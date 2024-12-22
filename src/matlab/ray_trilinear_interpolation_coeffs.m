@@ -29,8 +29,15 @@ ry = oy + ny * t;
 rz = oz + nz * t;
 c = subs(c, [x, y, z], [rx, ry, rz]);
 
-% Extract coefficients with respect to t
+% Extract coefficients with respect to t o, n
 [c_coeffs, c_terms] = coeffs(c, [t, ox, oy, oz, nx, ny, nz]);
+c_coeffs = simplify(c_coeffs);
+f_coeffs = unique(c_coeffs);
+
+disp([c_coeffs(:), c_terms(:)])
+
+%% Extract coefficients with respect to t o, n
+[c_coeffs, c_terms] = coeffs(c, t);
 c_coeffs = simplify(c_coeffs);
 f_coeffs = unique(c_coeffs);
 

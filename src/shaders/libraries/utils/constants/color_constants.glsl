@@ -62,7 +62,7 @@ const ColorConstants COLOR = ColorConstants(
     vec3(1.0, 0.6, 1.0),
     vec3(1.0, 0.84, 0.0),
     vec3(0.75, 0.75, 0.75),
-    vec3(0.0, 0.0, 0.0)   
+    vec3(0.0, 0.0, 0.0)
 );
 
 #endif

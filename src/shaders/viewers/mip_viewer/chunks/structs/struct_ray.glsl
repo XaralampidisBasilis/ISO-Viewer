@@ -43,7 +43,7 @@ Ray set_ray()
     ray.max_step_distance = 0.0;
     ray.min_value         = 0.0;
     ray.max_value         = 1.0;
-    ray.range_value        = 1.0;
+    ray.range_value       = 1.0;
     ray.max_step_count    = 0;
     ray.max_skip_count    = 0;
     return ray;

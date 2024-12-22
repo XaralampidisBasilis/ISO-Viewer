@@ -2,7 +2,7 @@
 #define MAXABS
 
 #ifndef SSIGN
-#include "./functions/ssign"
+#include "./curves/ssign"
 #endif
 
 float maxabs(in float v, in float a) { return ssign(v) * max(abs(v), a); }

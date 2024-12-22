@@ -47,12 +47,15 @@ export default class VolumeProcessor
         this.isosurfaceDistanceDualMap    = { params: null, tensor: null, texture: null}
         this.isosurfaceBoundingBoxDualMap = { params: null, tensor: null, texture: null}
         this.minimaMap                    = { params: null, tensor: null, texture: null}
+        this.minimaDualMap                = { params: null, tensor: null, texture: null}
+        this.minimaDistanceDualMap        = { params: null, tensor: null, texture: null}
         this.maximaMap                    = { params: null, tensor: null, texture: null}
+        this.maximaDualMap                = { params: null, tensor: null, texture: null}
+        this.maximaDistanceDualMap        = { params: null, tensor: null, texture: null}
         this.extremaMap                   = { params: null, tensor: null, texture: null}
         this.extremaDistanceMap           = { params: null, tensor: null, texture: null}
-        this.minimaDualMap                = { params: null, tensor: null, texture: null}
-        this.maximaDualMap                = { params: null, tensor: null, texture: null}
         this.extremaDualMap               = { params: null, tensor: null, texture: null}
+        this.extremaDistanceDualMap       = { params: null, tensor: null, texture: null}
     }
 
     setVolumeParameters()
@@ -601,9 +604,40 @@ export default class VolumeProcessor
             })            
         })
 
-        // console.log('extremaDualMap', this.extremaDualMap.params, this.extremaDualMap.tensor.dataSync())
+        console.log('extremaDualMap', this.extremaDualMap.params, this.extremaDualMap.tensor.dataSync())
     }
 
+    async computeMaximaDistanceDualMap(subDivision = 4, maxIterations = 255)
+    {
+        if (!(this.intensityMap.tensor instanceof tf.Tensor)) 
+        {
+            throw new Error(`computeMaximaDistanceDualMap: intensityMap is not computed`)
+        }
+        
+        timeit('computeMaximaDistanceDualMap', () =>
+        {
+            [this.maximaDistanceDualMap.tensor, this.maximaDistanceDualMap.params] = tf.tidy(() =>
+            {
+                const [tensor, maxDistance] = TensorUtils.maximaDistanceDualMap(this.intensityMap.tensor, subDivision, maxIterations)
+                const params = {}
+                params.subDivision = subDivision
+                params.invSubDivision = 1/subDivision
+                params.shape = tensor.shape
+                params.maxDistance = maxDistance.arraySync()
+                params.dimensions = new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed())
+                params.spacing = new THREE.Vector3().copy(this.volume.params.spacing).multiplyScalar(params.subDivision)
+                params.size = new THREE.Vector3().copy(params.dimensions).multiply(params.spacing)
+                params.numBlocks = params.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
+                params.invDimensions = new THREE.Vector3().fromArray(params.dimensions.toArray().map(x => 1/x))
+                params.invSpacing = new THREE.Vector3().fromArray(params.spacing.toArray().map(x => 1/x))
+                params.invSize = new THREE.Vector3().fromArray(params.size.toArray().map(x => 1/x))
+            
+                return [tensor, params]
+            })
+        })
+
+        console.log('maximaDistanceDualMap', this.maximaDistanceDualMap.params, this.maximaDistanceDualMap.tensor.dataSync())
+    }
 
     // Precompute Intensity
 

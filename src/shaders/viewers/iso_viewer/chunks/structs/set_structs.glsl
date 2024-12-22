@@ -9,3 +9,4 @@ Block  block      = set_block();
 Debug  debug      = set_debug();
 Trace  prev_trace = set_trace();
 Voxel  prev_voxel = set_voxel();
+Probe  probe      = set_probe();

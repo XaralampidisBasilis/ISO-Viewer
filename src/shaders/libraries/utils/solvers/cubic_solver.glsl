@@ -13,7 +13,7 @@
 #define SQRT_3 1.73205080757
 #endif
 #ifndef CBRT
-#include "../functions/cbrt"
+#include "../curves/cbrt"
 #endif
 
 vec3 cubic_solver(in vec4 coeffs, in float value)

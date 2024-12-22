@@ -46,6 +46,7 @@ export default class MIPViewer extends EventEmitter
         await this.processor.quantizeTaylorMap()
         await this.processor.quantizeIntensityMap()
         await this.processor.computeExtremaDualMap(uExtremap.sub_division)
+        await this.processor.computeMaximaDistanceDualMap(uExtremap.sub_division, 255)
     }
 
     async updateExtremaMap()
