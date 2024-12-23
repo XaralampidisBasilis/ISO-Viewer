@@ -44,7 +44,7 @@ export default function()
         u_distmap : new THREE.Uniform
         ({
             max_distance    : 0,
-            max_iterations  : 100,
+            max_iterations  : 255,
             sub_division    : 3,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),

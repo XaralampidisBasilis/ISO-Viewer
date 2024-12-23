@@ -126,6 +126,7 @@ export default class MIPViewer extends EventEmitter
             THREE.UnsignedByteType)
         this.processor.maximaDistanceDualMap.tensor.dispose()
 
+
         // colormaps
         this.textures.color_maps = this.resources.items.colormaps                      
         this.textures.color_maps.colorSpace = THREE.SRGBColorSpace
@@ -200,6 +201,10 @@ export default class MIPViewer extends EventEmitter
         uTextures.extrema_map = this.textures.extrema_map
         uTextures.distance_map = this.textures.distance_map
         uTextures.color_maps = this.textures.color_maps   
+
+        
+        console.log(this.textures.distance_map)
+        console.log(this.material.uniforms.u_distmap.value)
     }
 
     setMesh()

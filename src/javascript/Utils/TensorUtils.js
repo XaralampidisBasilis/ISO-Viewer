@@ -1376,7 +1376,7 @@ export function maximaDistanceDualMap(tensor, subDivisions = 2, maxIterations = 
         const maxDistance = distanceMap.max()
 
         // Combine the maxima with the distance
-        const maximaDistanceDualMap = tf.concat([maxima, distanceMap])
+        const maximaDistanceDualMap = tf.concat([maxima, distanceMap], 3)
         distanceMap.dispose()
         maxima.dispose()
 
