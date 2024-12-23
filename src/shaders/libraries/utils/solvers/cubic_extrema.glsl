@@ -11,10 +11,10 @@
 #include "./cubic_pows"
 #endif
 #ifndef MMIN
-#include "../mmin"
+#include "../math/mmin"
 #endif
 #ifndef MMAX
-#include "../mmax"
+#include "../math/mmax"
 #endif
 
 void cubic_extrema(out vec2 extrema_values, in vec4 coeffs, in vec2 boundary_points)

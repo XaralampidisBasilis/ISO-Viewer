@@ -5,7 +5,7 @@
 #define MICRO_TOLERANCE 1e-6
 #endif
 #ifndef SUM
-#include "../sum"
+#include "../math/sum"
 #endif
 
 vec2 linsolve(in mat2 A, in vec2 b)

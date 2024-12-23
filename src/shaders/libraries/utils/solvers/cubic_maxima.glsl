@@ -11,7 +11,7 @@
 #include "./cubic_pows"
 #endif
 #ifndef MMAX
-#include "../mmax"
+#include "../math/mmax"
 #endif
 
 void cubic_maxima(out float maxima_value, in vec4 coeffs, in vec2 boundary_points)

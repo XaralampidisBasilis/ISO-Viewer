@@ -1,16 +1,16 @@
 // softstep with inflex point (1,1)
 
-#ifndef SINKSTEP
-#define SINKSTEP
+#ifndef SOFTSTEP_SINK
+#define SOFTSTEP_SINK
 
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
 #endif
 #ifndef MAP
-#include "../map"
+#include "../math/map"
 #endif
 
-float sinkstep(in float edge0, in float edge1, in float x, in float slope)
+float softstep_sink(in float edge0, in float edge1, in float x, in float slope)
 {
     float t = map(edge0, edge1, x);
     float t_inv = 1.0 - t;

@@ -26,6 +26,12 @@ struct ToleranceConstants {
     float YOCTO;
     float RONTO;
     float QUECTO;
+    float MAX_HIGHP_FLOAT;
+    float MIN_HIGHP_FLOAT;
+    float MAX_MEDIUMP_FLOAT;
+    float MIN_MEDIUMP_FLOAT;
+    float MAX_LOWP_FLOAT;
+    float MIN_LOWP_FLOAT;
 };
 
 const ToleranceConstants TOLERANCE = ToleranceConstants(
@@ -52,7 +58,13 @@ const ToleranceConstants TOLERANCE = ToleranceConstants(
     1e-21,
     1e-24,
     1e-27,
-    1e-30
+    1e-30,
+    3.402823e38,
+    1.175494e-38,
+    16.384,
+    0.000061035,
+    256.0,
+    0.00390625
 );
 
 #endif

@@ -21,7 +21,7 @@
 #define MICRO_TOLERANCE 1e-6
 #endif
 #ifndef MAP
-#include "../map"
+#include "../math/map"
 #endif
 
 float softstep(in float edge0, in float edge1, in float x)

@@ -2,7 +2,7 @@
 #define SOME
 
 #ifndef MMAX
-#include "../MMAX"
+#include "../math/mmax"
 #endif
 #ifndef ON
 #include "./on"

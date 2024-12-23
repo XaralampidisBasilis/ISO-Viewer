@@ -5,10 +5,10 @@
 #define INTERSECT_BOX_MIN
 
 #ifndef MMIN
-#include "../mmin"
+#include "../math/mmin"
 #endif
 #ifndef MMAX
-#include "../mmax"
+#include "../math/mmax"
 #endif
 
 float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 dir) 

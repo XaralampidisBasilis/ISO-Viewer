@@ -28,7 +28,7 @@
 
  // Dependencies
 #ifndef PROD
-#include "./prod"
+#include "./math/prod"
 #endif
 
 

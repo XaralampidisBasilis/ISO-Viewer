@@ -11,7 +11,7 @@
 #include "./cubic_pows"
 #endif
 #ifndef MMIN
-#include "../mmin"
+#include "../math/mmin"
 #endif
 
 void cubic_minima(out float minima_value, in vec4 coeffs, in vec2 boundary_points)

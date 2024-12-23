@@ -10,7 +10,7 @@
 #define MILLI_TOLERANCE 1e-3
 #endif
 #ifndef MAXABS
-#include "../maxabs"
+#include "../math/maxabs"
 #endif
 #ifndef LINSOLVE
 #include "../solvers/linsolve"

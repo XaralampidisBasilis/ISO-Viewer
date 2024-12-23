@@ -2,7 +2,7 @@
 #define EVERY
 
 #ifndef PROD
-#include "../prod"
+#include "../math/prod"
 #endif
 #ifndef ON
 #include "./on"

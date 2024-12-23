@@ -13,10 +13,10 @@
 #define NANO_TOLERANCE 1e-9
 #endif
 #ifndef POWN
-#include "./pown"
+#include "../math/pown"
 #endif
 #ifndef MAP
-#include "../map"
+#include "../math/map"
 #endif
 
 float inverse_softstep(in float edge0, in float edge1, in float x)

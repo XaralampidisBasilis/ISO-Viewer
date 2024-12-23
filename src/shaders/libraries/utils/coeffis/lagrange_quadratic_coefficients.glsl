@@ -10,10 +10,10 @@
 #define MICRO_TOLERANCE 1e-6
 #endif
 #ifndef PROD
-#include "../prod"
+#include "../math/prod"
 #endif
 #ifndef MAXABS
-#include "../maxabs"
+#include "../math/maxabs"
 #endif
 
 vec3 lagrange_quadratic_coefficients(in vec3 t, in vec3 f)
