@@ -11,7 +11,7 @@
 #define BOX_BOUNDS
 
 #ifndef MMAX
-#include "./math/mmax"
+#include "../math/mmax"
 #endif
 
 vec2 box_bounds(vec2 b_min, vec2 b_max, vec2 p) 

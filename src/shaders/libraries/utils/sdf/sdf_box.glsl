@@ -11,7 +11,7 @@
 #define SDF_BOX
 
 #ifndef MMAX
-#include "./mmax"
+#include "../math/mmax"
 #endif
 
 float sdf_box(vec2 b_min, vec2 b_max, vec2 p) 

@@ -4,7 +4,7 @@ Voxel next_voxel = voxel;
 
 // update next trace 
 next_trace.distance = trace.distance + ray.step_distance * DECI_TOLERANCE;
-next_trace.distance = min(next_trace.distance, ray.end_distance);
+next_trace.distance = clamp(next_trace.distance, ray.start_distance, ray.end_distance);
 
 // update next voxel
 next_voxel.texture_coords = trace.position * u_volume.inv_size;
@@ -14,7 +14,7 @@ next_voxel.error = next_voxel.value - u_rendering.threshold_value;
 
 // update previous trace 
 prev_trace.distance = trace.distance - ray.step_distance * DECI_TOLERANCE;
-prev_trace.distance = max(prev_trace.distance, ray.start_distance);
+prev_trace.distance = clamp(prev_trace.distance, ray.start_distance, ray.end_distance);
 
 // update previous voxel
 prev_voxel.texture_coords = prev_trace.position * u_volume.inv_size;

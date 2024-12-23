@@ -1,0 +1,25 @@
+
+#ifndef MATH
+#define MATH
+
+#include "./argmax" 
+#include "./argmin" 
+#include "./cbrt" 
+#include "./clampabs" 
+#include "./cumprod" 
+#include "./cumsum" 
+#include "./decimate" 
+#include "./diff" 
+#include "./map" 
+#include "./maxabs" 
+#include "./mean" 
+#include "./minabs" 
+#include "./mmax" 
+#include "./mmin" 
+#include "./mmix" 
+#include "./pown" 
+#include "./prod" 
+#include "./ssign" 
+#include "./sum"
+
+#endif

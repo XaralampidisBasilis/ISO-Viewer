@@ -1,7 +1,7 @@
 
 // compute distances
 cell.bounds = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
-cell.bounds = clamp(cell.bounds, box.entry_distance, box.exit_distance);
+cell.bounds = clamp(cell.bounds, ray.start_distance, ray.end_distance);
 cell.distances = mmix(cell.bounds.x, cell.bounds.y, sample_distances);
 
 // compute coeffs
