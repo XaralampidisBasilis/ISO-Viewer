@@ -11,6 +11,7 @@ export default function()
         ({
             taylor_map: null,
             extrema_map : null,
+            distance_map : null,
             color_maps: null,
         }),
 
@@ -38,6 +39,20 @@ export default function()
             inv_dimensions: new THREE.Vector3(),
             inv_spacing   : new THREE.Vector3(),
             inv_size      : new THREE.Vector3(),
+        }),
+
+        u_distmap : new THREE.Uniform
+        ({
+            max_distance    : 0,
+            max_iterations  : 100,
+            sub_division    : 3,
+            dimensions      : new THREE.Vector3(),
+            spacing         : new THREE.Vector3(),
+            size            : new THREE.Vector3(),
+            inv_sub_division: 0.0,
+            inv_dimensions  : new THREE.Vector3(),
+            inv_spacing     : new THREE.Vector3(),
+            inv_size        : new THREE.Vector3(),
         }),
 
         u_rendering: new THREE.Uniform
@@ -75,9 +90,9 @@ export default function()
 
     const defines = 
     {           
-        INTERSECT_BVOL_ENABLED     : 1,
+        INTERSECT_BVOL_ENABLED     : 0,
         REFINE_INTERSECTION_ENABLED: 0,
-        SKIPPING_ENABLED           : 0,
+        SKIPPING_ENABLED           : 1,
         DITHERING_ENABLED          : 0,
         DISCARDING_DISABLED        : 0,
     }

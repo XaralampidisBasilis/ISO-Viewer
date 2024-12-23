@@ -38,6 +38,7 @@ export default class MIPViewer extends EventEmitter
     async precompute()
     {
         const uExtremap = this.material.uniforms.u_extremap.value
+        const uDistmap = this.material.uniforms.u_distmap.value
 
         await this.processor.computeIntensityMap()
         await this.processor.normalizeIntensityMap()
@@ -46,7 +47,7 @@ export default class MIPViewer extends EventEmitter
         await this.processor.quantizeTaylorMap()
         await this.processor.quantizeIntensityMap()
         await this.processor.computeExtremaDualMap(uExtremap.sub_division)
-        await this.processor.computeMaximaDistanceDualMap(uExtremap.sub_division, 255)
+        await this.processor.computeMaximaDistanceDualMap(uDistmap.sub_division, uDistmap.max_iterations)
     }
 
     async updateExtremaMap()
@@ -73,6 +74,30 @@ export default class MIPViewer extends EventEmitter
         this.logMemory('updateExtremaMap')
     }
 
+    async updateDistanceMap()
+    {
+        const uDistmap = this.material.uniforms.u_distmap.value
+        const uTextures = this.material.uniforms.u_textures.value
+
+        await this.processor.computeMaximaDistanceDualMap(uDistmap.sub_division, uDistmap.max_iterations)
+        
+        const distmapParams =  this.processor.maximaDistanceDualMap.params
+        uDistmap.max_distance = distmapParams.maxDistance
+        uDistmap.sub_division = distmapParams.subDivision
+        uDistmap.dimensions.copy(distmapParams.dimensions)
+        uDistmap.spacing.copy(distmapParams.spacing)
+        uDistmap.size.copy(distmapParams.size)
+        uDistmap.inv_sub_division = distmapParams.invSubDivision
+        uDistmap.inv_dimensions.copy(distmapParams.invDimensions)
+        uDistmap.inv_spacing.copy(distmapParams.invSpacing)
+        uDistmap.inv_size.copy(distmapParams.invSize)
+
+        uTextures.distance_map.dispose()
+        uTextures.distance_map = this.processor.getTexture('maximaDistanceDualMap', THREE.RGFormat, THREE.UnsignedByteType)
+        uTextures.distance_map.needsUpdate = true
+        this.processor.maximaDistanceDualMap.tensor.dispose()
+    }
+
     setParameters()
     {
         this.parameters = {}
@@ -83,15 +108,25 @@ export default class MIPViewer extends EventEmitter
     {
         this.textures = {}
 
-        // taylor_map
-        this.textures.taylor_map = this.processor.getTexture('taylorMap', THREE.RGBAFormat, THREE.UnsignedByteType)
+        // taylor map
+        this.textures.taylor_map = this.processor.getTexture('taylorMap', 
+            THREE.RGBAFormat, 
+            THREE.UnsignedByteType)
         this.processor.taylorMap.tensor.dispose()
 
-        // extrema_map
-        this.textures.extrema_map = this.processor.getTexture('extremaDualMap', THREE.RGFormat, THREE.UnsignedByteType)
+        // extrema map
+        this.textures.extrema_map = this.processor.getTexture('extremaDualMap', 
+            THREE.RGFormat, 
+            THREE.UnsignedByteType)
         this.processor.extremaDualMap.tensor.dispose()
 
-        // color_maps
+        // distance map
+        this.textures.distance_map = this.processor.getTexture('maximaDistanceDualMap', 
+            THREE.RGFormat, 
+            THREE.UnsignedByteType)
+        this.processor.maximaDistanceDualMap.tensor.dispose()
+
+        // colormaps
         this.textures.color_maps = this.resources.items.colormaps                      
         this.textures.color_maps.colorSpace = THREE.SRGBColorSpace
         this.textures.color_maps.minFilter = THREE.LinearFilter
@@ -117,10 +152,12 @@ export default class MIPViewer extends EventEmitter
         const volumeParams = this.processor.volume.params
         const taylormapParams = this.processor.taylorMap.params
         const extremaParams =  this.processor.extremaDualMap.params
+        const distmapParams =  this.processor.maximaDistanceDualMap.params
 
         // uniforms
         const uVolume = this.material.uniforms.u_volume.value
         const uExtremap = this.material.uniforms.u_extremap.value
+        const uDistmap = this.material.uniforms.u_distmap.value
         const uTextures = this.material.uniforms.u_textures.value
 
         // volume
@@ -147,9 +184,21 @@ export default class MIPViewer extends EventEmitter
         uExtremap.inv_spacing.copy(extremaParams.invSpacing)
         uExtremap.inv_size.copy(extremaParams.invSize)
 
+        // distance map 
+        uDistmap.max_distance = distmapParams.maxDistance
+        uDistmap.sub_division = distmapParams.subDivision
+        uDistmap.dimensions.copy(distmapParams.dimensions)
+        uDistmap.spacing.copy(distmapParams.spacing)
+        uDistmap.size.copy(distmapParams.size)
+        uDistmap.inv_sub_division = distmapParams.invSubDivision
+        uDistmap.inv_dimensions.copy(distmapParams.invDimensions)
+        uDistmap.inv_spacing.copy(distmapParams.invSpacing)
+        uDistmap.inv_size.copy(distmapParams.invSize)
+
         // textures
         uTextures.taylor_map = this.textures.taylor_map
         uTextures.extrema_map = this.textures.extrema_map
+        uTextures.distance_map = this.textures.distance_map
         uTextures.color_maps = this.textures.color_maps   
     }
 

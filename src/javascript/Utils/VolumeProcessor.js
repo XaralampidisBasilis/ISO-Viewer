@@ -422,7 +422,7 @@ export default class VolumeProcessor
             })
         })
 
-        console.log('isosurfaceDistanceDualMap', this.isosurfaceDistanceDualMap.params, this.isosurfaceDistanceDualMap.tensor.dataSync())
+        // console.log('isosurfaceDistanceDualMap', this.isosurfaceDistanceDualMap.params, this.isosurfaceDistanceDualMap.tensor.dataSync())
     }
 
     async computeIsosurfaceBoundingBoxDualMap(threshold = 0)
@@ -636,6 +636,8 @@ export default class VolumeProcessor
             })
         })
 
+        console.log('intensityMap', this.intensityMap.params, this.intensityMap.tensor.dataSync())
+        console.log('extremaDualMap', this.extremaDualMap.params, this.extremaDualMap.tensor.dataSync())
         console.log('maximaDistanceDualMap', this.maximaDistanceDualMap.params, this.maximaDistanceDualMap.tensor.dataSync())
     }
 

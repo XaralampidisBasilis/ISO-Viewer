@@ -1,3 +1,4 @@
+#include "./debug_block/debug_block_distance"              
 #include "./debug_block/debug_block_min_value"              
 #include "./debug_block/debug_block_max_value"              
 #include "./debug_block/debug_block_occupied"           
@@ -6,11 +7,12 @@
            
 switch (u_debugging.option - debug.slot_block)
 {
-    case 1: fragColor = debug.block_min_value;  break;
-    case 2: fragColor = debug.block_max_value;  break;
-    case 3: fragColor = debug.block_occupied;   break;
-    case 4: fragColor = debug.block_coords;     break;
-    case 5: fragColor = debug.block_skip_count; break;
+    case 1: fragColor = debug.block_distance;   break;
+    case 2: fragColor = debug.block_min_value;  break;
+    case 3: fragColor = debug.block_max_value;  break;
+    case 4: fragColor = debug.block_occupied;   break;
+    case 5: fragColor = debug.block_coords;     break;
+    case 6: fragColor = debug.block_skip_count; break;
 }
 
   

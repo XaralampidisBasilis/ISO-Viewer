@@ -76,6 +76,7 @@ struct Debug
     vec4 cell_max_value;    
 
     int  slot_block;
+    vec4 block_distance;
     vec4 block_min_value;
     vec4 block_max_value;
     vec4 block_occupied; 
@@ -153,6 +154,7 @@ Debug set_debug()
     debug.cell_coeffs                = vec4(vec3(0.0), 1.0);      
     debug.cell_max_value             = vec4(vec3(0.0), 1.0);      
 
+    debug.block_distance             = vec4(vec3(0.0), 1.0);
     debug.block_min_value            = vec4(vec3(0.0), 1.0);
     debug.block_max_value            = vec4(vec3(0.0), 1.0);
     debug.block_occupied             = vec4(vec3(0.0), 1.0);

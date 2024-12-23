@@ -191,11 +191,12 @@ export default class MIPGui
                 cell_coeffs               : 409,
                 cell_max_value            : 410,
 
-                block_min_value           : 501,
-                block_max_value           : 502,
-                block_occupied            : 503,
-                block_coords              : 504,
-                block_skip_count          : 505,
+                block_distance            : 501,
+                block_min_value           : 502,
+                block_max_value           : 503,
+                block_occupied            : 504,
+                block_coords              : 505,
+                block_skip_count          : 506,
 
                 frag_depth                : 601,
                 frag_position             : 602,
