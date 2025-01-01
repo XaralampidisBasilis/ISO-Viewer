@@ -5,7 +5,15 @@ if (trace.intersected)
     #if REFINE_INTERSECTION_ENABLED == 1
     #include "./refine_intersection"
     #endif
-    #include "./compute_gradients"
+
+    if (u_debugging.variable1 > 0.0)
+    {
+        #include "./compute_gradients"
+    }
+    else
+    {
+        #include "./compute_gradients_analytic"
+    }
 }
 
 if (trace.exhausted)

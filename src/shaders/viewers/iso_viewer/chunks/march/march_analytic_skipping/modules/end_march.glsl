@@ -7,7 +7,7 @@ if (trace.intersected)
     #include "./refine_intersection"
     #endif
 
-    #include "./compute_gradients"
+    #include "./compute_gradients_analytic"
 }
 
 if (trace.exhausted)

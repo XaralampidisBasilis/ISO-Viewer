@@ -9,6 +9,7 @@
 #include "../../../../libraries/utils/reformers/sort"
 #include "../../../../libraries/utils/sdf/box_bounds"
 #include "../../../../libraries/utils/colors/color"
+#include "../../../../libraries/utils/colors/posterize"
 
 
 
