@@ -42,4 +42,27 @@ export default class Camera
     {
         this.controls.update()
     }
+
+    destroy() 
+    {
+        this.scene.remove(this.instance);
+
+        if (this.controls) 
+        {
+            this.controls.dispose()
+            this.controls = null // prevent memory leaks
+        }
+
+        if (this.instance) 
+        {
+            this.instance = null // allow garbage collection
+        }
+
+        this.experience = null
+        this.sizes = null
+        this.scene = null
+        this.canvas = null
+
+        console.log('Camera destroyed')
+    }
 }

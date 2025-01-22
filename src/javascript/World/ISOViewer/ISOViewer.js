@@ -43,9 +43,6 @@ export default class ISOViewer extends EventEmitter
         await tf.ready()
         await this.processor.computeIntensityMap()
         await this.processor.normalizeIntensityMap()
-        await this.processor.computeGradientMap()
-        await this.processor.computeTaylorMap().then(() => this.processor.gradientMap.tensor.dispose())
-        await this.processor.quantizeTaylorMap()
         await this.processor.computeIsosurfaceBoundingBoxDualMap(uRendering.threshold_value)
         await this.processor.computeIsosurfaceDistanceDualMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
     }
@@ -186,7 +183,6 @@ export default class ISOViewer extends EventEmitter
 
     destroy() 
     {
-    
         Object.keys(this.textures).forEach(key => 
         {
             if (this.textures[key]) 

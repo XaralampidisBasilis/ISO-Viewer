@@ -19,7 +19,7 @@ export default class Renderer
         this.instance = new THREE.WebGLRenderer({
             canvas: this.canvas,
             powerPreference: 'high-performance',
-            antialias: false,
+            antialias: true,
             stencil: false,
             depth: true,
             alpha: true,
@@ -42,5 +42,22 @@ export default class Renderer
     update()
     {
         this.instance.render(this.scene, this.camera.instance)
+    }
+
+    destroy() 
+    {
+        if (this.instance) 
+        {
+            this.instance.dispose()
+            this.instance = null // Allow garbage collection
+        }
+
+        this.experience = null
+        this.canvas = null
+        this.sizes = null
+        this.scene = null
+        this.camera = null
+
+        console.log('Renderer destroyed')
     }
 }

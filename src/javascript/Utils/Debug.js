@@ -4,9 +4,10 @@ export default class Debug
 {
     constructor()
     {
+        // Enable debug mode based on URL hash
         this.active = window.location.hash === '#debug'
 
-        if(this.active)
+        if (this.active)
         {
             this.ui = new GUI()
         }
@@ -14,11 +15,14 @@ export default class Debug
 
     getController(gui, name) 
     {
-        // Check if the controller is in the main GUI
+        // Check if the controller exists in the GUI
         for (const controller of gui.controllersRecursive()) 
         {
             if (controller._name === name)
+            {
                 return controller        
+
+            }
         }
 
         // Return null if the controller was not found
@@ -27,14 +31,27 @@ export default class Debug
 
     getFolder(gui, title) 
     {
-        // Check if the controller is in the main GUI
+        // Check if the folder exists in the GUI
         for (const folder of gui.foldersRecursive()) 
         {
             if (folder._title === title)
+            {
                 return folder        
+            }
         }
 
-        // Return null if the controller was not found
+        // Return null if the folder was not found
         return null
+    }
+
+    destroy()
+    {
+        if (this.active && this.ui)
+        {
+            this.ui.destroy() // Clean up the GUI instance
+            this.ui = null
+        }
+
+        console.log('Debug destroyed')
     }
 }

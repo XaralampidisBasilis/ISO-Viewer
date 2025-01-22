@@ -1,6 +1,6 @@
+import * as THREE from 'three'
 import Experience from '../Experience'
-import ISOViewer from '../Viewers/ISOViewer/ISOViewer'
-import MIPViewer from '../Viewers/MIPViewer/MIPViewer'
+// import ISOViewer from '../Viewers/ISOViewer/ISOViewer'
 import EventEmitter from '../Utils/EventEmitter'
 
 export default class World extends EventEmitter
@@ -17,23 +17,48 @@ export default class World extends EventEmitter
         // Wait for resources
         this.resources.on('ready', () =>
         {
-            // Wait for viewer
-            this.viewer = new ISOViewer()
-            this.viewer.on('ready', () => 
-            {
-                this.camera.instance.position.copy(this.viewer.parameters.volume.size)
-                this.trigger('ready')
-            })
-        })
-    }
+            // // Wait for viewer
+            // this.viewer = new ISOViewer()
+            // this.viewer.on('ready', () => 
+            // {
+            //     this.camera.instance.position.copy(this.viewer.parameters.volume.size)
+            //     this.trigger('ready')
+            // })
 
-    update()
-    {
+            this.trigger('ready')
+
+        })
     }
 
     destroy()
     {
-        if(this.viewer)
-            this.viewer.destroy()
+        // dispose scene
+        this.scene.traverse((child) =>
+        {
+            // test if it's a mesh
+            if(child instanceof THREE.Mesh)
+            {
+                child.geometry.dispose()
+
+                // Loop through the material properties
+                for(const key in child.material)
+                {
+                    const value = child.material[key]
+
+                    // Test if there is a dispose function
+                    if(value && typeof value.dispose === 'function')
+                    {
+                        value.dispose()
+                    }
+                }
+            }
+        })
+
+        this.scene = null
+        this.camera = null
+        this.resources = null
+        this.experience = null
+
+        console.log('World destroyed')
     }
 }
