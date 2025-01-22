@@ -417,8 +417,8 @@ export function gradients3d(tensor, spacing)
         const gradientsX = compute(kernel.x, spacing.x)
         const gradientsY = compute(kernel.y, spacing.y)
         const gradientsZ = compute(kernel.z, spacing.z)
-
         const gradients = tf.concat([gradientsX, gradientsY, gradientsZ], 3)
+        // const gradients = tf.zeros(tensor.shape.slice(0, 3).concat(3), 'float32')
 
         return gradients
     })   

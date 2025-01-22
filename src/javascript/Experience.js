@@ -38,7 +38,7 @@ export default class Experience
         this.resources = new Resources(sources)
         this.renderer = new Renderer()
         this.world = new World()
-        this.xr = new XRManager()
+        // this.xr = new XRManager()
 
         if(this.debug.active)
             this.stats = new Stats(true)

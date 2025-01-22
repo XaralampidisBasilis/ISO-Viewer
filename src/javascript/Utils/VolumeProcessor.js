@@ -83,7 +83,7 @@ export default class VolumeProcessor
         {
             [this.intensityMap.tensor, this.intensityMap.params] = tf.tidy(() =>
             {
-                const tensor  = tf.tensor4d(this.volume.data, this.volume.params.shape,'float32')
+                const tensor  = tf.tensor4d(this.volume.getData(), this.volume.params.shape,'float32')
                 const params = {...this.volume.params}
 
                 return [tensor, params]
