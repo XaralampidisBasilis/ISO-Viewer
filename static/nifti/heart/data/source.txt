@@ -1,2 +1,0 @@
-2018 Atria Segmentation Data
-https://www.cardiacatlas.org/atriaseg2018-challenge/atria-seg-data/
