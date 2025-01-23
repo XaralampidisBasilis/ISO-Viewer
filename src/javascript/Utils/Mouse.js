@@ -32,8 +32,8 @@ export default class Mouse extends EventEmitter
         this.y = event.clientY
 
         // Update normalized mouse position
-        this.normalizedX = this.x / window.innerWidth
-        this.normalizedY = -this.y / window.innerHeight
+        this.normalizedX = (this.x / window.innerWidth) * 2 - 1
+        this.normalizedY = (-this.y / window.innerHeight) * 2 - 1
 
         // Emit the `move` event
         this.trigger('move', {

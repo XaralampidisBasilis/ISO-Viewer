@@ -2,9 +2,9 @@ import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Experience from '../../Experience'
 import EventEmitter from '../../Utils/EventEmitter'
-import VolumeProcessor from '../../Utils/VolumeProcessor'
 import ISOMaterial from './ISOMaterial'
 import ISOGui from './ISOGui'
+import ISOProcessor from './ISOProcessor'
 
 export default class ISOViewer extends EventEmitter
 {
@@ -21,42 +21,40 @@ export default class ISOViewer extends EventEmitter
         this.debug = this.experience.debug
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
-
-        this.processor = new VolumeProcessor(this.resources.items.volumeNifti)
-        this.precompute().then(() => 
+        this.processor = new ISOProcessor(this.resources.items.volumeNifti)
+        this.process().then(() => 
         {
-            this.setParameters()
-            this.setTextures()
-            this.setGeometry()
-            this.setMaterial()
-            this.setMesh()
-            this.logMemory('precompute')
-            this.trigger('ready')
+            // this.setParameters()
+            // this.setTextures()
+            // this.setGeometry()
+            // this.setMaterial()
+            // this.setMesh()
+            // this.trigger('ready')
         })
     }
     
-    async precompute()
+    async process()
     {
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistmap = this.material.uniforms.u_distmap.value
 
         await tf.ready()
-        await this.processor.computeIntensityMap()
+        await this.processor.generateIntensityMap()
         await this.processor.normalizeIntensityMap()
-        await this.processor.computeIsosurfaceBoundingBoxDualMap(uRendering.threshold_value)
-        await this.processor.computeIsosurfaceDistanceDualMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
+        await this.processor.generateOccupancyMap(uRendering.threshold_value, uDistmap.sub_division)
+        // await this.processor.generateDistanceMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
+        // await this.processor.generateBoundingBox(uRendering.threshold_value)
     }
 
     async updateBoundingBox()
     {
         const uRendering = this.material.uniforms.u_rendering.value
         const uVolume = this.material.uniforms.u_volume.value
-
-        await this.processor.computeIsosurfaceBoundingBoxDualMap(uRendering.threshold_value)
+        await this.processor.generateBoundingBox(uRendering.threshold_value)
         
-        const boxParams = this.processor.isosurfaceBoundingBoxDualMap.params 
-        uVolume.min_position.copy(boxParams.minPosition)
-        uVolume.max_position.copy(boxParams.maxPosition)     
+        const pBoundingBox = this.processor.boundingBox.parameters 
+        uVolume.min_position.copy(pBoundingBox.minPosition)
+        uVolume.max_position.copy(pBoundingBox.maxPosition)     
     }   
 
     async updateDistanceMap()
@@ -64,26 +62,25 @@ export default class ISOViewer extends EventEmitter
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistmap = this.material.uniforms.u_distmap.value
         const uTextures = this.material.uniforms.u_textures.value
-
-        await this.processor.computeIsosurfaceDistanceDualMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
+        await this.processor.generateDistanceMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
         
-        const distmapParams =  this.processor.isosurfaceDistanceDualMap.params
-        uDistmap.max_distance = distmapParams.maxDistance
-        uDistmap.sub_division = distmapParams.subDivision
-        uDistmap.dimensions.copy(distmapParams.dimensions)
-        uDistmap.spacing.copy(distmapParams.spacing)
-        uDistmap.size.copy(distmapParams.size)
-        uDistmap.inv_sub_division = distmapParams.invSubDivision
-        uDistmap.inv_dimensions.copy(distmapParams.invDimensions)
-        uDistmap.inv_spacing.copy(distmapParams.invSpacing)
-        uDistmap.inv_size.copy(distmapParams.invSize)
+        const pDistanceMap =  this.processor.isosurfaceDistanceDualMap.parameters
+        uDistmap.max_distance = pDistanceMap.maxDistance
+        uDistmap.sub_division = pDistanceMap.subDivision
+        uDistmap.dimensions.copy(pDistanceMap.dimensions)
+        uDistmap.spacing.copy(pDistanceMap.spacing)
+        uDistmap.size.copy(pDistanceMap.size)
+        uDistmap.inv_sub_division = pDistanceMap.invSubDivision
+        uDistmap.inv_dimensions.copy(pDistanceMap.invDimensions)
+        uDistmap.inv_spacing.copy(pDistanceMap.invSpacing)
+        uDistmap.inv_size.copy(pDistanceMap.invSize)
 
         uTextures.distance_map.dispose()
-        uTextures.distance_map = this.processor.getTexture('isosurfaceDistanceDualMap', THREE.RedFormat, THREE.UnsignedByteType)
+        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
         uTextures.distance_map.needsUpdate = true
-        this.processor.isosurfaceDistanceDualMap.tensor.dispose()
+        this.processor.distanceMap.tensor.dispose()
 
-        console.log(distmapParams)
+        console.log(pDistanceMap)
         console.log(uDistmap)
 
         this.logMemory('updateDistmap')
@@ -92,28 +89,22 @@ export default class ISOViewer extends EventEmitter
     setParameters()
     {
         this.parameters = {}
-        this.parameters.volume = this.processor.volume.params
+        this.parameters.volume = { ...this.processor.volume.parameters}
     }
 
     setTextures()
     {
         this.textures = {}
+        this.textures.intensityMap = this.processor.generateTexture('intensityMap', THREE.RedFormat, THREE.FloatType)
+        this.textures.distanceMap = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        this.processor.distanceMap.tensor.dispose()
 
-        // taylor_map
-        this.textures.taylor_map = this.processor.getTexture('taylorMap', THREE.RGBAFormat, THREE.UnsignedByteType)
-        this.processor.taylorMap.tensor.dispose()
-
-        // distance_map
-        this.textures.distance_map = this.processor.getTexture('isosurfaceDistanceDualMap', THREE.RedFormat, THREE.UnsignedByteType)
-        this.processor.isosurfaceDistanceDualMap.tensor.dispose()
-
-        // color_maps
-        this.textures.color_maps = this.resources.items.colormaps                      
-        this.textures.color_maps.colorSpace = THREE.SRGBColorSpace
-        this.textures.color_maps.minFilter = THREE.LinearFilter
-        this.textures.color_maps.magFilter = THREE.LinearFilter         
-        this.textures.color_maps.generateMipmaps = false
-        this.textures.color_maps.needsUpdate = true 
+        this.textures.colorMaps = this.resources.items.colormaps                      
+        this.textures.colorMaps.colorSpace = THREE.SRGBColorSpace
+        this.textures.colorMaps.minFilter = THREE.LinearFilter
+        this.textures.colorMaps.magFilter = THREE.LinearFilter         
+        this.textures.colorMaps.generateMipmaps = false
+        this.textures.colorMaps.needsUpdate = true 
     }
   
     setGeometry()
@@ -130,10 +121,10 @@ export default class ISOViewer extends EventEmitter
     setMaterial()
     {        
         // parameters
-        const volumeParams = this.processor.volume.params
-        const taylormapParams = this.processor.taylorMap.params
-        const distmapParams =  this.processor.isosurfaceDistanceDualMap.params
-        const boxParams = this.processor.isosurfaceBoundingBoxDualMap.params
+        const pVolume = this.processor.volume.parameters
+        const pIntensityMap = this.processor.intensityMap.parameters
+        const pDistanceMap =  this.processor.distanceMap.parameters
+        const pBoundingBox = this.processor.boundingBox.parameters
 
         // uniforms
         const uVolume = this.material.uniforms.u_volume.value
@@ -141,37 +132,34 @@ export default class ISOViewer extends EventEmitter
         const uTextures = this.material.uniforms.u_textures.value
 
         // volume
-        uVolume.dimensions.copy(volumeParams.dimensions)
-        uVolume.spacing.copy(volumeParams.spacing)
-        uVolume.size.copy(volumeParams.size)
-        uVolume.size_length = volumeParams.sizeLength
-        uVolume.spacing_length = volumeParams.spacingLength
-        uVolume.inv_dimensions.copy(volumeParams.invDimensions)
-        uVolume.inv_spacing.copy(volumeParams.invSpacing)
-        uVolume.inv_size.copy(volumeParams.invSize)
-        uVolume.min_intensity = taylormapParams.minValue.x
-        uVolume.max_intensity = taylormapParams.maxValue.x
-        uVolume.min_gradient.fromArray(taylormapParams.minValue.toArray().slice(1))
-        uVolume.max_gradient.fromArray(taylormapParams.maxValue.toArray().slice(1))
-        uVolume.max_gradient_length = Math.max(uVolume.max_gradient.length(), uVolume.min_gradient.length())
-        uVolume.min_position.copy(boxParams.minPosition)
-        uVolume.max_position.copy(boxParams.maxPosition)
-
-        // distance_map
-        uDistmap.max_distance = distmapParams.maxDistance
-        uDistmap.sub_division = distmapParams.subDivision
-        uDistmap.dimensions.copy(distmapParams.dimensions)
-        uDistmap.spacing.copy(distmapParams.spacing)
-        uDistmap.size.copy(distmapParams.size)
-        uDistmap.inv_sub_division = distmapParams.invSubDivision
-        uDistmap.inv_dimensions.copy(distmapParams.invDimensions)
-        uDistmap.inv_spacing.copy(distmapParams.invSpacing)
-        uDistmap.inv_size.copy(distmapParams.invSize)
+        uVolume.dimensions.copy(pVolume.dimensions)
+        uVolume.spacing.copy(pVolume.spacing)
+        uVolume.size.copy(pVolume.size)
+        uVolume.min_position.copy(pBoundingBox.minPosition)
+        uVolume.max_position.copy(pBoundingBox.maxPosition)
+        uVolume.min_intensity = pIntensityMap.minValue
+        uVolume.max_intensity = pIntensityMap.maxValue
+        uVolume.size_length = pVolume.sizeLength
+        uVolume.spacing_length = pVolume.spacingLength
+        uVolume.inv_dimensions.copy(pVolume.invDimensions)
+        uVolume.inv_spacing.copy(pVolume.invSpacing)
+        uVolume.inv_size.copy(pVolume.invSize)
+ 
+        // distance map
+        uDistmap.max_distance = pDistanceMap.maxDistance
+        uDistmap.sub_division = pDistanceMap.subDivision
+        uDistmap.dimensions.copy(pDistanceMap.dimensions)
+        uDistmap.spacing.copy(pDistanceMap.spacing)
+        uDistmap.size.copy(pDistanceMap.size)
+        uDistmap.inv_sub_division = pDistanceMap.invSubDivision
+        uDistmap.inv_dimensions.copy(pDistanceMap.invDimensions)
+        uDistmap.inv_spacing.copy(pDistanceMap.invSpacing)
+        uDistmap.inv_size.copy(pDistanceMap.invSize)
 
         // textures
-        uTextures.taylor_map = this.textures.taylor_map
-        uTextures.distance_map = this.textures.distance_map
-        uTextures.color_maps = this.textures.color_maps   
+        uTextures.intensity_map = this.textures.intensityMap
+        uTextures.distance_map = this.textures.distanceMap
+        uTextures.color_maps = this.textures.colorMaps   
     }
 
     setMesh()

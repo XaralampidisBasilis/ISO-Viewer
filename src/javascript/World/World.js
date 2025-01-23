@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import Experience from '../Experience'
-// import ISOViewer from '../Viewers/ISOViewer/ISOViewer'
+import ISOViewer from './ISOViewer/ISOViewer'
 import EventEmitter from '../Utils/EventEmitter'
 
 export default class World extends EventEmitter
@@ -25,6 +25,7 @@ export default class World extends EventEmitter
             //     this.trigger('ready')
             // })
 
+            this.viewer = new ISOViewer()
             this.trigger('ready')
 
         })

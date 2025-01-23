@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { colormapLocations } from '../../../../static/textures/colormaps/colormaps.js'
-import vertexShader from '../../../shaders/viewers/iso_viewer/vertex.glsl'
-import fragmentShader from '../../../shaders/viewers/iso_viewer/fragment.glsl'
+import vertexShader from '../../../shaders/iso_viewer/vertex.glsl'
+import fragmentShader from '../../../shaders/iso_viewer/fragment.glsl'
 
 export default function()
 {
@@ -26,9 +26,8 @@ export default function()
             inv_size              : new THREE.Vector3(),
             min_position          : new THREE.Vector3(),
             max_position          : new THREE.Vector3(),
-            min_gradient          : new THREE.Vector3(),
-            max_gradient          : new THREE.Vector3(),
-            max_gradient_length   : 0.0,
+            min_intensity         : 0.0,
+            max_intensity         : 0.0,
         }),
 
         u_distmap : new THREE.Uniform
