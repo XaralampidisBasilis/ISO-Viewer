@@ -22,49 +22,47 @@ export default class ISOViewer extends EventEmitter
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
         this.processor = new ISOProcessor(this.resources.items.volumeNifti)
-        this.process().then(() => 
+        this.computeMaps().then(() => 
         {
-            // this.setParameters()
-            // this.setTextures()
-            // this.setGeometry()
-            // this.setMaterial()
-            // this.setMesh()
-            // this.trigger('ready')
+            this.setParameters()
+            this.setTextures()
+            this.setGeometry()
+            this.setMaterial()
+            this.setMesh()
+            this.trigger('ready')
         })
     }
     
-    async process()
+    async computeMaps()
     {
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistmap = this.material.uniforms.u_distmap.value
 
         await tf.ready()
-        await this.processor.generateIntensityMap()
-        await this.processor.normalizeIntensityMap()
-        await this.processor.generateOccupancyMap(uRendering.threshold_value, uDistmap.sub_division)
-        // await this.processor.generateDistanceMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
-        // await this.processor.generateBoundingBox(uRendering.threshold_value)
+        await this.processor.computeIntensityMap()
+        await this.processor.computeOccupancyMap(uRendering.threshold_value, uDistmap.sub_division)
+        this.processor.computes.intensityMap.tensor.dispose()
+
+        await this.processor.computeDistanceMap(uDistmap.max_iterations)
+        await this.processor.computeBoundingBox()
+        this.processor.computes.occupancyMap.tensor.dispose()
     }
 
-    async updateBoundingBox()
+    async updateUniforms()
     {
-        const uRendering = this.material.uniforms.u_rendering.value
-        const uVolume = this.material.uniforms.u_volume.value
-        await this.processor.generateBoundingBox(uRendering.threshold_value)
-        
-        const pBoundingBox = this.processor.boundingBox.parameters 
-        uVolume.min_position.copy(pBoundingBox.minPosition)
-        uVolume.max_position.copy(pBoundingBox.maxPosition)     
-    }   
+        await this.computeMaps()
 
-    async updateDistanceMap()
-    {
-        const uRendering = this.material.uniforms.u_rendering.value
+        const uVolume = this.material.uniforms.u_volume.value
         const uDistmap = this.material.uniforms.u_distmap.value
         const uTextures = this.material.uniforms.u_textures.value
-        await this.processor.generateDistanceMap(uRendering.threshold_value, uDistmap.sub_division, uDistmap.max_iterations)
-        
-        const pDistanceMap =  this.processor.isosurfaceDistanceDualMap.parameters
+        const pDistanceMap =  this.processor.computes.distanceMap.parameters
+        const pBoundingBox = this.processor.computes.boundingBox.parameters 
+
+        uTextures.distance_map.dispose()
+        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        uTextures.distance_map.needsUpdate = true
+        this.processor.computes.distanceMap.tensor.dispose()
+
         uDistmap.max_distance = pDistanceMap.maxDistance
         uDistmap.sub_division = pDistanceMap.subDivision
         uDistmap.dimensions.copy(pDistanceMap.dimensions)
@@ -74,16 +72,8 @@ export default class ISOViewer extends EventEmitter
         uDistmap.inv_dimensions.copy(pDistanceMap.invDimensions)
         uDistmap.inv_spacing.copy(pDistanceMap.invSpacing)
         uDistmap.inv_size.copy(pDistanceMap.invSize)
-
-        uTextures.distance_map.dispose()
-        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        uTextures.distance_map.needsUpdate = true
-        this.processor.distanceMap.tensor.dispose()
-
-        console.log(pDistanceMap)
-        console.log(uDistmap)
-
-        this.logMemory('updateDistmap')
+        uVolume.min_position.copy(pBoundingBox.minPosition)
+        uVolume.max_position.copy(pBoundingBox.maxPosition) 
     }
 
     setParameters()
@@ -95,9 +85,14 @@ export default class ISOViewer extends EventEmitter
     setTextures()
     {
         this.textures = {}
-        this.textures.intensityMap = this.processor.generateTexture('intensityMap', THREE.RedFormat, THREE.FloatType)
-        this.textures.distanceMap = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        this.processor.distanceMap.tensor.dispose()
+    
+        this.textures.intensityMap = new THREE.Data3DTexture(this.processor.volume.data, ...this.processor.volume.parameters.dimensions)
+        this.textures.intensityMap.format = THREE.RedFormat
+        this.textures.intensityMap.type = THREE.FloatType
+        this.textures.intensityMap.minFilter = THREE.LinearFilter
+        this.textures.intensityMap.magFilter = THREE.LinearFilter
+        this.textures.intensityMap.computeMipmaps = false
+        this.textures.intensityMap.needsUpdate = true
 
         this.textures.colorMaps = this.resources.items.colormaps                      
         this.textures.colorMaps.colorSpace = THREE.SRGBColorSpace
@@ -105,6 +100,9 @@ export default class ISOViewer extends EventEmitter
         this.textures.colorMaps.magFilter = THREE.LinearFilter         
         this.textures.colorMaps.generateMipmaps = false
         this.textures.colorMaps.needsUpdate = true 
+
+        this.textures.distanceMap = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        this.processor.computes.distanceMap.tensor.dispose()
     }
   
     setGeometry()
@@ -112,7 +110,6 @@ export default class ISOViewer extends EventEmitter
         const size = this.parameters.volume.size
         const center = this.parameters.volume.size.clone().divideScalar(2)
         this.geometry = new THREE.BoxGeometry(...size)
-        
         // In order to align model vertex coordinates with texture coordinates
         // we translate all with the center, so now they start at zero
         this.geometry.translate(...center) 
@@ -122,9 +119,8 @@ export default class ISOViewer extends EventEmitter
     {        
         // parameters
         const pVolume = this.processor.volume.parameters
-        const pIntensityMap = this.processor.intensityMap.parameters
-        const pDistanceMap =  this.processor.distanceMap.parameters
-        const pBoundingBox = this.processor.boundingBox.parameters
+        const pDistanceMap =  this.processor.computes.distanceMap.parameters
+        const pBoundingBox = this.processor.computes.boundingBox.parameters
 
         // uniforms
         const uVolume = this.material.uniforms.u_volume.value
@@ -137,8 +133,8 @@ export default class ISOViewer extends EventEmitter
         uVolume.size.copy(pVolume.size)
         uVolume.min_position.copy(pBoundingBox.minPosition)
         uVolume.max_position.copy(pBoundingBox.maxPosition)
-        uVolume.min_intensity = pIntensityMap.minValue
-        uVolume.max_intensity = pIntensityMap.maxValue
+        uVolume.min_intensity = pVolume.minIntensity
+        uVolume.max_intensity = pVolume.maxIntensity
         uVolume.size_length = pVolume.sizeLength
         uVolume.spacing_length = pVolume.spacingLength
         uVolume.inv_dimensions.copy(pVolume.invDimensions)
@@ -166,7 +162,7 @@ export default class ISOViewer extends EventEmitter
     {   
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
-        this.scene.add(this.mesh)
+        // this.scene.add(this.mesh)
     }
 
     destroy() 
@@ -174,7 +170,9 @@ export default class ISOViewer extends EventEmitter
         Object.keys(this.textures).forEach(key => 
         {
             if (this.textures[key]) 
+            {
                 this.textures[key].dispose()
+            }
         })
     
         if (this.mesh) 
@@ -188,7 +186,10 @@ export default class ISOViewer extends EventEmitter
         //     this.gui.destroy()
 
         if (this.processor)
+        {
             this.processor.destroy()
+            this.processor = null
+        }
 
         // Clean up references
         this.scene = null

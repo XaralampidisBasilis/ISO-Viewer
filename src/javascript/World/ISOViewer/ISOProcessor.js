@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import * as TensorUtils from '../../Computes/TensorUtils'
 
 const timeit = (name, callback) => { console.time(name), callback(), console.timeEnd(name) }
 
@@ -8,368 +7,258 @@ export default class ISOProcessor
 {
     constructor(volume)
     {
-        this.volume = volume
-        this.setObjects()
-        this.setParameters()
+        this.setComputes()
+        this.setVolume(volume)
     }
 
-    setObjects()
+    setComputes()
     {
-        this.intensityMap = { parameters: null, tensor: null, texture: null}
-        this.occupancyMap = { parameters: null, tensor: null, texture: null}
-        this.distanceMap  = { parameters: null, tensor: null, texture: null}
-        this.boundingBox  = { parameters: null, tensor: null, texture: null}
-    }
-
-    setParameters()
-    {
-        this.volume.parameters = 
+        this.computes = 
         {
-            dimensions       : new THREE.Vector3().fromArray(this.volume.dimensions),
-            spacing          : new THREE.Vector3().fromArray(this.volume.spacing),
-            size             : new THREE.Vector3().fromArray(this.volume.size),
-            spacingLength    : new THREE.Vector3().fromArray(this.volume.spacing).length(),
-            sizeLength       : new THREE.Vector3().fromArray(this.volume.size).length(),
-            invDimensions    : new THREE.Vector3().fromArray(this.volume.dimensions.map(x => 1/x)),
-            invSpacing       : new THREE.Vector3().fromArray(this.volume.spacing.map(x => 1/x)),
-            invSize          : new THREE.Vector3().fromArray(this.volume.size.map(x => 1/x)),
-            numVoxels        : this.volume.dimensions.reduce((voxels, dim) => voxels * dim, 1),
-            shape            : this.volume.dimensions.toReversed().concat(1),
+            intensityMap : { parameters: null, tensor: null, texture: null},
+            occupancyMap : { parameters: null, tensor: null, texture: null},
+            distanceMap  : { parameters: null, tensor: null, texture: null},
+            boundingBox  : { parameters: null, tensor: null, texture: null},
         }
+
     }
 
-    async generateIntensityMap()
+    setVolume(volume)
     {
-        timeit('generateIntensityMap', () =>
+        timeit('setVolume', () =>
         {
-            [this.intensityMap.tensor, this.intensityMap.parameters] = tf.tidy(() =>
+            this.volume = volume
+            this.volume.data = new Float32Array(volume.data)
+    
+            const data = this.volume.data
+            const min = this.volume.min
+            const scale = 1 / (this.volume.max - this.volume.min)
+            for (let i = 0; i < data.length; i++) 
             {
-                const data = new Float32Array(this.volume.data)
-                const tensor  = tf.tensor4d(data, this.volume.parameters.shape,'float32')
+                data[i] = (data[i] - min) * scale;
+            }
+    
+            this.volume.parameters = 
+            {
+                dimensions       : new THREE.Vector3().fromArray(this.volume.dimensions),
+                spacing          : new THREE.Vector3().fromArray(this.volume.spacing),
+                size             : new THREE.Vector3().fromArray(this.volume.size),
+                spacingLength    : new THREE.Vector3().fromArray(this.volume.spacing).length(),
+                sizeLength       : new THREE.Vector3().fromArray(this.volume.size).length(),
+                invDimensions    : new THREE.Vector3().fromArray(this.volume.dimensions.map(x => 1/x)),
+                invSpacing       : new THREE.Vector3().fromArray(this.volume.spacing.map(x => 1/x)),
+                invSize          : new THREE.Vector3().fromArray(this.volume.size.map(x => 1/x)),
+                numVoxels        : this.volume.dimensions.reduce((voxels, dim) => voxels * dim, 1),
+                shape            : this.volume.dimensions.toReversed().concat(1),
+                minIntensity     : this.volume.min,
+                maxIntensity     : this.volume.max,
+            }
+        })
+    }
+
+    destroy() 
+    {
+        for (const key of Object.keys(this.computes)) 
+        {
+            const computes = this.computes[key]
+            if (!computes) continue
+
+            if (computes.tensor instanceof tf.Tensor) 
+            {
+                computes.tensor.dispose()
+                computes.tensor = null
+            }
+
+            // If it has a Data3DTexture, dispose it
+            if (computes.texture instanceof THREE.Data3DTexture) 
+            {
+                computes.texture.dispose()
+                computes.texture = null
+            }
+
+            computes.parameters = null
+            this.computes[key] = null
+        }
+
+        this.computes = null
+        this.volume.data = null
+        this.volume.parameters = null
+        this.volume = null
+
+        console.log('ISOProcessor destroyed.')
+    }
+      
+
+    //  Computes
+
+    async computeIntensityMap()
+    {
+        if (this.computes.intensityMap.tensor instanceof tf.Tensor) 
+        {
+            this.computes.intensityMap.tensor.dispose()
+        }
+
+        timeit('computeIntensityMap', () =>
+        {
+            [this.computes.intensityMap.tensor, this.computes.intensityMap.parameters] = tf.tidy(() =>
+            {
+                const intensityMap = tf.tensor4d(this.volume.data, this.volume.parameters.shape,'float32')                
                 const parameters = {...this.volume.parameters}
 
-                return [tensor, parameters]
+                return [intensityMap, parameters]
             })            
         })
 
-        console.log('intensityMap', this.intensityMap.parameters, this.intensityMap.tensor.dataSync())
+        console.log(this.computes.intensityMap.parameters, this.computes.intensityMap.tensor.dataSync())
     }
 
-    async generateOccupancyMap(threshold = 0, subDivision = 4)
+    async computeOccupancyMap(threshold, subDivision)
     {
-        if (!(this.intensityMap.tensor instanceof tf.Tensor)) 
+        if (!(this.computes.intensityMap.tensor instanceof tf.Tensor)) 
         {
-            throw new Error(`generateOccupancyMap: intensityMap is not generated`)
+            throw new Error(`computeOccupancyMap: intensityMap is not computed`)
         }
 
-        timeit('generateOccupancyMap', () =>
+        if (this.computes.occupancyMap.tensor instanceof tf.Tensor) 
         {
-            [this.occupancyMap.tensor, this.occupancyMap.parameters] = tf.tidy(() => 
-            {
-                const tensor = this.computeOccupancyMap(this.intensityMap.tensor, threshold, subDivision)
-                const parameters = 
-                {
-                    shape : tensor.shape,
-                    threshold : threshold,
-                    subDivision : subDivision,
-                    invSubDivision : 1/subDivision,
-                    dimensions : new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed()),
-                    spacing : new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(subDivision),
-                    size : new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing),
-                    numBlocks : parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1),
-                    invDimensions : new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x)),
-                    invSpacing : new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x)),
-                    invSize : new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x)),
-                }
+            this.computes.occupancyMap.tensor.dispose()
+        }
 
-                return [tensor, parameters]
+        timeit('computeOccupancyMap', () =>
+        {
+            [this.computes.occupancyMap.tensor, this.computes.occupancyMap.parameters] = tf.tidy(() => 
+            {
+                const occupancyMap = this._computeOccupancyMap(this.computes.intensityMap.tensor, threshold, subDivision)
+                const parameters = {}
+                parameters.shape = occupancyMap.shape
+                parameters.threshold = threshold
+                parameters.subDivision = subDivision
+                parameters.invSubDivision = 1/subDivision
+                parameters.dimensions = new THREE.Vector3().fromArray(occupancyMap.shape.slice(0, 3).toReversed())
+                parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(subDivision)
+                parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
+                parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
+                parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
+                parameters.invSpacing = new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x))
+                parameters.invSize = new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x))
+
+                return [occupancyMap, parameters]
             })
         })
 
-        console.log('occupancyMap', this.occupancyMap.parameters, this.occupancyMap.tensor.dataSync())
+        console.log(this.computes.occupancyMap.parameters, this.computes.occupancyMap.tensor.dataSync())
     }
 
-    async generateDistanceMap(maxIters = 255)
+    async computeDistanceMap(maxIters)
     {
-        if (!(this.occupancyMap.tensor instanceof tf.Tensor)) 
+        if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
         {
-            throw new Error(`generateDistanceMap: occupancyMap is not generated`)
+            throw new Error(`computeDistanceMap: occupancyMap is not computed`)
+        }
+
+        if (this.computes.distanceMap.tensor instanceof tf.Tensor) 
+        {
+            this.computes.distanceMap.tensor.dispose()
         }
        
-        timeit('generateDistanceMap', () =>
+        timeit('computeDistanceMap', () =>
         {
-            [this.distanceMap.tensor, this.distanceMap.parameters] = tf.tidy(() =>
+            [this.computes.distanceMap.tensor, this.computes.distanceMap.parameters] = tf.tidy(() =>
             {
-                const tensor = TensorUtils.isosurfaceDistanceDualMap(this.intensityMap.tensor, threshold, subDivision, maxIters)
-                const parameters = 
-                {
-                    threshold : threshold,
-                    subDivision : subDivision,
-                    shape : tensor.shape,
-                    maxDistance : tensor.max().arraySync(),
-                    dimensions : new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed()),
-                    spacing : new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(parameters.subDivision),
-                    size : new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing),
-                    numBlocks : parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1),
-                    invSubDivision : 1/subDivision,
-                    invDimensions : new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x)),
-                    invSpacing : new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x)),
-                    invSize : new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x)),
-                }
+                const distanceMap = this._computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
+                const parameters = {...this.computes.occupancyMap.parameters}
+                parameters.maxDistance = distanceMap.max().arraySync()
                 
-                return [tensor, parameters]
+                return [distanceMap, parameters]
             })
         })
 
-        console.log('distanceMap', this.distanceMap.parameters, this.distanceMap.tensor.dataSync())
+        console.log(this.computes.distanceMap.parameters, this.computes.distanceMap.tensor.dataSync())
     }
 
-    async generateBoundingBox()
+    async computeBoundingBox()
     {
-        if (!(this.occupancyMap.tensor instanceof tf.Tensor)) 
+        if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
         {
-            throw new Error(`generateBoundingBox: occupancyMap is not generated`)
+            throw new Error(`computeBoundingBox: occupancyMap is not computed`)
         }
 
-        timeit('generateBoundingBox', () =>
+        timeit('computeBoundingBox', () =>
         {
-            this.boundingBox.parameters = tf.tidy(() =>
+            this.computes.boundingBox.parameters = tf.tidy(() =>
             {
-                const boundingBox = TensorUtils.isosurfaceBoundingBoxDualMap(this.intensityMap.tensor, threshold)
+                const boundingBox = this._computeBoundingBox(this.computes.occupancyMap.tensor)
                 const parameters = {}
-                parameters.threshold = threshold
-                parameters.minCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
-                parameters.maxCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
-                parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).subScalar(0.5).multiply(this.volume.parameters.spacing)
-                parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(0.5).multiply(this.volume.parameters.spacing)
-                
+                parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).subScalar(0.5).multiply(this.computes.occupancyMap.parameters.spacing)
+                parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(0.5).multiply(this.computes.occupancyMap.parameters.spacing)
+                parameters.minPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
+                parameters.maxPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
+                parameters.minCoords = new THREE.Vector3().copy(parameters.minPosition).divide(this.volume.parameters.spacing).floor()
+                parameters.maxCoords = new THREE.Vector3().copy(parameters.maxPosition).divide(this.volume.parameters.spacing).floor()
+
                 return parameters
             })          
         })
 
-        console.log('boundingBox', this.boundingBox.parameters)
-    }
-
-    async normalizeIntensityMap()
-    {
-        if (!(this.intensityMap.tensor instanceof tf.Tensor)) 
-        {
-            throw new Error(`normalizeIntensityMap: intensityMap is not generated`)
-        }
-
-        timeit('normalizeIntensityMap', () =>
-        {
-            [this.intensityMap.tensor, this.intensityMap.parameters] = tf.tidy(() =>
-            {
-                const [tensor, minValue, maxValue] = TensorUtils.normalize3d(this.intensityMap.tensor) 
-                this.intensityMap.tensor.dispose()
-
-                const parameters =  {...this.intensityMap.parameters}
-                parameters.minValue = minValue[0]
-                parameters.maxValue = maxValue[0]  
-
-                return [tensor, parameters]
-            })
-        })
-
-        console.log('normalizedIntensityMap', this.intensityMap.parameters, this.intensityMap.tensor.dataSync())
-    }
-
-    async downscaleIntensityMap(scale = 2)
-    {
-        if (!(this.intensityMap.tensor instanceof tf.Tensor)) 
-        {
-            throw new Error(`downscaleIntensityMap: intensityMap is not generated`)
-        }
-
-        timeit('downscaleIntensityMap', () =>
-        {
-            [this.intensityMap.tensor, this.intensityMap.parameters] = tf.tidy(() =>
-            {
-                const tensor = TensorUtils.downscale3d(this.intensityMap.tensor, scale)
-                this.intensityMap.tensor.dispose()
-
-                const parameters =  {...this.intensityMap.parameters}
-                parameters.downScale = scale
-                parameters.dimensions = new THREE.Vector3().fromArray(this.intensityMap.tensor.shape.slice(0, 3).toReversed())
-                parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(scale)
-                parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
-                parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
-                parameters.shape = this.intensityMap.tensor.shape
-
-                return [tensor, parameters]
-            })
-        })
-
-        console.log('downscaledIntensityMap', this.intensityMap.parameters, this.intensityMap.tensor.dataSync())
-    }
-
-    async quantizeIntensityMap()
-    {
-        if (!(this.intensityMap.tensor instanceof tf.Tensor)) 
-        {
-            throw new Error(`quantizeIntensityMap: intensityMap is not generated`)
-        }
-
-        timeit('quantizeIntensityMap', () =>
-        {
-            [this.intensityMap.tensor, this.intensityMap.parameters] = tf.tidy(() =>
-            {
-                const [tensor, minValue, maxValue] = TensorUtils.quantize3d(this.intensityMap.tensor) 
-                this.intensityMap.tensor.dispose()
-
-                const parameters =  {...this.intensityMap.parameters}
-                parameters.minValue = minValue
-                parameters.maxValue = maxValue  
-
-                return [tensor, parameters]
-            })            
-        })
-
-        console.log('quantizedIntensityMap', this.intensityMap.parameters, this.intensityMap.tensor.dataSync())
+        console.log(this.computes.boundingBox.parameters)
     }
 
     generateTexture(key, format, type) 
     {
-        if (!(this[key].tensor instanceof tf.Tensor)) 
+        if (!(this.computes[key].tensor instanceof tf.Tensor)) 
         {
-            throw new Error(`${key} is not generated`)
+            throw new Error(`${key} is not computed`)
         }
 
-        if (this[key].texture instanceof THREE.Data3DTexture) 
+        if (this.computes[key].texture instanceof THREE.Data3DTexture) 
         {
-            this[key].texture.dispose()
+            this.computes[key].texture.dispose()
         }
 
         timeit(`generateTexture(${key})`, () =>
         {
-            let dimensions = this[key].parameters.dimensions.toArray()
+            let dimensions = this.computes[key].parameters.dimensions.toArray()
             let array
 
             switch (type) 
             {
                 case THREE.FloatType:
-                    array = new Float32Array(this[key].tensor.dataSync())
+                    array = new Float32Array(this.computes[key].tensor.dataSync())
                     break
                 case THREE.UnsignedByteType:
-                    array = new Uint8Array(this[key].tensor.dataSync())
+                    array = new Uint8Array(this.computes[key].tensor.dataSync())
                     break
                 case THREE.UnsignedShortType:
-                    array = new Uint16Array(this[key].tensor.dataSync())
+                    array = new Uint16Array(this.computes[key].tensor.dataSync())
                     break
                 case THREE.ByteType:
-                    array = new Int8Array(this[key].tensor.dataSync())
+                    array = new Int8Array(this.computes[key].tensor.dataSync())
                     break
                 case THREE.ShortType:
-                    array = new Int16Array(this[key].tensor.dataSync())
+                    array = new Int16Array(this.computes[key].tensor.dataSync())
                     break
                 case THREE.IntType:
-                    array = new Int32Array(this[key].tensor.dataSync())
+                    array = new Int32Array(this.computes[key].tensor.dataSync())
                     break
                 default:
                     throw new Error(`Unsupported type: ${type}`)
             }
 
-            this[key].texture = new THREE.Data3DTexture(array, ...dimensions)
-            this[key].texture.format = format
-            this[key].texture.type = type
-            this[key].texture.minFilter = THREE.LinearFilter
-            this[key].texture.magFilter = THREE.LinearFilter
-            this[key].texture.generateMipmaps = false
-            this[key].texture.needsUpdate = true
+            this.computes[key].texture = new THREE.Data3DTexture(array, ...dimensions)
+            this.computes[key].texture.format = format
+            this.computes[key].texture.type = type
+            this.computes[key].texture.minFilter = THREE.LinearFilter
+            this.computes[key].texture.magFilter = THREE.LinearFilter
+            this.computes[key].texture.computeMipmaps = false
+            this.computes[key].texture.needsUpdate = true
         })
 
-        return this[key].texture
+        return this.computes[key].texture
     }
     
-    destroy() 
-    {
-        Object.keys(this).forEach(key => 
-        {
-            // console.log(this[key])
-
-            if (this[key]?.tensor instanceof tf.Tensor) 
-            {
-                this[key].tensor.dispose()
-                this[key].tensor = null
-            }
-
-            if (this[key]?.texture instanceof THREE.Data3DTexture) 
-            {
-                this[key].texture.dispose()
-                this[key].texture = null
-            }
-        
-            if (this[key]?.parameters) 
-            {
-                delete this[key].parameters
-            }
-
-            if (this[key])
-            {
-                this[key] = null
-            }
-        })
-
-        this.volume = null;
-    
-        console.log("ISOProcessor destroyed.");
-    }
-
     // Helpers
-
-    boundingInterval(occupancy, axis) 
-    {
-        return tf.tidy(() => 
-        {
-            // Check input is boolean
-            if (occupancy.dtype !== "bool") {
-                throw new Error('Input tensor must be of type bool');
-            }
-            
-            // Scalar tensors
-            const scalarOne = tf.scalar(1, 'int32')
     
-            // Create a list of all axes and remove the target axis
-            const axes = [...Array(occupancy.rank).keys()].filter((x) => x !== axis)
-            
-            // Compute the collapsed view along the specified axis
-            const collapsed = occupancy.any(axes) 
-            
-            // Find the first non-zero index (minInd)
-            const minIndTemp = collapsed.argMax(0) // First True from the left
-            
-            // Find the last non-zero index (maxInd)
-            const reversed = collapsed.reverse()
-            const maxIndTemp = tf.sub(occupancy.shape[axis], reversed.argMax()).sub(scalarOne) // First True from the right
-            
-            // Check if there are any true values in the collapsed tensor
-            const isNonSingular = tf.any(collapsed)
-    
-            // If collapsed is singular return zero indices
-            const minInd = minIndTemp.mul(isNonSingular) // min indices are included 
-            const maxInd = maxIndTemp.mul(isNonSingular) // max indices are included 
-    
-            // Return the bounds
-            return [minInd, maxInd] 
-        })
-    }
-     
-    minPool3d(tensor4d, filterSize, strides, pad)
-    {
-        return tf.tidy(() =>
-        {
-            const scalarNegativeOne = tf.scalar(-1, 'float32')
-            const negative = tensor4d.mul(scalarNegativeOne)
-            const negMaxPool = tf.maxPool3d(negative, filterSize, strides, pad)
-            negative.dispose()
-            const tensorMinPool = negMaxPool.mul(scalarNegativeOne)
-            negMaxPool.dispose()
-            return tensorMinPool
-        })
-    } 
-
-    computeOccupancyMap(intensityMap, threshold, subDivision) 
+    _computeOccupancyMap(intensityMap, threshold, subDivision) 
     {
         return tf.tidy(() => 
         {
@@ -381,7 +270,7 @@ export default class ISOProcessor
             const tensorPadded = tf.mirrorPad(intensityMap, [[1, 1], [1, 1], [1, 1], [0, 0]], 'symmetric')
     
             // Min pooling for lower bound detection
-            const minima = this.minPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
+            const minima = this._minPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
             const lesser = tf.lessEqual(minima, scalarThreshold)
             minima.dispose()
     
@@ -423,7 +312,7 @@ export default class ISOProcessor
         })
     }
 
-    computeDistanceMap(occupancyMap, maxIters = 255) 
+    _computeDistanceMap(occupancyMap, maxIters) 
     {
         return tf.tidy(() => 
         {
@@ -483,13 +372,15 @@ export default class ISOProcessor
         })
     }
 
-    computeBoundingBox(occupancyMap) 
+    _computeBoundingBox(occupancyMap) 
     {
         return tf.tidy(() => 
         {
+            const occupancyMapBool = occupancyMap.cast('bool')
+
             // Compute the bounds for each axis dynamically
-            const rank = occupancyMap.rank
-            const boundingIntervals = Array.from({ length: rank }, (_, axis) => boundingInterval(occupancyMap, axis))
+            const rank = occupancyMapBool.rank
+            const boundingIntervals = Array.from({ length: rank }, (_, axis) => this._argBounds(occupancyMapBool, axis))
     
             // Separate min and max bounds
             const minCoords = tf.stack(boundingIntervals.map(interval => interval[0]), 0)
@@ -502,4 +393,80 @@ export default class ISOProcessor
             return { minCoords: minCoordsArray, maxCoords: maxCoordsArray}
         })
     }
+
+    _minPool3d(tensor4d, filterSize, strides, pad)
+    {
+        return tf.tidy(() =>
+        {
+            const scalarNegativeOne = tf.scalar(-1, 'float32')
+            const negative = tensor4d.mul(scalarNegativeOne)
+            const negMaxPool = tf.maxPool3d(negative, filterSize, strides, pad)
+            negative.dispose()
+            const tensorMinPool = negMaxPool.mul(scalarNegativeOne)
+            negMaxPool.dispose()
+            return tensorMinPool
+        })
+    } 
+
+    _argBounds(occupancyMapBool, axis) 
+    {
+        return tf.tidy(() => 
+        {
+            // Check input is boolean
+            if (occupancyMapBool.dtype !== "bool") {
+                throw new Error('Input tensor must be of type bool');
+            }
+            
+            // Scalar tensors
+            const scalarOne = tf.scalar(1, 'int32')
+    
+            // Create a list of all axes and remove the target axis
+            const axes = [...Array(occupancyMapBool.rank).keys()].filter((x) => x !== axis)
+            
+            // Compute the collapsed view along the specified axis
+            const collapsed = occupancyMapBool.any(axes) 
+            
+            // Find the first non-zero index (minInd)
+            const minIndTemp = collapsed.argMax(0) // First True from the left
+            
+            // Find the last non-zero index (maxInd)
+            const reversed = collapsed.reverse()
+            const maxIndTemp = tf.sub(occupancyMapBool.shape[axis], reversed.argMax()).sub(scalarOne) // First True from the right
+            
+            // Check if there are any true values in the collapsed tensor
+            const isNonSingular = tf.any(collapsed)
+    
+            // If collapsed is singular return zero indices
+            const minInd = minIndTemp.mul(isNonSingular) // min indices are included 
+            const maxInd = maxIndTemp.mul(isNonSingular) // max indices are included 
+    
+            // Return the bounds
+            return [minInd, maxInd] 
+        })
+    }
+
+    _quantize(tensor4d) 
+    {
+        return tf.tidy(() => 
+        {
+            // Tensor must be normalized in [0, 1]
+            // Scale to the specified quantization levels
+            const scaled = tensor4d.mul(tf.scalar(255))
+            tensor4d.dispose()
+    
+            // Clip values to the range [0, levels]
+            const clipped = scaled.clipByValue(0, 255)
+            scaled.dispose()
+    
+            // Round and cast to integer type
+            const rounded = clipped.round()
+            clipped.dispose()
+            const quantized = rounded.cast('int32')
+            rounded.dispose()
+    
+            // Return the quantized tensor
+            return quantized
+        })
+    }
+
 }
