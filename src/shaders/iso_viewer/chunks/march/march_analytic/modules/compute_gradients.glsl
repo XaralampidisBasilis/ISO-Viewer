@@ -11,21 +11,26 @@
  */
 
 // Sample neighbors
-float values[8];
+float intensities[8];
 for (int i = 0; i < 8; i++)
 {
-    vec3 texture_coords = voxel.texture_coords + u_volume.inv_dimensions * center_offsets[i];
-    values[i] = texture(u_textures.taylor_map, texture_coords).r;
-    values[i] /= exp2(sum(outside_open(0.0, 1.0, texture_coords))); // correct edge cases due to trilinear interpolation and clamp to edge wrapping   
+    vec3 uvw_offset = trace.uvw + u_volume.inv_dimensions * center_offsets[i];
+    intensities[i] = texture(u_textures.intensity_map, uvw_offset).r;
+    intensities[i] /= exp2(sum(outside_open(0.0, 1.0, uvw_offset))); // correct edge cases due to trilinear interpolation and clamp to edge wrapping   
 }
 
-// update voxel
-voxel.gradient = vec3(
-    values[1] + values[5] + values[6] + values[7] - values[0] - values[3] - values[2] - values[4],
-    values[2] + values[4] + values[6] + values[7] - values[0] - values[3] - values[1] - values[5],
-    values[3] + values[4] + values[5] + values[7] - values[0] - values[2] - values[1] - values[6]
+// Precompute summed groups of intensities for better clarity
+vec3 positive_sums = vec3(
+    intensities[1] + intensities[5] + intensities[6] + intensities[7], // x-axis
+    intensities[2] + intensities[4] + intensities[6] + intensities[7], // y-axis
+    intensities[3] + intensities[4] + intensities[5] + intensities[7]  // z-axis
 );
-voxel.gradient *= u_volume.inv_spacing * 0.25;
 
-// update trace
-trace.derivative = dot(voxel.gradient, ray.step_direction);
+vec3 negative_sums = vec3(
+    intensities[0] + intensities[3] + intensities[2] + intensities[4], // x-axis
+    intensities[0] + intensities[3] + intensities[1] + intensities[5], // y-axis
+    intensities[0] + intensities[2] + intensities[1] + intensities[6]  // z-axis
+);
+
+// Compute gradient
+trace.gradient = (positive_sums - negative_sums) * (u_volume.inv_spacing * 0.25);

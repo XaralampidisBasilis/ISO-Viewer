@@ -10,7 +10,7 @@ for (int count = 0; count < MAX_TRACE_STEP_COUNT; count++, trace.step_count++)
         break;
     }
 
-    #include "./modules/update_march"
+    #include "./modules/update_trace"
     
     if (trace.terminated || trace.exhausted) 
     {

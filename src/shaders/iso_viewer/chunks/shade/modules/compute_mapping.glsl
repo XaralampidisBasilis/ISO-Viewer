@@ -11,13 +11,13 @@
  */
 
 // Map voxel value
-frag.mapped_value = map(u_colormap.thresholds.x, u_colormap.thresholds.y, voxel.value);
+frag.mapped_intensity = map(u_colormap.thresholds.x, u_colormap.thresholds.y, trace.intensity);
 
 // Posterize to discrete levels
-frag.mapped_value = posterize(frag.mapped_value, float(u_colormap.levels));
+frag.mapped_intensity = posterize(frag.mapped_intensity, float(u_colormap.levels));
 
 // interpolate the u-coordinate within the colormap texture columns
-float colormap_coords_x = mix(u_colormap.start_coords.x, u_colormap.end_coords.x, frag.mapped_value);
+float colormap_coords_x = mix(u_colormap.start_coords.x, u_colormap.end_coords.x, frag.mapped_intensity);
 float colormap_coords_y = u_colormap.start_coords.y;
 
 // Create the UV coordinates for the texture lookup

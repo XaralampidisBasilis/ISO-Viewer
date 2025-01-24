@@ -9,9 +9,10 @@ export default function()
     {
         u_textures: new THREE.Uniform
         ({
-            taylor_map: null,
+            intensity_map : null,
+            occupancy_map : null,
             distance_map  : null,
-            color_maps: null,
+            color_maps    : null,
         }),
 
         u_volume : new THREE.Uniform
@@ -47,8 +48,6 @@ export default function()
         u_rendering: new THREE.Uniform
         ({
             threshold_value  : 0.53,
-            min_step_scaling : 0.1,
-            max_step_scaling : 2.0,
             max_step_count   : 1000,
             max_skip_count   : 200,
         }),

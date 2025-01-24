@@ -24,5 +24,5 @@ void main()
     #include "./chunks/raycast/compute_raycast"
     #include "./chunks/march/compute_march"
     #include "./chunks/shade/compute_shade"
-    #include "./chunks/debug/compute_debug"
+    // #include "./chunks/debug/compute_debug"
 }

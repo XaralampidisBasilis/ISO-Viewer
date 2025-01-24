@@ -1,29 +1,32 @@
 #ifndef STRUCT_CELL
 #define STRUCT_CELL
 
+
 struct Cell 
 {
     ivec3 coords;
-    ivec3 step_coords;
+    ivec3 coords_step;
     vec3  min_position;
     vec3  max_position;
-    vec4  coeffs;    
-    vec4  values;    
-    vec4  distances;
-    vec2  bounds;
+    float entry_distance;
+    float exit_distance;
+    vec4  sample_intensities;    
+    vec4  sample_distances;
+    vec4  intensity_coeffs;    
 };
 
 Cell set_cell()
 {
     Cell cell;
-    cell.coords       = ivec3(0);
-    cell.step_coords  = ivec3(0);
-    cell.min_position = vec3(0.0);
-    cell.max_position = vec3(0.0);
-    cell.coeffs       = vec4(0.0);
-    cell.values       = vec4(0.0);
-    cell.distances    = vec4(0.0);
-    cell.bounds       = vec2(0.0);
+    cell.coords             = ivec3(0);
+    cell.coords_step        = ivec3(0);
+    cell.min_position       = vec3(0.0);
+    cell.max_position       = vec3(0.0);
+    cell.entry_distance     = 0.0;
+    cell.exit_distance      = 0.0;
+    cell.sample_intensities = vec4(0.0);
+    cell.sample_distances   = vec4(0.0);
+    cell.intensity_coeffs   = vec4(0.0);
     return cell;
 }
 

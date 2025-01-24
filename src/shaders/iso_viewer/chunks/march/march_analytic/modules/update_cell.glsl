@@ -1,25 +1,40 @@
 
-// compute cell coords from trace position
-cell.coords += cell.step_coords;
+// compute cell bounding box in model coordinates
 cell.min_position = (vec3(cell.coords) - 0.5) * u_volume.spacing;
 cell.max_position = (vec3(cell.coords) + 0.5) * u_volume.spacing;
 
-// compute position
-cell.bounds.x = cell.bounds.y;
-cell.bounds.y = intersect_box_max(cell.min_position, cell.max_position, camera.position, ray.step_direction, cell.step_coords);
+// compute cell intersection with ray and find entry and exit distances, and the next cell 
+cell.entry_distance = cell.bounds.y;
+cell.exit_distance = intersect_box_max
+(
+    cell.min_position, 
+    cell.max_position, 
+    camera.position, 
+    ray.step_direction, 
+    cell.coords_step
+);
+cell.coords += cell.coords_step;
 
-// compute distances
-cell.distances.x = cell.distances.w;
-cell.distances.yzw = mmix(cell.bounds.x, cell.bounds.y, sample_distances.yzw);
+// given the entry and exit compute the sampling distances inside the cell
+cell.sample_distances.x = cell.sample_distances.w;
+cell.sample_distances.yzw = mmix(cell.entry_distance, cell.exit_distance, sample_weights4.yzw);
 
-// compute values
-cell.values.x = cell.values.w;
-cell.values.y = texture(u_textures.taylor_map, camera.texture_position + ray.texture_direction * cell.distances.y).r;
-cell.values.z = texture(u_textures.taylor_map, camera.texture_position + ray.texture_direction * cell.distances.z).r;
-cell.values.w = texture(u_textures.taylor_map, camera.texture_position + ray.texture_direction * cell.distances.w).r;
+// compute the intensity samples inside the cell from the intensity map texture
+cell.sample_intensities.x = cell.sample_intensities.w;
+cell.sample_intensities.y = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.distances.y).r;
+cell.sample_intensities.z = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.distances.z).r;
+cell.sample_intensities.w = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.distances.w).r;
 
-// compute coeffs
-cell.coeffs = sample_matrix * cell.values;
+// from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
+cell.intensity_coeffs = vandermonde_matrix4 * cell.sample_intensities;
 
-// check intersection
-trace.intersected = is_cubic_solvable(cell.coeffs, u_rendering.threshold_value, 0.0, 1.0, cell.values.x, cell.values.w);
+// given the polynomial we can compute if we intersect the isosurface inside the cell
+trace.intersected = is_cubic_solvable
+(
+    cell.intensity_coeffs, 
+    u_rendering.iso_intensity, 
+    0.0, 
+    1.0, 
+    cell.sample_intensities.x, 
+    cell.sample_intensities.w
+);

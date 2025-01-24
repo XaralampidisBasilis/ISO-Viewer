@@ -14,9 +14,8 @@ struct Volume
     vec3  inv_size;            
     vec3  min_position;          
     vec3  max_position;          
-    vec3  min_gradient;          
-    vec3  max_gradient;          
-    float max_gradient_length;
+    vec3  min_intensity;          
+    vec3  max_intensity;          
 };
 
 uniform Volume u_volume;

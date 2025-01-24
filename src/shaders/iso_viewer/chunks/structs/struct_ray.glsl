@@ -9,8 +9,6 @@ struct Ray
     vec3  texture_direction;   
     float step_distance;        // fixed step distance for each ray 
     float rand_distance;        // random distance for dithering
-    float min_step_distance;    // minimum step distance for adaptive stepping
-    float max_step_distance;    // maximum step distance for adaptive stepping
 
     vec3  start_position;       // starting position of the current ray in 3d model coordinates for ray march
     vec3  end_position;         // ending position of the current ray in 3d model coordinates for ray march
@@ -35,8 +33,6 @@ Ray set_ray()
     ray.start_distance    = 0.0;
     ray.end_distance      = 0.0;
     ray.span_distance     = 0.0;
-    ray.min_step_distance = 0.0;
-    ray.max_step_distance = 0.0;
     ray.max_step_count    = 0;
     ray.max_skip_count    = 0;
     return ray;

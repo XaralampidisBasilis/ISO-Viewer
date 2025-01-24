@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 
-const timeit = (name, callback) => { console.time(name), callback(), console.timeEnd(name) }
+const timeit = (name, callback) => 
+{ 
+    console.time(name) 
+    callback()
+    console.timeEnd(name) 
+}
 
 export default class ISOProcessor
 {
