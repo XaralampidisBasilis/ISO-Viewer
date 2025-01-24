@@ -19,7 +19,6 @@ if (trace.terminated)
     discard;  
     #else
     // discard_trace(trace);
-    // discard_voxel(voxel);
     #endif
 }
 

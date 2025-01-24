@@ -1,9 +1,9 @@
 
 // compute distances
-vec2 cell_distances = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
-cell_distances = clamp(cell_distances, box.entry_distance, box.exit_distance);
-cell.entry_distance = cell_distances.x;
-cell.exit_distance = cell_distances.y;
+vec2 cell_intersections = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
+cell_intersections = clamp(cell_intersections, box.entry_distance, box.exit_distance);
+cell.entry_distance = cell_intersections.x;
+cell.exit_distance = cell_intersections.y;
 cell.sample_distances = mmix(cell.entry_distance, cell.exit_distance, sample_weights4);
 
 // compute intensities

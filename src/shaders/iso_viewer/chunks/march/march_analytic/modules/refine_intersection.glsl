@@ -1,59 +1,43 @@
-// Set next 
-Trace next_trace = trace;
-Voxel next_voxel = voxel;
 
-// update next trace 
-next_trace.distance = trace.distance + ray.step_distance * DECI_TOLERANCE;
-next_trace.distance = min(next_trace.distance, ray.end_distance);
-
-// update next voxel
-next_voxel.texture_coords = trace.position * u_volume.inv_size;
-next_voxel.texture_sample = texture(u_textures.taylor_map, next_voxel.texture_coords);
-next_voxel.value = next_voxel.texture_sample.r;
-next_voxel.error = next_voxel.value - u_rendering.threshold_value;
+Trace temp = trace;
+vec2 errors = vec2(0.0);
+vec2 distances = vec2(0.0);
 
 // update previous trace 
-prev_trace.distance = trace.distance - ray.step_distance * DECI_TOLERANCE;
-prev_trace.distance = max(prev_trace.distance, ray.start_distance);
+distances.x = max(ray.start_distance, trace.distance - ray.step_distance * DECI_TOLERANCE);
+temp.uvw = (camera.position + ray.step_direction * distances.y) * u_volume.inv_size;
+errors.x = texture(u_textures.taylor_map, temp.uvw).r - u_rendering.iso_intensity;
 
-// update previous voxel
-prev_voxel.texture_coords = prev_trace.position * u_volume.inv_size;
-prev_voxel.texture_sample = texture(u_textures.taylor_map, prev_voxel.texture_coords);
-prev_voxel.value = prev_voxel.texture_sample.r;
-prev_voxel.error = prev_voxel.value - u_rendering.threshold_value;
+// update next trace 
+distances.y = min(ray.end_distance, trace.distance + ray.step_distance * DECI_TOLERANCE);
+temp.uvw = (camera.position + ray.step_direction * distances.y) * u_volume.inv_size;
+errors.y = texture(u_textures.taylor_map, temp.uvw).r - u_rendering.iso_intensity;
 
 // Compute iterative bisection method
-vec2 errors = vec2(prev_voxel.error, next_voxel.error);
-vec2 distances = vec2(prev_trace.distance, next_trace.distance);
-
 for (int iter = 0; iter < 10; iter++) 
 {
     // update trace
-    next_trace.distance = mix(distances.x, distances.y, 0.5);
-    next_trace.position = camera.position + ray.step_direction * next_trace.distance;
-
-    // update voxel
-    next_voxel.texture_coords = next_trace.position * u_volume.inv_size;
-    next_voxel.value = texture(u_textures.taylor_map, next_voxel.texture_coords).r;
-    next_voxel.error = next_voxel.value - u_rendering.threshold_value;
+    temp.distance = mix(distances.x, distances.y, 0.5);
+    temp.position = camera.position + ray.step_direction * temp.distance;
+    temp.uvw = temp.position * u_volume.inv_size;
+    temp.intensity = texture(u_textures.taylor_map, temp.uvw).r;
+    temp.error = temp.intensity - u_rendering.iso_intensity;
 
     // update interval
-    float interval = step(0.0, errors.x * next_voxel.error);
+    float interval = step(0.0, errors.x * temp.error);
 
     errors = mix(
-        vec2(errors.x, next_voxel.error), 
-        vec2(next_voxel.error, errors.y), 
+        vec2(errors.x, temp.error), 
+        vec2(temp.error, errors.y), 
         interval);
 
     distances = mix(
-        vec2(distances.x, next_trace.distance), 
-        vec2(next_trace.distance, distances.y), 
+        vec2(distances.x, temp.distance), 
+        vec2(temp.distance, distances.y), 
         interval);
 }
 
-// Rollback if no improvement
-if (abs(voxel.error) > abs(next_voxel.error)) 
+if (abs(trace.error) > abs(temp.error)) 
 {
-    voxel = next_voxel;
-    trace = next_trace;
+    trace = temp;
 }

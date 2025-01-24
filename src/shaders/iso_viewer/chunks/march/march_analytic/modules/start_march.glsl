@@ -1,10 +1,10 @@
 
-// start trace
+// compute trace at ray start position
 trace.distance = ray.start_distance;
 trace.position = camera.position + ray.step_direction * trace.distance;
-prev_trace = trace;
 
-// start cell
+// compute cell at ray start position
+cell.coords_step = ivec3(0);
 cell.coords = ivec3(ray.start_position * u_volume.inv_spacing + 0.5);
 cell.exit_distance = ray.start_distance;
 cell.sample_distances.w = ray.start_distance;

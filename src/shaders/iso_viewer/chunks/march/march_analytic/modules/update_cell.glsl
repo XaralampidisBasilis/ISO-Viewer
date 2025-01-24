@@ -1,9 +1,10 @@
 
 // compute cell bounding box in model coordinates
+cell.coords += cell.coords_step;
 cell.min_position = (vec3(cell.coords) - 0.5) * u_volume.spacing;
 cell.max_position = (vec3(cell.coords) + 0.5) * u_volume.spacing;
 
-// compute cell intersection with ray and find entry and exit distances, and the next cell 
+// compute cell ray intersection to find entry and exit distances, 
 cell.entry_distance = cell.bounds.y;
 cell.exit_distance = intersect_box_max
 (
@@ -13,7 +14,6 @@ cell.exit_distance = intersect_box_max
     ray.step_direction, 
     cell.coords_step
 );
-cell.coords += cell.coords_step;
 
 // given the entry and exit compute the sampling distances inside the cell
 cell.sample_distances.x = cell.sample_distances.w;
