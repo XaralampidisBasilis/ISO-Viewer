@@ -8,5 +8,5 @@ trace.error = trace.intensity - u_rendering.iso_intensity;
 
 // update conditions
 trace.terminated = trace.distance > ray.end_distance;
-trace.exhausted = trace.terminated ? false : trace.step_count >= ray.max_cell_count;
+trace.exhausted = trace.terminated ? false : trace.step_count >= MAX_CELL_COUNT;
 

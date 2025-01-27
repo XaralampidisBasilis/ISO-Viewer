@@ -65,7 +65,7 @@ struct Debug
     vec4 frag_light_angle; 
     vec4 frag_halfway_angle; 
     vec4 frag_camera_angle; 
-    vec4 frag_mapped_value; 
+    vec4 frag_mapped_intensity; 
     vec4 frag_mapped_color; 
     vec4 frag_ambient_color; 
     vec4 frag_diffuse_color; 
@@ -157,7 +157,7 @@ Debug set_debug()
     debug.frag_light_angle         = vec4(vec3(0.0), 1.0);
     debug.frag_halfway_angle       = vec4(vec3(0.0), 1.0);
     debug.frag_camera_angle        = vec4(vec3(0.0), 1.0);
-    debug.frag_mapped_value        = vec4(vec3(0.0), 1.0);
+    debug.frag_mapped_intensity    = vec4(vec3(0.0), 1.0);
     debug.frag_mapped_color        = vec4(vec3(0.0), 1.0);
     debug.frag_ambient_color       = vec4(vec3(0.0), 1.0);
     debug.frag_diffuse_color       = vec4(vec3(0.0), 1.0);

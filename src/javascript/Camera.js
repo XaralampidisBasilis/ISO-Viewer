@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import Experience from './Experience'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
 
 export default class Camera
 {
@@ -24,12 +25,17 @@ export default class Camera
 
     setControls()
     {
-        this.controls = new OrbitControls(this.instance, this.canvas)
-        this.controls.enableDamping = true
-        this.controls.enableZoom = true
-        this.controls.zoomToCursor = true
-        this.controls.zoomSpeed = 2
-        // this.controls.target = new THREE.Vector3(0,0,-1000);
+        this.controls = {}
+
+        // this.controls.orbit = new OrbitControls(this.instance, this.canvas)
+        // this.controls.orbit.enableDamping = true
+        // this.controls.orbit.enableZoom = true
+        // this.controls.orbit.zoomToCursor = true
+        // this.controls.orbit.zoomSpeed = 2
+
+        this.controls.trackball = new TrackballControls(this.instance, this.canvas)
+        this.controls.trackball.staticMoving = false
+        this.controls.trackball.zoomSpeed = 2
     }
 
     resize()
@@ -40,16 +46,16 @@ export default class Camera
 
     update()
     {
-        this.controls.update()
+        this.controls.trackball.update()
     }
 
     destroy() 
     {
         this.scene.remove(this.instance);
 
-        if (this.controls) 
+        if (this.controls.trackball) 
         {
-            this.controls.dispose()
+            this.controls.trackball.dispose()
             this.controls = null // prevent memory leaks
         }
 

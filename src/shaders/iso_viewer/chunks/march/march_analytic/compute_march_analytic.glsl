@@ -12,7 +12,7 @@ for (int count = 0; count < MAX_CELL_COUNT; count++, trace.step_count++)
 
     #include "./modules/update_trace"
     
-    if (trace.terminated /*|| trace.exhausted*/) 
+    if (trace.terminated || trace.exhausted) 
     {
         break;
     }

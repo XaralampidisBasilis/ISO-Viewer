@@ -222,7 +222,7 @@ export default class ISOGui
                 frag_light_angle        : 608,     
                 frag_halfway_angle      : 609,     
                 frag_camera_angle       : 610,     
-                frag_mapped_value       : 611,     
+                frag_mapped_intensity   : 611,     
                 frag_mapped_color       : 612,     
                 frag_ambient_color      : 613,     
                 frag_diffuse_color      : 614,     

@@ -75,7 +75,7 @@ switch (u_debugging.option - debug.slot_frag)
     case  8: fragColor = debug.frag_light_angle;        break; 
     case  9: fragColor = debug.frag_halfway_angle;      break; 
     case 10: fragColor = debug.frag_camera_angle;       break; 
-    case 11: fragColor = debug.frag_mapped_value;       break; 
+    case 11: fragColor = debug.frag_mapped_intensity;   break; 
     case 12: fragColor = debug.frag_mapped_color;       break; 
     case 13: fragColor = debug.frag_ambient_color;      break; 
     case 14: fragColor = debug.frag_diffuse_color;      break; 
