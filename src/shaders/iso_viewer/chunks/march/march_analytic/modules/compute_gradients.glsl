@@ -34,3 +34,4 @@ vec3 negative_sums = vec3(
 
 // Compute gradient
 trace.gradient = (positive_sums - negative_sums) * (u_volume.inv_spacing * 0.25);
+// float max_length = mmax(u_volume.inv_spacing); // max gradient length

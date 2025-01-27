@@ -7,8 +7,8 @@ struct Block
     int   value;
     bool  occupied;
     ivec3 coords;  
-    ivec3 step_coords;
-    vec3  texture_coords;
+    ivec3 coords_step;
+    vec3  uvw;
     ivec3 min_coords;
     ivec3 max_coords;
     vec3  min_position;
@@ -19,16 +19,16 @@ struct Block
 Block set_block()
 {
     Block block;
-    block.value          = 0;
-    block.occupied       = false;
-    block.coords         = ivec3(0);
-    block.step_coords    = ivec3(0);
-    block.texture_coords = vec3(0.0);
-    block.min_coords     = ivec3(0);
-    block.max_coords     = ivec3(0);
-    block.min_position   = vec3(0.0);
-    block.max_position   = vec3(0.0);
-    block.skip_count     = 0;
+    block.value        = 0;
+    block.occupied     = false;
+    block.coords       = ivec3(0);
+    block.coords_step  = ivec3(0);
+    block.uvw          = vec3(0.0);
+    block.min_coords   = ivec3(0);
+    block.max_coords   = ivec3(0);
+    block.min_position = vec3(0.0);
+    block.max_position = vec3(0.0);
+    block.skip_count   = 0;
     return block;
 }
 

@@ -79,7 +79,7 @@ export default class ISOGui
         const uDistmap = this.viewer.material.uniforms.u_distmap.value
         const defines = this.viewer.material.defines
         const objects = { 
-            threshold_value            : uRendering.threshold_value,
+            iso_intensity              : uRendering.iso_intensity,
             sub_division               : uDistmap.sub_division,
             INTERSECT_BBOX_ENABLED     : Boolean(defines.INTERSECT_BBOX_ENABLED),
             INTERSECT_BVOL_ENABLED     : Boolean(defines.INTERSECT_BVOL_ENABLED),
@@ -91,9 +91,7 @@ export default class ISOGui
     
         this.controllers.rendering = 
         {
-            thresholdValue     : folder.add(objects, 'threshold_value').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.threshold_value = value, this.viewer.updateBoundingBox(),  this.viewer.updateDistanceMap() }),
-            minStepScale       : folder.add(uRendering, 'min_step_scaling').min(0.001).max(5).step(0.001),
-            maxStepScale       : folder.add(uRendering, 'max_step_scaling').min(0.001).max(5).step(0.001),
+            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateBoundingBox(),  this.viewer.updateDistanceMap() }),
             maxStepCount       : folder.add(uRendering, 'max_step_count').min(0).max(1000).step(1),
             maxSkipCount       : folder.add(uRendering, 'max_skip_count').min(0).max(200).step(1),
             subDivision        : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateDistanceMap() }),
@@ -180,31 +178,23 @@ export default class ISOGui
                 ray_end_position        : 109,
                 ray_max_step_count      : 110,
                 ray_max_skip_count      : 111,
-
-                trace_intersected       : 201,             
-                trace_terminated        : 202,             
-                trace_exhausted         : 203,             
-                trace_outside           : 204,             
-                trace_distance          : 205,             
-                trace_position          : 206,             
-                trace_derivative        : 207,             
-                trace_step_distance     : 208,             
-                trace_step_scaling      : 209,             
-                trace_step_count        : 210,             
-                trace_mean_step_scaling : 211,             
-                trace_mean_step_distance: 212,             
-                trace_stepped_distance  : 213,             
-                trace_skipped_distance  : 214,             
-                trace_spanned_distance  : 215,     
-
-                voxel_coords            : 301,         
-                voxel_step_coords       : 302,         
-                voxel_texture_coords    : 303,         
-                voxel_gradient          : 304,         
-                voxel_gradient_length   : 305,         
-                voxel_value             : 306,         
-                voxel_error             : 307,         
-                voxel_abs_error         : 308,         
+                 
+                trace_intersected       : 201,
+                trace_terminated        : 202,
+                trace_exhausted         : 203,
+                trace_outside           : 204,
+                trace_distance          : 205,
+                trace_position          : 206,
+                trace_intensity         : 207,
+                trace_error             : 208,
+                trace_abs_error         : 209,
+                trace_gradient          : 210,
+                trace_gradient_length   : 211,
+                trace_step_count        : 212,
+                trace_step_distance     : 213,
+                trace_stepped_distance  : 214,
+                trace_skipped_distance  : 215,
+                trace_spanned_distance  : 216,
 
                 cell_coords             : 401,
                 cell_step_coords        : 402,
@@ -269,104 +259,6 @@ export default class ISOGui
     }
     
     // controllers bindings
-
-    setBindings()
-    {
-    
-        // rendering threshold controller
-        this.controllers.rendering.threshold
-        .onChange(() => 
-        {
-            this.displaceColormapLow() // displace colormap low based on rendering threshold
-            this.displaceColormapHigh()  // displace colormap high based on rendering threshold
-        })
-
-        // cap colormap low based on rendering threshold
-        this.controllers.colormap.low.onChange(() => this.capColormapLow())
-
-        // cap colormap high based on rendering threshold
-        this.controllers.colormap.high.onChange(() => this.capColormapHigh())
-
-        // cap rendering spacing min based on spacing max
-        this.controllers.rendering.steppingMin.onChange(() => this.capRaycastSpacingMin())
-
-        // cap rendering spacing max based on spacing min
-        this.controllers.rendering.steppingMax.onChange(() => this.capRaycastSpacingMax())
-    }
-
-    capRaycastSpacingMin()
-    {
-        this.controllers.raycast.steppingMin.setValue
-        (
-            Math.min
-            (
-                this.controllers.raycast.steppingMin.getValue(),
-                this.controllers.raycast.steppingMax.getValue()
-            )
-        ).updateDisplay()
-    }
-
-    capRaycastSpacingMax()
-    {
-        this.controllers.rendering.steppingMax.setValue
-        (
-            Math.max
-            (
-                this.controllers.rendering.steppingMin.getValue(),
-                this.controllers.rendering.steppingMax.getValue()
-            )
-        ).updateDisplay()
-    }
-
-    displaceColormapLow()
-    {
-        this.controllers.colormap.low.setValue
-        (
-            Math.min
-            (
-                this.controllers.colormap.low.getValue(), 
-                this.controllers.rendering.sampleThreshold.getValue()
-            )
-        ).updateDisplay()
-    }
-
-    displaceColormapHigh()
-    {
-        this.controllers.colormap.high.setValue
-        (
-            Math.max
-            (
-                this.controllers.rendering.sampleThreshold.getValue(),
-                this.controllers.colormap.high.getValue()
-            )
-        ).updateDisplay()
-    }
-
-    capColormapLow()
-    {
-        this.controllers.colormap.low.setValue
-        (
-            Math.min
-            (
-                this.controllers.colormap.low.getValue(),            
-                this.controllers.rendering.sampleThreshold.getValue(),
-                this.controllers.colormap.high.getValue()
-            )
-        ).updateDisplay()
-    }
-
-    capColormapHigh()
-    {
-        this.controllers.colormap.high.setValue
-        (
-            Math.max
-            (
-                this.controllers.colormap.low.getValue(), 
-                this.controllers.rendering.sampleThreshold.getValue(), 
-                this.controllers.colormap.high.getValue()
-            )
-        ).updateDisplay()
-    }
 
     flipColormap()
     {

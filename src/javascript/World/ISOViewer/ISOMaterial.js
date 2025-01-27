@@ -47,9 +47,9 @@ export default function()
 
         u_rendering: new THREE.Uniform
         ({
-            threshold_value  : 0.53,
-            max_step_count   : 1000,
-            max_skip_count   : 200,
+            iso_intensity   : 0.53,
+            max_step_count  : 1000,
+            max_skip_count  : 200,
         }),
 
         u_colormap: new THREE.Uniform

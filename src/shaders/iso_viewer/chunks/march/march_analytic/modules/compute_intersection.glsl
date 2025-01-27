@@ -7,10 +7,10 @@ cell.exit_distance = cell_intersections.y;
 cell.sample_distances = mmix(cell.entry_distance, cell.exit_distance, sample_weights4);
 
 // compute intensities
-cell.sample_intensities.x = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.sample_distances.x).r;
-cell.sample_intensities.y = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.sample_distances.y).r;
-cell.sample_intensities.z = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.sample_distances.z).r;
-cell.sample_intensities.w = texture(u_textures.intensity_map, camera.texture_position + ray.texture_direction * cell.sample_distances.w).r;
+cell.sample_intensities.x = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.x).r;
+cell.sample_intensities.y = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.y).r;
+cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.z).r;
+cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.w).r;
 
 // compute coefficients
 cell.intensity_coeffs = vandermonde_matrix4 * cell.sample_intensities;

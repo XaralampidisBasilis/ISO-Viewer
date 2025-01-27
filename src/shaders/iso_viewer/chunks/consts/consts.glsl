@@ -1,4 +1,6 @@
 
+const int MAX_TRACE_STEP_COUNT = 1000;
+const int MAX_BLOCK_SKIP_COUNT = 100;
 
 const ivec2 binary_offset = ivec2(0, 1);
 const ivec3 binary_offsets[8] = ivec3[8]
@@ -32,10 +34,3 @@ const mat4 vandermonde_matrix4 = mat4
      0.0, -4.5, 18.0, -13.5,
     0.0, 1.0, -4.5,   4.5 
 );
-
-
-const int MAX_TRACE_STEP_COUNT = 1000;
-const int MAX_BLOCK_SKIP_COUNT = 100;
-
-const float MIN_TRACE_STEP_SCALING = 0.01;
-const float MAX_TRACE_STEP_SCALING = 5.00;

@@ -1,6 +1,7 @@
 clear, clc
 syms a0 a1 b1 b2 x x0 x1 f00 f01 f10 f11 fc 
 assume([a0 a1 b1 b2 x x0 x1 f00 f01 f10 f11 fc ], 'real')
+assume([cx cy cz cw t v], 'real')
 
 P0_x = (a0 + a1 * x) / (1 + b1 * x + b2 * x^2);
 P1_x = simplify(diff(P0_x, x));

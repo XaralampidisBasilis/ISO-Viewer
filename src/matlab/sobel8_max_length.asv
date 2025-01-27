@@ -1,9 +1,14 @@
+clear, clc
+syms Dx Dy Dz
+assume([Dx Dy Dz], 'real')
+assume(Dx > 0 & Dy > 0 & Dz > 0)
+
 % Define Sx, Sy, and Sz as given
 Sx =[-1.0, -1.0, -1.0, -1.0, +1.0, +1.0, +1.0, +1.0]';
 Sy =[-1.0, -1.0, +1.0, +1.0, -1.0, -1.0, +1.0, +1.0]';
 Sz =[-1.0, +1.0, -1.0, +1.0, -1.0, +1.0, -1.0, +1.0]';
 
-S = Sx * Sx' + Sy * Sy' + Sz * Sz';
+S = Sx * Sx' + Sy * Sy' / Dy + Sz * Sz' / Dz;
 d = eig(S);
 
 % Define the objective function
@@ -43,13 +48,9 @@ for i = 1:num_trials
     end
 end
 
-best_g_max = [dot(Sx, best_r_max), dot(Sy, best_r_max), dot(Sz, best_r_max)];
-
 % Display the best results
 disp('The best vector r that maximizes l(r) is:');
 disp(best_r_max);
-disp('The best gradient g that maximizes l(r) is:');
-disp(best_g_max);
 disp('The maximum value of l(r) is:');
 disp(best_max_value);
 disp('The maximum squared value of l(r) is:');

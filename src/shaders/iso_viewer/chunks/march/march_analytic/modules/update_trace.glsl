@@ -1,7 +1,4 @@
 
-// update previous
-prev_trace = trace;
-
 // update trace
 trace.distance = cell.exit_distance;
 trace.uvw = trace.position * u_volume.inv_size;

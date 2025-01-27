@@ -49,6 +49,7 @@ directional_color *= min(shadows_fading, edge_fading);
 // Compose colors
 frag.shaded_color.rgb = frag.ambient_color + directional_color;
 frag.shaded_color.rgb *= u_lighting.intensity;
+// frag.shaded_color.a = length(trace.gradient);
 
 // Assign frag color
 fragColor = frag.shaded_color;
