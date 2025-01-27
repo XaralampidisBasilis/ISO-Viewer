@@ -40,7 +40,7 @@ export default class ISOViewer extends EventEmitter
 
         await tf.ready()
         await this.processor.computeIntensityMap()
-        await this.processor.computeOccupancyMap(uRendering.threshold_value, uDistmap.sub_division)
+        await this.processor.computeOccupancyMap(uRendering.iso_intensity, uDistmap.sub_division)
         this.processor.computes.intensityMap.tensor.dispose()
 
         await this.processor.computeDistanceMap(uDistmap.max_iterations)
@@ -48,7 +48,7 @@ export default class ISOViewer extends EventEmitter
         this.processor.computes.occupancyMap.tensor.dispose()
     }
 
-    async updateUniforms()
+    async updateMaps()
     {
         await this.computeMaps()
 
@@ -60,7 +60,6 @@ export default class ISOViewer extends EventEmitter
 
         uTextures.distance_map.dispose()
         uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        uTextures.distance_map.needsUpdate = true
         this.processor.computes.distanceMap.tensor.dispose()
 
         uDistmap.max_distance = pDistanceMap.maxDistance
@@ -74,6 +73,12 @@ export default class ISOViewer extends EventEmitter
         uDistmap.inv_size.copy(pDistanceMap.invSize)
         uVolume.min_position.copy(pBoundingBox.minPosition)
         uVolume.max_position.copy(pBoundingBox.maxPosition) 
+
+        this.material.defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
+        this.material.defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        this.material.needsUpdate = true
+
+        console.log(this.material.defines)
     }
 
     setParameters()
@@ -156,13 +161,18 @@ export default class ISOViewer extends EventEmitter
         uTextures.intensity_map = this.textures.intensityMap
         uTextures.distance_map = this.textures.distanceMap
         uTextures.color_maps = this.textures.colorMaps   
+
+        // defines
+        this.material.defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
+        this.material.defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        this.material.needsUpdate = true
     }
 
     setMesh()
     {   
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
-        // this.scene.add(this.mesh)
+        this.scene.add(this.mesh)
     }
 
     destroy() 

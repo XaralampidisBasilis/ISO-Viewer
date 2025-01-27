@@ -4,8 +4,8 @@
 struct Rendering 
 {
     float iso_intensity;      
-    int   max_step_count;     
-    int   max_skip_count;   
+    int   max_cell_count;     
+    int   max_block_count;   
 };
 
 uniform Rendering u_rendering;

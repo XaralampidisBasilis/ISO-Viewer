@@ -5,7 +5,7 @@ cell.min_position = (vec3(cell.coords) - 0.5) * u_volume.spacing;
 cell.max_position = (vec3(cell.coords) + 0.5) * u_volume.spacing;
 
 // compute cell ray intersection to find entry and exit distances, 
-cell.entry_distance = cell.bounds.y;
+cell.entry_distance = cell.exit_distance;
 cell.exit_distance = intersect_box_max
 (
     cell.min_position, 

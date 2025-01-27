@@ -5,7 +5,6 @@
  *
  * @param volume_data: 3D texture sampler containing intensity data.
  * @param volume_dimensions: Dimensions of the 3D texture.
- * @param voxel_coords: Coordinates of the voxel in the 3D texture.
  *
  * @return vec4: Gradient vector at the given position as rgb and smoothed sample as alpha
  */

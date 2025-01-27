@@ -1,15 +1,50 @@
+// COMPUTE DEBUG 
 
-#include "./debug_ray/debug_ray_discarded"            
-#include "./debug_ray/debug_ray_step_direction"       
-#include "./debug_ray/debug_ray_step_distance"        
-#include "./debug_ray/debug_ray_rand_distance"        
-#include "./debug_ray/debug_ray_start_distance"       
-#include "./debug_ray/debug_ray_end_distance"         
-#include "./debug_ray/debug_ray_span_distance"        
-#include "./debug_ray/debug_ray_start_position"       
-#include "./debug_ray/debug_ray_end_position"         
-#include "./debug_ray/debug_ray_max_step_count"       
-#include "./debug_ray/debug_ray_max_skip_count"       
+// discarded
+debug.ray_discarded = vec4(vec3(ray.discarded), 1.0);
+
+// step direction
+vec3 debug_ray_step_direction = ray.step_direction * 0.5 + 0.5;
+debug.ray_step_direction = vec4(debug_ray_step_direction, 1.0);
+
+// step distance
+float debug_ray_step_distance = ray.step_distance / u_volume.spacing_length;
+debug.ray_step_distance = vec4(vec3(debug_ray_step_distance), 1.0);
+
+// rand distance
+float debug_ray_rand_distance = ray.rand_distance / ray.step_distance;
+debug.ray_rand_distance = vec4(vec3(debug_ray_rand_distance), 1.0);
+
+// start distance
+float debug_ray_start_distance = map(box.min_entry_distance, box.max_exit_distance, ray.start_distance);
+debug.ray_start_distance = vec4(vec3(debug_ray_start_distance), 1.0);
+
+// end distance
+float debug_ray_end_distance = map(box.min_entry_distance, box.max_exit_distance, ray.end_distance);
+debug.ray_end_distance = vec4(vec3(debug_ray_end_distance), 1.0);
+
+// span distance
+float debug_ray_span_distance = map(0.0, box.max_span_distance, ray.span_distance);
+debug.ray_span_distance = vec4(vec3(debug_ray_span_distance), 1.0);
+
+// start position
+vec3 debug_ray_start_position =  map(box.min_position, box.max_position, ray.start_position);
+debug.ray_start_position = vec4(vec3(debug_ray_start_position), 1.0);
+
+// end position
+vec3 debug_ray_end_position = map(box.min_position, box.max_position, ray.end_position);
+debug.ray_end_position = vec4(vec3(debug_ray_end_position), 1.0);
+
+// max cell count
+float debug_ray_max_cell_count = float(ray.max_cell_count) / float(u_rendering.max_cell_count);
+debug.ray_max_cell_count = vec4(vec3(debug_ray_max_cell_count), 1.0);
+
+// max block count
+float debug_ray_max_block_count = float(ray.max_block_count) / float(u_rendering.max_block_count);
+debug.ray_max_block_count = vec4(vec3(debug_ray_max_block_count), 1.0);
+
+
+// PRINT DEBUG
 
 switch (u_debugging.option - debug.slot_ray)
 {
@@ -22,6 +57,6 @@ switch (u_debugging.option - debug.slot_ray)
     case  7: fragColor = debug.ray_span_distance;  break;
     case  8: fragColor = debug.ray_start_position; break;
     case  9: fragColor = debug.ray_end_position;   break;
-    case 10: fragColor = debug.ray_max_step_count; break;
-    case 11: fragColor = debug.ray_max_skip_count; break;
+    case 10: fragColor = debug.ray_max_cell_count; break;
+    case 11: fragColor = debug.ray_max_block_count; break;
 }

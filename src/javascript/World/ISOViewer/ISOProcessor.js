@@ -135,6 +135,7 @@ export default class ISOProcessor
             {
                 const occupancyMap = this._computeOccupancyMap(this.computes.intensityMap.tensor, threshold, subDivision)
                 const parameters = {}
+
                 parameters.shape = occupancyMap.shape
                 parameters.threshold = threshold
                 parameters.subDivision = subDivision
@@ -172,6 +173,7 @@ export default class ISOProcessor
             {
                 const distanceMap = this._computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
                 const parameters = {...this.computes.occupancyMap.parameters}
+                
                 parameters.maxDistance = distanceMap.max().arraySync()
                 
                 return [distanceMap, parameters]
@@ -194,12 +196,22 @@ export default class ISOProcessor
             {
                 const boundingBox = this._computeBoundingBox(this.computes.occupancyMap.tensor)
                 const parameters = {}
-                parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).subScalar(0.5).multiply(this.computes.occupancyMap.parameters.spacing)
-                parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(0.5).multiply(this.computes.occupancyMap.parameters.spacing)
+             
+                parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).addScalar(0).multiply(this.computes.occupancyMap.parameters.spacing)
+                parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(1).multiply(this.computes.occupancyMap.parameters.spacing)
                 parameters.minPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
                 parameters.maxPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
-                parameters.minCoords = new THREE.Vector3().copy(parameters.minPosition).divide(this.volume.parameters.spacing).floor()
-                parameters.maxCoords = new THREE.Vector3().copy(parameters.maxPosition).divide(this.volume.parameters.spacing).floor()
+
+                parameters.minCoords = new THREE.Vector3().copy(parameters.minPosition).divide(this.volume.parameters.spacing).addScalar(0.5).floor() // included in bbox
+                parameters.maxCoords = new THREE.Vector3().copy(parameters.maxPosition).divide(this.volume.parameters.spacing).subScalar(0.5).floor() // included in bbox
+                parameters.minCoords.clamp(new THREE.Vector3(), this.volume.parameters.dimensions)
+                parameters.maxCoords.clamp(new THREE.Vector3(), this.volume.parameters.dimensions)
+
+                parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
+                parameters.numCells = parameters.dimensions.toArray().reduce((cells, dim) => cells * dim, 1)
+                parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
+                parameters.maxCellCount = parameters.dimensions.toArray().reduce((intersections, cells) => intersections + cells, -2)
+                parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
 
                 return parameters
             })          

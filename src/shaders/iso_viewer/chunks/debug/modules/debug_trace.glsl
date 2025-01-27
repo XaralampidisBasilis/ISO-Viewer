@@ -43,7 +43,7 @@ float debug_trace_gradient_length = map(0.0, mmax(u_volume.inv_spacing), length(
 debug.trace_gradient_length = vec4(vec3(debug_trace_gradient_length), 1.0);
 
 // step count
-float debug_trace_step_count = float(trace.step_count) / float(u_rendering.max_step_count);
+float debug_trace_step_count = float(trace.step_count) / float(u_rendering.max_cell_count);
 debug.trace_step_count = vec4(vec3(debug_trace_step_count), 1.0);
 
 // step distance
@@ -62,7 +62,6 @@ debug.trace_stepped_distance = vec4(vec3(debug_trace_stepped_distance), 1.0);
 // skipped distance
 float debug_trace_skipped_distance = map(0.0, box.max_span_distance, trace.skipped_distance);
 debug.trace_skipped_distance = vec4(vec3(debug_trace_skipped_distance), 1.0);
-
 
 // PRINT DEBUG
 

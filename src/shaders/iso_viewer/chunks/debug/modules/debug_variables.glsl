@@ -1,4 +1,6 @@
 
+// PRINT DEBUG
+
 switch (u_debugging.option - debug.slot_variables)
 { 
     case 1: fragColor = debug.variable1; break;

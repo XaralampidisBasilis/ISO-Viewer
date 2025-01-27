@@ -18,7 +18,7 @@ frag.view_vector    = normalize(frag.view_vector);
 frag.halfway_vector = normalize(frag.halfway_vector);
 
 // Compute normal vector
-frag.normal_vector  = normalize(voxel.gradient);
+frag.normal_vector  = normalize(trace.gradient);
 frag.normal_vector *= ssign(dot(frag.normal_vector, frag.view_vector));
 
 // Compute vector angles
@@ -49,7 +49,10 @@ directional_color *= min(shadows_fading, edge_fading);
 // Compose colors
 frag.shaded_color.rgb = frag.ambient_color + directional_color;
 frag.shaded_color.rgb *= u_lighting.intensity;
-// frag.shaded_color.a = length(trace.gradient);
+
+// Compute alpha
+// frag.shaded_color.a = length(trace.gradient * u_volume.spacing);
+// frag.shaded_color.a = frag.shaded_color.a < MILLI_TOLERANCE ? 0.0 : 1.0;
 
 // Assign frag color
 fragColor = frag.shaded_color;

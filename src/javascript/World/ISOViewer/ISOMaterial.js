@@ -48,8 +48,8 @@ export default function()
         u_rendering: new THREE.Uniform
         ({
             iso_intensity   : 0.53,
-            max_step_count  : 1000,
-            max_skip_count  : 200,
+            max_cell_count  : 1000,
+            max_block_count : 1000,
         }),
 
         u_colormap: new THREE.Uniform
@@ -94,16 +94,17 @@ export default function()
         INTERSECT_BBOX_ENABLED     : 1,
         INTERSECT_BVOL_ENABLED     : 1,
         REFINE_INTERSECTION_ENABLED: 1,
-        REFINE_GRADIENTS_ENABLED   : 1,
         SKIPPING_ENABLED           : 1,
         DITHERING_ENABLED          : 0,
         DISCARDING_DISABLED        : 0,
+        MAX_CELL_COUNT             : 1000,
+        MAX_BLOCK_COUNT            : 1000,
     }
 
     const material = new THREE.ShaderMaterial
     ({    
         side: THREE.BackSide,
-        transparent: false,
+        transparent: true,
         depthTest: true,
         depthWrite: true,
 

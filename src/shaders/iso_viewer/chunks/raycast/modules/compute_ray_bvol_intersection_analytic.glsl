@@ -2,7 +2,7 @@
 // Compute ray entry with bounding volume
 #include "./compute_ray_bvol_intersection_analytic/set_ray_start_block"
 
-for (int count = 0; count < u_rendering.max_skip_count; count++, block.skip_count++) 
+for (int count = 0; count < u_rendering.max_block_count; count++, block.skip_count++) 
 {
     #include "./compute_ray_bvol_intersection_analytic/update_ray_block"
     
@@ -28,7 +28,7 @@ if (block.occupied)
 // Compute ray exit with bounding volume
 #include "./compute_ray_bvol_intersection_analytic/set_ray_end_block"
 
-for (int count = 0; count < u_rendering.max_skip_count; count++, block.skip_count++) 
+for (int count = 0; count < u_rendering.max_block_count; count++, block.skip_count++) 
 {
     #include "./compute_ray_bvol_intersection_analytic/update_ray_block"
 

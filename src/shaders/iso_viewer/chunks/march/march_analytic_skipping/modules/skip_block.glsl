@@ -16,7 +16,7 @@ trace.step_distance = trace.distance - prev_trace.distance;
 
 // update conditions
 trace.terminated = trace.distance > ray.end_distance;
-trace.exhausted = trace.step_count >= ray.max_step_count;
+trace.exhausted = trace.step_count >= ray.max_cell_count;
 
 // update count
 block.skip_count++;

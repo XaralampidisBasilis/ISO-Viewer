@@ -13,5 +13,5 @@ voxel.error = voxel.value - u_rendering.threshold_value;
 
 // update conditions
 trace.terminated = trace.distance > ray.end_distance;
-trace.exhausted = trace.step_count >= ray.max_step_count;
+trace.exhausted = trace.step_count >= ray.max_cell_count;
 

@@ -84,23 +84,21 @@ export default class ISOGui
             INTERSECT_BBOX_ENABLED     : Boolean(defines.INTERSECT_BBOX_ENABLED),
             INTERSECT_BVOL_ENABLED     : Boolean(defines.INTERSECT_BVOL_ENABLED),
             REFINE_INTERSECTION_ENABLED: Boolean(defines.REFINE_INTERSECTION_ENABLED),
-            REFINE_GRADIENTS_ENABLED   : Boolean(defines.REFINE_GRADIENTS_ENABLED),
             DITHERING_ENABLED          : Boolean(defines.DITHERING_ENABLED),
             SKIPPING_ENABLED           : Boolean(defines.SKIPPING_ENABLED),
         }
     
         this.controllers.rendering = 
         {
-            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateBoundingBox(),  this.viewer.updateDistanceMap() }),
-            maxStepCount       : folder.add(uRendering, 'max_step_count').min(0).max(1000).step(1),
-            maxSkipCount       : folder.add(uRendering, 'max_skip_count').min(0).max(200).step(1),
-            subDivision        : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateDistanceMap() }),
-            enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
-            enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('enable_intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
-            enableRefineInter  : folder.add(objects, 'REFINE_INTERSECTION_ENABLED').name('enable_refine_position').onFinishChange((value) => { defines.REFINE_INTERSECTION_ENABLED = Number(value), material.needsUpdate = true }),
-            enableRefineGrad   : folder.add(objects, 'REFINE_GRADIENTS_ENABLED').name('enable_refine_gradient').onFinishChange((value) => { defines.REFINE_GRADIENTS_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
-            enableDithering    : folder.add(objects, 'DITHERING_ENABLED').name('enable_dithering').onFinishChange((value) => { defines.DITHERING_ENABLED = Number(value), material.needsUpdate = true }),
+            isoIntensity        : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateMaps() }),
+            maxCellCount        : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
+            maxBlockCount       : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
+            subDivision         : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateMaps() }),
+            enableIntersectBbox : folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
+            enableIntersectBvol : folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('enable_intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
+            enableRefineInter   : folder.add(objects, 'REFINE_INTERSECTION_ENABLED').name('enable_refine_position').onFinishChange((value) => { defines.REFINE_INTERSECTION_ENABLED = Number(value), material.needsUpdate = true }),
+            enableSkipping      : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+            enableDithering     : folder.add(objects, 'DITHERING_ENABLED').name('enable_dithering').onFinishChange((value) => { defines.DITHERING_ENABLED = Number(value), material.needsUpdate = true }),
         }
     }
 
@@ -176,8 +174,8 @@ export default class ISOGui
                 ray_span_distance       : 107,
                 ray_start_position      : 108,
                 ray_end_position        : 109,
-                ray_max_step_count      : 110,
-                ray_max_skip_count      : 111,
+                ray_max_cell_count      : 110,
+                ray_max_block_count     : 111,
                  
                 trace_intersected       : 201,
                 trace_terminated        : 202,

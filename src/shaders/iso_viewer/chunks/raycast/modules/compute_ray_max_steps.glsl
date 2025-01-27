@@ -1,12 +1,10 @@
 
-// compute the maximum allowed number of steps based on the min ray step distance
+ivec3 start_coords = ivec3(ray.start_position * u_volume.inv_spacing);
+ivec3 end_coords = ivec3(ray.end_position * u_volume.inv_spacing);
+ivec3 span_coords = abs(end_coords - start_coords);
 
-// ray.max_step_count = int(ceil(u_volume.size_length / mmin(u_volume.spacing * u_rendering.min_step_scaling)));
+ray.max_cell_count = sum(span_coords) - 2;
+ray.max_cell_count = mmin(ray.max_cell_count, u_rendering.max_cell_count, MAX_CELL_COUNT);
 
-ray.max_step_count = int(ceil(ray.span_distance / ray.step_distance));
-ray.max_step_count = min(ray.max_step_count, u_rendering.max_step_count);
-ray.max_step_count = min(ray.max_step_count, MAX_TRACE_STEP_COUNT);
-
-ray.max_skip_count = int(ceil(ray.span_distance / mmin(u_distmap.spacing)));
-ray.max_skip_count = min(ray.max_skip_count, u_rendering.max_skip_count);
-ray.max_skip_count = min(ray.max_skip_count, MAX_BLOCK_SKIP_COUNT);
+ray.max_block_count = sum(span_coords / u_distmap.sub_division) - 2;
+ray.max_block_count = mmin(ray.max_block_count, u_rendering.max_block_count, MAX_BLOCK_COUNT);
