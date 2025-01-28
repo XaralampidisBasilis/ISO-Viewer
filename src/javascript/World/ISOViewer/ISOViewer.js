@@ -37,7 +37,7 @@ export default class ISOViewer extends EventEmitter
     async computeMaps()
     {
         const uRendering = this.material.uniforms.u_rendering.value
-        const uDistmap = this.material.uniforms.u_distmap.value
+        const uDistmap = this.material.uniforms.u_distance_map.value
 
         await tf.ready()
         await this.processor.computeIntensityMap()
@@ -53,8 +53,8 @@ export default class ISOViewer extends EventEmitter
     {
         // Material defines and uniforms
         const defines = this.material.defines
-        const uVolume = this.material.uniforms.u_volume.value
-        const uDistmap = this.material.uniforms.u_distmap.value
+        const uVolume = this.material.uniforms.u_intensity_map.value
+        const uDistmap = this.material.uniforms.u_distance_map.value
         const uTextures = this.material.uniforms.u_textures.value
       
         // Free GPU before computation
@@ -146,8 +146,8 @@ export default class ISOViewer extends EventEmitter
         const pBoundingBox = this.processor.computes.boundingBox.parameters
 
         // uniforms
-        const uVolume = this.material.uniforms.u_volume.value
-        const uDistmap = this.material.uniforms.u_distmap.value
+        const uVolume = this.material.uniforms.u_intensity_map.value
+        const uDistmap = this.material.uniforms.u_distance_map.value
         const uTextures = this.material.uniforms.u_textures.value
 
         // volume

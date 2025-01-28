@@ -1,7 +1,7 @@
-#ifndef UNIFORMS_DISTMAP
-#define UNIFORMS_DISTMAP
+#ifndef UNIFORMS_DISTANCE_MAP
+#define UNIFORMS_DISTANCE_MAP
 
-struct Distmap
+struct DistanceMap
 {
     int   max_distance;
     int   max_iterations;
@@ -15,6 +15,6 @@ struct Distmap
     vec3  inv_size;              
 };
 
-uniform Distmap u_distmap;
+uniform DistanceMap u_distance_map;
 
-#endif // UNIFORMS_DISTMAP
+#endif 

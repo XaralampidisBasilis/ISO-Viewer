@@ -3,18 +3,18 @@
 // COMPUTE DEBUG 
 
 // cheby distance
-float debug_block_cheby_distance = float(block.cheby_distance) / float(u_distmap.max_distance);
+float debug_block_cheby_distance = float(block.cheby_distance) / float(u_distance_map.max_distance);
 debug.block_cheby_distance = vec4(vec3(debug_block_cheby_distance), 1.0);
 
 // occupied
 debug.block_occupied = vec4(vec3(block.occupied), 1.0);
 
 // coords
-vec3 debug_block_coords = vec3(block.coords) / vec3(u_distmap.dimensions - 1);
+vec3 debug_block_coords = vec3(block.coords) / vec3(u_distance_map.dimensions - 1);
 debug.block_coords = vec4(debug_block_coords, 1.0);
 
 // coords step
-vec3 debug_block_coords_step = (vec3(block.coords_step) / float(u_distmap.max_distance)) * 0.5 + 0.5;
+vec3 debug_block_coords_step = (vec3(block.coords_step) / float(u_distance_map.max_distance)) * 0.5 + 0.5;
 debug.block_coords_step  = vec4(debug_block_coords_step, 1.0);
 
 // min position

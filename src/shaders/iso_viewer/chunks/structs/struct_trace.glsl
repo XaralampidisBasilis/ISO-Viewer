@@ -4,8 +4,8 @@
 // struct to hold information about the current ray trace 
 struct Trace 
 {
-    bool  intersected;          // flag indicating if the trace intersected with the u_volume
-    bool  terminated;           // flag indicating if the trace has reached out of u_volume bounds
+    bool  intersected;          // flag indicating if the trace intersected with the u_intensity_map
+    bool  terminated;           // flag indicating if the trace has reached out of u_intensity_map bounds
     bool  exhausted;            // flag indicating if the trace has reached the max step count
 
     ivec3 coords;

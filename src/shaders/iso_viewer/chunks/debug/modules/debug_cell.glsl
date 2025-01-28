@@ -8,7 +8,7 @@ debug.cell_intersected = vec4(vec3(cell.intersected), 1.0);
 debug.cell_terminated = vec4(vec3(cell.terminated), 1.0);
 
 // coords
-vec3 debug_cell_coords = vec3(cell.coords) * u_volume.inv_dimensions;
+vec3 debug_cell_coords = vec3(cell.coords) * u_intensity_map.inv_dimensions;
 debug.cell_coords = vec4(debug_cell_coords, 1.0);
 
 // coords step

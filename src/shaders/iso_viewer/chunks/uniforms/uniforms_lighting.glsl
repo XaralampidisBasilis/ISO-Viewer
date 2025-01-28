@@ -13,4 +13,4 @@ struct Lighting
 
 uniform Lighting u_lighting;
 
-#endif // UNIFORMS_LIGHTING
+#endif

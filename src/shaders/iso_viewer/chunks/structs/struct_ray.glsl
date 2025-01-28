@@ -24,7 +24,7 @@ Ray set_ray()
     Ray ray;
     ray.discarded       = false;
     ray.direction       = normalize(v_ray_direction);
-    ray.uvw_direction   = normalize(v_ray_direction) * u_volume.inv_size;
+    ray.uvw_direction   = normalize(v_ray_direction) * u_intensity_map.inv_size;
     ray.step_distance   = 0.0;
     ray.start_position  = vec3(0.0);
     ray.end_position    = vec3(0.0);

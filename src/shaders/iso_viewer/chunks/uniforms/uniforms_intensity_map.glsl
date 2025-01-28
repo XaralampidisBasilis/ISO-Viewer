@@ -1,8 +1,7 @@
-#ifndef UNIFORMS_VOLUME
-#define UNIFORMS_VOLUME
+#ifndef UNIFORMS_INTENSITY_MAP
+#define UNIFORMS_INTENSITY_MAP
 
-// struct to hold volume uniforms
-struct Volume 
+struct IntensityMap 
 {
     ivec3 dimensions;    
     vec3  spacing;           
@@ -18,6 +17,6 @@ struct Volume
     float max_intensity;          
 };
 
-uniform Volume u_volume;
+uniform IntensityMap u_intensity_map;
 
 #endif

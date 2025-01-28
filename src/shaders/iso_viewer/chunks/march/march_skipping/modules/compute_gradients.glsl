@@ -13,7 +13,7 @@
 float intensities[8];
 for (int i = 0; i < 8; i++)
 {
-    vec3 uvw_offset = trace.uvw + u_volume.inv_dimensions * center_offsets[i];
+    vec3 uvw_offset = trace.uvw + u_intensity_map.inv_dimensions * center_offsets[i];
     intensities[i] = texture(u_textures.intensity_map, uvw_offset).r;
 }
 
@@ -31,7 +31,7 @@ vec3 backward_intensity = vec3(
 );
 
 // Compute gradient
-trace.gradient = (forward_intensity - backward_intensity) / (u_volume.spacing * 4.0);
+trace.gradient = (forward_intensity - backward_intensity) / (u_intensity_map.spacing * 4.0);
 
 // Update stats
 #if STATS_ENABLED == 1

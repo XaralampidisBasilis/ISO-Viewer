@@ -12,4 +12,4 @@ struct Shading
 
 uniform Shading u_shading;
 
-#endif // UNIFORMS_SHADING
+#endif 

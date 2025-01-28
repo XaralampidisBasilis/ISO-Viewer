@@ -1,7 +1,7 @@
-#ifndef UNIFORMS_COLORMAP
-#define UNIFORMS_COLORMAP
+#ifndef UNIFORMS_COLOR_MAP
+#define UNIFORMS_COLOR_MAP
 
-struct Colormap 
+struct ColorMap 
 {
     int  levels;      
     int  name;        
@@ -10,6 +10,6 @@ struct Colormap
     vec2 end_coords;  
 };
 
-uniform Colormap u_colormap;
+uniform ColorMap u_color_map;
 
 #endif

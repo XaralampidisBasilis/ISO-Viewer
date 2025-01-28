@@ -76,7 +76,7 @@ export default class ISOGui
         const folder = this.subfolders.rendering
         const material = this.viewer.material
         const uRendering = this.viewer.material.uniforms.u_rendering.value
-        const uDistmap = this.viewer.material.uniforms.u_distmap.value
+        const uDistmap = this.viewer.material.uniforms.u_distance_map.value
         const defines = this.viewer.material.defines
         const objects = { 
             iso_intensity              : uRendering.iso_intensity,
@@ -100,7 +100,7 @@ export default class ISOGui
     addControllersColormap() 
     {
         const folder = this.subfolders.colormap
-        const uniforms = this.viewer.material.uniforms.u_colormap.value
+        const uniforms = this.viewer.material.uniforms.u_color_map.value
         const objects = { flip: false }
     
         this.controllers.colormap = 
@@ -254,16 +254,16 @@ export default class ISOGui
 
     flipColormap()
     {
-        // let colormap = this.viewer.material.uniforms.u_colormap.value
-        [this.viewer.material.uniforms.u_colormap.value.start_coords.x, this.viewer.material.uniforms.u_colormap.value.end_coords.x] = 
-        [this.viewer.material.uniforms.u_colormap.value.end_coords.x, this.viewer.material.uniforms.u_colormap.value.start_coords.x]      
+        // let colormap = this.viewer.material.uniforms.u_color_map.value
+        [this.viewer.material.uniforms.u_color_map.value.start_coords.x, this.viewer.material.uniforms.u_color_map.value.end_coords.x] = 
+        [this.viewer.material.uniforms.u_color_map.value.end_coords.x, this.viewer.material.uniforms.u_color_map.value.start_coords.x]      
     }
 
     updateColormap()
     {
         let { x_start, x_end, y } = colormapLocations[this.controllers.colormap.name.getValue()]
-        this.viewer.material.uniforms.u_colormap.value.start_coords.set(x_start, y)
-        this.viewer.material.uniforms.u_colormap.value.end_coords.set(x_end, y)      
+        this.viewer.material.uniforms.u_color_map.value.start_coords.set(x_start, y)
+        this.viewer.material.uniforms.u_color_map.value.end_coords.set(x_end, y)      
     }
 
     destroy() {

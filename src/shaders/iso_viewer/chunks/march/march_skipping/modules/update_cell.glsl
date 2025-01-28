@@ -1,8 +1,8 @@
 
 // compute cell bounding box in model coordinates
 cell.coords += cell.coords_step;
-cell.min_position = (vec3(cell.coords) - 0.5) * u_volume.spacing;
-cell.max_position = (vec3(cell.coords) + 0.5) * u_volume.spacing;
+cell.min_position = (vec3(cell.coords) - 0.5) * u_intensity_map.spacing;
+cell.max_position = (vec3(cell.coords) + 0.5) * u_intensity_map.spacing;
 
 // compute cell ray intersection to find entry and exit distances, 
 cell.entry_distance = cell.exit_distance;

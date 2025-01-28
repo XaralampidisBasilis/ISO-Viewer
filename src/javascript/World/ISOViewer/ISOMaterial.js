@@ -15,7 +15,7 @@ export default function()
             color_maps    : null,
         }),
 
-        u_volume : new THREE.Uniform
+        u_intensity_map : new THREE.Uniform
         ({
             dimensions            : new THREE.Vector3(),
             spacing               : new THREE.Vector3(),
@@ -31,7 +31,7 @@ export default function()
             max_intensity         : 0.0,
         }),
 
-        u_distmap : new THREE.Uniform
+        u_distance_map : new THREE.Uniform
         ({
             max_distance    : 0,
             max_iterations  : 100,
@@ -45,21 +45,21 @@ export default function()
             inv_size        : new THREE.Vector3(),
         }),
 
-        u_rendering: new THREE.Uniform
-        ({
-            iso_intensity   : 0.53,
-            max_count       : 0,
-            max_cell_count  : 0,
-            max_block_count : 0,
-        }),
-
-        u_colormap: new THREE.Uniform
+        u_color_map: new THREE.Uniform
         ({
             levels      : 255,
             name        : 'cet_d9',
             thresholds  : new THREE.Vector2(0, 1),
             start_coords: new THREE.Vector2(colormapLocations['cet_d9'].x_start, colormapLocations['cet_d9'].y),
             end_coords  : new THREE.Vector2(colormapLocations['cet_d9'].x_end,   colormapLocations['cet_d9'].y),
+        }),
+        
+        u_rendering: new THREE.Uniform
+        ({
+            iso_intensity   : 0.53,
+            max_count       : 0,
+            max_cell_count  : 0,
+            max_block_count : 0,
         }),
 
         u_shading: new THREE.Uniform

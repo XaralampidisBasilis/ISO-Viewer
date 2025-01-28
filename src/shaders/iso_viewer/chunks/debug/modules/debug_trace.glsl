@@ -35,11 +35,11 @@ vec3 debug_trace_abs_error = mmix(BLACK_COLOR, RED_COLOR, abs(trace.error / MILL
 debug.trace_abs_error = vec4(debug_trace_abs_error, 1.0);
 
 // gradient
-vec3 debug_trace_gradient = (trace.gradient / mmax(u_volume.inv_spacing)) * 0.5 + 0.5;
+vec3 debug_trace_gradient = (trace.gradient / mmax(u_intensity_map.inv_spacing)) * 0.5 + 0.5;
 debug.trace_gradient = vec4(debug_trace_gradient, 1.0);
 
 // gradient length
-float debug_trace_gradient_length = map(0.0, mmax(u_volume.inv_spacing), length(trace.gradient));
+float debug_trace_gradient_length = map(0.0, mmax(u_intensity_map.inv_spacing), length(trace.gradient));
 debug.trace_gradient_length = vec4(vec3(debug_trace_gradient_length), 1.0);
 
 // PRINT DEBUG

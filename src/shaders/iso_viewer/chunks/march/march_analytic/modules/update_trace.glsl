@@ -2,7 +2,7 @@
 // update trace
 trace.distance = cell.exit_distance;
 trace.position = camera.position + ray.direction * trace.distance; 
-trace.uvw = trace.position * u_volume.inv_size;
+trace.uvw = trace.position * u_intensity_map.inv_size;
 trace.intensity = cell.sample_intensities.w;
 trace.error = trace.intensity - u_rendering.iso_intensity;
 

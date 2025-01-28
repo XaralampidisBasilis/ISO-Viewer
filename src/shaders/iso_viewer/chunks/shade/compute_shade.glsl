@@ -4,7 +4,7 @@
 #include "./modules/compute_depth"
 
 // Compute light position
-vec3 light_offset = u_lighting.position_offset * u_volume.size;
+vec3 light_offset = u_lighting.position_offset * u_intensity_map.size;
 vec3 light_position = camera.position + light_offset;
 
 // Compute shading vectors

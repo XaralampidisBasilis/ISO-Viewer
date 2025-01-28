@@ -8,7 +8,7 @@ vec3 debug_ray_direction = ray.direction * 0.5 + 0.5;
 debug.ray_direction = vec4(debug_ray_direction, 1.0);
 
 // step distance
-float debug_ray_step_distance = ray.step_distance / u_volume.spacing_length;
+float debug_ray_step_distance = ray.step_distance / u_intensity_map.spacing_length;
 debug.ray_step_distance = vec4(vec3(debug_ray_step_distance), 1.0);
 
 // start distance

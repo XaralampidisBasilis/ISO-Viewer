@@ -11,4 +11,4 @@ struct Rendering
 
 uniform Rendering u_rendering;
 
-#endif // UNIFORMS_RENDERING
+#endif 
