@@ -4,6 +4,15 @@
 struct Debug 
 {
     int  slot_ray;
+    int  slot_trace;
+    int  slot_cell;
+    int  slot_block;
+    int  slot_frag;
+    int  slot_box;
+    int  slot_camera;
+    int  slot_stats;
+    int  slot_variables;
+
     vec4 ray_discarded;
     vec4 ray_direction;
     vec4 ray_step_distance;
@@ -15,7 +24,6 @@ struct Debug
     vec4 ray_max_cell_count;
     vec4 ray_max_block_count;
 
-    int  slot_trace;
     vec4 trace_intersected;      
     vec4 trace_terminated;       
     vec4 trace_exhausted;        
@@ -28,7 +36,6 @@ struct Debug
     vec4 trace_gradient;         
     vec4 trace_gradient_length;  
 
-    int  slot_cell;
     vec4 cell_intersected;       
     vec4 cell_terminated;        
     vec4 cell_coords;            
@@ -41,16 +48,13 @@ struct Debug
     vec4 cell_sample_intensities;
     vec4 cell_intensity_coeffs;  
 
-    int  slot_block;
-    vec4 block_value;        
+    vec4 block_cheby_distance;        
     vec4 block_occupied;     
     vec4 block_coords;       
     vec4 block_coords_step;  
     vec4 block_min_position; 
     vec4 block_max_position; 
-    vec4 block_skip_count;   
 
-    int  slot_frag;
     vec4 frag_depth;
     vec4 frag_position; 
     vec4 frag_normal_vector; 
@@ -69,7 +73,6 @@ struct Debug
     vec4 frag_shaded_color; 
     vec4 frag_shaded_luminance; 
 
-    int  slot_box;
     vec4 box_entry_distance;
     vec4 box_exit_distance;
     vec4 box_span_distance;
@@ -79,18 +82,15 @@ struct Debug
     vec4 box_max_exit_distance;
     vec4 box_max_span_distance;
 
-    int  slot_camera;
     vec4 camera_position;
     vec4 camera_direction; 
     vec4 camera_far_distance; 
     vec4 camera_near_distance; 
 
-    int  slot_stats;
     vec4 stats_num_fetches;
     vec4 stats_num_steps;
     vec4 stats_num_skips;
 
-    int  slot_variables;
     vec4 variable1;
     vec4 variable2;
     vec4 variable3;
@@ -109,7 +109,7 @@ Debug set_debug()
     debug.ray_start_position       = vec4(vec3(0.0), 1.0);
     debug.ray_end_position         = vec4(vec3(0.0), 1.0);
     debug.ray_max_cell_count       = vec4(vec3(0.0), 1.0);
-    debug.ray_max_block_count       = vec4(vec3(0.0), 1.0);
+    debug.ray_max_block_count      = vec4(vec3(0.0), 1.0);
 
     debug.trace_intersected        = vec4(vec3(0.0), 1.0);
     debug.trace_terminated         = vec4(vec3(0.0), 1.0);
@@ -135,13 +135,12 @@ Debug set_debug()
     debug.cell_sample_intensities  = vec4(vec3(0.0), 1.0);
     debug.cell_intensity_coeffs    = vec4(vec3(0.0), 1.0);
 
-    debug.block_value              = vec4(vec3(0.0), 1.0);
+    debug.block_cheby_distance     = vec4(vec3(0.0), 1.0);
     debug.block_occupied           = vec4(vec3(0.0), 1.0);
     debug.block_coords             = vec4(vec3(0.0), 1.0);
     debug.block_coords_step        = vec4(vec3(0.0), 1.0);
     debug.block_min_position       = vec4(vec3(0.0), 1.0);
     debug.block_max_position       = vec4(vec3(0.0), 1.0);
-    debug.block_skip_count         = vec4(vec3(0.0), 1.0);
 
     debug.frag_depth               = vec4(vec3(0.0), 1.0);
     debug.frag_position            = vec4(vec3(0.0), 1.0);

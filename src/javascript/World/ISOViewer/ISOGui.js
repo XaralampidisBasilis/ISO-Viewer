@@ -195,13 +195,12 @@ export default class ISOGui
                 cell_sample_intensities : 410,
                 cell_intensity_coeffs   : 411,
 
-                block_value             : 501,
+                block_cheby_distance    : 501,
                 block_occupied          : 502,
                 block_coords            : 503,
                 block_step_coords       : 504,
                 block_min_position      : 505,
                 block_max_position      : 506,
-                block_skip_count        : 507,
 
                 frag_depth              : 601,     
                 frag_position           : 602,     

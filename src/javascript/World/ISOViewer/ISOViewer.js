@@ -97,7 +97,6 @@ export default class ISOViewer extends EventEmitter
         defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
         defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
         this.material.needsUpdate = true
-
     }
 
     setParameters()

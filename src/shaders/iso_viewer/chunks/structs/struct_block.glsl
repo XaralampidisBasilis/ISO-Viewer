@@ -14,7 +14,6 @@ struct Block
     vec3  max_position;
     float entry_distance;
     float exit_distance;
-    int   skip_count;
 };
 
 Block set_block()
@@ -30,7 +29,6 @@ Block set_block()
     block.max_position   = vec3(0.0);
     block.entry_distance = 0.0;
     block.exit_distance  = 0.0;
-    block.skip_count     = 0;
     return block;
 }
 
