@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import Experience from './Experience'
+import { OrientationCube } from './Utils/OrientationCube'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
 

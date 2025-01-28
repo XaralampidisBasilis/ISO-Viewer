@@ -34,7 +34,7 @@ export default function()
         u_distance_map : new THREE.Uniform
         ({
             max_distance    : 0,
-            max_iterations  : 100,
+            max_iterations  : 50,
             sub_division    : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
@@ -103,7 +103,7 @@ export default function()
         MAX_BLOCK_COUNT        : 1000,
         MAX_CELL_SUB_COUNT     : 10,
         MAX_BLOCK_SUB_COUNT    : 20,
-        MAX_BATCH_COUNT        : 50,
+        MAX_BATCH_COUNT        : 100,
     }
 
     const material = new THREE.ShaderMaterial

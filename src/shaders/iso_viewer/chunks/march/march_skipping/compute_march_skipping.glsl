@@ -50,5 +50,8 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
     }
 }   
 
+trace.exhausted = (trace.intersected || trace.terminated) ? false : true;
+// If batch marching is exhausted continue linearly?
+
 // terminate march, compute intersection and gradient
 #include "./modules/end_march"
