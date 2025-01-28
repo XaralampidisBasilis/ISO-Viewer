@@ -4,4 +4,4 @@
 #define MAX_CELL_SUB_COUNT 10
 
 trace.distance = ray.start_distance;
-trace.position = camera.position + ray.step_direction * trace.distance;
+trace.position = camera.position + ray.direction * trace.distance;

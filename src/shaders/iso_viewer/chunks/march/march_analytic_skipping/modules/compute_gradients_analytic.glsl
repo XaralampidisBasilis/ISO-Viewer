@@ -21,4 +21,4 @@ for (int i = 0; i < 3; i++)
 voxel.gradient = (forward_values - backward_values) * u_volume.inv_spacing;
 
 // update trace
-trace.derivative = dot(voxel.gradient, ray.step_direction);
+trace.derivative = dot(voxel.gradient, ray.direction);

@@ -5,9 +5,8 @@ struct Debug
 {
     int  slot_ray;
     vec4 ray_discarded;
-    vec4 ray_step_direction;
+    vec4 ray_direction;
     vec4 ray_step_distance;
-    vec4 ray_rand_distance;
     vec4 ray_start_distance;
     vec4 ray_end_distance;
     vec4 ray_span_distance;
@@ -97,9 +96,8 @@ Debug set_debug()
     Debug debug;
 
     debug.ray_discarded            = vec4(vec3(0.0), 1.0);
-    debug.ray_step_direction       = vec4(vec3(0.0), 1.0);
+    debug.ray_direction            = vec4(vec3(0.0), 1.0);
     debug.ray_step_distance        = vec4(vec3(0.0), 1.0);
-    debug.ray_rand_distance        = vec4(vec3(0.0), 1.0);
     debug.ray_start_distance       = vec4(vec3(0.0), 1.0);
     debug.ray_end_distance         = vec4(vec3(0.0), 1.0);
     debug.ray_span_distance        = vec4(vec3(0.0), 1.0);

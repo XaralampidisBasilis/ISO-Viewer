@@ -4,12 +4,12 @@
 debug.ray_discarded = vec4(vec3(ray.discarded), 1.0);
 
 // step direction
-vec3 debug_ray_step_direction = ray.step_direction * 0.5 + 0.5;
-debug.ray_step_direction = vec4(debug_ray_step_direction, 1.0);
+vec3 debug_ray_direction = ray.direction * 0.5 + 0.5;
+debug.ray_direction = vec4(debug_ray_direction, 1.0);
 
-// rand distance
-float debug_ray_rand_distance = ray.rand_distance / ray.step_distance;
-debug.ray_rand_distance = vec4(vec3(debug_ray_rand_distance), 1.0);
+// step distance
+float debug_ray_step_distance = ray.step_distance / u_volume.spacing_length;
+debug.ray_step_distance = vec4(vec3(debug_ray_step_distance), 1.0);
 
 // start distance
 float debug_ray_start_distance = map(box.min_entry_distance, box.max_exit_distance, ray.start_distance);
@@ -44,14 +44,14 @@ debug.ray_max_block_count = vec4(vec3(debug_ray_max_block_count), 1.0);
 
 switch (u_debugging.option - debug.slot_ray)
 {
-    case  1: fragColor = debug.ray_discarded;      break;
-    case  2: fragColor = debug.ray_step_direction; break;
-    case  3: fragColor = debug.ray_rand_distance;  break;
-    case  4: fragColor = debug.ray_start_distance; break;
-    case  5: fragColor = debug.ray_end_distance;   break;
-    case  6: fragColor = debug.ray_span_distance;  break;
-    case  7: fragColor = debug.ray_start_position; break;
-    case  8: fragColor = debug.ray_end_position;   break;
-    case  9: fragColor = debug.ray_max_cell_count; break;
+    case  1: fragColor = debug.ray_discarded;       break;
+    case  2: fragColor = debug.ray_direction;       break;
+    case  3: fragColor = debug.ray_step_distance;   break;
+    case  4: fragColor = debug.ray_start_distance;  break;
+    case  5: fragColor = debug.ray_end_distance;    break;
+    case  6: fragColor = debug.ray_span_distance;   break;
+    case  7: fragColor = debug.ray_start_position;  break;
+    case  8: fragColor = debug.ray_end_position;    break;
+    case  9: fragColor = debug.ray_max_cell_count;  break;
     case 10: fragColor = debug.ray_max_block_count; break;
 }

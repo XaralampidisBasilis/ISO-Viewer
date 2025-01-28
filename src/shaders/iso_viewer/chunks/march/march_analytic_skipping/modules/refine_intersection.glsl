@@ -30,7 +30,7 @@ for (int iter = 0; iter < 10; iter++)
 {
     // update trace
     next_trace.distance = mix(distances.x, distances.y, 0.5);
-    next_trace.position = camera.position + ray.step_direction * next_trace.distance;
+    next_trace.position = camera.position + ray.direction * next_trace.distance;
 
     // update voxel
     next_voxel.texture_coords = next_trace.position * u_volume.inv_size;

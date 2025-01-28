@@ -10,6 +10,6 @@ const mat4 sample_matrix = mat4(
 
 // start trace
 trace.distance = ray.start_distance;
-trace.position = camera.position + ray.step_direction * ray.start_distance;
+trace.position = camera.position + ray.direction * ray.start_distance;
 prev_trace = trace;
 

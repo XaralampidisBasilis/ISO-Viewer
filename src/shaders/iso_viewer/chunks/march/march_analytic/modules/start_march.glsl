@@ -1,7 +1,7 @@
 
 // compute trace at ray start position
 trace.distance = ray.start_distance;
-trace.position = camera.position + ray.step_direction * trace.distance;
+trace.position = camera.position + ray.direction * trace.distance;
 trace.uvw = trace.position * u_volume.inv_size;
 
 // compute cell at ray start position

@@ -10,8 +10,8 @@ block.max_position = (vec3(block.max_coords + 1) + MILLI_TOLERANCE) * u_distmap.
 
 // update position
 prev_trace = trace;
-trace.distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.step_direction);
-trace.position = camera.position + ray.step_direction * trace.distance; 
+trace.distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
+trace.position = camera.position + ray.direction * trace.distance; 
 trace.step_distance = trace.distance - prev_trace.distance;
 
 // update conditions

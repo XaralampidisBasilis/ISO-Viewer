@@ -82,9 +82,6 @@ export default class ISOGui
             iso_intensity              : uRendering.iso_intensity,
             sub_division               : uDistmap.sub_division,
             INTERSECT_BBOX_ENABLED     : Boolean(defines.INTERSECT_BBOX_ENABLED),
-            INTERSECT_BVOL_ENABLED     : Boolean(defines.INTERSECT_BVOL_ENABLED),
-            REFINE_INTERSECTION_ENABLED: Boolean(defines.REFINE_INTERSECTION_ENABLED),
-            DITHERING_ENABLED          : Boolean(defines.DITHERING_ENABLED),
             SKIPPING_ENABLED           : Boolean(defines.SKIPPING_ENABLED),
         }
     
@@ -95,10 +92,7 @@ export default class ISOGui
             maxBlockCount       : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
             subDivision         : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateMaps() }),
             enableIntersectBbox : folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
-            enableIntersectBvol : folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('enable_intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
-            enableRefineInter   : folder.add(objects, 'REFINE_INTERSECTION_ENABLED').name('enable_refine_position').onFinishChange((value) => { defines.REFINE_INTERSECTION_ENABLED = Number(value), material.needsUpdate = true }),
             enableSkipping      : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
-            enableDithering     : folder.add(objects, 'DITHERING_ENABLED').name('enable_dithering').onFinishChange((value) => { defines.DITHERING_ENABLED = Number(value), material.needsUpdate = true }),
         }
     }
 
@@ -166,16 +160,15 @@ export default class ISOGui
                 default                 : 0,
 
                 ray_discarded           : 101,
-                ray_step_direction      : 102,
+                ray_direction           : 102,
                 ray_step_distance       : 103,
-                ray_rand_distance       : 104,
-                ray_start_distance      : 105,
-                ray_end_distance        : 106,
-                ray_span_distance       : 107,
-                ray_start_position      : 108,
-                ray_end_position        : 109,
-                ray_max_cell_count      : 110,
-                ray_max_block_count     : 111,
+                ray_start_distance      : 104,
+                ray_end_distance        : 105,
+                ray_span_distance       : 106,
+                ray_start_position      : 107,
+                ray_end_position        : 108,
+                ray_max_cell_count      : 109,
+                ray_max_block_count     : 110,
                  
                 trace_intersected       : 201,
                 trace_terminated        : 202,

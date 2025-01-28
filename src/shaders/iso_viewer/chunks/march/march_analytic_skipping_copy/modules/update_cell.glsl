@@ -11,7 +11,7 @@ cell.exit_distance = intersect_box_max
     cell.min_position, 
     cell.max_position, 
     camera.position, 
-    ray.step_direction, 
+    ray.direction, 
     cell.coords_step
 );
 

@@ -5,7 +5,7 @@ cell.min_position = (vec3(cell.coords) - 0.5 - MILLI_TOLERANCE) * u_volume.spaci
 cell.max_position = (vec3(cell.coords) + 0.5 + MILLI_TOLERANCE) * u_volume.spacing;
 
 // // compute distances
-cell.bounds = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
+cell.bounds = intersect_box(cell.min_position, cell.max_position, camera.position, ray.direction);
 cell.bounds = clamp(cell.bounds, ray.start_distance, ray.end_distance);
 cell.distances = mmix(cell.bounds.x, cell.bounds.y, sample_distances);
 

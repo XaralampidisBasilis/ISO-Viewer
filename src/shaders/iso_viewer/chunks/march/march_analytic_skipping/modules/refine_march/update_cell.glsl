@@ -6,7 +6,7 @@ cell.max_position = (vec3(cell.coords) + 0.5) * u_volume.spacing;
 
 // compute position
 cell.bounds.x = cell.bounds.y;
-cell.bounds.y = intersect_box_max(cell.min_position, cell.max_position, camera.position, ray.step_direction, cell.step_coords);
+cell.bounds.y = intersect_box_max(cell.min_position, cell.max_position, camera.position, ray.direction, cell.step_coords);
 
 // compute distances
 cell.distances.x = cell.distances.w;

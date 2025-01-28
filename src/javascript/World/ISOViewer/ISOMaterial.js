@@ -92,10 +92,7 @@ export default function()
     const defines = 
     {           
         INTERSECT_BBOX_ENABLED     : 1,
-        INTERSECT_BVOL_ENABLED     : 1,
-        REFINE_INTERSECTION_ENABLED: 1,
         SKIPPING_ENABLED           : 1,
-        DITHERING_ENABLED          : 0,
         DISCARDING_DISABLED        : 0,
         MAX_CELL_COUNT             : 1000,
         MAX_BLOCK_COUNT            : 1000,

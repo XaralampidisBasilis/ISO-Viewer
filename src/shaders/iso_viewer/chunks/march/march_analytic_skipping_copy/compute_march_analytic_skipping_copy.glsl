@@ -15,7 +15,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
         }  
         
         trace.distance = block.exit_distance;
-        trace.position = camera.position + ray.step_direction * trace.distance; 
+        trace.position = camera.position + ray.direction * trace.distance; 
     }
 
     // Cell 

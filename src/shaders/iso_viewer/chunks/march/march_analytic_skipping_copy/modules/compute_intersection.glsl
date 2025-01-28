@@ -1,6 +1,6 @@
 
 // compute distances
-vec2 cell_intersections = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
+vec2 cell_intersections = intersect_box(cell.min_position, cell.max_position, camera.position, ray.direction);
 cell_intersections = clamp(cell_intersections, box.entry_distance, box.exit_distance);
 cell.entry_distance = cell_intersections.x;
 cell.exit_distance = cell_intersections.y;
@@ -22,7 +22,7 @@ float iso_distance = mmin(mmix(1.0, iso_distances, is_inside));
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, iso_distance);
-trace.position = camera.position + ray.step_direction * trace.distance; 
+trace.position = camera.position + ray.direction * trace.distance; 
 trace.uvw = trace.position * u_volume.inv_size; 
 trace.intensity = texture(u_textures.intensity_map, trace.uvw).r;
 trace.error = trace.intensity - u_rendering.iso_intensity;

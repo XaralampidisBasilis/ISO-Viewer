@@ -7,9 +7,9 @@ block.min_position = vec3(block.coords + 0) * u_distmap.spacing - u_volume.spaci
 block.max_position = vec3(block.coords + 1) * u_distmap.spacing - u_volume.spacing * 0.5;  
 
 // Refine trace position from block entry distance
-trace.distance = intersect_box_min(block.min_position, block.max_position, camera.position, ray.step_direction);
+trace.distance = intersect_box_min(block.min_position, block.max_position, camera.position, ray.direction);
 trace.distance -= u_volume.spacing_length * 0.5; // safeguard for numerical instabilities
-trace.position = camera.position + ray.step_direction * trace.distance; 
+trace.position = camera.position + ray.direction * trace.distance; 
 
 // start cell
 cell.step_coords = ivec3(0.0);

@@ -1,6 +1,6 @@
 
 // compute distances
-cell.bounds = intersect_box(cell.min_position, cell.max_position, camera.position, ray.step_direction);
+cell.bounds = intersect_box(cell.min_position, cell.max_position, camera.position, ray.direction);
 cell.bounds = clamp(cell.bounds, ray.start_distance, ray.end_distance);
 cell.distances = mmix(cell.bounds.x, cell.bounds.y, sample_distances);
 
@@ -19,7 +19,7 @@ float solution = mmin(mmix(1.0, solutions, is_inside));
 
 // update trace 
 trace.distance = mix(cell.bounds.x, cell.bounds.y, solution);
-trace.position = camera.position + ray.step_direction * trace.distance; 
+trace.position = camera.position + ray.direction * trace.distance; 
 
 // update voxel
 voxel.texture_coords = trace.position * u_volume.inv_size;

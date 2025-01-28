@@ -10,13 +10,11 @@
 #include "./modules/compute_ray_bbox_intersection"
 #endif
 
+// Compute ray step distance
+#include "./modules/compute_ray_step_distance"
+
 // Compute ray max steps 
 #include "./modules/compute_ray_max_steps"
-
-// Compute ray dithering
-#if DITHERING_ENABLED == 1
-#include "./modules/compute_ray_dithering"
-#endif
 
 
 
