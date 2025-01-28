@@ -6,3 +6,4 @@
 #include "./struct_cell"
 #include "./struct_block"
 #include "./struct_debug"
+#include "./struct_stats"

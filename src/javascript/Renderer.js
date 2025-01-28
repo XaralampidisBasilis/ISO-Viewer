@@ -18,19 +18,17 @@ export default class Renderer
     {
         this.instance = new THREE.WebGLRenderer({
             canvas: this.canvas,
-            powerPreference: 'high-performance',
-            antialias: true,
-            stencil: false,
+            antialias: false,
             depth: true,
             alpha: true,
-            preserveDrawingBuffer: false  // Save memory by not preserving the frame buffer
+            powerPreference: 'high-performance',
+            preserveDrawingBuffer: false,  // Save memory by not preserving the frame buffer
         })       
         this.instance.setClearColor('#211d20', 1)
         this.instance.setSize(this.sizes.width, this.sizes.height)
         this.instance.setPixelRatio(this.sizes.pixelRatio)
         this.instance.xr.enabled = true;
         this.instance.shadowMap.enabled = false
-    
     }
 
     resize()

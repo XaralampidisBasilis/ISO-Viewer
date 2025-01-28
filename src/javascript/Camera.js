@@ -35,7 +35,10 @@ export default class Camera
 
         this.controls.trackball = new TrackballControls(this.instance, this.canvas)
         this.controls.trackball.staticMoving = false
-        this.controls.trackball.zoomSpeed = 2
+        this.controls.trackball.dynamicDampingFactor = 0.3
+        this.controls.trackball.zoomSpeed = 2.0
+        this.controls.trackball.panSpeed = 0.1
+        this.controls.trackball.rotateSpeed = 1.0
     }
 
     resize()

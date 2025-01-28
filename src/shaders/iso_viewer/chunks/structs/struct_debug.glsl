@@ -35,15 +35,17 @@ struct Debug
     vec4 trace_spanned_distance; 
 
     int  slot_cell;
-    vec4 cell_coords;
-    vec4 cell_coords_step;
-    vec4 cell_min_position;
-    vec4 cell_max_position;
-    vec4 cell_entry_distance;
-    vec4 cell_exit_distance;
-    vec4 cell_distances;
-    vec4 cell_values;    
-    vec4 cell_coeffs;    
+    vec4 cell_intersected;       
+    vec4 cell_terminated;        
+    vec4 cell_coords;            
+    vec4 cell_coords_step;       
+    vec4 cell_max_position;      
+    vec4 cell_min_position;      
+    vec4 cell_entry_distance;    
+    vec4 cell_exit_distance;     
+    vec4 cell_sample_distances;  
+    vec4 cell_sample_intensities;
+    vec4 cell_intensity_coeffs;  
 
     int  slot_block;
     vec4 block_value;        
@@ -128,16 +130,17 @@ Debug set_debug()
     debug.trace_skipped_distance   = vec4(vec3(0.0), 1.0);
     debug.trace_spanned_distance   = vec4(vec3(0.0), 1.0);
  
-
-    debug.cell_coords              = vec4(vec3(0.0), 1.0);   
-    debug.cell_coords_step         = vec4(vec3(0.0), 1.0);        
-    debug.cell_min_position        = vec4(vec3(0.0), 1.0);         
-    debug.cell_max_position        = vec4(vec3(0.0), 1.0);         
-    debug.cell_entry_distance      = vec4(vec3(0.0), 1.0);      
-    debug.cell_exit_distance       = vec4(vec3(0.0), 1.0);      
-    debug.cell_distances           = vec4(vec3(0.0), 1.0);      
-    debug.cell_values              = vec4(vec3(0.0), 1.0);       
-    debug.cell_coeffs              = vec4(vec3(0.0), 1.0);       
+    debug.cell_intersected         = vec4(vec3(0.0), 1.0);
+    debug.cell_terminated          = vec4(vec3(0.0), 1.0);
+    debug.cell_coords              = vec4(vec3(0.0), 1.0);
+    debug.cell_coords_step         = vec4(vec3(0.0), 1.0);
+    debug.cell_max_position        = vec4(vec3(0.0), 1.0);
+    debug.cell_min_position        = vec4(vec3(0.0), 1.0);
+    debug.cell_entry_distance      = vec4(vec3(0.0), 1.0);
+    debug.cell_exit_distance       = vec4(vec3(0.0), 1.0);
+    debug.cell_sample_distances    = vec4(vec3(0.0), 1.0);
+    debug.cell_sample_intensities  = vec4(vec3(0.0), 1.0);
+    debug.cell_intensity_coeffs    = vec4(vec3(0.0), 1.0);
 
     debug.block_value              = vec4(vec3(0.0), 1.0);
     debug.block_occupied           = vec4(vec3(0.0), 1.0);

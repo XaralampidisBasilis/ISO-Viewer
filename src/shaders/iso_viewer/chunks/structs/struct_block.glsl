@@ -4,31 +4,33 @@
 // struct to hold the current occumap parameters
 struct Block
 {
-    int   value;
+    int   cheby_distance;
     bool  occupied;
     ivec3 coords;  
     ivec3 coords_step;
-    vec3  uvw;
     ivec3 min_coords;
     ivec3 max_coords;
     vec3  min_position;
     vec3  max_position;
+    float entry_distance;
+    float exit_distance;
     int   skip_count;
 };
 
 Block set_block()
 {
     Block block;
-    block.value        = 0;
-    block.occupied     = false;
-    block.coords       = ivec3(0);
-    block.coords_step  = ivec3(0);
-    block.uvw          = vec3(0.0);
-    block.min_coords   = ivec3(0);
-    block.max_coords   = ivec3(0);
-    block.min_position = vec3(0.0);
-    block.max_position = vec3(0.0);
-    block.skip_count   = 0;
+    block.cheby_distance = 0;
+    block.occupied       = false;
+    block.coords         = ivec3(0);
+    block.coords_step    = ivec3(0);
+    block.min_coords     = ivec3(0);
+    block.max_coords     = ivec3(0);
+    block.min_position   = vec3(0.0);
+    block.max_position   = vec3(0.0);
+    block.entry_distance = 0.0;
+    block.exit_distance  = 0.0;
+    block.skip_count     = 0;
     return block;
 }
 

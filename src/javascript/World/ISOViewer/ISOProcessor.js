@@ -114,7 +114,7 @@ export default class ISOProcessor
             })            
         })
 
-        console.log(this.computes.intensityMap.parameters, this.computes.intensityMap.tensor.dataSync())
+        console.log(this.computes.intensityMap.parameters, /*this.computes.intensityMap.tensor.dataSync()*/)
     }
 
     async computeOccupancyMap(threshold, subDivision)
@@ -152,7 +152,7 @@ export default class ISOProcessor
             })
         })
 
-        console.log(this.computes.occupancyMap.parameters, this.computes.occupancyMap.tensor.dataSync())
+        console.log(this.computes.occupancyMap.parameters, /*this.computes.occupancyMap.tensor.dataSync()*/)
     }
 
     async computeDistanceMap(maxIters)
@@ -180,7 +180,7 @@ export default class ISOProcessor
             })
         })
 
-        console.log(this.computes.distanceMap.parameters, this.computes.distanceMap.tensor.dataSync())
+        console.log(this.computes.distanceMap.parameters, /*this.computes.distanceMap.tensor.dataSync()*/)
     }
 
     async computeBoundingBox()

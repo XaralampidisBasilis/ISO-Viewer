@@ -6,3 +6,4 @@ Trace  trace      = set_trace();
 Cell   cell       = set_cell();
 Block  block      = set_block();
 Debug  debug      = set_debug();
+Stats  stats      = set_stats();

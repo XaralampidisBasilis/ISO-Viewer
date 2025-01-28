@@ -4,6 +4,8 @@
 
 struct Cell 
 {
+    bool  intersected;
+    bool  terminated;
     ivec3 coords;
     ivec3 coords_step;
     vec3  min_position;
@@ -18,6 +20,8 @@ struct Cell
 Cell set_cell()
 {
     Cell cell;
+    cell.intersected        = false;
+    cell.terminated         = false;
     cell.coords             = ivec3(0);
     cell.coords_step        = ivec3(0);
     cell.min_position       = vec3(0.0);
