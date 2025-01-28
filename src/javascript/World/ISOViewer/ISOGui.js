@@ -188,11 +188,6 @@ export default class ISOGui
                 trace_abs_error         : 209,
                 trace_gradient          : 210,
                 trace_gradient_length   : 211,
-                trace_step_count        : 212,
-                trace_step_distance     : 213,
-                trace_stepped_distance  : 214,
-                trace_skipped_distance  : 215,
-                trace_spanned_distance  : 216,
                 
                 cell_intersected        : 401,
                 cell_terminated         : 402,

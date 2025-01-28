@@ -8,9 +8,11 @@ struct Stats
     int num_divisions;
     int num_branches;         // if/else, switch
     int num_fetches;          // texture fetch
+    int num_steps;
+    int num_skips;
 };
 
-Stats init_stats()
+Stats set_stats()
 {
     Stats stats;
     stats.num_multiplications = 0;
@@ -18,6 +20,8 @@ Stats init_stats()
     stats.num_divisions       = 0;
     stats.num_branches        = 0;
     stats.num_fetches         = 0;
+    stats.num_steps           = 0;
+    stats.num_skips           = 0;
     return stats;
 }
 

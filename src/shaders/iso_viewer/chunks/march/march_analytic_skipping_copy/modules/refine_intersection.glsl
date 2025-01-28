@@ -2,14 +2,18 @@ Trace temp = trace;
 vec2 errors = vec2(0.0);
 vec2 distances = vec2(0.0);
 
-// update previous trace 
-distances.x = max(ray.start_distance, trace.distance - ray.step_distance * DECI_TOLERANCE);
-temp.uvw = (camera.position + ray.step_direction * distances.y) * u_volume.inv_size;
+// update previous trace
+temp.distance = trace.distance - ray.step_distance * DECI_TOLERANCE;
+distances.x = max(ray.start_distance, temp.distance);
+temp.position = camera.position + ray.step_direction * distances.x;
+temp.uvw =  temp.position * u_volume.inv_size;
 errors.x = texture(u_textures.intensity_map, temp.uvw).r - u_rendering.iso_intensity;
 
 // update next trace 
-distances.y = min(ray.end_distance, trace.distance + ray.step_distance * DECI_TOLERANCE);
-temp.uvw = (camera.position + ray.step_direction * distances.y) * u_volume.inv_size;
+temp.distance = trace.distance + ray.step_distance * DECI_TOLERANCE;
+distances.y = min(ray.end_distance, temp.distance);
+temp.position = camera.position + ray.step_direction * distances.y;
+temp.uvw = temp.position * u_volume.inv_size;
 errors.y = texture(u_textures.intensity_map, temp.uvw).r - u_rendering.iso_intensity;
 
 // Compute iterative bisection method

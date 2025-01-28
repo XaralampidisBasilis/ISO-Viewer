@@ -42,27 +42,6 @@ debug.trace_gradient = vec4(debug_trace_gradient, 1.0);
 float debug_trace_gradient_length = map(0.0, mmax(u_volume.inv_spacing), length(trace.gradient));
 debug.trace_gradient_length = vec4(vec3(debug_trace_gradient_length), 1.0);
 
-// step count
-float debug_trace_step_count = float(trace.step_count) / float(u_rendering.max_cell_count);
-debug.trace_step_count = vec4(vec3(debug_trace_step_count), 1.0);
-
-// step distance
-vec3 debug_trace_step_distance = vec3(trace.step_distance / length(u_volume.spacing));
-debug_trace_step_distance = mmix(RED_COLOR, BLACK_COLOR, WHITE_COLOR, map(-1.0, 1.0, debug_trace_step_distance));
-debug.trace_step_distance = vec4(debug_trace_step_distance, 1.0);
-
-// spanned distance
-float debug_trace_spanned_distance = map(0.0, box.max_span_distance, trace.distance - ray.start_distance);
-debug.trace_spanned_distance = vec4(vec3(debug_trace_spanned_distance), 1.0);
-
-// stepped distance
-float debug_trace_stepped_distance = trace.stepped_distance / box.max_span_distance;
-debug.trace_stepped_distance = vec4(vec3(debug_trace_stepped_distance), 1.0);
-
-// skipped distance
-float debug_trace_skipped_distance = map(0.0, box.max_span_distance, trace.skipped_distance);
-debug.trace_skipped_distance = vec4(vec3(debug_trace_skipped_distance), 1.0);
-
 // PRINT DEBUG
 
 switch (u_debugging.option - debug.slot_trace)
@@ -78,9 +57,4 @@ switch (u_debugging.option - debug.slot_trace)
     case  9: fragColor = debug.trace_abs_error;           break;
     case 10: fragColor = debug.trace_gradient;            break;
     case 11: fragColor = debug.trace_gradient_length;     break;
-    case 12: fragColor = debug.trace_step_count;          break;
-    case 13: fragColor = debug.trace_step_distance;       break;
-    case 14: fragColor = debug.trace_stepped_distance;    break;
-    case 15: fragColor = debug.trace_skipped_distance;    break;
-    case 16: fragColor = debug.trace_spanned_distance;    break;
 }

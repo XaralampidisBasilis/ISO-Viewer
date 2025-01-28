@@ -20,7 +20,7 @@ struct Debug
     vec4 trace_intersected;      
     vec4 trace_terminated;       
     vec4 trace_exhausted;        
-    vec4 trace_outside;          
+    vec4 trace_outside;  
     vec4 trace_distance;         
     vec4 trace_position;         
     vec4 trace_intensity;        
@@ -28,11 +28,6 @@ struct Debug
     vec4 trace_abs_error;        
     vec4 trace_gradient;         
     vec4 trace_gradient_length;  
-    vec4 trace_step_count;       
-    vec4 trace_step_distance;    
-    vec4 trace_stepped_distance; 
-    vec4 trace_skipped_distance; 
-    vec4 trace_spanned_distance; 
 
     int  slot_cell;
     vec4 cell_intersected;       
@@ -124,11 +119,6 @@ Debug set_debug()
     debug.trace_abs_error          = vec4(vec3(0.0), 1.0);
     debug.trace_gradient           = vec4(vec3(0.0), 1.0);
     debug.trace_gradient_length    = vec4(vec3(0.0), 1.0);
-    debug.trace_step_count         = vec4(vec3(0.0), 1.0);
-    debug.trace_step_distance      = vec4(vec3(0.0), 1.0);
-    debug.trace_stepped_distance   = vec4(vec3(0.0), 1.0);
-    debug.trace_skipped_distance   = vec4(vec3(0.0), 1.0);
-    debug.trace_spanned_distance   = vec4(vec3(0.0), 1.0);
  
     debug.cell_intersected         = vec4(vec3(0.0), 1.0);
     debug.cell_terminated          = vec4(vec3(0.0), 1.0);

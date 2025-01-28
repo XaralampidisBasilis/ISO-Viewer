@@ -5,7 +5,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
 {
     // Block 
 
-    for (int count = 0; count < MAX_BLOCK_SUB_COUNT; count++, block.skip_count++) 
+    for (int count = 0; count < MAX_BLOCK_SUB_COUNT; count++) 
     {
         #include "./modules/update_block"
 
@@ -22,7 +22,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
 
     #include "./modules/start_cell"
 
-    for (int count = 0; count < MAX_CELL_SUB_COUNT; count++, trace.step_count++) 
+    for (int count = 0; count < MAX_CELL_SUB_COUNT; count++) 
     {
         #include "./modules/update_cell"
 
@@ -36,7 +36,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
 
     #include "./modules/update_trace"
 
-    if (trace.intersected || trace.terminated || trace.exhausted) 
+    if (trace.intersected || trace.terminated) 
     {
         break;
     }

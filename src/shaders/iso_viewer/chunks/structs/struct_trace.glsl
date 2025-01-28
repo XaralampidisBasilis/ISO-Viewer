@@ -8,18 +8,11 @@ struct Trace
     bool  terminated;           // flag indicating if the trace has reached out of u_volume bounds
     bool  exhausted;            // flag indicating if the trace has reached the max step count
 
-    int   step_count;           // number of steps taken along the ray
-    float step_distance;        // distance to be covered
-
+    ivec3 coords;
     vec3  position;             // current position in 3d model coordinates
     vec3  uvw;                  // current position in 3d model coordinates
     float distance;             // current distance traveled from camera
 
-    float spanned_distance;     // total spanned distance from ray start
-    float stepped_distance;     // total stepped distance 
-    float skipped_distance;
-
-    ivec3 coords;
     vec3  gradient;             // gradient vector
     float intensity;            // sampled value at the current position
     float error;           
@@ -31,15 +24,10 @@ Trace set_trace()
     trace.intersected      = false;
     trace.terminated       = false;
     trace.exhausted        = false;
-    trace.step_count       = 0;
-    trace.step_distance    = 0.0;
+    trace.coords           = ivec3(0.0);
     trace.position         = vec3(0.0);
     trace.uvw              = vec3(0.0);
     trace.distance         = 0.0;
-    trace.spanned_distance = 0.0;
-    trace.stepped_distance = 0.0;
-    trace.skipped_distance = 0.0;
-    trace.coords           = ivec3(0.0);
     trace.gradient         = vec3(0.0);
     trace.intensity        = 0.0;
     trace.error            = 0.0;
@@ -47,7 +35,6 @@ Trace set_trace()
 }
 void discard_trace(inout Trace trace)
 {
-    trace.step_distance      = 0.0;
     trace.position           = vec3(0.0);
     trace.distance           = 0.0;
     trace.error              = 0.0;

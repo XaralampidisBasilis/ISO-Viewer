@@ -37,7 +37,7 @@ export default class Camera
         this.controls.trackball.staticMoving = false
         this.controls.trackball.dynamicDampingFactor = 0.3
         this.controls.trackball.zoomSpeed = 2.0
-        this.controls.trackball.panSpeed = 0.1
+        this.controls.trackball.panSpeed = 0.05
         this.controls.trackball.rotateSpeed = 1.0
     }
 
@@ -49,7 +49,12 @@ export default class Camera
 
     update()
     {
+        // let distance = Math.max(this.instance.position.distanceTo( this.controls.trackball.target), 0.0001)
+        // this.controls.trackball.panSpeed  = 0.05 / distance
+        // this.controls.trackball.zoomSpeed = 0.5 / distance
+        
         this.controls.trackball.update()
+        
     }
 
     destroy() 
