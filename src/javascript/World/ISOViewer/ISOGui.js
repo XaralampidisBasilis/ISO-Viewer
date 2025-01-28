@@ -87,8 +87,8 @@ export default class ISOGui
     
         this.controllers.rendering = 
         {
-            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateMaps() }),
-            subDivision        : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateMaps() }),
+            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.update() }),
+            subDivision        : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.update() }),
             maxCount           : folder.add(uRendering, 'max_count').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),

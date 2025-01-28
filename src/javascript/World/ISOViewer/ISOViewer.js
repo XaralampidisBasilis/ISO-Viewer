@@ -49,56 +49,6 @@ export default class ISOViewer extends EventEmitter
         this.processor.computes.occupancyMap.tensor.dispose()
     }
 
-    async updateMaps()
-    {
-        // Material defines and uniforms
-        const defines = this.material.defines
-        const uVolume = this.material.uniforms.u_intensity_map.value
-        const uDistmap = this.material.uniforms.u_distance_map.value
-        const uTextures = this.material.uniforms.u_textures.value
-      
-        // Free GPU before computation
-        uTextures.intensity_map.dispose()
-        uTextures.distance_map.dispose()
-
-        await this.computeMaps()
-
-        // Compute parameters
-        const computes = this.processor.computes
-        const pDistanceMap =  computes.distanceMap.parameters
-        const pBoundingBox = computes.boundingBox.parameters 
-
-        // Update textures
-        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        computes.distanceMap.tensor.dispose()
-
-        uTextures.intensity_map = new THREE.Data3DTexture(this.processor.volume.data, ...this.processor.volume.parameters.dimensions)
-        uTextures.intensity_map.format = THREE.RedFormat
-        uTextures.intensity_map.type = THREE.FloatType
-        uTextures.intensity_map.minFilter = THREE.LinearFilter
-        uTextures.intensity_map.magFilter = THREE.LinearFilter
-        uTextures.intensity_map.computeMipmaps = false
-        uTextures.intensity_map.needsUpdate = true
-
-        // Update uniforms
-        uDistmap.max_distance = pDistanceMap.maxDistance
-        uDistmap.sub_division = pDistanceMap.subDivision
-        uDistmap.dimensions.copy(pDistanceMap.dimensions)
-        uDistmap.spacing.copy(pDistanceMap.spacing)
-        uDistmap.size.copy(pDistanceMap.size)
-        uDistmap.inv_sub_division = pDistanceMap.invSubDivision
-        uDistmap.inv_dimensions.copy(pDistanceMap.invDimensions)
-        uDistmap.inv_spacing.copy(pDistanceMap.invSpacing)
-        uDistmap.inv_size.copy(pDistanceMap.invSize)
-        uVolume.min_position.copy(pBoundingBox.minPosition)
-        uVolume.max_position.copy(pBoundingBox.maxPosition) 
-
-        // Update defines
-        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
-        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
-        this.material.needsUpdate = true
-    }
-
     setParameters()
     {
         this.parameters = {}
@@ -146,6 +96,7 @@ export default class ISOViewer extends EventEmitter
         const pBoundingBox = this.processor.computes.boundingBox.parameters
 
         // uniforms
+        const defines = this.material.defines
         const uVolume = this.material.uniforms.u_intensity_map.value
         const uDistmap = this.material.uniforms.u_distance_map.value
         const uTextures = this.material.uniforms.u_textures.value
@@ -181,9 +132,13 @@ export default class ISOViewer extends EventEmitter
         uTextures.color_maps = this.textures.colorMaps   
 
         // defines
-        this.material.defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
-        this.material.defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
+        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        defines.MAX_CELL_SUB_COUNT = 3 * pDistanceMap.subDivision - 2
+        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
+        
         this.material.needsUpdate = true
+        console.log(this.material)
     }
 
     setMesh()
@@ -191,6 +146,60 @@ export default class ISOViewer extends EventEmitter
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
+    }
+
+    async update()
+    {
+        // Material defines and uniforms
+        const defines = this.material.defines
+        const uVolume = this.material.uniforms.u_intensity_map.value
+        const uDistmap = this.material.uniforms.u_distance_map.value
+        const uTextures = this.material.uniforms.u_textures.value
+      
+        // Free GPU before computation
+        uTextures.intensity_map.dispose()
+        uTextures.distance_map.dispose()
+
+        await this.computeMaps()
+
+        // Compute parameters
+        const computes = this.processor.computes
+        const pDistanceMap =  computes.distanceMap.parameters
+        const pBoundingBox = computes.boundingBox.parameters 
+
+        // Update textures
+        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        computes.distanceMap.tensor.dispose()
+
+        uTextures.intensity_map = new THREE.Data3DTexture(this.processor.volume.data, ...this.processor.volume.parameters.dimensions)
+        uTextures.intensity_map.format = THREE.RedFormat
+        uTextures.intensity_map.type = THREE.FloatType
+        uTextures.intensity_map.minFilter = THREE.LinearFilter
+        uTextures.intensity_map.magFilter = THREE.LinearFilter
+        uTextures.intensity_map.computeMipmaps = false
+        uTextures.intensity_map.needsUpdate = true
+
+        // Update uniforms
+        uDistmap.max_distance = pDistanceMap.maxDistance
+        uDistmap.sub_division = pDistanceMap.subDivision
+        uDistmap.dimensions.copy(pDistanceMap.dimensions)
+        uDistmap.spacing.copy(pDistanceMap.spacing)
+        uDistmap.size.copy(pDistanceMap.size)
+        uDistmap.inv_sub_division = pDistanceMap.invSubDivision
+        uDistmap.inv_dimensions.copy(pDistanceMap.invDimensions)
+        uDistmap.inv_spacing.copy(pDistanceMap.invSpacing)
+        uDistmap.inv_size.copy(pDistanceMap.invSize)
+        uVolume.min_position.copy(pBoundingBox.minPosition)
+        uVolume.max_position.copy(pBoundingBox.maxPosition) 
+
+        // Update defines
+        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
+        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        defines.MAX_CELL_SUB_COUNT = 3 * pDistanceMap.subDivision - 2
+        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
+
+        // Update material
+        this.material.needsUpdate = true
     }
 
     destroy() 
