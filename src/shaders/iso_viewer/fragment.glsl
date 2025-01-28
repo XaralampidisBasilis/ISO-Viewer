@@ -24,5 +24,8 @@ void main()
     #include "./chunks/raycast/compute_raycast"
     #include "./chunks/march/compute_march"
     #include "./chunks/shade/compute_shade"
+
+    #if DEBUG_ENABLED == 1
     #include "./chunks/debug/compute_debug"
+    #endif
 }

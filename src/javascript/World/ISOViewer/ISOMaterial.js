@@ -35,7 +35,7 @@ export default function()
         ({
             max_distance    : 0,
             max_iterations  : 100,
-            sub_division    : 3,
+            sub_division    : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
@@ -48,8 +48,9 @@ export default function()
         u_rendering: new THREE.Uniform
         ({
             iso_intensity   : 0.53,
-            max_cell_count  : 1000,
-            max_block_count : 1000,
+            max_count       : 0,
+            max_cell_count  : 0,
+            max_block_count : 0,
         }),
 
         u_colormap: new THREE.Uniform
@@ -91,17 +92,24 @@ export default function()
 
     const defines = 
     {           
-        INTERSECT_BBOX_ENABLED     : 1,
-        SKIPPING_ENABLED           : 1,
-        DISCARDING_DISABLED        : 0,
-        MAX_CELL_COUNT             : 1000,
-        MAX_BLOCK_COUNT            : 1000,
+        INTERSECT_BBOX_ENABLED : 1,
+        SKIPPING_ENABLED       : 1,
+
+        STATS_ENABLED          : 0,
+        DEBUG_ENABLED          : 1,
+        DISCARDING_DISABLED    : 0,
+
+        MAX_CELL_COUNT         : 1000,
+        MAX_BLOCK_COUNT        : 1000,
+        MAX_CELL_SUB_COUNT     : 10,
+        MAX_BLOCK_SUB_COUNT    : 20,
+        MAX_BATCH_COUNT        : 50,
     }
 
     const material = new THREE.ShaderMaterial
     ({    
         side: THREE.BackSide,
-        transparent: true,
+        transparent: false,
         depthTest: true,
         depthWrite: true,
 

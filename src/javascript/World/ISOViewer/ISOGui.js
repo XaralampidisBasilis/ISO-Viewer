@@ -87,12 +87,13 @@ export default class ISOGui
     
         this.controllers.rendering = 
         {
-            isoIntensity        : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateMaps() }),
-            maxCellCount        : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
-            maxBlockCount       : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
-            subDivision         : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateMaps() }),
-            enableIntersectBbox : folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping      : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.updateMaps() }),
+            subDivision        : folder.add(objects, 'sub_division').min(2).max(16).step(1).onFinishChange((value) => { uDistmap.sub_division = value, this.viewer.updateMaps() }),
+            maxCount           : folder.add(uRendering, 'max_count').min(0).max(1000).step(1),
+            maxCellCount       : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
+            maxBlockCount      : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
+            enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
+            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
         }
     }
 
@@ -233,6 +234,10 @@ export default class ISOGui
                 camera_direction        : 802,
                 camera_far_distance     : 803,
                 camera_near_distance    : 804,
+
+                stats_num_fetches       : 301,
+                stats_num_steps         : 302,
+                stats_num_skips         : 303,
                 
                 variable1               : 901,
                 variable2               : 902,

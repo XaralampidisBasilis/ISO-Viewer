@@ -14,8 +14,6 @@ if (trace.terminated)
 {
     #if DISCARDING_DISABLED == 0
     discard;  
-    #else
-    // discard_trace(trace);
     #endif
 }
 

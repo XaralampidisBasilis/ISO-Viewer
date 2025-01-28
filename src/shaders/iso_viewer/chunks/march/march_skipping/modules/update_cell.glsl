@@ -17,7 +17,7 @@ cell.exit_distance = intersect_box_max
 
 // given the entry and exit compute the sampling distances inside the cell
 cell.sample_distances.x = cell.sample_distances.w;
-cell.sample_distances.yzw = mmix(cell.entry_distance, cell.exit_distance, sample_weights4.yzw);
+cell.sample_distances.yzw = mmix(cell.entry_distance, cell.exit_distance, weights_vec4.yzw);
 
 // compute the intensity samples inside the cell from the intensity map texture
 cell.sample_intensities.x = cell.sample_intensities.w;
@@ -26,7 +26,7 @@ cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.u
 cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.w).r;
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-cell.intensity_coeffs = vandermonde_matrix4 * cell.sample_intensities;
+cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
 cell.terminated = cell.exit_distance > block.exit_distance;
@@ -39,3 +39,9 @@ cell.intersected = is_cubic_solvable
     cell.sample_intensities.x, 
     cell.sample_intensities.w
 );
+
+// Update stats
+#if STATS_ENABLED == 1
+stats.num_fetches += 3;
+stats.num_steps += 1;
+#endif

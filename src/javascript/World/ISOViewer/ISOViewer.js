@@ -22,6 +22,7 @@ export default class ISOViewer extends EventEmitter
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
         this.processor = new ISOProcessor(this.resources.items.volumeNifti)
+
         this.computeMaps().then(() => 
         {
             this.setParameters()
@@ -50,18 +51,36 @@ export default class ISOViewer extends EventEmitter
 
     async updateMaps()
     {
-        await this.computeMaps()
-
+        // Material defines and uniforms
+        const defines = this.material.defines
         const uVolume = this.material.uniforms.u_volume.value
         const uDistmap = this.material.uniforms.u_distmap.value
         const uTextures = this.material.uniforms.u_textures.value
-        const pDistanceMap =  this.processor.computes.distanceMap.parameters
-        const pBoundingBox = this.processor.computes.boundingBox.parameters 
-
+      
+        // Free GPU before computation
+        uTextures.intensity_map.dispose()
         uTextures.distance_map.dispose()
-        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        this.processor.computes.distanceMap.tensor.dispose()
 
+        await this.computeMaps()
+
+        // Compute parameters
+        const computes = this.processor.computes
+        const pDistanceMap =  computes.distanceMap.parameters
+        const pBoundingBox = computes.boundingBox.parameters 
+
+        // Update textures
+        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        computes.distanceMap.tensor.dispose()
+
+        uTextures.intensity_map = new THREE.Data3DTexture(this.processor.volume.data, ...this.processor.volume.parameters.dimensions)
+        uTextures.intensity_map.format = THREE.RedFormat
+        uTextures.intensity_map.type = THREE.FloatType
+        uTextures.intensity_map.minFilter = THREE.LinearFilter
+        uTextures.intensity_map.magFilter = THREE.LinearFilter
+        uTextures.intensity_map.computeMipmaps = false
+        uTextures.intensity_map.needsUpdate = true
+
+        // Update uniforms
         uDistmap.max_distance = pDistanceMap.maxDistance
         uDistmap.sub_division = pDistanceMap.subDivision
         uDistmap.dimensions.copy(pDistanceMap.dimensions)
@@ -74,11 +93,11 @@ export default class ISOViewer extends EventEmitter
         uVolume.min_position.copy(pBoundingBox.minPosition)
         uVolume.max_position.copy(pBoundingBox.maxPosition) 
 
-        this.material.defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
-        this.material.defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
+        // Update defines
+        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
+        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
         this.material.needsUpdate = true
 
-        console.log(this.material.defines)
     }
 
     setParameters()
@@ -214,9 +233,9 @@ export default class ISOViewer extends EventEmitter
         console.log("ISOViewer destroyed")
     }
 
-    logMemory(fun)
+    logGPU()
     {
-        console.log(`${fun}: Tensors = ${tf.memory().numTensors}, Textures = ${this.renderer.instance.info.memory.textures}`)
+        console.log(`$Tensors = ${tf.memory().numTensors}, Textures = ${this.renderer.instance.info.memory.textures}`)
     }
     
 }

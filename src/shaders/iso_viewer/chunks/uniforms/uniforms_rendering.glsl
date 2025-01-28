@@ -3,7 +3,8 @@
 
 struct Rendering 
 {
-    float iso_intensity;      
+    float iso_intensity;  
+    int   max_count;         
     int   max_cell_count;     
     int   max_block_count;   
 };

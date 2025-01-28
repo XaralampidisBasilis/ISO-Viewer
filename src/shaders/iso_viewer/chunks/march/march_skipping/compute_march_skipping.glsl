@@ -1,12 +1,14 @@
 
+// start march at ray start
 #include "./modules/start_march"
 
 for (int batch = 0; batch < MAX_BATCH_COUNT; batch++) 
 {
-    // Block 
+    // Skip empty space using the precomputed chebyshev distance map 
 
     for (int count = 0; count < MAX_BLOCK_SUB_COUNT; count++) 
     {
+        // update block based on current trace
         #include "./modules/update_block"
 
         if (block.occupied) 
@@ -14,16 +16,22 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
             break;
         }  
         
-        trace.distance = block.exit_distance;
-        trace.position = camera.position + ray.direction * trace.distance; 
+        // update trace to skip the current block
+        #include "./modules/skip_block"
+
+        if (trace.terminated) 
+        {
+            break;
+        } 
     }
 
-    // Cell 
+    // March analytically the volume cells inside an occupied block
 
     #include "./modules/start_cell"
 
     for (int count = 0; count < MAX_CELL_SUB_COUNT; count++) 
     {
+        // update current cell, take samples, and compute if there is intersection
         #include "./modules/update_cell"
 
         if (cell.intersected || cell.terminated) 
@@ -32,7 +40,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
         }
     }   
 
-    // Trace
+    // Update the trace and check termination conditions
 
     #include "./modules/update_trace"
 
@@ -42,4 +50,5 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
     }
 }   
 
+// terminate march, compute intersection and gradient
 #include "./modules/end_march"

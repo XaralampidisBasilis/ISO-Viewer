@@ -85,6 +85,11 @@ struct Debug
     vec4 camera_far_distance; 
     vec4 camera_near_distance; 
 
+    int  slot_stats;
+    vec4 stats_num_fetches;
+    vec4 stats_num_steps;
+    vec4 stats_num_skips;
+
     int  slot_variables;
     vec4 variable1;
     vec4 variable2;
@@ -169,6 +174,10 @@ Debug set_debug()
     debug.camera_direction         = vec4(vec3(0.0), 1.0);
     debug.camera_far_distance      = vec4(vec3(0.0), 1.0);
     debug.camera_near_distance     = vec4(vec3(0.0), 1.0);
+
+    debug.stats_num_fetches        = vec4(vec3(0.0), 1.0);
+    debug.stats_num_steps          = vec4(vec3(0.0), 1.0);
+    debug.stats_num_skips          = vec4(vec3(0.0), 1.0);
 
     debug.variable1                = vec4(vec3(0.0), 1.0);
     debug.variable2                = vec4(vec3(0.0), 1.0);

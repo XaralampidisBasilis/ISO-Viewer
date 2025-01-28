@@ -1,4 +1,7 @@
+
+// For kernel convolution
 const ivec2 binary_offset = ivec2(0, 1);
+const vec2 center_offset = vec2(-0.5, 0.5);
 const ivec3 binary_offsets[8] = ivec3[8]
 (
     binary_offset.xxx, binary_offset.yxx, 
@@ -6,8 +9,6 @@ const ivec3 binary_offsets[8] = ivec3[8]
     binary_offset.xyy, binary_offset.yxy,
     binary_offset.yyx, binary_offset.yyy 
 );
-
-const vec2 center_offset = vec2(-0.5, 0.5);
 const vec3 center_offsets[8] = vec3[8]
 (
     center_offset.xxx, center_offset.yxx, 
@@ -16,14 +17,22 @@ const vec3 center_offsets[8] = vec3[8]
     center_offset.yyx, center_offset.yyy 
 );
 
-const vec4 sample_weights4 = vec4
+// For polynomial interpolation
+const vec2 weights_vec2 = vec2(0.0, 1.0);
+const vec3 weights_vec3 = vec3(0.0, 0.5, 1.0);
+const vec4 weights_vec4 = vec4(0.0, 1.0/3.0, 2.0/3.0, 1.0);
+const mat2 inv_vander_mat2 = mat2
 (
-    0.0, 
-    1.0/3.0, 
-    2.0/3.0, 
-    1.0
+    1.0, -1.0,   
+    0.0,  1.0   
 );
-const mat4 vandermonde_matrix4 = mat4
+const mat3 inv_vander_mat3 = mat3
+(
+    1.0, -3.0,  2.0,  
+    0.0,  4.0, -4.5,  
+    0.0, -1.0,  2.0
+);
+const mat4 inv_vander_mat4 = mat4
 (
      1.0, -5.5,   9.0,   -4.5,
      0.0,  9.0, -22.5,   13.5,
@@ -31,11 +40,3 @@ const mat4 vandermonde_matrix4 = mat4
     0.0, 1.0, -4.5,   4.5 
 );
 
-
-#ifndef MAX_CELL_COUNT
-int MAX_CELL_COUNT = 1000;
-#endif
-
-#ifndef MAX_BLOCK_COUNT
-int MAX_BLOCK_COUNT = 1000;
-#endif

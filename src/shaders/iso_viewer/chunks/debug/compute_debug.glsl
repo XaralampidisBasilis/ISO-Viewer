@@ -17,4 +17,7 @@ debug.slot_variables = 900;
 // #include "./modules/debug_camera"          
 #include "./modules/debug_variables"               
 
-  
+#if STATS_ENABLED == 1
+debug.slot_stats = 300;
+#include "./modules/debug_stats"  
+#endif

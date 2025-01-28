@@ -13,12 +13,4 @@ export default [
         type: 'texture',
         path: 'textures/colormaps/colormaps.png'
     },
-
-    // Noisemaps  
-    {
-        name: 'blue256Noisemap',
-        type: 'texture',
-        path: 'textures/noisemaps/blue_256.png'
-    },      
-    
 ]

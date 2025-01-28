@@ -46,15 +46,15 @@ debug.trace_gradient_length = vec4(vec3(debug_trace_gradient_length), 1.0);
 
 switch (u_debugging.option - debug.slot_trace)
 { 
-    case  1: fragColor = debug.trace_intersected;         break;
-    case  2: fragColor = debug.trace_terminated;          break;
-    case  3: fragColor = debug.trace_exhausted;           break;
-    case  4: fragColor = debug.trace_outside;             break;
-    case  5: fragColor = debug.trace_distance;            break;
-    case  6: fragColor = debug.trace_position;            break;
-    case  7: fragColor = debug.trace_intensity;           break;
-    case  8: fragColor = debug.trace_error;               break;
-    case  9: fragColor = debug.trace_abs_error;           break;
-    case 10: fragColor = debug.trace_gradient;            break;
-    case 11: fragColor = debug.trace_gradient_length;     break;
+    case  1: fragColor = debug.trace_intersected;     break;
+    case  2: fragColor = debug.trace_terminated;      break;
+    case  3: fragColor = debug.trace_exhausted;       break;
+    case  4: fragColor = debug.trace_outside;         break;
+    case  5: fragColor = debug.trace_distance;        break;
+    case  6: fragColor = debug.trace_position;        break;
+    case  7: fragColor = debug.trace_intensity;       break;
+    case  8: fragColor = debug.trace_error;           break;
+    case  9: fragColor = debug.trace_abs_error;       break;
+    case 10: fragColor = debug.trace_gradient;        break;
+    case 11: fragColor = debug.trace_gradient_length; break;
 }

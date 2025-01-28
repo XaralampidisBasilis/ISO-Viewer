@@ -4,7 +4,7 @@ vec2 cell_intersections = intersect_box(cell.min_position, cell.max_position, ca
 cell_intersections = clamp(cell_intersections, box.entry_distance, box.exit_distance);
 cell.entry_distance = cell_intersections.x;
 cell.exit_distance = cell_intersections.y;
-cell.sample_distances = mmix(cell.entry_distance, cell.exit_distance, sample_weights4);
+cell.sample_distances = mmix(cell.entry_distance, cell.exit_distance, weights_vec4);
 
 // compute intensities
 cell.sample_intensities.x = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.x).r;
@@ -13,7 +13,7 @@ cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.u
 cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.w).r;
 
 // compute coefficients
-cell.intensity_coeffs = vandermonde_matrix4 * cell.sample_intensities;
+cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
 
 // compute solution
 vec3 iso_distances = cubic_solver(cell.intensity_coeffs, u_rendering.iso_intensity);

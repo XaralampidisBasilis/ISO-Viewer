@@ -95,6 +95,7 @@
         "Texels",
         "timeit",
         "topk",
+        "vander",
         "viridis",
         "voldim",
         "voxel",
