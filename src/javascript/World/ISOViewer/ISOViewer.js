@@ -22,15 +22,9 @@ export default class ISOViewer extends EventEmitter
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
         this.processor = new ISOProcessor(this.resources.items.volumeNifti)
-
-        this.computeMaps().then(() => 
+        this.processor.on('ready', () =>
         {
-            this.setParameters()
-            this.setTextures()
-            this.setGeometry()
-            this.setMaterial()
-            this.setMesh()
-            this.trigger('ready')
+            this.computeMaps().then(() => this.setViewer())
         })
     }
     
@@ -38,15 +32,22 @@ export default class ISOViewer extends EventEmitter
     {
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
-
-        await tf.ready()
         await this.processor.computeIntensityMap()
         await this.processor.computeOccupancyMap(uRendering.iso_intensity, uDistanceMap.sub_division)
         this.processor.computes.intensityMap.tensor.dispose()
-
         await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
         await this.processor.computeBoundingBox()
         this.processor.computes.occupancyMap.tensor.dispose()
+    }
+
+    setViewer()
+    {
+        this.setParameters()
+        this.setTextures()
+        this.setGeometry()
+        this.setMaterial()
+        this.setMesh()
+        this.trigger('ready')
     }
 
     setParameters()
@@ -58,24 +59,39 @@ export default class ISOViewer extends EventEmitter
     setTextures()
     {
         this.textures = {}
-    
-        this.textures.intensityMap = new THREE.Data3DTexture(this.processor.volume.data, ...this.processor.volume.parameters.dimensions)
-        this.textures.intensityMap.format = THREE.RedFormat
-        this.textures.intensityMap.type = THREE.FloatType
-        this.textures.intensityMap.minFilter = THREE.LinearFilter
-        this.textures.intensityMap.magFilter = THREE.LinearFilter
-        this.textures.intensityMap.computeMipmaps = false
-        this.textures.intensityMap.needsUpdate = true
 
+        // color maps
         this.textures.colorMaps = this.resources.items.colormaps                      
         this.textures.colorMaps.colorSpace = THREE.SRGBColorSpace
         this.textures.colorMaps.minFilter = THREE.LinearFilter
         this.textures.colorMaps.magFilter = THREE.LinearFilter         
         this.textures.colorMaps.generateMipmaps = false
         this.textures.colorMaps.needsUpdate = true 
-
-        this.textures.distanceMap = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
+        
+        // distance map
+        this.textures.distanceMap = new THREE.Data3DTexture(
+            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            ...this.processor.computes.distanceMap.parameters.dimensions
+        )
+        this.textures.distanceMap.format = THREE.RedFormat
+        this.textures.distanceMap.type = THREE.UnsignedByteType
+        this.textures.distanceMap.minFilter = THREE.LinearFilter
+        this.textures.distanceMap.magFilter = THREE.LinearFilter
+        this.textures.distanceMap.computeMipmaps = false
+        this.textures.distanceMap.needsUpdate = true
         this.processor.computes.distanceMap.tensor.dispose()
+
+        // intensity map
+        this.textures.intensityMap = new THREE.Data3DTexture(
+            this.processor.volume.data, 
+            ...this.processor.volume.parameters.dimensions
+        )
+        this.textures.intensityMap.format = THREE.RedFormat
+        this.textures.intensityMap.type = THREE.FloatType
+        this.textures.intensityMap.minFilter = THREE.LinearFilter
+        this.textures.intensityMap.magFilter = THREE.LinearFilter
+        this.textures.intensityMap.computeMipmaps = false
+        this.textures.intensityMap.needsUpdate = true
     }
   
     setGeometry()
@@ -90,52 +106,51 @@ export default class ISOViewer extends EventEmitter
 
     setMaterial()
     {        
-        // Compute Parameters
-        const pVolume = this.processor.volume.parameters
-        const pDistanceMap =  this.processor.computes.distanceMap.parameters
-        const pBoundingBox = this.processor.computes.boundingBox.parameters
+        // Computes
+        const intensityMap = this.processor.computes.intensityMap
+        const distanceMap =  this.processor.computes.distanceMap
+        const boundingBox = this.processor.computes.boundingBox
 
-        // Material Uniforms
+        // Uniforms/Defines
         const uTextures = this.material.uniforms.u_textures.value
         const uIntensityMap = this.material.uniforms.u_intensity_map.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
+        const defines = this.material.defines
 
-        // Update textures
+        // Update Uniforms
         uTextures.intensity_map = this.textures.intensityMap
         uTextures.distance_map = this.textures.distanceMap
         uTextures.color_maps = this.textures.colorMaps   
 
-        // Update uniforms
-        uIntensityMap.dimensions.copy(pVolume.dimensions)
-        uIntensityMap.spacing.copy(pVolume.spacing)
-        uIntensityMap.size.copy(pVolume.size)
-        uIntensityMap.min_position.copy(pBoundingBox.minPosition)
-        uIntensityMap.max_position.copy(pBoundingBox.maxPosition)
-        uIntensityMap.min_intensity = pVolume.minIntensity
-        uIntensityMap.max_intensity = pVolume.maxIntensity
-        uIntensityMap.size_length = pVolume.sizeLength
-        uIntensityMap.spacing_length = pVolume.spacingLength
-        uIntensityMap.inv_dimensions.copy(pVolume.invDimensions)
-        uIntensityMap.inv_spacing.copy(pVolume.invSpacing)
-        uIntensityMap.inv_size.copy(pVolume.invSize)
+        uIntensityMap.dimensions.copy(intensityMap.parameters.dimensions)
+        uIntensityMap.spacing.copy(intensityMap.parameters.spacing)
+        uIntensityMap.size.copy(intensityMap.parameters.size)
+        uIntensityMap.min_position.copy(boundingBox.parameters.minPosition)
+        uIntensityMap.max_position.copy(boundingBox.parameters.maxPosition)
+        uIntensityMap.min_intensity = intensityMap.parameters.minIntensity
+        uIntensityMap.max_intensity = intensityMap.parameters.maxIntensity
+        uIntensityMap.size_length = intensityMap.parameters.sizeLength
+        uIntensityMap.spacing_length = intensityMap.parameters.spacingLength
+        uIntensityMap.inv_dimensions.copy(intensityMap.parameters.invDimensions)
+        uIntensityMap.inv_spacing.copy(intensityMap.parameters.invSpacing)
+        uIntensityMap.inv_size.copy(intensityMap.parameters.invSize)
  
-        uDistanceMap.max_distance = pDistanceMap.maxDistance
-        uDistanceMap.sub_division = pDistanceMap.subDivision
-        uDistanceMap.dimensions.copy(pDistanceMap.dimensions)
-        uDistanceMap.spacing.copy(pDistanceMap.spacing)
-        uDistanceMap.size.copy(pDistanceMap.size)
-        uDistanceMap.inv_sub_division = pDistanceMap.invSubDivision
-        uDistanceMap.inv_dimensions.copy(pDistanceMap.invDimensions)
-        uDistanceMap.inv_spacing.copy(pDistanceMap.invSpacing)
-        uDistanceMap.inv_size.copy(pDistanceMap.invSize)
+        uDistanceMap.max_distance = distanceMap.parameters.maxDistance
+        uDistanceMap.sub_division = distanceMap.parameters.subDivision
+        uDistanceMap.dimensions.copy(distanceMap.parameters.dimensions)
+        uDistanceMap.spacing.copy(distanceMap.parameters.spacing)
+        uDistanceMap.size.copy(distanceMap.parameters.size)
+        uDistanceMap.inv_sub_division = distanceMap.parameters.invSubDivision
+        uDistanceMap.inv_dimensions.copy(distanceMap.parameters.invDimensions)
+        uDistanceMap.inv_spacing.copy(distanceMap.parameters.invSpacing)
+        uDistanceMap.inv_size.copy(distanceMap.parameters.invSize)
 
-        // Update defines
-        const defines = this.material.defines
-        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
-        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
-        defines.MAX_CELL_SUB_COUNT = 3 * pDistanceMap.subDivision - 2
+        // Update Defines
+        defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
         defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
-        console.log(defines)
 
         // Update material
         this.material.needsUpdate = true
@@ -150,47 +165,75 @@ export default class ISOViewer extends EventEmitter
 
     async update()
     {
-        // Material defines and uniforms
+        // Free GPU 
+        this.textures.distanceMap.dispose()
+        // this.textures.intensityMap.dispose()
+
+        // Uniforms/Defines
+        const uTextures = this.material.uniforms.u_textures.value
+        const uRendering = this.material.uniforms.u_rendering.value
         const uIntensityMap = this.material.uniforms.u_intensity_map.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
-        const uTextures = this.material.uniforms.u_textures.value
-      
-        // Free GPU before computation
-        uTextures.distance_map.dispose()
-
-        await this.computeMaps()
-
-        // Compute parameters
-        const computes = this.processor.computes
-        const pDistanceMap = computes.distanceMap.parameters
-        const pBoundingBox = computes.boundingBox.parameters 
-
-        // Update textures
-        uTextures.distance_map = this.processor.generateTexture('distanceMap', THREE.RedFormat, THREE.UnsignedByteType)
-        computes.distanceMap.tensor.dispose()
-
-        // Update uniforms
-        uDistanceMap.max_distance = pDistanceMap.maxDistance
-        uDistanceMap.sub_division = pDistanceMap.subDivision
-        uDistanceMap.dimensions.copy(pDistanceMap.dimensions)
-        uDistanceMap.spacing.copy(pDistanceMap.spacing)
-        uDistanceMap.size.copy(pDistanceMap.size)
-        uDistanceMap.inv_sub_division = pDistanceMap.invSubDivision
-        uDistanceMap.inv_dimensions.copy(pDistanceMap.invDimensions)
-        uDistanceMap.inv_spacing.copy(pDistanceMap.invSpacing)
-        uDistanceMap.inv_size.copy(pDistanceMap.invSize)
-        uIntensityMap.min_position.copy(pBoundingBox.minPosition)
-        uIntensityMap.max_position.copy(pBoundingBox.maxPosition) 
-
-        // Update defines
         const defines = this.material.defines
-        defines.MAX_CELL_COUNT = pBoundingBox.maxCellCount
-        defines.MAX_BLOCK_COUNT = pBoundingBox.maxBlockCount
-        defines.MAX_CELL_SUB_COUNT = 3 * pDistanceMap.subDivision - 2
-        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
-        console.log(defines)
 
-        // Update material
+        // Recompute Maps
+        await this.processor.computeIntensityMap()
+        await this.processor.computeOccupancyMap(uRendering.iso_intensity, uDistanceMap.sub_division)
+        this.processor.computes.intensityMap.tensor.dispose()
+        await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
+        await this.processor.computeBoundingBox()
+        this.processor.computes.occupancyMap.tensor.dispose()
+
+        // Computes
+        const intensityMap = this.processor.computes.intensityMap
+        const distanceMap = this.processor.computes.distanceMap
+        const boundingBox = this.processor.computes.boundingBox 
+
+        // Update Textures
+        this.textures.distanceMap = new THREE.Data3DTexture(
+            new Uint8Array(distanceMap.tensor.dataSync()), 
+            ...distanceMap.parameters.dimensions)
+        this.textures.distanceMap.format = THREE.RedFormat
+        this.textures.distanceMap.type = THREE.UnsignedByteType
+        this.textures.distanceMap.minFilter = THREE.LinearFilter
+        this.textures.distanceMap.magFilter = THREE.LinearFilter
+        this.textures.distanceMap.computeMipmaps = false
+        this.textures.distanceMap.needsUpdate = true
+        this.processor.computes.distanceMap.tensor.dispose()
+
+        // this.textures.intensityMap = new THREE.Data3DTexture(
+        //     this.processor.volume.data, 
+        //     ...intensityMap.parameters.dimensions)
+        // this.textures.intensityMap.format = THREE.RedFormat
+        // this.textures.intensityMap.type = THREE.FloatType
+        // this.textures.intensityMap.minFilter = THREE.LinearFilter
+        // this.textures.intensityMap.magFilter = THREE.LinearFilter
+        // this.textures.intensityMap.computeMipmaps = false
+        // this.textures.intensityMap.needsUpdate = true
+        
+        // Update Uniforms
+        uTextures.distance_map = this.textures.distanceMap
+        // uTextures.intensity_map = this.textures.intensityMap
+        uDistanceMap.max_distance = distanceMap.parameters.maxDistance
+        uDistanceMap.sub_division = distanceMap.parameters.subDivision
+        uDistanceMap.dimensions.copy(distanceMap.parameters.dimensions)
+        uDistanceMap.spacing.copy(distanceMap.parameters.spacing)
+        uDistanceMap.size.copy(distanceMap.parameters.size)
+        uDistanceMap.inv_sub_division = distanceMap.parameters.invSubDivision
+        uDistanceMap.inv_dimensions.copy(distanceMap.parameters.invDimensions)
+        uDistanceMap.inv_spacing.copy(distanceMap.parameters.invSpacing)
+        uDistanceMap.inv_size.copy(distanceMap.parameters.invSize)
+        uIntensityMap.min_position.copy(boundingBox.parameters.minPosition)
+        uIntensityMap.max_position.copy(boundingBox.parameters.maxPosition) 
+
+        // Update Defines
+        defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
+        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)        
+
+        // Update Material
         this.material.needsUpdate = true
     }
 
