@@ -31,7 +31,7 @@ export default class Sizes extends EventEmitter
             pixelRatio: this.pixelRatio
         })
 
-        console.log('resize', this)
+        // console.log('resize', this)
     }
 
     destroy() 

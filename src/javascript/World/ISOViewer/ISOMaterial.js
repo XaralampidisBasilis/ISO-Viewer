@@ -39,7 +39,7 @@ export default function()
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_sub_division: 0.0,
+            inv_sub_division: 0.25,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),

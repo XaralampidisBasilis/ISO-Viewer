@@ -82,15 +82,8 @@ export default class ISOProcessor extends EventEmitter
 
             if (computes.tensor instanceof tf.Tensor) 
             {
-                computes.tensor.dispose()
+                tf.dispose(computes.tensor)
                 computes.tensor = null
-            }
-
-            // If it has a Data3DTexture, dispose it
-            if (computes.texture instanceof THREE.Data3DTexture) 
-            {
-                computes.texture.dispose()
-                computes.texture = null
             }
 
             computes.parameters = null
@@ -111,7 +104,7 @@ export default class ISOProcessor extends EventEmitter
     {
         if (this.computes.intensityMap.tensor instanceof tf.Tensor) 
         {
-            this.computes.intensityMap.tensor.dispose()
+            tf.dispose(this.computes.intensityMap.tensor)
         }
 
         timeit('computeIntensityMap', () =>
@@ -132,7 +125,7 @@ export default class ISOProcessor extends EventEmitter
 
         if (this.computes.occupancyMap.tensor instanceof tf.Tensor) 
         {
-            this.computes.occupancyMap.tensor.dispose()
+            tf.dispose(this.computes.occupancyMap.tensor)
         }
 
         timeit('computeOccupancyMap', () =>
@@ -168,7 +161,7 @@ export default class ISOProcessor extends EventEmitter
 
         if (this.computes.distanceMap.tensor instanceof tf.Tensor) 
         {
-            this.computes.distanceMap.tensor.dispose()
+            tf.dispose(this.computes.distanceMap.tensor)
         }
        
         timeit('computeDistanceMap', () =>
@@ -178,7 +171,7 @@ export default class ISOProcessor extends EventEmitter
             
             const maxTensor = distanceMap.max()
             parameters.maxDistance = maxTensor.arraySync()  
-            maxTensor.dispose()
+            tf.dispose(maxTensor)
 
             this.computes.distanceMap.tensor = distanceMap
             this.computes.distanceMap.parameters = parameters
@@ -227,7 +220,6 @@ export default class ISOProcessor extends EventEmitter
     {
         // Scalars for threshold and output scaling
         const scalarThreshold = tf.scalar(threshold, 'float32')
-        const scalar255 = tf.scalar(255, 'int32')
 
         // Symmetric padding to handle boundaries
         const tensorPadded = tf.mirrorPad(intensityMap, [[1, 1], [1, 1], [1, 1], [0, 0]], 'symmetric')
@@ -235,26 +227,24 @@ export default class ISOProcessor extends EventEmitter
         // Min pooling for lower bound detection
         const minima = this._minPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
         const lesser = tf.lessEqual(minima, scalarThreshold)
-        minima.dispose()
+        tf.dispose(minima)
 
         // Max pooling for upper bound detection
         const maxima = tf.maxPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
-        tensorPadded.dispose()
+        tf.dispose(tensorPadded)
         const greater = tf.greaterEqual(maxima, scalarThreshold)
-        scalarThreshold.dispose()
-        maxima.dispose()
+        tf.dispose(scalarThreshold)
+        tf.dispose(maxima)
 
         // Logical AND to find isosurface occupied regions
         const occupied = tf.logicalAnd(lesser, greater)
-        lesser.dispose()
-        greater.dispose()
+        tf.dispose(lesser)
+        tf.dispose(greater)
 
         // If no subdivision is needed, scale and return
         if (subDivision === 1) 
         {        
-            const occupancyMap255 = occupied.mul(scalar255)
-            occupied.dispose()
-            return occupancyMap255
+            return occupied
         }
 
         // Calculate necessary padding for valid subdivisions
@@ -265,25 +255,20 @@ export default class ISOProcessor extends EventEmitter
 
         // Apply padding
         const occupiedPadded = tf.pad(occupied, padAmounts)
-        occupied.dispose()
+        tf.dispose(occupied)
 
         // Apply max pooling with valid padding and subdivision
         const subDivisions = [subDivision, subDivision, subDivision]
         const occupancyMap = tf.maxPool3d(occupiedPadded, subDivisions, subDivisions, 'valid')
-        occupiedPadded.dispose()
+        tf.dispose(occupiedPadded)
 
-        // Scale the result and return
-        const occupancyMap255 = occupancyMap.mul(scalar255)
-        occupancyMap.dispose()
-        scalar255.dispose()
-
-        return occupancyMap255
+        return occupancyMap
     }
 
     _computeDistanceMap(occupancyMap, maxIters) 
     {
         // Initialize next diffusion
-        let diffusionNext = occupancyMap.cast('bool')
+        let diffusionNext = tf.clone(occupancyMap)
 
         // Initialize previous diffusion
         let diffusionPrev = tf.zeros(occupancyMap.shape, 'bool')
@@ -298,38 +283,38 @@ export default class ISOProcessor extends EventEmitter
             // Compute distance update
             const diffusionUpdate = tf.notEqual(diffusionNext, diffusionPrev)
             const distanceUpdate = diffusionUpdate.mul(scalarIter)
-            diffusionUpdate.dispose()
-            scalarIter.dispose()
+            tf.dispose(diffusionUpdate)
+            tf.dispose( scalarIter)
 
             // Update distance map
             const distanceMapTemp = distanceMap.add(distanceUpdate)
-            distanceUpdate.dispose()
-            distanceMap.dispose()
+            tf.dispose(distanceUpdate)
+            tf.dispose(distanceMap)
             distanceMap = distanceMapTemp
 
             // Update previous diffusion 
-            diffusionPrev.dispose()
+            tf.dispose(diffusionPrev)
             diffusionPrev = diffusionNext.clone()
 
             // Compute next diffusion with max pooling
             const diffusionNextTemp = tf.maxPool3d(diffusionPrev, [3, 3, 3], [1, 1, 1], 'same')
-            diffusionNext.dispose()
+            tf.dispose(diffusionNext)
             diffusionNext = diffusionNextTemp
         }
-        diffusionNext.dispose()
+        tf.dispose(diffusionNext)
 
         // Compute final distance update
         const scalarMaxIters = tf.scalar(maxIters, 'int32')
         const diffusionUpdate = tf.logicalNot(diffusionPrev)
-        diffusionPrev.dispose()
+        tf.dispose(diffusionPrev)
         const distanceUpdate = diffusionUpdate.mul(scalarMaxIters)
-        diffusionUpdate.dispose()
-        scalarMaxIters.dispose()
+        tf.dispose(diffusionUpdate)
+        tf.dispose(scalarMaxIters)
 
         // Update final distance map
         const distanceMapTemp = distanceMap.add(distanceUpdate)
-        distanceUpdate.dispose()
-        distanceMap.dispose()
+        tf.dispose(distanceUpdate)
+        tf.dispose(distanceMap)
         distanceMap = distanceMapTemp
 
         // Return the final distance map
@@ -338,12 +323,9 @@ export default class ISOProcessor extends EventEmitter
 
     _computeBoundingBox(occupancyMap) 
     {
-        const occupancyMapBool = occupancyMap.cast('bool')
-
         // Compute the bounds for each axis dynamically
-        const rank = occupancyMapBool.rank
-        const boundingIntervals = Array.from({ length: rank }, (_, axis) => this._argBounds(occupancyMapBool, axis))
-        occupancyMapBool.dispose()
+        const rank = occupancyMap.rank
+        const boundingIntervals = Array.from({ length: rank }, (_, axis) => this._argBounds(occupancyMap, axis))
 
         // Separate min and max bounds
         const minCoords = tf.stack(boundingIntervals.map(interval => interval[0]), 0)
@@ -353,8 +335,8 @@ export default class ISOProcessor extends EventEmitter
         // Convert tensors to arrays
         const minCoordsArray = minCoords.arraySync().slice(0, 3).toReversed()
         const maxCoordsArray = maxCoords.arraySync().slice(0, 3).toReversed()
-        minCoords.dispose()
-        maxCoords.dispose()
+        tf.dispose(minCoords)
+        tf.dispose(maxCoords)
 
         return { minCoords: minCoordsArray, maxCoords: maxCoordsArray}
     
@@ -365,10 +347,10 @@ export default class ISOProcessor extends EventEmitter
         const scalarNegativeOne = tf.scalar(-1, 'float32')
         const negative = tensor4d.mul(scalarNegativeOne)
         const negMaxPool = tf.maxPool3d(negative, filterSize, strides, pad)
-        negative.dispose()
+        tf.dispose(negative)
         const tensorMinPool = negMaxPool.mul(scalarNegativeOne)
-        negMaxPool.dispose()
-        scalarNegativeOne.dispose()
+        tf.dispose(negMaxPool)
+        tf.dispose(scalarNegativeOne)
         return tensorMinPool
     } 
 
@@ -394,23 +376,23 @@ export default class ISOProcessor extends EventEmitter
         // Find the last non-zero index (maxInd)
         const reversed = collapsed.reverse()
         const reversedArgMax = reversed.argMax()
-        reversed.dispose()
+        tf.dispose(reversed)
         const maxIndTemp2 = tf.sub(occupancyMapBool.shape[axis], reversedArgMax)
-        reversedArgMax.dispose()
+        tf.dispose(reversedArgMax)
         const maxIndTemp = maxIndTemp2.sub(scalarOne) // First True from the right
-        maxIndTemp2.dispose()
-        scalarOne.dispose()
+        tf.dispose(maxIndTemp2)
+        tf.dispose(scalarOne)
 
         // Check if there are any true values in the collapsed tensor
         const isNonSingular = tf.any(collapsed)
-        collapsed.dispose()
+        tf.dispose(collapsed)
 
         // If collapsed is singular return zero indices
         const minInd = minIndTemp.mul(isNonSingular) // min indices are included 
         const maxInd = maxIndTemp.mul(isNonSingular) // max indices are included 
-        minIndTemp.dispose()
-        maxIndTemp.dispose()
-        isNonSingular.dispose()
+        tf.dispose(minIndTemp)
+        tf.dispose(maxIndTemp)
+        tf.dispose(isNonSingular)
 
         // Return the bounds
         return [minInd, maxInd] 
@@ -423,17 +405,17 @@ export default class ISOProcessor extends EventEmitter
             // Tensor must be normalized in [0, 1]
             // Scale to the specified quantization levels
             const scaled = tensor4d.mul(tf.scalar(255))
-            tensor4d.dispose()
+            tf.dispose(tensor4d)
     
             // Clip values to the range [0, levels]
             const clipped = scaled.clipByValue(0, 255)
-            scaled.dispose()
+            tf.dispose(scaled)
     
             // Round and cast to integer type
             const rounded = clipped.round()
-            clipped.dispose()
+            tf.dispose(clipped)
             const quantized = rounded.cast('int32')
-            rounded.dispose()
+            tf.dispose(rounded)
     
             // Return the quantized tensor
             return quantized
