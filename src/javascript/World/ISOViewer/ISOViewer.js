@@ -33,7 +33,7 @@ export default class ISOViewer extends EventEmitter
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         await this.processor.computeIntensityMap()
-        await this.processor.computeOccupancyMap(uRendering.iso_intensity, uDistanceMap.sub_division)
+        await this.processor.computeOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
         tf.dispose(this.processor.computes.intensityMap.tensor)
         await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
         await this.processor.computeBoundingBox()
@@ -169,12 +169,9 @@ export default class ISOViewer extends EventEmitter
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         const defines = this.material.defines
 
-        // Dispose 
-        this.textures.distanceMap.dispose()
-
         // Recompute Maps
         await this.processor.computeIntensityMap()
-        await this.processor.computeOccupancyMap(uRendering.iso_intensity, uDistanceMap.sub_division)
+        await this.processor.computeOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
         tf.dispose(this.processor.computes.intensityMap.tensor)
         await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
         await this.processor.computeBoundingBox()
@@ -185,6 +182,7 @@ export default class ISOViewer extends EventEmitter
         const boundingBox = this.processor.computes.boundingBox 
 
         // Update Textures
+        this.textures.distanceMap.dispose()
         const distanceData = this.processor.computes.distanceMap.tensor.dataSync()
         this.textures.distanceMap = new THREE.Data3DTexture(
             new Uint8Array(distanceData), 

@@ -32,7 +32,7 @@ cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
 trace.intersected = is_cubic_solvable
 (
     cell.intensity_coeffs, 
-    u_rendering.iso_intensity, 
+    u_rendering.intensity, 
     0.0, 
     1.0, 
     cell.sample_intensities.x, 

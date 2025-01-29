@@ -80,14 +80,14 @@ export default class ISOGui
         const uDistanceMap = this.viewer.material.uniforms.u_distance_map.value
         const objects = 
         { 
-            iso_intensity              : uRendering.iso_intensity,
+            intensity              : uRendering.intensity,
             INTERSECT_BBOX_ENABLED     : Boolean(defines.INTERSECT_BBOX_ENABLED),
             SKIPPING_ENABLED           : Boolean(defines.SKIPPING_ENABLED),
         }
     
         this.controllers.rendering = 
         {
-            isoIntensity       : folder.add(objects, 'iso_intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.iso_intensity = value, this.viewer.update() }),
+            isoIntensity       : folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { uRendering.intensity = value, this.viewer.update() }),
             maxCount           : folder.add(uRendering, 'max_count').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),

@@ -33,7 +33,7 @@ cell.terminated = cell.exit_distance > block.exit_distance;
 cell.intersected = is_cubic_solvable
 (
     cell.intensity_coeffs, 
-    u_rendering.iso_intensity, 
+    u_rendering.intensity, 
     0.0, 
     1.0, 
     cell.sample_intensities.x, 

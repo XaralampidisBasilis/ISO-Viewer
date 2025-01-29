@@ -16,7 +16,7 @@ cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.u
 cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
 
 // compute solution
-vec3 iso_distances = cubic_solver(cell.intensity_coeffs, u_rendering.iso_intensity);
+vec3 iso_distances = cubic_solver(cell.intensity_coeffs, u_rendering.intensity);
 vec3 is_inside = inside_closed(0.0, 1.0, iso_distances);
 float iso_distance = mmin(mmix(1.0, iso_distances, is_inside));
 
@@ -25,7 +25,7 @@ trace.distance = mix(cell.entry_distance, cell.exit_distance, iso_distance);
 trace.position = camera.position + ray.direction * trace.distance; 
 trace.uvw = trace.position * u_intensity_map.inv_size; 
 trace.intensity = texture(u_textures.intensity_map, trace.uvw).r;
-trace.error = trace.intensity - u_rendering.iso_intensity;
+trace.error = trace.intensity - u_rendering.intensity;
 
 // Update stats
 #if STATS_ENABLED == 1

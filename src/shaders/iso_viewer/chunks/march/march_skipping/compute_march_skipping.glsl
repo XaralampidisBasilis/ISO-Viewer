@@ -2,6 +2,8 @@
 // start march at ray start
 #include "./modules/start_march"
 
+
+
 for (int batch = 0; batch < MAX_BATCH_COUNT; batch++) 
 {
     // Skip empty space using the precomputed chebyshev distance map 
