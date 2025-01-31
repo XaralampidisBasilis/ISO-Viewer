@@ -44,6 +44,7 @@ struct Debug
     vec4 cell_min_position;      
     vec4 cell_entry_distance;    
     vec4 cell_exit_distance;     
+    vec4 cell_span_distance;     
     vec4 cell_sample_distances;  
     vec4 cell_sample_intensities;
     vec4 cell_intensity_coeffs;  
@@ -131,6 +132,7 @@ Debug set_debug()
     debug.cell_min_position        = vec4(vec3(0.0), 1.0);
     debug.cell_entry_distance      = vec4(vec3(0.0), 1.0);
     debug.cell_exit_distance       = vec4(vec3(0.0), 1.0);
+    debug.cell_span_distance       = vec4(vec3(0.0), 1.0);
     debug.cell_sample_distances    = vec4(vec3(0.0), 1.0);
     debug.cell_sample_intensities  = vec4(vec3(0.0), 1.0);
     debug.cell_intensity_coeffs    = vec4(vec3(0.0), 1.0);

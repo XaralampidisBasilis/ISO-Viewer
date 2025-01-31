@@ -23,6 +23,10 @@ debug.cell_entry_distance = vec4(vec3(debug_cell_entry_distance), 1.0);
 float debug_cell_exit_distance = map(box.min_entry_distance, box.max_exit_distance, cell.exit_distance);
 debug.cell_exit_distance = vec4(vec3(debug_cell_exit_distance), 1.0);
 
+// span distance
+float debug_cell_span_distance = (cell.exit_distance - cell.entry_distance) / u_intensity_map.spacing_length;
+debug.cell_span_distance = vec4(vec3(debug_cell_span_distance), 1.0);
+ 
 // min position
 vec3 debug_cell_min_position = map(box.min_position, box.max_position, cell.min_position);
 debug.cell_min_position = vec4(debug_cell_min_position, 1.0);
@@ -54,8 +58,9 @@ switch (u_debugging.option - debug.slot_cell)
     case  6: fragColor = debug.cell_min_position;       break;
     case  7: fragColor = debug.cell_entry_distance;     break;
     case  8: fragColor = debug.cell_exit_distance;      break;
-    case  9: fragColor = debug.cell_sample_distances;   break;
-    case 10: fragColor = debug.cell_sample_intensities; break;
-    case 11: fragColor = debug.cell_intensity_coeffs;   break;
+    case  9: fragColor = debug.cell_span_distance;      break;
+    case 10: fragColor = debug.cell_sample_distances;   break;
+    case 11: fragColor = debug.cell_sample_intensities; break;
+    case 12: fragColor = debug.cell_intensity_coeffs;   break;
 }
 

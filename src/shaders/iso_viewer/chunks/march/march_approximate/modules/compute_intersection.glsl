@@ -4,20 +4,19 @@ vec2 cell_distances = intersect_box(cell.min_position, cell.max_position, camera
 cell_distances = clamp(cell_distances, box.entry_distance, box.exit_distance);
 cell.entry_distance = cell_distances.x;
 cell.exit_distance = cell_distances.y;
-cell.sample_distances = mmix(cell.entry_distance, cell.exit_distance, weights_vec4);
+cell.sample_distances.xyz = mmix(cell.entry_distance, cell.exit_distance, weights_vec3);
 
 // compute intensities
 cell.sample_intensities.x = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.x).r;
 cell.sample_intensities.y = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.y).r;
 cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.z).r;
-cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.w).r;
 
 // compute coefficients
-cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
+cell.intensity_coeffs.xyz = inv_vander_mat3 * cell.sample_intensities.xyz;
 
 // compute solution
-vec3 solutions = cubic_solver(cell.intensity_coeffs, u_rendering.intensity);
-vec3 is_inside = inside_closed(0.0, 1.0, solutions);
+vec2 solutions = quadratic_solver(cell.intensity_coeffs.xyz, u_rendering.intensity);
+vec2 is_inside = inside_closed(0.0, 1.0, solutions);
 float min_solution = mmin(mmix(1.0, solutions, is_inside));
 
 // update trace 

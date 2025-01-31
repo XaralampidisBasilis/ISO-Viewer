@@ -190,9 +190,10 @@ export default class ISOGui
                 cell_min_position       : 406,
                 cell_entry_distance     : 407,
                 cell_exit_distance      : 408,
-                cell_sample_distances   : 409,
-                cell_sample_intensities : 410,
-                cell_intensity_coeffs   : 411,
+                cell_span_distance      : 409,
+                cell_sample_distances   : 410,
+                cell_sample_intensities : 411,
+                cell_intensity_coeffs   : 412,
 
                 block_cheby_distance    : 501,
                 block_occupied          : 502,
