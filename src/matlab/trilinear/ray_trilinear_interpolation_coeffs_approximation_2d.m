@@ -70,37 +70,65 @@ disp(error)
 %% Symbolic solver
 
 % Define variables as vectors
-syms s0 s1 
-assume([s0 s1], 'real')
+syms fa fb 
+assume([fa fb], 'real')
 
 f = [f00 f10 f01 f11];
-w0 = simplify(coeffs(c_samples(1), f));
-w1 = simplify(coeffs(c_samples(3), f));
+
+wa = simplify(coeffs(c_samples(1), f));
+wb = simplify(coeffs(c_samples(3), f));
 w  = simplify(coeffs(c_coeffs(1), f));
 
-% Define equality constraints
-eqs = [dot(w0, f) == s0, ...
-       dot(w1, f) == s1];
+% Solve for a particular solution f_p
+Aeq = [wa; wb];
+beq = [fa; fb];
+fp = Aeq \ beq;  % Particular solution
 
-% Solve for two variables in terms of the other two
-sol = solve(eqs, [f00, f11]);
+% Find null space basis
+syms v1 v2
+assume([v1 v2], 'real')
+v = [v1 v2];
 
-% Substitute into the objective function
-c_expr = simplify(subs(dot(w, f), [f00, f11], [sol.f00, sol.f11]));
-c_factor = factor(c_expr);
+V = null(Aeq); % 4x2 matrix (2 independent basis vectors)
+num_variables = size(V, 2);
+
+% General solution
+fg = fp + v1 * V(:, 1) + v2 * V(:, 2);
+
+% Compute coefficient
+cg = w * fg;
+cg_factor = factor(cg);
+disp(cg_factor')
+
+[v_coeffs, v_terms] = coeffs(cg_factor(3), v);
+disp([v_coeffs', v_terms']);
+
+% Evaluate f(v1, v2) for all 4 cases
+v_cases = dec2bin(0:2^num_variables-1) - '0';
+num_cases = size(v_cases, 1);
+
+% Initialize min and max
+cg_values = sym(zeros(num_cases, 1));  % Store function values
+cg_variable = cg_factor(3) - v_coeffs(end);
+
+for i = 1:num_cases
+    % Compute function value
+    cg_values(i) = simplify(subs(cg_variable, v, v_cases(i, :)));
+end
+
 
 %% Special case 
-syms s0 s1 
-assume([s0 s1], 'real')
+syms fa fb 
+assume([fa fb], 'real')
 
 f = [f00 f10 f01 f11];
-w0 = simplify(coeffs(c_samples(1), f));
-w1 = simplify(coeffs(c_samples(3), f));
+wa = simplify(coeffs(c_samples(1), f));
+wb = simplify(coeffs(c_samples(3), f));
 w  = simplify(coeffs(c_coeffs(1), f));
 
 % Define equality constraints
-eqs = [dot(w0, f) == s0, ...
-       dot(w1, f) == s1];
+eqs = [dot(wa, f) == fa, ...
+       dot(wb, f) == fb];
 
 % Solve for two variables in terms of the other two
 sol = solve(eqs, [f10, f01]);

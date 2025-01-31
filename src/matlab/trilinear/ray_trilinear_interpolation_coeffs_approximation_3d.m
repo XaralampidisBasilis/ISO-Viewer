@@ -87,6 +87,53 @@ disp(error)
 
 
 
+%% Solver
+%% Symbolic solver
+
+% Define variables as vectors
+syms fa fb
+assume([fa fb], 'real')
+
+f = [f000 f100 f010 f001 f110 f101 f011 f111];
+wa = simplify(coeffs(c_samples(1), f));
+wb = simplify(coeffs(c_samples(4), f));
+w  = simplify(c_coeffs(1));
+
+% Solve for a particular solution f_p
+Aeq = [wa; wb];
+beq = [fa; fb];
+fp = Aeq \ beq;  % Particular solution
+
+% Find null space basis
+V = null(Aeq); % 4x2 matrix (2 independent basis vectors)
+num_variables = size(V, 2);
+syms v1 v2 v3 v4 v5 v6
+assume([v1 v2 v3 v4 v5 v6], 'real')
+v = [v1 v2 v3 v4 v5 v6];
+
+% General solution
+fg = fp + v1 * V(:, 1) + v2 * V(:, 2) + v3 * V(:, 3) + v4 * V(:, 4) + v5 * V(:, 5) + v6 * V(:, 6);
+
+% Compute coefficient
+cg = w * fg;
+cg_factor = factor(cg);
+disp(cg_factor');
+
+[v_coeffs, v_terms] = coeffs(cg_factor(2), v);
+disp([v_coeffs', v_terms']);
+
+% Evaluate v for all cases
+v_cases = dec2bin(0:2^num_variables-1) - '0';
+num_cases = size(v_cases, 1);
+
+% Initialize min and max
+cg_values = sym(zeros(num_cases, 1));  % Store function values
+
+for i = 1:num_cases
+    % Compute function value
+    cg_values(i) = simplify(subs(cg_factor(2), v, v_cases(i, :)));
+end
+
 
 %% Special case ay = 0, bx = 0
 syms s0 s1 
