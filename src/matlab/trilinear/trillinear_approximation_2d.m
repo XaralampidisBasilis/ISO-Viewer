@@ -25,8 +25,8 @@ ry = ay + (by - ay) * t;
 c = simplify(subs(c, [x, y], [rx, ry]));
 
 % Special cases that generalize due to symmetries
-c = subs(c, [ay, bx], [0, 1]);
-%c = subs(c, [ay, by], [0, 1]);
+%c = subs(c, [ay, bx], [0, 1]);
+c = subs(c, [ay, by], [0, 1]);
 
 % Extract coefficients with respect to t
 [c_coeffs, c_terms] = coeffs(c, t);
@@ -52,4 +52,4 @@ c_expr = simplify(subs(c_coeffs(1), [f00, f11], [sol.f00, sol.f11]));
 f_coeffs = simplify(f_coeffs);
 
 disp([f_coeffs(:), f_terms(:)])
-
+simplify(subs(c_expr, [f10 f01], [1, 1]))
