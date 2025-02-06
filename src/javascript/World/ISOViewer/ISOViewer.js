@@ -37,9 +37,6 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
         await this.processor.generateBoundingBox()
         tf.dispose(this.processor.computes.occupancyMap.tensor)
-        tf.dispose(this.processor.computes.intensityMap.tensor)
-
-        console.log('generated maps')
     }
 
     setViewer()
@@ -94,6 +91,8 @@ export default class ISOViewer extends EventEmitter
         this.textures.intensityMap.magFilter = THREE.LinearFilter
         this.textures.intensityMap.computeMipmaps = false
         this.textures.intensityMap.needsUpdate = true
+        delete this.processor.volume.data
+        delete this.resources.items.volumeNifti.data
     }
   
     setGeometry()
@@ -162,8 +161,11 @@ export default class ISOViewer extends EventEmitter
         this.scene.add(this.mesh)
     }
 
-    async update()
+    async updateIsosurface(threshold)
     {
+        console.log('UPDATE ISOSURFACE')
+        console.time('UPDATE ISOSURFACE')
+
         // Uniforms/Defines
         const uTextures = this.material.uniforms.u_textures.value
         const uRendering = this.material.uniforms.u_rendering.value
@@ -172,11 +174,10 @@ export default class ISOViewer extends EventEmitter
         const defines = this.material.defines
 
         // Recompute Maps
-        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
+        await this.processor.generateOccupancyMap(threshold, uDistanceMap.sub_division)
         await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
         await this.processor.generateBoundingBox()
         tf.dispose(this.processor.computes.occupancyMap.tensor)
-        await tf.nextFrame()
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap
@@ -184,9 +185,8 @@ export default class ISOViewer extends EventEmitter
 
         // Update Textures
         this.textures.distanceMap.dispose()
-        const distanceData = this.processor.computes.distanceMap.tensor.dataSync()
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Uint8Array(distanceData), 
+            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
             ...distanceMap.parameters.dimensions)
         this.textures.distanceMap.format = THREE.RedFormat
         this.textures.distanceMap.type = THREE.UnsignedByteType
@@ -197,6 +197,7 @@ export default class ISOViewer extends EventEmitter
         tf.dispose(this.processor.computes.distanceMap.tensor)
         
         // Update Uniforms
+        uRendering.intensity = threshold
         uTextures.distance_map = this.textures.distanceMap
         uDistanceMap.max_distance = distanceMap.parameters.maxDistance
         uDistanceMap.sub_division = distanceMap.parameters.subDivision
@@ -219,6 +220,7 @@ export default class ISOViewer extends EventEmitter
 
         // Update Material
         this.material.needsUpdate = true
+        console.timeEnd('UPDATE ISOSURFACE')
     }
 
     destroy() 

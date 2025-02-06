@@ -1,14 +1,6 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../../Utils/EventEmitter'
-import { e } from 'mathjs'
-
-const timeit = (name, callback) => 
-{ 
-    // console.time(name) 
-    callback()
-    // console.timeEnd(name) 
-}
 
 export default class ISOProcessor extends EventEmitter
 {
@@ -43,35 +35,34 @@ export default class ISOProcessor extends EventEmitter
 
     setVolume(volume)
     {
-        timeit('setVolume', () =>
+       
+        console.time('setVolume')
+        this.volume = volume
+        this.volume.data = new Float32Array(volume.data)
+        const data = this.volume.data
+        const min = this.volume.min
+        const scale = 1 / (this.volume.max - this.volume.min)
+        for (let i = 0; i < data.length; i++) 
         {
-            this.volume = volume
-            this.volume.data = new Float32Array(volume.data)
-    
-            const data = this.volume.data
-            const min = this.volume.min
-            const scale = 1 / (this.volume.max - this.volume.min)
-            for (let i = 0; i < data.length; i++) 
-            {
-                data[i] = (data[i] - min) * scale;
-            }
-    
-            this.volume.parameters = 
-            {
-                dimensions       : new THREE.Vector3().fromArray(this.volume.dimensions),
-                spacing          : new THREE.Vector3().fromArray(this.volume.spacing),
-                size             : new THREE.Vector3().fromArray(this.volume.size),
-                spacingLength    : new THREE.Vector3().fromArray(this.volume.spacing).length(),
-                sizeLength       : new THREE.Vector3().fromArray(this.volume.size).length(),
-                invDimensions    : new THREE.Vector3().fromArray(this.volume.dimensions.map(x => 1/x)),
-                invSpacing       : new THREE.Vector3().fromArray(this.volume.spacing.map(x => 1/x)),
-                invSize          : new THREE.Vector3().fromArray(this.volume.size.map(x => 1/x)),
-                numVoxels        : this.volume.dimensions.reduce((voxels, dim) => voxels * dim, 1),
-                shape            : this.volume.dimensions.toReversed().concat(1),
-                minIntensity     : this.volume.min,
-                maxIntensity     : this.volume.max,
-            }
-        })
+            data[i] = (data[i] - min) * scale;
+        }
+
+        this.volume.parameters = 
+        {
+            dimensions       : new THREE.Vector3().fromArray(this.volume.dimensions),
+            spacing          : new THREE.Vector3().fromArray(this.volume.spacing),
+            size             : new THREE.Vector3().fromArray(this.volume.size),
+            spacingLength    : new THREE.Vector3().fromArray(this.volume.spacing).length(),
+            sizeLength       : new THREE.Vector3().fromArray(this.volume.size).length(),
+            invDimensions    : new THREE.Vector3().fromArray(this.volume.dimensions.map(x => 1/x)),
+            invSpacing       : new THREE.Vector3().fromArray(this.volume.spacing.map(x => 1/x)),
+            invSize          : new THREE.Vector3().fromArray(this.volume.size.map(x => 1/x)),
+            numVoxels        : this.volume.dimensions.reduce((voxels, dim) => voxels * dim, 1),
+            shape            : this.volume.dimensions.toReversed().concat(1),
+            minIntensity     : this.volume.min,
+            maxIntensity     : this.volume.max,
+        }
+        console.timeEnd('setVolume')
     }
 
     destroy() 
@@ -103,9 +94,11 @@ export default class ISOProcessor extends EventEmitter
 
     async generateIntensityMap()
     {
+        console.time('generateIntensityMap') 
         this.computes.intensityMap.tensor = tf.tensor4d(this.volume.data, this.volume.parameters.shape,'float32')                
         this.computes.intensityMap.parameters = {...this.volume.parameters}
-        
+        console.timeEnd('generateIntensityMap') 
+
         // console.log(this.computes.intensityMap.parameters, /*this.computes.intensityMap.tensor.dataSync()*/)
     }
 
@@ -116,6 +109,7 @@ export default class ISOProcessor extends EventEmitter
             throw new Error(`computeOccupancyMap: intensityMap is not computed`)
         }
         
+        console.time('generateOccupancyMap') 
         const occupancyMap = await this.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, subDivision)
         const parameters = {}
 
@@ -133,8 +127,10 @@ export default class ISOProcessor extends EventEmitter
 
         this.computes.occupancyMap.tensor = occupancyMap
         this.computes.occupancyMap.parameters = parameters
+        console.timeEnd('generateOccupancyMap') 
 
-        // console.log(this.computes.occupancyMap.parameters, /*this.computes.occupancyMap.tensor.dataSync()*/)
+        console.log(this.computes.occupancyMap.parameters)
+        // console.log(this.computes.occupancyMap.tensor.dataSync())
     }
 
     async generateDistanceMap(maxIters)
@@ -144,6 +140,7 @@ export default class ISOProcessor extends EventEmitter
             throw new Error(`computeDistanceMap: occupancyMap is not computed`)
         }
 
+        console.time('generateDistanceMap') 
         const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
         const parameters = {...this.computes.occupancyMap.parameters}
         const maxTensor = distanceMap.max()
@@ -155,7 +152,8 @@ export default class ISOProcessor extends EventEmitter
 
         this.computes.distanceMap.tensor = distanceMap
         this.computes.distanceMap.parameters = parameters
-    
+        console.timeEnd('generateDistanceMap') 
+
 
         // console.log(this.computes.distanceMap.parameters, /*this.computes.distanceMap.tensor.dataSync()*/)
     }
@@ -167,6 +165,7 @@ export default class ISOProcessor extends EventEmitter
             throw new Error(`computeBoundingBox: occupancyMap is not computed`)
         }
    
+        console.time('generateBoundingBox') 
         const boundingBox = await this.computeBoundingBox(this.computes.occupancyMap.tensor)
         const parameters = {}
         
@@ -187,57 +186,48 @@ export default class ISOProcessor extends EventEmitter
         parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
 
         this.computes.boundingBox.parameters = parameters
+        console.timeEnd('generateBoundingBox') 
 
         // console.log(this.computes.boundingBox.parameters)
     }
     
     // Helpers
-    
+
     async computeOccupancyMap(intensityMap, threshold, division) 
     {
         // Scalars for threshold and output scaling
         const scalarThreshold = tf.scalar(threshold, 'float32')
+        const strides = [division, division, division]
+        const spacing = strides.map(x => x + 1)
+
+        // Calculate necessary padding for valid subdivisions and boundary handling
+        const divisible = intensityMap.shape
+            .map((dimension, i) => Math.ceil((dimension - spacing[i]) / strides[i]))
+            .map((dimension, i) => dimension * strides[i] + spacing[i])
+        const padding = intensityMap.shape.map((dimension, i) => [1, divisible[i] - dimension - 1])
+        padding[3] = [0, 0]
 
         // Symmetric padding to handle boundaries by adding zeros
-        const padded = tf.mirrorPad(intensityMap, [[1, 1], [1, 1], [1, 1], [0, 0]], 'symmetric')
+        const padded = tf.mirrorPad(intensityMap, padding, 'symmetric')
 
         // Min pooling for lower bound detection
-        const minima = this.minPool3d(padded, [2, 2, 2], [1, 1, 1], 'valid')
-        const lesser = tf.lessEqual(minima, scalarThreshold)
-        tf.dispose(minima)
+        const minPool = this.minPool3d(padded, spacing, strides, 'valid')
+        const isAbove = tf.greaterEqual(scalarThreshold, minPool)
+        tf.dispose(minPool)
         await tf.nextFrame()
 
         // Max pooling for upper bound detection
-        const maxima = tf.maxPool3d(padded, [2, 2, 2], [1, 1, 1], 'valid')
-        tf.dispose(padded)
+        const maxPool = tf.maxPool3d(padded, spacing, strides, 'valid')
+        const isBellow = tf.lessEqual(scalarThreshold, maxPool)
+        tf.dispose(maxPool)
         await tf.nextFrame()
 
-        const greater = tf.greaterEqual(maxima, scalarThreshold)
-        tf.dispose([maxima, scalarThreshold])
+        tf.dispose([padded, scalarThreshold])
         await tf.nextFrame()
 
-        // Logical AND to find isosurface occupied regions
-        const occupied = tf.logicalAnd(lesser, greater)
-        tf.dispose([lesser, greater])
-        await tf.nextFrame()
-
-        // Calculate necessary padding for valid subdivisions
-        const roundUp = (X, N) => N * Math.ceil(X / N)
-        const padAmounts = occupied.shape.map((dimension, i) => 
-        {
-            const paddedDim = (i < 3) ? roundUp(dimension, division) : dimension // Only pad spatial dimensions
-            return [0, paddedDim - dimension]
-        })
-
-        // Apply padding
-        const occupiedPadded = tf.pad(occupied, padAmounts)
-        tf.dispose(occupied)
-        await tf.nextFrame()
-
-        // Apply max pooling with valid padding and subdivision
-        const divisions = [division, division, division]
-        const occupancyMap = tf.maxPool3d(occupiedPadded, divisions, divisions, 'valid')
-        tf.dispose(occupiedPadded)
+        // Logical AND to find isosurface occupied blocks
+        const occupancyMap = tf.logicalAnd(isAbove, isBellow)
+        tf.dispose([isAbove, isBellow])
         await tf.nextFrame()
 
         return occupancyMap
@@ -304,12 +294,12 @@ export default class ISOProcessor extends EventEmitter
         await tf.nextFrame()
 
         const collapsedYZ = occupancyMap.any([0, 3]) 
-        const collapsedY = collapsedYZ.any(0) 
+        const collapsedY = collapsedYZ.any(1) 
         coords[1] = await this.trueBounds(collapsedY)
         tf.dispose(collapsedY)
         await tf.nextFrame()
 
-        const collapsedZ = collapsedYZ.any(1) 
+        const collapsedZ = collapsedYZ.any(0) 
         coords[0] = await this.trueBounds(collapsedZ)
         tf.dispose([collapsedZ, collapsedYZ])
         await tf.nextFrame()
