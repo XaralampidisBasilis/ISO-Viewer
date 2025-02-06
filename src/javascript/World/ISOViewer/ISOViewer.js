@@ -24,20 +24,22 @@ export default class ISOViewer extends EventEmitter
         this.processor = new ISOProcessor(this.resources.items.volumeNifti)
         this.processor.on('ready', () =>
         {
-            this.computeMaps().then(() => this.setViewer())
+            this.generateMaps().then(() => this.setViewer())
         })
     }
     
-    async computeMaps()
+    async generateMaps()
     {
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
-        await this.processor.computeIntensityMap()
-        await this.processor.computeOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
-        tf.dispose(this.processor.computes.intensityMap.tensor)
-        await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
-        await this.processor.computeBoundingBox()
+        await this.processor.generateIntensityMap()
+        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
+        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
+        await this.processor.generateBoundingBox()
         tf.dispose(this.processor.computes.occupancyMap.tensor)
+        tf.dispose(this.processor.computes.intensityMap.tensor)
+
+        console.log('generated maps')
     }
 
     setViewer()
@@ -170,12 +172,11 @@ export default class ISOViewer extends EventEmitter
         const defines = this.material.defines
 
         // Recompute Maps
-        await this.processor.computeIntensityMap()
-        await this.processor.computeOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
-        tf.dispose(this.processor.computes.intensityMap.tensor)
-        await this.processor.computeDistanceMap(uDistanceMap.max_iterations)
-        await this.processor.computeBoundingBox()
+        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
+        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
+        await this.processor.generateBoundingBox()
         tf.dispose(this.processor.computes.occupancyMap.tensor)
+        await tf.nextFrame()
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap

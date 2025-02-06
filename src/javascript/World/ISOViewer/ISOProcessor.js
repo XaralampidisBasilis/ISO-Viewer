@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../../Utils/EventEmitter'
+import { e } from 'mathjs'
 
 const timeit = (name, callback) => 
 { 
@@ -114,6 +115,7 @@ export default class ISOProcessor extends EventEmitter
         {
             throw new Error(`computeOccupancyMap: intensityMap is not computed`)
         }
+        
         const occupancyMap = await this.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, subDivision)
         const parameters = {}
 
@@ -196,26 +198,28 @@ export default class ISOProcessor extends EventEmitter
         // Scalars for threshold and output scaling
         const scalarThreshold = tf.scalar(threshold, 'float32')
 
-        // Symmetric padding to handle boundaries
-        const tensorPadded = tf.mirrorPad(intensityMap, [[1, 1], [1, 1], [1, 1], [0, 0]], 'symmetric')
+        // Symmetric padding to handle boundaries by adding zeros
+        const padded = tf.mirrorPad(intensityMap, [[1, 1], [1, 1], [1, 1], [0, 0]], 'symmetric')
 
         // Min pooling for lower bound detection
-        const minima = this.minPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
+        const minima = this.minPool3d(padded, [2, 2, 2], [1, 1, 1], 'valid')
         const lesser = tf.lessEqual(minima, scalarThreshold)
         tf.dispose(minima)
+        await tf.nextFrame()
 
         // Max pooling for upper bound detection
-        const maxima = tf.maxPool3d(tensorPadded, [2, 2, 2], [1, 1, 1], 'valid')
-        tf.dispose(tensorPadded)
+        const maxima = tf.maxPool3d(padded, [2, 2, 2], [1, 1, 1], 'valid')
+        tf.dispose(padded)
+        await tf.nextFrame()
 
         const greater = tf.greaterEqual(maxima, scalarThreshold)
-        tf.dispose(scalarThreshold)
-        tf.dispose(maxima)
+        tf.dispose([maxima, scalarThreshold])
+        await tf.nextFrame()
 
         // Logical AND to find isosurface occupied regions
         const occupied = tf.logicalAnd(lesser, greater)
-        tf.dispose(lesser)
-        tf.dispose(greater)
+        tf.dispose([lesser, greater])
+        await tf.nextFrame()
 
         // Calculate necessary padding for valid subdivisions
         const roundUp = (X, N) => N * Math.ceil(X / N)
@@ -228,11 +232,13 @@ export default class ISOProcessor extends EventEmitter
         // Apply padding
         const occupiedPadded = tf.pad(occupied, padAmounts)
         tf.dispose(occupied)
+        await tf.nextFrame()
 
         // Apply max pooling with valid padding and subdivision
         const divisions = [division, division, division]
         const occupancyMap = tf.maxPool3d(occupiedPadded, divisions, divisions, 'valid')
         tf.dispose(occupiedPadded)
+        await tf.nextFrame()
 
         return occupancyMap
     }
@@ -291,80 +297,57 @@ export default class ISOProcessor extends EventEmitter
 
     async computeBoundingBox(occupancyMap) 
     {
-        // Compute the bounds for each axis dynamically
-        const rank = occupancyMap.rank
-        const boundingIntervals = Array.from({ length: rank }, (_, axis) => this.argBounds(occupancyMap, axis))
+        const coords = []
+        const collapsedX = occupancyMap.any([1, 2, 3]) 
+        coords[2] = await this.trueBounds(collapsedX)
+        tf.dispose(collapsedX)
+        await tf.nextFrame()
 
-        // Separate min and max bounds
-        const minCoords = tf.stack(boundingIntervals.map(interval => interval[0]), 0)
-        const maxCoords = tf.stack(boundingIntervals.map(interval => interval[1]), 0)
-        tf.dispose(boundingIntervals)
+        const collapsedYZ = occupancyMap.any([0, 3]) 
+        const collapsedY = collapsedYZ.any(0) 
+        coords[1] = await this.trueBounds(collapsedY)
+        tf.dispose(collapsedY)
+        await tf.nextFrame()
 
-        // Convert tensors to arrays
-        const minCoordsArray = minCoords.arraySync().slice(0, 3).toReversed()
-        const maxCoordsArray = maxCoords.arraySync().slice(0, 3).toReversed()
-        tf.dispose(minCoords)
-        tf.dispose(maxCoords)
+        const collapsedZ = collapsedYZ.any(1) 
+        coords[0] = await this.trueBounds(collapsedZ)
+        tf.dispose([collapsedZ, collapsedYZ])
+        await tf.nextFrame()
 
-        return { minCoords: minCoordsArray, maxCoords: maxCoordsArray}
+        const minCoords = [coords[0][0], coords[1][0], coords[2][0]]
+        const maxCoords = [coords[0][1], coords[1][1], coords[2][1]]
+
+        return { minCoords, maxCoords }
     
+    }
+
+    async trueBounds(condition)
+    {
+        const coords = await tf.whereAsync(condition)
+        const indices = coords.arraySync().flat()
+        tf.dispose(coords)
+
+        if (indices.length)
+        {
+            return [indices[0], indices[indices.length - 1]]
+        }
+        else
+        {
+            return [0, 0]
+        }
     }
 
     minPool3d(tensor4d, filterSize, strides, pad)
     {
-        const scalarNegativeOne = tf.scalar(-1, 'float32')
-        const negative = tensor4d.mul(scalarNegativeOne)
-        const negMaxPool = tf.maxPool3d(negative, filterSize, strides, pad)
-        tf.dispose(negative)
-        const tensorMinPool = negMaxPool.mul(scalarNegativeOne)
-        tf.dispose(negMaxPool)
-        tf.dispose(scalarNegativeOne)
-        return tensorMinPool
+        return tf.tidy(() =>
+        {
+            const tensorNeg = tensor4d.neg()
+            const maxPool = tf.maxPool3d(tensorNeg, filterSize, strides, pad)
+            const minPool = maxPool.neg()
+            return minPool
+        })
+
     } 
-
-    argBounds(occupancyMapBool, axis) 
-    {
-        // Check input is boolean
-        if (occupancyMapBool.dtype !== "bool") {
-            throw new Error('Input tensor must be of type bool');
-        }
-        
-        // Scalar tensors
-        const scalarOne = tf.scalar(1, 'int32')
-
-        // Create a list of all axes and remove the target axis
-        const axes = [...Array(occupancyMapBool.rank).keys()].filter((x) => x !== axis)
-        
-        // Compute the collapsed view along the specified axis
-        const collapsed = occupancyMapBool.any(axes) 
-        
-        // Find the first non-zero index (minInd)
-        const minIndTemp = collapsed.argMax(0) // First True from the left
-        
-        // Find the last non-zero index (maxInd)
-        const reversed = collapsed.reverse()
-        const reversedArgMax = reversed.argMax()
-        tf.dispose(reversed)
-        const maxIndTemp2 = tf.sub(occupancyMapBool.shape[axis], reversedArgMax)
-        tf.dispose(reversedArgMax)
-        const maxIndTemp = maxIndTemp2.sub(scalarOne) // First True from the right
-        tf.dispose(maxIndTemp2)
-        tf.dispose(scalarOne)
-
-        // Check if there are any true values in the collapsed tensor
-        const isNonSingular = tf.any(collapsed)
-        tf.dispose(collapsed)
-
-        // If collapsed is singular return zero indices
-        const minInd = minIndTemp.mul(isNonSingular) // min indices are included 
-        const maxInd = maxIndTemp.mul(isNonSingular) // max indices are included 
-        tf.dispose(minIndTemp)
-        tf.dispose(maxIndTemp)
-        tf.dispose(isNonSingular)
-
-        // Return the bounds
-        return [minInd, maxInd] 
-    }
 
     quantize(tensor4d) 
     {
