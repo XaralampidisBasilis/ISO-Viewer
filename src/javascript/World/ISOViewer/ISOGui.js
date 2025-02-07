@@ -80,9 +80,10 @@ export default class ISOGui
         const uDistanceMap = this.viewer.material.uniforms.u_distance_map.value
         const objects = 
         { 
-            intensity              : uRendering.intensity,
-            INTERSECT_BBOX_ENABLED     : Boolean(defines.INTERSECT_BBOX_ENABLED),
-            SKIPPING_ENABLED           : Boolean(defines.SKIPPING_ENABLED),
+            intensity               : uRendering.intensity,
+            INTERSECT_BBOX_ENABLED  : Boolean(defines.INTERSECT_BBOX_ENABLED),
+            INTERSECT_BVOL_ENABLED  : Boolean(defines.INTERSECT_BVOL_ENABLED),
+            SKIPPING_ENABLED        : Boolean(defines.SKIPPING_ENABLED),
         }
     
         this.controllers.rendering = 
@@ -91,8 +92,9 @@ export default class ISOGui
             maxCount           : folder.add(uRendering, 'max_count').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
-            enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('enable_intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('enable_skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+            enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
+            enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
+            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
         }
     }
 

@@ -10,6 +10,11 @@
 #include "./modules/compute_ray_bbox_intersection"
 #endif
 
+// Compute intersection of ray with bounding volume
+#if INTERSECT_BVOL_ENABLED == 1
+#include "./modules/compute_ray_bvol_intersection"
+#endif
+
 // Compute ray step distance
 #include "./modules/compute_ray_step_distance"
 
