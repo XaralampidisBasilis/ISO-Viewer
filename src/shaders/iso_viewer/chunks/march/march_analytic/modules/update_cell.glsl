@@ -21,9 +21,9 @@ cell.sample_distances.yzw = mmix(cell.entry_distance, cell.exit_distance, weight
 
 // compute the intensity samples inside the cell from the intensity map texture
 cell.sample_intensities.x = cell.sample_intensities.w;
-cell.sample_intensities.y = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.y).r;
-cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.z).r;
-cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.uvw_direction * cell.sample_distances.w).r;
+cell.sample_intensities.y = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * cell.sample_distances.y).r;
+cell.sample_intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * cell.sample_distances.z).r;
+cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * cell.sample_distances.w).r;
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
 cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;

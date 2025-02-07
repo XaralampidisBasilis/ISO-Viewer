@@ -15,6 +15,7 @@ block.min_position = (vec3(block.min_coords + 0) - MILLI_TOLERANCE) * u_distance
 block.max_position = (vec3(block.max_coords + 1) + MILLI_TOLERANCE) * u_distance_map.spacing - u_intensity_map.spacing * 0.5;  
 
 // Compute entry and exit distances
+block.entry_distance = block.exit_distance;
 block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
 
 // Update stats

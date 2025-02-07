@@ -196,12 +196,12 @@ export default class ISOProcessor extends EventEmitter
         // Scalars for threshold and output scaling
         const scalarThreshold = tf.scalar(threshold, 'float32')
         const strides = [division, division, division]
-        const spacing = strides.map(x => x + 1)
+        const divisions = strides.map(x => x + 1)
 
         // Calculate necessary padding for valid subdivisions and boundary handling
         const divisible = intensityMap.shape
-            .map((dimension, i) => Math.ceil((dimension - spacing[i]) / strides[i]))
-            .map((dimension, i) => dimension * strides[i] + spacing[i])
+            .map((dimension, i) => Math.ceil((dimension - divisions[i]) / strides[i]))
+            .map((dimension, i) => dimension * strides[i] + divisions[i])
         const padding = intensityMap.shape.map((dimension, i) => [1, divisible[i] - dimension - 1])
         padding[3] = [0, 0]
 
@@ -209,13 +209,13 @@ export default class ISOProcessor extends EventEmitter
         const padded = tf.mirrorPad(intensityMap, padding, 'symmetric')
 
         // Min pooling for lower bound detection
-        const minPool = this.minPool3d(padded, spacing, strides, 'valid')
+        const minPool = this.minPool3d(padded, divisions, strides, 'valid')
         const isAbove = tf.greaterEqual(scalarThreshold, minPool)
         tf.dispose(minPool)
         await tf.nextFrame()
 
         // Max pooling for upper bound detection
-        const maxPool = tf.maxPool3d(padded, spacing, strides, 'valid')
+        const maxPool = tf.maxPool3d(padded, divisions, strides, 'valid')
         const isBellow = tf.lessEqual(scalarThreshold, maxPool)
         tf.dispose(maxPool)
         await tf.nextFrame()
@@ -233,12 +233,10 @@ export default class ISOProcessor extends EventEmitter
 
     async computeDistanceMap(occupancyMap, maxIters) 
     {
-        console.log(tf.memory().numTensors)
-
         // Initialize distance map and previous/next diffusion
-        let distanceMap   = tf.variable(tf.zeros(occupancyMap.shape, 'int32'), true)
-        let diffusionPrev = tf.variable(tf.zeros(occupancyMap.shape, 'bool'), true)
-        let diffusionNext = tf.variable(tf.clone(occupancyMap), true)
+        let distanceMap   = tf.tidy(() => tf.variable(tf.zeros(occupancyMap.shape, 'int32'), true))
+        let diffusionPrev = tf.tidy(() => tf.variable(tf.zeros(occupancyMap.shape, 'bool'), true))
+        let diffusionNext = tf.tidy(() => tf.variable(tf.clone(occupancyMap), true))
 
         for (let i = 0; i <= maxIters; i++) 
         {
@@ -261,8 +259,6 @@ export default class ISOProcessor extends EventEmitter
             // Await for garbage disposal
             tf.dispose([diffusionNextUpdate, distanceMapUpdate, distanceUpdate, diffusionUpdate, scalarIter])
             await tf.nextFrame()
-
-            console.log(tf.memory().numTensors)
         }
 
         // Compute final distance update
@@ -274,10 +270,9 @@ export default class ISOProcessor extends EventEmitter
         distanceMap = distanceMap.add(distanceUpdate)
 
         // Cleanup
-        tf.disposeVariables()
         tf.dispose([distanceUpdate, diffusionUpdate, scalarMax])
+        tf.disposeVariables()
         await tf.nextFrame()
-        console.log(tf.memory().numTensors)
 
         // Return the final distance map
         return distanceMap

@@ -3,39 +3,55 @@
 // COMPUTE DEBUG 
 
 // cheby distance
-float debug_block_cheby_distance = float(block.cheby_distance) / float(u_distance_map.max_distance);
-debug.block_cheby_distance = vec4(vec3(debug_block_cheby_distance), 1.0);
+vec4 debug_block_cheby_distance = to_color(float(block.cheby_distance) / float(u_distance_map.max_distance));
 
 // occupied
-debug.block_occupied = vec4(vec3(block.occupied), 1.0);
+vec4 debug_block_occupied = to_color(block.occupied);
+
+// terminated
+vec4 debug_block_terminated = to_color(block.terminated);
 
 // coords
-vec3 debug_block_coords = vec3(block.coords) / vec3(u_distance_map.dimensions - 1);
-debug.block_coords = vec4(debug_block_coords, 1.0);
+vec4 debug_block_coords = to_color(vec3(block.coords) / vec3(u_distance_map.dimensions - 1));
 
 // coords step
-vec3 debug_block_coords_step = (vec3(block.coords_step) / float(u_distance_map.max_distance)) * 0.5 + 0.5;
-debug.block_coords_step  = vec4(debug_block_coords_step, 1.0);
+vec4 debug_block_coords_step = to_color((vec3(block.coords_step) / float(u_distance_map.max_distance)) * 0.5 + 0.5);
 
 // min position
-vec3 debug_block_min_position = map(box.min_position, box.max_position, block.min_position);
-debug.block_min_position = vec4(debug_block_min_position, 1.0);
+vec4 debug_block_min_position = to_color(map(box.min_position, box.max_position, block.min_position));
 
 // max position
-vec3 debug_block_max_position = map(box.min_position, box.max_position, block.max_position);
-debug.block_max_position = vec4(debug_block_max_position, 1.0);
+vec4 debug_block_max_position = to_color(map(box.min_position, box.max_position, block.max_position));
+
+// entry distance
+vec4 debug_block_entry_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, block.entry_distance));
+
+// exit distance
+vec4 debug_block_exit_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, block.exit_distance));
+
+// entry position
+vec4 debug_block_entry_position = to_color(map(box.min_position, box.max_position, block.entry_position));
+
+// exit position
+vec4 debug_block_exit_position = to_color(map(box.min_position, box.max_position, block.exit_position));
+
     
-           
+    
 // PRINT DEBUG
 
 switch (u_debugging.option - debug.slot_block)
 {
-    case 1: fragColor = debug.block_cheby_distance; break;
-    case 2: fragColor = debug.block_occupied;       break;
-    case 3: fragColor = debug.block_coords;         break;
-    case 4: fragColor = debug.block_coords_step;    break;
-    case 5: fragColor = debug.block_min_position;   break;
-    case 6: fragColor = debug.block_max_position;   break;
+    case  1: fragColor = debug_block_cheby_distance; break;
+    case  2: fragColor = debug_block_occupied;       break;
+    case  3: fragColor = debug_block_terminated;     break;
+    case  4: fragColor = debug_block_coords;         break;
+    case  5: fragColor = debug_block_coords_step;    break;
+    case  6: fragColor = debug_block_min_position;   break;
+    case  7: fragColor = debug_block_max_position;   break;
+    case  8: fragColor = debug_block_entry_distance; break;
+    case  9: fragColor = debug_block_exit_distance;  break;
+    case 10: fragColor = debug_block_entry_position; break;
+    case 11: fragColor = debug_block_exit_position;  break;
 }
 
   
