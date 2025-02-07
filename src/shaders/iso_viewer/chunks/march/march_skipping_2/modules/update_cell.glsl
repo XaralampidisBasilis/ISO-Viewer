@@ -24,8 +24,8 @@ cell.intersected = is_cubic_solvable(cell.intensity_coeffs, u_rendering.intensit
 cell.coords += cell.coords_step;
 
 // Compute cell bounding box
-cell.min_position = (vec3(cell.coords) - 0.5 - MILLI_TOLERANCE) * u_intensity_map.spacing;
-cell.max_position = (vec3(cell.coords) + 0.5 + MILLI_TOLERANCE) * u_intensity_map.spacing;
+cell.min_position = (vec3(cell.coords) - 0.5) * u_intensity_map.spacing;
+cell.max_position = (vec3(cell.coords) + 0.5) * u_intensity_map.spacing;
 
 // Compute ray-cell intersection
 cell.entry_distance = cell.exit_distance;
