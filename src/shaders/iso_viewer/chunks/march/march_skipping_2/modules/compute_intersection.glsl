@@ -1,5 +1,5 @@
 
-// Compute analytic solution of intersection
+// compute solution
 vec3 solutions = cubic_solver(cell.intensity_coeffs, u_rendering.intensity);
 vec3 is_inside = inside_closed(0.0, 1.0, solutions);
 float min_solution = mmin(mmix(1.0, solutions, is_inside));

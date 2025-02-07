@@ -1,50 +1,43 @@
 
-// Start march 
-#include "./modules/start_trace"
+// start march at ray start
+#include "./modules/start_march"
 
-for (int i = 0; i < MAX_BATCH_COUNT; i++) 
+for (int batch = 0; batch < MAX_BATCH_COUNT; batch++) 
 {
-    // March empty blocks inside volume
+    // Skip empty space using the precomputed chebyshev distance map 
     #include "./modules/start_block"
 
-    for (int b = 0; b < MAX_BLOCK_SUB_COUNT; b++) 
+    for (int count = 0; count < MAX_BLOCK_SUB_COUNT; count++) 
     {
+        #include "./modules/update_block"
+
         if (block.occupied || block.terminated) 
         {
             break;
-        }
-        
-        #include "./modules/update_block"
+        }  
     }
 
-    // Terminate march loop
-    if (block.terminated && !block.occupied) 
-    {
-        break;
-    }
-
-    // March cells inside current block
+    // March analytically the volume cells inside an occupied block
     #include "./modules/start_cell"
 
-    for (int c = 0; c < MAX_CELL_SUB_COUNT; c++) 
+    for (int count = 0; count < MAX_CELL_SUB_COUNT; count++) 
     {
+        #include "./modules/update_cell"
+
         if (cell.intersected || cell.terminated) 
         {
             break;
         }
-
-        #include "./modules/update_cell"
     }   
 
-    // March trace 
-    #include "./modules/update_trace"
+    // Termination condition
+    cell.terminated = cell.exit_distance > ray.end_distance;
 
-    // Terminate march loop
-    if (cell.intersected || trace.terminated) 
+    if (cell.intersected || cell.terminated) 
     {
         break;
     }
 }   
 
-// Terminate march, compute intersection and gradient
-#include "./modules/end_trace"
+// terminate march, compute intersection and gradient
+#include "./modules/end_march"

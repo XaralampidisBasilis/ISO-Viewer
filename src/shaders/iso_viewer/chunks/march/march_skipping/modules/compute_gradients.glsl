@@ -13,8 +13,8 @@
 float intensities[8];
 for (int i = 0; i < 8; i++)
 {
-    vec3 uvw_offset = trace.uvw + u_intensity_map.inv_dimensions * center_offsets[i];
-    intensities[i] = texture(u_textures.intensity_map, uvw_offset).r;
+    vec3 sample_uvw = trace.uvw + u_intensity_map.inv_dimensions * center_offsets[i];
+    intensities[i] = texture(u_textures.intensity_map, sample_uvw).r;
 }
 
 // Precompute summed groups of intensities for better clarity

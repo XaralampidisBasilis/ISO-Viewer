@@ -39,7 +39,7 @@ export default function()
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_sub_division: 0.25,
+            inv_sub_division: 1/4,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),
@@ -56,7 +56,7 @@ export default function()
         
         u_rendering: new THREE.Uniform
         ({
-            intensity   : 0.53,
+            intensity       : 0.53,
             max_count       : 0,
             max_cell_count  : 0,
             max_block_count : 0,

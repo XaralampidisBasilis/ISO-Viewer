@@ -22,7 +22,7 @@ cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.d
 cell.intensity_coeffs = inv_vander_mat4 * cell.sample_intensities;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
-cell.terminated = cell.exit_distance > block.exit_distance;
+cell.terminated = cell.exit_distance > block.exit_distance; // REALLY IMPORTANT FOR OPTIMIZATION
 cell.intersected = is_cubic_solvable(cell.intensity_coeffs, u_rendering.intensity, 0.0, 1.0, cell.sample_intensities.x, cell.sample_intensities.w);
 
 // Update stats
