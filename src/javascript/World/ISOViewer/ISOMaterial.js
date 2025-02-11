@@ -34,7 +34,7 @@ export default function()
         u_distance_map : new THREE.Uniform
         ({
             max_distance    : 0,
-            max_iterations  : 50,
+            max_iterations  : 32,
             sub_division    : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
@@ -93,7 +93,7 @@ export default function()
     const defines = 
     {           
         INTERSECT_BBOX_ENABLED : 1,
-        INTERSECT_BVOL_ENABLED : 1,
+        INTERSECT_BVOL_ENABLED : 0,
         SKIPPING_ENABLED       : 1,
 
         STATS_ENABLED          : 1,

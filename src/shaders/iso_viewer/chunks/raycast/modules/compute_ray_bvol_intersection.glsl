@@ -3,7 +3,7 @@
 block.exit_distance = ray.start_distance;
 block.exit_position = ray.start_position;
 
-for (int i = 0; i < u_rendering.max_count; i++) 
+for (int i = 0; i < MAX_BLOCK_COUNT / 4; i++) 
 {
     #include "./compute_ray_bvol_intersection/update_ray_start"
 
@@ -13,19 +13,19 @@ for (int i = 0; i < u_rendering.max_count; i++)
     }  
 }
 
-// // Compute ray exit with bounding volume
-// block.entry_distance = ray.end_distance;
-// block.entry_position = ray.end_position;
+// Compute ray exit with bounding volume
+block.entry_distance = ray.end_distance;
+block.entry_position = ray.end_position;
 
-// for (int i = 0; i < u_rendering.max_count; i++) 
-// {
-//     #include "./compute_ray_bvol_intersection/update_ray_end"
+for (int i = 0; i < MAX_BLOCK_COUNT / 4; i++) 
+{
+    #include "./compute_ray_bvol_intersection/update_ray_end"
 
-//       if (block.occupied || block.terminated) 
-//     {
-//         break;
-//     }  
-// }
+      if (block.occupied || block.terminated) 
+    {
+        break;
+    }  
+}
 
 // Discard ray if no intersection with bounding volume
 ray.span_distance = ray.end_distance - ray.start_distance;

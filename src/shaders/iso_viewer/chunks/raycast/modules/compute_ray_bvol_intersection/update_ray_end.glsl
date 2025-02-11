@@ -1,6 +1,6 @@
 
 // Compute block coords from trace position
-block.coords = ivec3((block.entry_distance + u_intensity_map.spacing * 0.5) * u_distance_map.inv_spacing);
+block.coords = ivec3((block.entry_position + u_intensity_map.spacing * 0.5) * u_distance_map.inv_spacing);
 
 // Sample the distance map and compute if block is occupied
 block.cheby_distance = int(round(texelFetch(u_textures.distance_map, block.coords, 0).r * 255.0));
@@ -20,7 +20,7 @@ block.entry_distance = intersect_box_min(block.min_position, block.max_position,
 
 // Compute block entry/exit positions
 block.exit_position = block.entry_position;
-block.entry_position = camera.position + ray.direction * block.exit_distance;
+block.entry_position = camera.position + ray.direction * block.entry_distance;
 
 // Compute termination condition
 block.terminated = block.exit_distance < ray.start_distance;
