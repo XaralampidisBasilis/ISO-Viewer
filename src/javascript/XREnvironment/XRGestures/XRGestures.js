@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import Experience from '../../Experience'
+import { formatVector } from '../../Utils/VectorUtils'
 
 import Tap from './Tap'
 import Polytap from './Polytap'
@@ -18,32 +19,23 @@ const _cursor   = new THREE.Vector2()
 const _cursor0  = new THREE.Vector2()
 const _cursor1  = new THREE.Vector2()
 
-// standalone functions
-function delay( duration ) 
-{  
-    return new Promise( resolve => setTimeout( resolve, duration ) ) 
-}
-function formatVector( vector, digits ) 
-{
-    let sign = vector.toArray().map( (component) => ( component > 0 ) ? '+' : '-' )
-    if ( vector instanceof THREE.Vector2 ) return `(${sign[0] + Math.abs(vector.x).toFixed(digits)}, ${sign[1] + Math.abs(vector.y).toFixed(digits)})`
-    if ( vector instanceof THREE.Vector3 ) return `(${sign[0] + Math.abs(vector.x).toFixed(digits)}, ${sign[1] + Math.abs(vector.y).toFixed(digits)}, ${sign[2] + Math.abs(vector.z).toFixed(digits)})`
-}
-
-let instance = null
-
 class XRGestures extends THREE.EventDispatcher 
 {
+    static instance = null
+
     constructor() {
 
         super()     
 
         // Singleton
-        if(instance)
-            return instance
-        instance = this
+        if (XRGestures.instance) 
+        {
+            return XRGestures.instance
+        }
+        XRGestures.instance = this
             
         this.experience = new Experience()
+        this.scene = this.experience.scene
         this.renderer = this.experience.renderer.instance
         this.camera = this.renderer.xr.getCamera()
         
@@ -54,7 +46,7 @@ class XRGestures extends THREE.EventDispatcher
         this.setRaycasters()
         this.setParameters()
         this.setControllers()
-        this.setInventory()
+        this.setGesturesList()
     }
 
     // setup 
@@ -131,9 +123,9 @@ class XRGestures extends THREE.EventDispatcher
         })     
     }
 
-    setInventory() {
+    setGesturesList() {
 
-        this.inventory =  {
+        this.list =  {
             tap    : new Tap(),
             polytap: new Polytap(),
             hold   : new Hold(),
@@ -152,7 +144,7 @@ class XRGestures extends THREE.EventDispatcher
         
         const controller = event.target
         const index = controller.userData.index
-        await delay( XRGestures.DELAY_CONTROLLER ) // need this to avoid some transient phenomenon, without it 
+        await this.delay( XRGestures.DELAY_CONTROLLER ) // need this to avoid some transient phenomenon, without it 
 
         this.numControllers += 1                            
         this.startParameters( index )
@@ -166,7 +158,7 @@ class XRGestures extends THREE.EventDispatcher
 
         const controller = event.target
         const index = controller.userData.index
-        await delay( XRGestures.DELAY_CONTROLLER )
+        await this.delay( XRGestures.DELAY_CONTROLLER )
 
         this.numControllers -= 1 
         this.stopParameters( index )
@@ -180,7 +172,7 @@ class XRGestures extends THREE.EventDispatcher
 
     update() {  
      
-        if ( ! this.renderer.xr.isPresenting ) console.error('Gestures must be in xr mode')
+        if ( ! this.renderer.xr.isPresenting ) console.error('XRGestures must be in xr mode')
 
         this.camera.updateMatrix()    
         this.updateViewRaycaster()
@@ -240,18 +232,18 @@ class XRGestures extends THREE.EventDispatcher
         if (this.parametersDual)
             this.destroyDualParameters()
     
-        // Clean up inventory items (gesture detectors)
-        if (this.inventory) 
+        // Clean up list items (gesture detectors)
+        if (this.list) 
         {
-            Object.keys(this.inventory).forEach((gesture) => 
+            Object.keys(this.list).forEach((gesture) => 
             {
-                if (this.inventory[gesture].destroy)
-                    this.inventory[gesture].destroy() // Call a destroy method if available
+                if (this.list[gesture].destroy)
+                    this.list[gesture].destroy() // Call a destroy method if available
                 
-                this.inventory[gesture] = null
+                this.list[gesture] = null
             })
 
-            this.inventory = null
+            this.list = null
         }
     
         // Nullify references
@@ -266,15 +258,15 @@ class XRGestures extends THREE.EventDispatcher
     detect() {
 
         // order matters
-        this.inventory.tap.detectGesture()                                   
-        this.inventory.polytap.detectGesture()
-        this.inventory.swipe.detectGesture()
-        this.inventory.hold.detectGesture()
-        this.inventory.pan.detectGesture()
-        this.inventory.pinch.detectGesture()
-        this.inventory.twist.detectGesture()
-        this.inventory.explode.detectGesture()
-        this.inventory.implode.detectGesture()
+        this.list.tap.detectGesture()                                   
+        this.list.polytap.detectGesture()
+        this.list.swipe.detectGesture()
+        this.list.hold.detectGesture()
+        this.list.pan.detectGesture()
+        this.list.pinch.detectGesture()
+        this.list.twist.detectGesture()
+        this.list.explode.detectGesture()
+        this.list.implode.detectGesture()
 
     }
 
@@ -749,16 +741,16 @@ class XRGestures extends THREE.EventDispatcher
 
     resetGesturesExcept( exception ) {
 
-        for (const gesture in this.inventory) {
-            if( gesture !== exception ) this.inventory[gesture].resetGesture()
+        for (const gesture in this.list) {
+            if( gesture !== exception ) this.list[gesture].resetGesture()
         }    
 
     }
 
     resetGestures() {
 
-        for (const gesture in this.inventory) {
-            this.inventory[gesture].resetGesture()
+        for (const gesture in this.list) {
+            this.list[gesture].resetGesture()
         }                
     }
 
@@ -770,6 +762,11 @@ class XRGestures extends THREE.EventDispatcher
     }
 
     // utils
+
+    delay( duration ) 
+    {  
+        return new Promise( resolve => setTimeout( resolve, duration ) ) 
+    }
 
     reduceAngle ( theta ) {
 

@@ -1,30 +1,35 @@
 import * as THREE from 'three'
 import Experience from '../Experience'
-import EventEmitter from '../Utils/EventEmitter'
 import XRHitTest from './XRHitTest'
 import XRGestures from './XRGestures/XRGestures'
+import * as XRActions from './XRActions/XRActions'
 import { ARButton } from 'three/examples/jsm/webxr/ARButton'
 
-import Place from './XRActions/Place'
-export default class XRManager
+export default class XREnvironment
 {
+    static instance = null
+
     constructor()
     {
+        // Singleton
+        if (XREnvironment.instance) 
+        {
+            return XREnvironment.instance
+        }
+        XREnvironment.instance = this
+
         // Setup
         this.experience = new Experience()
         this.resources = this.experience.resources
         this.renderer = this.experience.renderer
         this.world = this.experience.world
         this.scene = this.experience.scene
+        this.gestures = new XRGestures()
+        this.hitTest = new XRHitTest()
 
-        this.world.on('ready', () =>
-        {
-            this.gestures = new XRGestures()
-            this.hitTest = new XRHitTest()
-            this.setButton()
-            this.addSessionListeners()
-            this.setActions()
-        })
+        this.setButton()
+        this.setListeners()
+        this.setActions()
     } 
 
     setButton()
@@ -33,37 +38,18 @@ export default class XRManager
         { 
             requiredFeatures: ['hit-test'],
             optionalFeatures: ['dom-overlay'],            
-            domOverlay: { root: document.getElementById('container-xr') },
+            domOverlay: { root: document.body } //{ root: document.getElementById('container-xr') },
         })
         
         document.body.appendChild(this.button)
     }
 
-    setActions()
-    {
-        this.actions = {}
-        this.actions.place = new Place(this.world.viewer.mesh, 'polytap')
-    }
-
-    addSessionListeners()
+    setListeners()
     {
         this.sessionStartListener = () => this.onSessionStart()
         this.sessionEndListener = () => this.onSessionEnd()
         this.renderer.instance.xr.addEventListener('sessionstart', this.sessionStartListener)
         this.renderer.instance.xr.addEventListener('sessionend', this.sessionEndListener)
-    }
-
-    update()
-    {       
-        if (this.session) 
-            this.session.requestAnimationFrame(this.updateFrame.bind(this))
-    }
-
-    updateFrame(timestamp, frame)
-    {
-        this.gestures.update()  
-        this.hitTest.update(timestamp, frame)
-        this.renderer.update()
     }
 
     onSessionStart()
@@ -72,26 +58,53 @@ export default class XRManager
         
         this.renderer.instance.setClearAlpha(0)
         this.renderer.instance.domElement.style.display = 'none'
-        this.scene.traverse((child) =>
-        {
-            if(child instanceof THREE.Mesh)
-                child.visible = false
-        })
+        this.hitTest.reticle.mesh.visible = true    
+
+        // this.scene.traverse((child) =>
+        // {
+        //     if(child instanceof THREE.Mesh)
+        //         child.visible = false
+        // })
         
-        this.hitTest.reticle.mesh.visible = false    
     }
 
     onSessionEnd()
     {
         this.renderer.instance.setClearAlpha(1)
         this.renderer.instance.domElement.style.display = ''
-
         this.hitTest.reticle.mesh.visible = false     
-        this.scene.traverse((child) =>
-        {
-            if(child instanceof THREE.Mesh)
-                child.visible = true
-        })  
+
+        // this.scene.traverse((child) =>
+        // {
+        //     if(child instanceof THREE.Mesh)
+        //         child.visible = true
+        // })  
+    }
+
+    setActions()
+    {
+        this.anchorViewer = new XRActions.Anchor(this.world.viewer)
+        this.grabViewer = new XRActions.Grab(this.world.viewer, 'hold')
+        this.transportViewer = new XRActions.ParallelTransport(this.world.viewer, 'pan')
+        this.rollViewer = new XRActions.Roll(this.world.viewer, 'twist')
+        this.scaleViewer = new XRActions.Scale(this.world.viewer, 'pinch')
+        // this.guidedRotation = new XRActions.GuidedRotation(this.world.viewer, 'hold', new THREE.Vector3(), new THREE.Vector3(0, 0, 1))
+        // this.guidedRotation2 = new XRActions.GuidedRotation2(this.world.viewer, 'hold', new THREE.Vector3(), new THREE.Vector3(0, 0, 1))
+        // this.guidedRotation3 = new XRActions.GuidedRotation3(this.world.viewer, 'hold', new THREE.Vector3(), new THREE.Vector3(0, 0, 1))
+        // this.guidedTranslation = new XRActions.GuidedTranslation(this.world.viewer, 'hold', new THREE.Vector3(), new THREE.Vector3(1, 0, 0))
+    }
+
+    update()
+    {       
+        if (this.session) 
+            this.session.requestAnimationFrame(this.render.bind(this))
+    }
+
+    render(timestamp, frame)
+    {
+        this.hitTest.update(timestamp, frame)
+        this.gestures.update()  
+        this.renderer.update()
     }
 
     destroy()
@@ -128,7 +141,7 @@ export default class XRManager
         this.world = null
         this.scene = null
 
-        console.log("XRManager destroyed")
+        console.log("XREnvironment destroyed")
     }
 
 }

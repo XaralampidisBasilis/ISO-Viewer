@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../../Utils/EventEmitter'
-import { cos } from 'mathjs'
 
 export default class ISOProcessor extends EventEmitter
 {

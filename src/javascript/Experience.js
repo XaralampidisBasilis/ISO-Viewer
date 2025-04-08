@@ -3,7 +3,6 @@ import Debug from './Utils/Debug'
 import Sizes from './Utils/Sizes'
 import Time from './Utils/Time'
 import Mouse from './Utils/Mouse'
-import Keyboard from './Utils/Keyboard'
 import Stats from './Utils/Stats'
 import Camera from './Camera'
 import Renderer from './Renderer'
@@ -35,7 +34,6 @@ export default class Experience
         this.sizes = new Sizes()
         this.time = new Time()
         this.mouse = new Mouse()
-        this.keyboard = new Keyboard()
         this.scene = new THREE.Scene()
         this.camera = new Camera()
         this.resources = new Resources(sources)
@@ -89,19 +87,29 @@ export default class Experience
         this.time.off('tick')
 
         // destroy components
-        if (this.mouse) this.mouse.destroy()
-        if (this.keyboard) this.keyboard.destroy()
-        if (this.world) this.world.destroy()
-        if (this.camera) this.camera.destroy()
-        if (this.renderer) this.renderer.destroy()
-        if (this.debug) this.debug.destroy()
+        if (this.mouse) 
+            this.mouse.destroy()
+
+        if (this.keyboard) 
+            this.keyboard.destroy()
+
+        if (this.world) 
+            this.world.destroy()
+
+        if (this.camera)
+            this.camera.destroy()
+
+        if (this.renderer) 
+            this.renderer.destroy()
+
+        if (this.debug) 
+            this.debug.destroy()
 
         // Nullify properties for cleanup
         this.debug = null
         this.sizes = null
         this.time = null
         this.mouse = null
-        this.keyboard = null
         this.scene = null
         this.camera = null
         this.resources = null
