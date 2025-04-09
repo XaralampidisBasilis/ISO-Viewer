@@ -236,7 +236,6 @@ export default class ISOProcessor extends EventEmitter
         // Prepare strides and size for pooling operations
         const strides = [blockSize, blockSize, blockSize]
         const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
-        const scalarThreshold = tf.scalar(threshold, 'float32')
     
         // Compute shape in order to be appropriate for valid pool operations
         const shape = intensityMap.shape
@@ -251,14 +250,14 @@ export default class ISOProcessor extends EventEmitter
         
         // Min pooling for lower bound detection
         const minPool = this.minPool3d(padded, filterSize, strides, 'valid')
-        const isAbove = tf.greaterEqual(scalarThreshold, minPool)
+        const isAbove = tf.greaterEqual(threshold, minPool)
         tf.dispose(minPool)
         await tf.nextFrame()
     
         // Max pooling for upper bound detection
         const maxPool = tf.maxPool3d(padded, filterSize, strides, 'valid')
-        const isBellow = tf.lessEqual(scalarThreshold, maxPool)
-        tf.dispose([maxPool, padded, scalarThreshold])
+        const isBellow = tf.lessEqual(threshold, maxPool)
+        tf.dispose([maxPool, padded])
         await tf.nextFrame()
     
         // Logical AND to find isosurface occupied blocks

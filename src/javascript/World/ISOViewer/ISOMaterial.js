@@ -10,7 +10,6 @@ export default function()
         u_textures: new THREE.Uniform
         ({
             intensity_map : null,
-            occupancy_map : null,
             distance_map  : null,
             color_maps    : null,
         }),
@@ -29,6 +28,15 @@ export default function()
             max_position          : new THREE.Vector3(),
             min_intensity         : 0.0,
             max_intensity         : 0.0,
+        }),
+
+        u_bbox : new THREE.Uniform
+        ({
+            dimensions  : new THREE.Vector3(),
+            min_coords  : new THREE.Vector3(),
+            max_coords  : new THREE.Vector3(),
+            min_position: new THREE.Vector3(),
+            max_position: new THREE.Vector3(),
         }),
 
         u_distance_map : new THREE.Uniform

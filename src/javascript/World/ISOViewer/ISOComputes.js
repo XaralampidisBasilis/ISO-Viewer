@@ -77,18 +77,16 @@ export default class ISOComputes extends EventEmitter
 
         this.intensityMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeIntensityMap') 
-        // console.log(this.intensityMap.parameters)
-        // console.log(this.intensityMap.tensor.dataSync())
     }
 
     async downscaleIntensityMap()
     {
         console.time('downscaleIntensityMap') 
-        const downscaledMap = await TENSOR.downscaleLinear(this.intensityMap.tensor, 2)  
+        const tensor = await TENSOR.downscaleLinear(this.intensityMap.tensor, 2)  
 
         const parameters = {}
-        parameters.shape = downscaledMap.shape
-        parameters.dimensions = new THREE.Vector3().fromArray(downscaledMap.shape.slice(0, 3).toReversed())
+        parameters.shape = tensor.shape
+        parameters.dimensions = new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed())
         parameters.size = new THREE.Vector3().copy(this.intensityMap.parameters.size)
         parameters.spacing = new THREE.Vector3().copy(parameters.size).divide(parameters.dimensions)
         parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
@@ -99,13 +97,9 @@ export default class ISOComputes extends EventEmitter
         parameters.numVoxels = parameters.dimensions.toArray().reduce((voxels, dimension) => voxels * dimension, 1)
         parameters.maxVoxels = parameters.dimensions.toArray().reduce((voxels, dimension) => voxels + dimension, -2)
 
-        tf.dispose(this.intensityMap.tensor)
-        this.intensityMap.tensor = downscaledMap
-        this.intensityMap.parameters = parameters
-
+        this.intensityMap.tensor.dispose()
+        this.intensityMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('downscaleIntensityMap') 
-        // console.log(this.intensityMap.parameters)
-        // console.log(this.intensityMap.tensor.dataSync())
     }
 
     async computeOccupancyMap(threshold, blockDimensions)
@@ -128,8 +122,6 @@ export default class ISOComputes extends EventEmitter
 
         this.occupancyMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeOccupancyMap') 
-        // console.log(this.occupancyMap.parameters)
-        // console.log(this.occupancyMap.tensor.dataSync())
     }
 
     async computeBoundingBox()
@@ -147,7 +139,6 @@ export default class ISOComputes extends EventEmitter
 
         this.boundingBox = { parameters : parameters }
         console.timeEnd('computeBoundingBox') 
-        // console.log(this.boundingBox.parameters)
     }
 
 
@@ -157,17 +148,12 @@ export default class ISOComputes extends EventEmitter
         const begin = this.boundingBox.parameters.minCoords.toArray().toReversed().concat(0)
         const sliceSize = this.boundingBox.parameters.dimensions.toArray().toReversed().concat(1)
         const tensor = await TENSOR.computeDistanceMapFromSlice(this.binaryMap.tensor, begin, sliceSize, 128)
-        const maxTensor = tensor.max()
 
         const parameters = {...this.binaryMap.parameters}
-        parameters.maxDistance = maxTensor.arraySync()  
-        tf.dispose(maxTensor)
-
+        parameters.maxDistance = tf.tidy(() => tensor.max().arraySync())  
+        
         this.distanceMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeDistanceMap') 
-        // console.log(this.distanceMap.parameters)
-        // console.log(this.distanceMap.tensor)
-        // console.log(this.distanceMap.tensor.dataSync())
     }
 
     destroy() 

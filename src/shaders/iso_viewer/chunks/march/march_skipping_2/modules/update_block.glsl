@@ -3,7 +3,7 @@
 block.coords = ivec3((block.exit_position + u_intensity_map.spacing * 0.5) * u_distance_map.inv_spacing);
 
 // Sample the distance map and compute if block is occupied
-block.cheby_distance = int(round(texelFetch(u_textures.distance_map, block.coords, 0).r * 255.0));
+block.cheby_distance = texelFetch(u_textures.distance_map, block.coords, 0).r;
 block.occupied = block.cheby_distance == 0;
 
 // Compute block min max coords in distance map

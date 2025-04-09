@@ -78,13 +78,13 @@ export default class ISOViewer extends EventEmitter
         
         // distance map
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
             ...this.processor.computes.distanceMap.parameters.dimensions
         )
-        this.textures.distanceMap.format = THREE.RedFormat
-        this.textures.distanceMap.type = THREE.UnsignedByteType
-        this.textures.distanceMap.minFilter = THREE.LinearFilter
-        this.textures.distanceMap.magFilter = THREE.LinearFilter
+        this.textures.distanceMap.format = THREE.RedIntegerFormat
+        this.textures.distanceMap.type = THREE.ByteType
+        this.textures.distanceMap.minFilter = THREE.NearestFilter
+        this.textures.distanceMap.magFilter = THREE.NearestFilter
         this.textures.distanceMap.computeMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
@@ -150,6 +150,10 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
+        uniforms.u_bbox.value.dimensions.copy(boundingBox.parameters.dimensions)
+        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCoords)
+        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCoords)
+
         // Update Defines
         defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
         defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
@@ -170,57 +174,50 @@ export default class ISOViewer extends EventEmitter
         console.log('UPDATE ISOSURFACE')
         console.time('UPDATE ISOSURFACE')
 
-        // Uniforms/Defines
-        const uTextures = this.material.uniforms.u_textures.value
-        const uRendering = this.material.uniforms.u_rendering.value
-        const uIntensityMap = this.material.uniforms.u_intensity_map.value
-        const uDistanceMap = this.material.uniforms.u_distance_map.value
+        // Uniforms/Defines        
+        const uniforms = this.material.uniforms
         const defines = this.material.defines
 
         // Recompute Maps
-        await this.processor.generateOccupancyMap(threshold, uDistanceMap.sub_division)
-        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
+        await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.sub_division)
+        await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
         await this.processor.generateBoundingBox()
         tf.dispose(this.processor.computes.occupancyMap.tensor)
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap
         const boundingBox = this.processor.computes.boundingBox 
-
-        // Update Textures
+  
+        // distance map
         this.textures.distanceMap.dispose()
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
-            ...distanceMap.parameters.dimensions)
-        this.textures.distanceMap.format = THREE.RedFormat
-        this.textures.distanceMap.type = THREE.UnsignedByteType
-        this.textures.distanceMap.minFilter = THREE.LinearFilter
-        this.textures.distanceMap.magFilter = THREE.LinearFilter
+            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            ...this.processor.computes.distanceMap.parameters.dimensions
+        )
+        this.textures.distanceMap.format = THREE.RedIntegerFormat
+        this.textures.distanceMap.type = THREE.ByteType
+        this.textures.distanceMap.minFilter = THREE.NearestFilter
+        this.textures.distanceMap.magFilter = THREE.NearestFilter
         this.textures.distanceMap.computeMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
         
-        // Update Uniforms
-        uRendering.intensity = threshold
-        uTextures.distance_map = this.textures.distanceMap
-        uDistanceMap.max_distance = distanceMap.parameters.maxDistance
-        uDistanceMap.sub_division = distanceMap.parameters.subDivision
-        uDistanceMap.dimensions.copy(distanceMap.parameters.dimensions)
-        uDistanceMap.spacing.copy(distanceMap.parameters.spacing)
-        uDistanceMap.size.copy(distanceMap.parameters.size)
-        uDistanceMap.inv_sub_division = distanceMap.parameters.invSubDivision
-        uDistanceMap.inv_dimensions.copy(distanceMap.parameters.invDimensions)
-        uDistanceMap.inv_spacing.copy(distanceMap.parameters.invSpacing)
-        uDistanceMap.inv_size.copy(distanceMap.parameters.invSize)
-        uIntensityMap.min_position.copy(boundingBox.parameters.minPosition)
-        uIntensityMap.max_position.copy(boundingBox.parameters.maxPosition) 
+        uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
+        uniforms.u_distance_map.value.sub_division = distanceMap.parameters.subDivision
+        uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)
+        uniforms.u_distance_map.value.spacing.copy(distanceMap.parameters.spacing)
+        uniforms.u_distance_map.value.size.copy(distanceMap.parameters.size)
+        uniforms.u_distance_map.value.inv_sub_division = distanceMap.parameters.invSubDivision
+        uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
+        uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
+        uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
         // Update Defines
         defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
         defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
         defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
         defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
-        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)        
+        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)   
 
         // Update Material
         this.material.needsUpdate = true

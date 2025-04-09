@@ -45,10 +45,10 @@ export default class Textures extends EventEmitter
     setIntensityMap()
     {
         const source = this.computes.intensityMap
-        const data = source.tensor.dataSync()
-        const dims = source.parameters.dimensions
+        const dimensions = source.parameters.dimensions
+        const data = new Float32Array(source.tensor.dataSync())
 
-        this.intensityMap = new THREE.Data3DTexture(data, ...dims)
+        this.intensityMap = new THREE.Data3DTexture(data, ...dimensions)
         this.intensityMap.format = THREE.RedFormat
         this.intensityMap.type = THREE.FloatType
         this.intensityMap.minFilter = THREE.LinearFilter
@@ -62,10 +62,10 @@ export default class Textures extends EventEmitter
     setDistanceMap()
     {
         const source = this.computes.distanceMap
+        const dimensions = source.parameters.dimensions
         const data = new Int8Array(source.tensor.dataSync())
-        const dims = source.parameters.dimensions
 
-        this.distanceMap = new THREE.Data3DTexture(data, ...dims)
+        this.distanceMap = new THREE.Data3DTexture(data, ...dimensions)
         this.distanceMap.format = THREE.RedIntegerFormat
         this.distanceMap.type = THREE.ByteType
         this.distanceMap.minFilter = THREE.NearestFilter
