@@ -57,3 +57,5 @@ export default class World extends EventEmitter
         console.log('World destroyed')
     }
 }
+
+

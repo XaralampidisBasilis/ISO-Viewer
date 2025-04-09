@@ -8,9 +8,18 @@ import ISOProcessor from './ISOProcessor'
 
 export default class ISOViewer extends EventEmitter
 {
+    static instance = null
+
     constructor()
     {
         super()
+
+        // singleton
+        if (ISOViewer.instance) 
+        {
+            return ISOViewer.instance
+        }
+        ISOViewer.instance = this
 
         this.experience = new Experience()
         this.scene = this.experience.scene
@@ -21,7 +30,7 @@ export default class ISOViewer extends EventEmitter
         this.debug = this.experience.debug
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
-        this.processor = new ISOProcessor(this.resources.items.volumeNifti)
+        this.processor = new ISOProcessor(this.resources.items.intensityMap)
         this.processor.on('ready', () =>
         {
             this.generateMaps().then(() => this.setViewer())
@@ -60,7 +69,7 @@ export default class ISOViewer extends EventEmitter
         this.textures = {}
 
         // color maps
-        this.textures.colorMaps = this.resources.items.colormaps                      
+        this.textures.colorMaps = this.resources.items.colorMaps                      
         this.textures.colorMaps.colorSpace = THREE.SRGBColorSpace
         this.textures.colorMaps.minFilter = THREE.LinearFilter
         this.textures.colorMaps.magFilter = THREE.LinearFilter         
@@ -92,17 +101,14 @@ export default class ISOViewer extends EventEmitter
         this.textures.intensityMap.computeMipmaps = false
         this.textures.intensityMap.needsUpdate = true
         delete this.processor.volume.data
-        delete this.resources.items.volumeNifti.data
+        delete this.resources.items.intensityMap.data
     }
   
     setGeometry()
     {
         const size = this.parameters.volume.size
         const center = this.parameters.volume.size.clone().divideScalar(2)
-        this.geometry = new THREE.BoxGeometry(...size)
-        // In order to align model vertex coordinates with texture coordinates
-        // we translate all with the center, so now they start at zero
-        this.geometry.translate(...center) 
+        this.geometry = new THREE.BoxGeometry(...size).translate(...center) 
     }
 
     setMaterial()
@@ -112,39 +118,37 @@ export default class ISOViewer extends EventEmitter
         const distanceMap =  this.processor.computes.distanceMap
         const boundingBox = this.processor.computes.boundingBox
 
-        // Uniforms/Defines
-        const uTextures = this.material.uniforms.u_textures.value
-        const uIntensityMap = this.material.uniforms.u_intensity_map.value
-        const uDistanceMap = this.material.uniforms.u_distance_map.value
+        // Uniforms/Defines        
+        const uniforms = this.material.uniforms
         const defines = this.material.defines
 
         // Update Uniforms
-        uTextures.intensity_map = this.textures.intensityMap
-        uTextures.distance_map = this.textures.distanceMap
-        uTextures.color_maps = this.textures.colorMaps   
+        uniforms.u_textures.value.intensity_map = this.textures.intensityMap
+        uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.color_maps = this.textures.colorMaps   
 
-        uIntensityMap.dimensions.copy(intensityMap.parameters.dimensions)
-        uIntensityMap.spacing.copy(intensityMap.parameters.spacing)
-        uIntensityMap.size.copy(intensityMap.parameters.size)
-        uIntensityMap.min_position.copy(boundingBox.parameters.minPosition)
-        uIntensityMap.max_position.copy(boundingBox.parameters.maxPosition)
-        uIntensityMap.min_intensity = intensityMap.parameters.minIntensity
-        uIntensityMap.max_intensity = intensityMap.parameters.maxIntensity
-        uIntensityMap.size_length = intensityMap.parameters.sizeLength
-        uIntensityMap.spacing_length = intensityMap.parameters.spacingLength
-        uIntensityMap.inv_dimensions.copy(intensityMap.parameters.invDimensions)
-        uIntensityMap.inv_spacing.copy(intensityMap.parameters.invSpacing)
-        uIntensityMap.inv_size.copy(intensityMap.parameters.invSize)
+        uniforms.u_intensity_map.value.dimensions.copy(intensityMap.parameters.dimensions)
+        uniforms.u_intensity_map.value.spacing.copy(intensityMap.parameters.spacing)
+        uniforms.u_intensity_map.value.size.copy(intensityMap.parameters.size)
+        uniforms.u_intensity_map.value.min_position.copy(boundingBox.parameters.minPosition)
+        uniforms.u_intensity_map.value.max_position.copy(boundingBox.parameters.maxPosition)
+        uniforms.u_intensity_map.value.min_intensity = intensityMap.parameters.minIntensity
+        uniforms.u_intensity_map.value.max_intensity = intensityMap.parameters.maxIntensity
+        uniforms.u_intensity_map.value.size_length = intensityMap.parameters.sizeLength
+        uniforms.u_intensity_map.value.spacing_length = intensityMap.parameters.spacingLength
+        uniforms.u_intensity_map.value.inv_dimensions.copy(intensityMap.parameters.invDimensions)
+        uniforms.u_intensity_map.value.inv_spacing.copy(intensityMap.parameters.invSpacing)
+        uniforms.u_intensity_map.value.inv_size.copy(intensityMap.parameters.invSize)
  
-        uDistanceMap.max_distance = distanceMap.parameters.maxDistance
-        uDistanceMap.sub_division = distanceMap.parameters.subDivision
-        uDistanceMap.dimensions.copy(distanceMap.parameters.dimensions)
-        uDistanceMap.spacing.copy(distanceMap.parameters.spacing)
-        uDistanceMap.size.copy(distanceMap.parameters.size)
-        uDistanceMap.inv_sub_division = distanceMap.parameters.invSubDivision
-        uDistanceMap.inv_dimensions.copy(distanceMap.parameters.invDimensions)
-        uDistanceMap.inv_spacing.copy(distanceMap.parameters.invSpacing)
-        uDistanceMap.inv_size.copy(distanceMap.parameters.invSize)
+        uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
+        uniforms.u_distance_map.value.sub_division = distanceMap.parameters.subDivision
+        uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)
+        uniforms.u_distance_map.value.spacing.copy(distanceMap.parameters.spacing)
+        uniforms.u_distance_map.value.size.copy(distanceMap.parameters.size)
+        uniforms.u_distance_map.value.inv_sub_division = distanceMap.parameters.invSubDivision
+        uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
+        uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
+        uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
         // Update Defines
         defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount

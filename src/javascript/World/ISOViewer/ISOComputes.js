@@ -4,7 +4,7 @@ import * as TENSOR from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 
-export default class ISOProcessor extends EventEmitter
+export default class ISOComputes extends EventEmitter
 {
     constructor()
     {
@@ -23,27 +23,37 @@ export default class ISOProcessor extends EventEmitter
 
     async setComputes()
     {
-        console.time('Computes') 
-
-        // tf.enableProdMode()
+        tf.enableProdMode()
         await tf.ready()
 
+        console.time('setComputes') 
         await tf.setBackend('webgl')
-        await this.setIntensityMap()
+        await this.computeIntensityMap()
         await this.downscaleIntensityMap()
 
         await tf.setBackend('webgl')
-        await this.setOccupancyMap()
-        await this.setBoundingBox()
-        await this.setDistanceMap()
-     
+        await this.computeOccupancyMap()
+        await this.computeBoundingBox()
+        await this.computeDistanceMap()
+        console.timeEnd('setComputes') 
+
         this.trigger('ready')
-        console.timeEnd('Computes') 
     }
 
-    async setIntensityMap()
+    async updateComputes()
     {
-        console.time('setIntensityMap') 
+        console.time('updateComputes') 
+        await this.computeOccupancyMap()
+        await this.computeBoundingBox()
+        await this.computeDistanceMap()
+        console.timeEnd('updateComputes') 
+
+        this.trigger('ready')
+    }
+
+    async computeIntensityMap()
+    {
+        console.time('computeIntensityMap') 
         const source = this.resources.items.intensityMap
         const parameters = 
         {
@@ -66,70 +76,9 @@ export default class ISOProcessor extends EventEmitter
         const tensor = tf.tidy(() => tf.tensor4d(data, parameters.shape,'float32').sub([min]).div([range]))        
 
         this.intensityMap = { tensor : tensor, parameters : parameters }
-        console.timeEnd('setIntensityMap') 
+        console.timeEnd('computeIntensityMap') 
         // console.log(this.intensityMap.parameters)
         // console.log(this.intensityMap.tensor.dataSync())
-    }
-
-    async setOccupancyMap(threshold, blockDimensions)
-    {
-        console.time('setOccupancyMap') 
-        const tensor = await TENSOR.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, blockDimensions)
-       
-        const parameters = {}
-        parameters.shape = tensor.shape
-        parameters.threshold = threshold
-        parameters.blockDimensions = blockDimensions
-        parameters.invBlockDimensions = 1/blockDimensions
-        parameters.dimensions = new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed())
-        parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(blockDimensions)
-        parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
-        parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
-        parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
-        parameters.invSpacing = new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x))
-        parameters.invSize = new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x))
-
-        this.occupancyMap = { tensor : tensor, parameters : parameters }
-        console.timeEnd('setOccupancyMap') 
-        // console.log(this.occupancyMap.parameters)
-        // console.log(this.occupancyMap.tensor.dataSync())
-    }
-
-    async setBoundingBox()
-    {
-        console.time('setBoundingBox') 
-        const boundingBox = await TENSOR.computeBoundingBox(this.binaryMap.tensor)
-        
-        const parameters = {}
-        parameters.minCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
-        parameters.maxCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
-        parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
-        parameters.size = parameters.dimensions.clone().multiply(this.binaryMap.parameters.spacing)
-        parameters.numCells = parameters.dimensions.toArray().reduce((count, dimension) => count * dimension, 1)
-        parameters.maxCells = parameters.dimensions.toArray().reduce((count, dimension) => count + dimension, -2)
-
-        this.boundingBox = { parameters : parameters }
-        console.timeEnd('setBoundingBox') 
-        // console.log(this.boundingBox.parameters)
-    }
-
-    async setDistanceMap()
-    {
-        console.time('setDistanceMap') 
-        const begin = this.boundingBox.parameters.minCoords.toArray().toReversed().concat(0)
-        const sliceSize = this.boundingBox.parameters.dimensions.toArray().toReversed().concat(1)
-        const tensor = await TENSOR.computeDistanceMapFromSlice(this.binaryMap.tensor, begin, sliceSize, 128)
-
-        const parameters = {...this.binaryMap.parameters}
-        const maxTensor = tensor.max()
-        parameters.maxDistance = maxTensor.arraySync()  
-        tf.dispose(maxTensor)
-
-        this.distanceMap = { tensor : tensor, parameters : parameters }
-        console.timeEnd('setDistanceMap') 
-        // console.log(this.distanceMap.parameters)
-        // console.log(this.distanceMap.tensor)
-        // console.log(this.distanceMap.tensor.dataSync())
     }
 
     async downscaleIntensityMap()
@@ -159,6 +108,68 @@ export default class ISOProcessor extends EventEmitter
         // console.log(this.intensityMap.tensor.dataSync())
     }
 
+    async computeOccupancyMap(threshold, blockDimensions)
+    {
+        console.time('computeOccupancyMap') 
+        const tensor = await TENSOR.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, blockDimensions)
+       
+        const parameters = {}
+        parameters.shape = tensor.shape
+        parameters.threshold = threshold
+        parameters.blockDimensions = blockDimensions
+        parameters.invBlockDimensions = 1/blockDimensions
+        parameters.dimensions = new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed())
+        parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(blockDimensions)
+        parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
+        parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
+        parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
+        parameters.invSpacing = new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x))
+        parameters.invSize = new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x))
+
+        this.occupancyMap = { tensor : tensor, parameters : parameters }
+        console.timeEnd('computeOccupancyMap') 
+        // console.log(this.occupancyMap.parameters)
+        // console.log(this.occupancyMap.tensor.dataSync())
+    }
+
+    async computeBoundingBox()
+    {
+        console.time('computeBoundingBox') 
+        const boundingBox = await TENSOR.computeBoundingBox(this.binaryMap.tensor)
+        
+        const parameters = {}
+        parameters.minCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
+        parameters.maxCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
+        parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
+        parameters.size = parameters.dimensions.clone().multiply(this.binaryMap.parameters.spacing)
+        parameters.numCells = parameters.dimensions.toArray().reduce((count, dimension) => count * dimension, 1)
+        parameters.maxCells = parameters.dimensions.toArray().reduce((count, dimension) => count + dimension, -2)
+
+        this.boundingBox = { parameters : parameters }
+        console.timeEnd('computeBoundingBox') 
+        // console.log(this.boundingBox.parameters)
+    }
+
+
+    async computeDistanceMap()
+    {
+        console.time('computeDistanceMap') 
+        const begin = this.boundingBox.parameters.minCoords.toArray().toReversed().concat(0)
+        const sliceSize = this.boundingBox.parameters.dimensions.toArray().toReversed().concat(1)
+        const tensor = await TENSOR.computeDistanceMapFromSlice(this.binaryMap.tensor, begin, sliceSize, 128)
+        const maxTensor = tensor.max()
+
+        const parameters = {...this.binaryMap.parameters}
+        parameters.maxDistance = maxTensor.arraySync()  
+        tf.dispose(maxTensor)
+
+        this.distanceMap = { tensor : tensor, parameters : parameters }
+        console.timeEnd('computeDistanceMap') 
+        // console.log(this.distanceMap.parameters)
+        // console.log(this.distanceMap.tensor)
+        // console.log(this.distanceMap.tensor.dataSync())
+    }
+
     destroy() 
     {
         if (this.intensityMap) 
@@ -170,12 +181,12 @@ export default class ISOProcessor extends EventEmitter
 
         }
 
-        if (this.binaryMap) 
+        if (this.occupancyMap) 
         {
-            tf.dispose(this.binaryMap.tensor)
-            this.binaryMap.tensor = null
-            this.binaryMap.parameters = null
-            this.binaryMap = null
+            tf.dispose(this.occupancyMap.tensor)
+            this.occupancyMap.tensor = null
+            this.occupancyMap.parameters = null
+            this.occupancyMap = null
         }
 
         if (this.distanceMap) 

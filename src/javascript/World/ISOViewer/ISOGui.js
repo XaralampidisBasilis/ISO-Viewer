@@ -1,12 +1,12 @@
 
 import { colormapLocations } from '../../../../static/textures/colormaps/colormaps'
-// import { throttleByCalls, throttleByDelay } from '../../Utils/Throttle'
+import ISOViewer from './ISOViewer'
 
 export default class ISOGui
 {
-    constructor(viewer)
+    constructor()
     {
-        this.viewer = viewer
+        this.viewer = new ISOViewer()
         this.debug = this.viewer.debug
 
         // setup

@@ -14,6 +14,11 @@ import * as tf from '@tensorflow/tfjs'
  */
 export async function computeOccupancyMap(intensityMap, threshold, blockSize) 
 {
+    // Prepare strides and size for pooling operations
+    const strides = [blockSize, blockSize, blockSize]
+    const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+    const scalarThreshold = tf.scalar(threshold, 'float32')
+
     // Compute shape in order to be appropriate for valid pool operations
     const shape = intensityMap.shape
     const blockCounts = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
@@ -25,11 +30,6 @@ export async function computeOccupancyMap(intensityMap, threshold, blockSize)
     padding[3] = [0, 0]
     const padded = tf.pad(intensityMap, padding) // tf.mirrorPad(intensityMap, padding, 'symmetric')
     
-    // Prepare strides and size for pooling operations
-    const strides = [blockSize, blockSize, blockSize]
-    const filterSize = strides.map((x) => x + 1) 
-    const scalarThreshold = tf.scalar(threshold, 'float32')
-
     // Min pooling for lower bound detection
     const minPool = minPool3d(padded, filterSize, strides, 'valid')
     const isAbove = tf.greaterEqual(scalarThreshold, minPool)
@@ -85,7 +85,7 @@ export async function computeBoundingBox(occupancyMap)
             minCoords: [zMin, yMin, xMin],
             maxCoords: [zMax, yMax, xMax],
         }
-    });
+    })
 }
 
 /**

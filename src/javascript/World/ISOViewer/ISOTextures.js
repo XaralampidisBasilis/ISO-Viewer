@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../../Utils/EventEmitter'
-import MPRViewer from './MPRViewer'
+import ISOViewer from './ISOViewer'
 
 export default class Textures extends EventEmitter
 {
@@ -10,7 +10,7 @@ export default class Textures extends EventEmitter
         super()
 
         // Setup
-        this.viewer = new MPRViewer()
+        this.viewer = new ISOViewer()
         this.resources = this.viewer.resources
         this.computes = this.viewer.computes
 
@@ -24,12 +24,9 @@ export default class Textures extends EventEmitter
     async setTextures()
     {
         console.time('Textures')
-
         this.setColorMaps()
         this.setIntensityMap()
-        this.setBinaryMap()
         this.setDistanceMap()
-
         this.trigger('ready')
         console.timeEnd('Textures')
     }
@@ -58,23 +55,6 @@ export default class Textures extends EventEmitter
         this.intensityMap.magFilter = THREE.LinearFilter
         this.intensityMap.computeMipmaps = false
         this.intensityMap.needsUpdate = true
-
-        tf.dispose(source.tensor)
-    }
-
-    setBinaryMap()
-    {
-        const source = this.computes.binaryMap
-        const data = source.tensor.dataSync()
-        const dims = source.parameters.dimensions
-
-        this.binaryMap = new THREE.Data3DTexture(data, ...dims)
-        this.binaryMap.format = THREE.RedFormat
-        this.binaryMap.type = THREE.UnsignedByteType
-        this.binaryMap.minFilter = THREE.LinearFilter
-        this.binaryMap.magFilter = THREE.LinearFilter
-        this.binaryMap.computeMipmaps = false
-        this.binaryMap.needsUpdate = true
 
         tf.dispose(source.tensor)
     }
@@ -108,12 +88,6 @@ export default class Textures extends EventEmitter
         {
             this.intensityMap.dispose()
             this.intensityMap = null
-        }
-
-        if (this.binaryMap)
-        {
-            this.binaryMap.dispose()
-            this.binaryMap = null
         }
 
         if (this.distanceMap)
