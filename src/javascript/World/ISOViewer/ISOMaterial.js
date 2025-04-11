@@ -42,7 +42,7 @@ export default function()
         u_distance_map : new THREE.Uniform
         ({
             max_distance    : 0,
-            max_iterations  : 32,
+            max_iterations  : 50,
             sub_division    : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),

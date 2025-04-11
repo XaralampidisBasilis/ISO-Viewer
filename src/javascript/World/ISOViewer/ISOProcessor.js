@@ -127,30 +127,6 @@ export default class ISOProcessor extends EventEmitter
         // console.log(this.computes.occupancyMap.tensor.dataSync())
     }
 
-    async generateDistanceMap(maxIters)
-    {
-        if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
-        {
-            throw new Error(`computeDistanceMap: occupancyMap is not computed`)
-        }
-
-        console.time('generateDistanceMap') 
-        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
-        const parameters = {...this.computes.occupancyMap.parameters}
-        const maxTensor = distanceMap.max()
-        const meanTensor = distanceMap.mean()
-
-        parameters.maxDistance = maxTensor.arraySync()  
-        parameters.meanTensor = meanTensor.arraySync()  
-        tf.dispose([maxTensor, meanTensor])
-
-        this.computes.distanceMap.tensor = distanceMap
-        this.computes.distanceMap.parameters = parameters
-        console.timeEnd('generateDistanceMap') 
-        // console.log(this.computes.distanceMap.parameters)
-        // console.log(this.computes.distanceMap.tensor.dataSync())
-    }
-
     async generateBoundingBox()
     {
         if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
@@ -182,7 +158,31 @@ export default class ISOProcessor extends EventEmitter
         console.timeEnd('generateBoundingBox') 
         // console.log(this.computes.boundingBox.parameters)
     }
-    
+
+    async generateDistanceMap(maxIters)
+    {
+        if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
+        {
+            throw new Error(`computeDistanceMap: occupancyMap is not computed`)
+        }
+
+        console.time('generateDistanceMap') 
+        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
+        const parameters = {...this.computes.occupancyMap.parameters}
+        const maxTensor = distanceMap.max()
+        const meanTensor = distanceMap.mean()
+
+        parameters.maxDistance = maxTensor.arraySync()  
+        parameters.meanTensor = meanTensor.arraySync()  
+        tf.dispose([maxTensor, meanTensor])
+
+        this.computes.distanceMap.tensor = distanceMap
+        this.computes.distanceMap.parameters = parameters
+        console.timeEnd('generateDistanceMap') 
+        // console.log(this.computes.distanceMap.parameters)
+        // console.log(this.computes.distanceMap.tensor.dataSync())
+    }
+
     // Helpers
 
     async computeOccupancyMap(intensityMap, threshold, blockSize) 
@@ -190,13 +190,13 @@ export default class ISOProcessor extends EventEmitter
         return tf.tidy(() =>
         {
             // Prepare strides and size for pooling operations
+            const shape = intensityMap.shape
             const strides = [blockSize, blockSize, blockSize]
             const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
     
             // Compute shape in order to be appropriate for valid pool operations
-            const shape = intensityMap.shape
-            const blockCounts = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
-            const newShape = blockCounts.map((blockCount) => blockCount * blockSize + 1)
+            const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+            const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
     
             // Calculate necessary padding for valid subdivisions and boundary handling
             const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
@@ -204,7 +204,7 @@ export default class ISOProcessor extends EventEmitter
             const padded = tf.pad(intensityMap, padding) 
 
             // Compute if voxel values is above/bellow  threshold
-            const isBellow  = tf.lessEqual(padded, threshold)
+            const isBellow = tf.lessEqual(padded, threshold)
             const isAbove = tf.greaterEqual(padded, threshold)
     
             // Compute if cell has values above/bellow threshold
@@ -214,37 +214,6 @@ export default class ISOProcessor extends EventEmitter
             // Compute cell occupation if above and bellow values from threshold
             const occupancyMap = tf.logicalAnd(hasAbove, hasBellow)
             return occupancyMap
-        })
-    }
-
-    async computeDistanceMap(occupancyMap, maxDistance) 
-    {
-        return tf.tidy(() => 
-        {
-            // Initialize the frontier (occupied voxels) and the distance tensor
-            let distances = tf.where(occupancyMap, 0, maxDistance)
-            let frontier  = tf.cast(occupancyMap, 'bool')
-            
-            for (let distance = 1; distance < maxDistance; distance++) 
-            {   
-                // Compute the new frontier by expanding frontier regions
-                const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
-                
-                // Identify the newly occupied voxel wavefront
-                const wavefront = tf.notEqual(newFrontier, frontier)
-
-                // Compute and add distances for the newly occupied voxels at this step
-                const newDistances = tf.where(wavefront, distance, distances)
-              
-                // Dispose old tensors 
-                tf.dispose([distances, frontier, wavefront])
-
-                // Update new tensors for the next iteration
-                frontier = newFrontier
-                distances = newDistances
-            }
-
-            return distances
         })
     }
 
@@ -265,13 +234,62 @@ export default class ISOProcessor extends EventEmitter
             const [xMin, xMax] = bounds(collapsedX)
             const [yMin, yMax] = bounds(collapsedY)
             const [zMin, zMax] = bounds(collapsedZ)
+
+            // Compute mix/max bounding box coords
+            const minCoords = [zMin, yMin, xMin]
+            const maxCoords = [zMax, yMax, xMax]
     
-            // Return bounding box coordinates in [z, y, x] order
-            return {
-                minCoords: [zMin, yMin, xMin],
-                maxCoords: [zMax, yMax, xMax],
-            }
+            return { minCoords, maxCoords }
         })
+    }
+
+    async computeDistanceMap(occupancyMap, maxDistance) 
+    {
+        return tf.tidy(() => 
+        {
+            // Initialize the frontier (occupied voxels) and the distance tensor
+            let distances = tf.where(occupancyMap, 0, maxDistance)
+            let frontier  = tf.cast(occupancyMap, 'bool')
+            
+            for (let distance = 1; distance < maxDistance; distance++) 
+            {   
+                [distances, frontier] = tf.tidy(() => 
+                {
+                    // Compute the new frontier by expanding frontier regions
+                    const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+                                    
+                    // Identify the newly occupied voxel wavefront
+                    const wavefront = tf.notEqual(newFrontier, frontier)
+
+                    // Compute and add distances for the newly occupied voxels at this step
+                    const newDistances = tf.where(wavefront, distance, distances)
+
+                    // Dispose old tensors 
+                    tf.dispose([distances, frontier, wavefront])
+
+                    // Update new tensors for the next iteration
+                    return [newDistances, newFrontier] 
+                })
+                
+            }
+
+            return distances
+        })
+    }
+
+    async computeDistanceMapFromSlice(occupancyMap, maxDistance, begin, sliceSize)
+    {
+        const shape = occupancyMap.shape
+        const paddings = shape.map((dimension, i) => [begin[i], dimension - begin[i] - sliceSize[i]])
+    
+        // Compute distance map over slice and pad result back to the original size
+        const occupancyMapSlice = tf.slice4d(occupancyMap, begin, sliceSize)
+        const distanceMapSlice = await computeDistanceMap(occupancyMapSlice, maxDistance)
+        const distanceMap = tf.pad4d(distanceMapSlice, paddings, 1)
+    
+        tf.dispose([distanceMapSlice, occupancyMapSlice])
+    
+        return distanceMap
     }
 
     minPool3d(tensor4d, filterSize, strides, pad)

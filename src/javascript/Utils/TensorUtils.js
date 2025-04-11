@@ -13,37 +13,36 @@ import * as tf from '@tensorflow/tfjs'
  * @returns {Promise<tf.Tensor>} - A 3D boolean tensor where `true` values represent occupied cell blocks.
  */
 export async function computeOccupancyMap(intensityMap, threshold, blockSize) 
+{
+    return tf.tidy(() =>
     {
-        return tf.tidy(() =>
-        {
-            // Prepare strides and size for pooling operations
-            const strides = [blockSize, blockSize, blockSize]
-            const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
-    
-            // Compute shape in order to be appropriate for valid pool operations
-            const shape = intensityMap.shape
-            const blockCounts = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
-            const newShape = blockCounts.map((blockCount) => blockCount * blockSize + 1)
-    
-            // Calculate necessary padding for valid subdivisions and boundary handling
-            const edgePadding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
-            edgePadding[3] = [0, 0]
-            const padded = intensityMap.pad(edgePadding) 
+        // Prepare strides and size for pooling operations
+        const shape = intensityMap.shape
+        const strides = [blockSize, blockSize, blockSize]
+        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
 
-            // Compute offset padded tensor
-            const isLesser = padded.lessEqual(threshold)
-            const isGreater = padded.greaterEqual(threshold)
-    
-            // Min pooling for lower bound detection
-            const hasLesser = tf.maxPool3d(isGreater, filterSize, strides, 'valid')
-            const hasGreater = tf.maxPool3d(isLesser, filterSize, strides, 'valid')
-    
-            // If product of min/max offsets is positive threshold is between min/max in cell
-            const occupancyMap = tf.logicalAnd(hasLesser, hasGreater)
-    
-            return occupancyMap
-        })
-    }
+        // Compute shape in order to be appropriate for valid pool operations
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+
+        // Calculate necessary padding for valid subdivisions and boundary handling
+        const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
+        padding[3] = [0, 0]
+        const padded = tf.pad(intensityMap, padding) 
+
+        // Compute if voxel values is above/bellow  threshold
+        const isBellow = tf.lessEqual(padded, threshold)
+        const isAbove = tf.greaterEqual(padded, threshold)
+
+        // Compute if cell has values above/bellow threshold
+        const hasAbove = tf.maxPool3d(isAbove, filterSize, strides, 'valid')
+        const hasBellow = tf.maxPool3d(isBellow, filterSize, strides, 'valid')
+
+        // Compute cell occupation if above and bellow values from threshold
+        const occupancyMap = tf.logicalAnd(hasAbove, hasBellow)
+        return occupancyMap
+    })
+}
 
 // export async function computeOccupancyMap(intensityMap, threshold, blockSize) 
 // {
@@ -108,11 +107,11 @@ export async function computeBoundingBox(occupancyMap)
         const [yMin, yMax] = bounds(collapsedY)
         const [zMin, zMax] = bounds(collapsedZ)
 
-        // Return bounding box coordinates in [z, y, x] order
-        return {
-            minCoords: [zMin, yMin, xMin],
-            maxCoords: [zMax, yMax, xMax],
-        }
+        // Compute mix/max bounding box coords
+        const minCoords = [zMin, yMin, xMin]
+        const maxCoords = [zMax, yMax, xMax]
+        
+        return { minCoords, maxCoords }
     })
 }
 
@@ -160,21 +159,23 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
         
         for (let distance = 1; distance < maxDistance; distance++) 
         {   
-            // Compute the new frontier by expanding frontier regions
-            const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
-            
-            // Identify the newly occupied voxel wavefront
-            const wavefront = tf.notEqual(newFrontier, frontier)
+            [distances, frontier] = tf.tidy(() => 
+            {
+                // Compute the new frontier by expanding frontier regions
+                const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+                                
+                // Identify the newly occupied voxel wavefront
+                const wavefront = tf.notEqual(newFrontier, frontier)
 
-            // Compute and add distances for the newly occupied voxels at this step
-            const newDistances = tf.where(wavefront, distance, distances)
-            
-            // Dispose old tensors 
-            tf.dispose([distances, frontier, wavefront])
+                // Compute and add distances for the newly occupied voxels at this step
+                const newDistances = tf.where(wavefront, distance, distances)
 
-            // Update new tensors for the next iteration
-            frontier = newFrontier
-            distances = newDistances
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, wavefront])
+
+                // Update new tensors for the next iteration
+                return [newDistances, newFrontier] 
+            })
         }
 
         return distances

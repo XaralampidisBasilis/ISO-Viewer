@@ -43,8 +43,8 @@ export default class ISOViewer extends EventEmitter
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         await this.processor.generateIntensityMap()
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
-        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
         await this.processor.generateBoundingBox()
+        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
     }
 
@@ -171,29 +171,25 @@ export default class ISOViewer extends EventEmitter
 
     async updateIsosurface(threshold)
     {
-        console.log('UPDATE ISOSURFACE')
-        console.time('UPDATE ISOSURFACE')
-
         // Uniforms/Defines        
         const uniforms = this.material.uniforms
         const defines = this.material.defines
 
         // Recompute Maps
         await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.sub_division)
-        await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
         await this.processor.generateBoundingBox()
+        await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap
         const boundingBox = this.processor.computes.boundingBox 
-  
-        // distance map
+
+        // Update Textures
         this.textures.distanceMap.dispose()
         this.textures.distanceMap = new THREE.Data3DTexture(
             new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
-            ...this.processor.computes.distanceMap.parameters.dimensions
-        )
+            ...distanceMap.parameters.dimensions)
         this.textures.distanceMap.format = THREE.RedIntegerFormat
         this.textures.distanceMap.type = THREE.ByteType
         this.textures.distanceMap.minFilter = THREE.NearestFilter
@@ -202,6 +198,9 @@ export default class ISOViewer extends EventEmitter
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
         
+        // Update Uniforms
+        uniforms.u_rendering.value.intensity = threshold
+        uniforms.u_textures.value.distance_map = this.textures.distanceMap
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
         uniforms.u_distance_map.value.sub_division = distanceMap.parameters.subDivision
         uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)
@@ -211,17 +210,18 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
+        uniforms.u_intensity_map.value.min_position.copy(boundingBox.parameters.minPosition)
+        uniforms.u_intensity_map.value.max_position.copy(boundingBox.parameters.maxPosition) 
 
         // Update Defines
         defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
         defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
         defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
         defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
-        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)   
+        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)        
 
         // Update Material
         this.material.needsUpdate = true
-        console.timeEnd('UPDATE ISOSURFACE')
     }
 
     destroy() 
