@@ -39,7 +39,7 @@ void cubic_extrema(out vec2 extrema_values, in vec4 coeffs, in vec2 boundary_poi
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(critical_values.xw, critical_values.yz, is_inside);
 
     // compute extrema values
@@ -68,7 +68,7 @@ void cubic_extrema(out vec2 extrema_values, out vec2 extrema_points, in vec4 coe
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(critical_values.xw, critical_values.yz, is_inside);
 
     // compute extrema values
@@ -104,7 +104,7 @@ void cubic_extrema(out vec2 extrema_values, in vec4 coeffs, in vec2 boundary_poi
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(boundary_values, critical_values.yz, is_inside);
 
     // compute extrema values
@@ -132,7 +132,7 @@ void cubic_extrema(out vec2 extrema_values, out vec2 extrema_points, in vec4 coe
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(boundary_values, critical_values.yz, is_inside);
 
     // compute extrema values

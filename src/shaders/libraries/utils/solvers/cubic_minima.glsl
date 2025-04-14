@@ -36,7 +36,7 @@ void cubic_minima(out float minima_value, in vec4 coeffs, in vec2 boundary_point
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(critical_values.xw, critical_values.yz, is_inside);
 
     // compute minima values
@@ -65,7 +65,7 @@ void cubic_minima(out float minima_value, out float minima_point, in vec4 coeffs
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(critical_values.xw, critical_values.yz, is_inside);
 
     // compute minima value
@@ -99,7 +99,7 @@ void cubic_minima( out float minima_value, in vec4 coeffs, in vec2 boundary_poin
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(boundary_values, critical_values.yz, is_inside);
 
     // compute minima value
@@ -127,7 +127,7 @@ void cubic_minima(out float minima_value, out float minima_point, in vec4 coeffs
     critical_values.z = dot(coeffs, cubic_pows(critical_points.z));
 
     // clamp values outside the boundary
-    vec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
+    bvec2 is_inside = inside_open(boundary_points.x, boundary_points.y, critical_points.yz);
     critical_values.yz = mix(boundary_values, critical_values.yz, is_inside);
 
     // compute minima value

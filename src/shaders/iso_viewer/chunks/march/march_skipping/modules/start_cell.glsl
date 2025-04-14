@@ -3,8 +3,8 @@
 cell.coords_step = ivec3(0);
 cell.coords = ivec3(trace.position * u_intensity_map.inv_spacing + 0.5);
 cell.exit_distance = trace.distance;
-cell.sample_distances.w = trace.distance;
-cell.sample_intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * cell.sample_distances.w).r;
+poly.distances.w = trace.distance;
+poly.intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * poly.distances.w).r;
 
 // Update stats
 #if STATS_ENABLED == 1

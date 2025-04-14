@@ -33,7 +33,7 @@ bool is_quadratic_solvable(in vec3 coeffs, in float value, in float start, in fl
     float extrema_value = dot(coeffs, quadratic_pows(linear_root));
     
     // check if the extrema are within the interval and evaluate the quadratic at those points
-    bool is_inside = inside_open(start, end, linear_root) > MICRO_TOLERANCE;
+    bool is_inside = inside_open(start, end, linear_root);
 
     // check solution based on intermediate value theorem
     bool is_solvable = (boundary_values.x * boundary_values.y <= MICRO_TOLERANCE);

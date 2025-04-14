@@ -33,7 +33,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float 
     );
     
     // check if the extrema are within the interval and evaluate the cubic at those points
-    bvec2 is_inside = greaterThan(inside_open(start, end, quadratic_roots), vec2(0.5));
+    bvec2 is_inside = inside_open(start, end, quadratic_roots);
 
     // check solution based on intermediate value theorem
     bool is_solvable = (boundary_values.x * boundary_values.y <= 0.0);
@@ -77,7 +77,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float 
     );
     
     // check if the extrema are within the interval and evaluate the cubic at those points
-    bvec2 is_inside = greaterThan(inside_open(start, end, quadratic_roots), vec2(0.5));
+    bvec2 is_inside = inside_open(start, end, quadratic_roots);
 
     // check solution based on intermediate value theorem
     bool is_solvable = (boundary_values.x * boundary_values.y <= 0.0);

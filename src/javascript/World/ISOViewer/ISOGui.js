@@ -231,9 +231,6 @@ export default class ISOGui
                 box_span_distance       : 703,
                 box_entry_position      : 704,
                 box_exit_position       : 705,
-                box_min_entry_distance  : 706,
-                box_max_exit_distance   : 707,
-                box_max_span_distance   : 708,
 
                 camera_position         : 801,
                 camera_direction        : 802,

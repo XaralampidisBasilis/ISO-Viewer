@@ -18,17 +18,21 @@ export default class Textures extends EventEmitter
         this.computes.on('ready', () =>
         {
             this.setTextures()
+            this.trigger('ready')
         })
     }
 
     async setTextures()
     {
-        console.time('Textures')
         this.setColorMaps()
         this.setIntensityMap()
         this.setDistanceMap()
-        this.trigger('ready')
-        console.timeEnd('Textures')
+    }
+
+    async update()
+    {
+        this.distanceMap.dispose()
+        this.setDistanceMap()
     }
 
     setColorMaps()

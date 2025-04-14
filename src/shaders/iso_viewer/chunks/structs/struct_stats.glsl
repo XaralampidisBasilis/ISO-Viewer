@@ -10,11 +10,6 @@ struct Stats
     int num_fetches;          // texture fetch
     int num_steps;
     int num_skips;
-    int num_intensity_map_fetches;
-    int num_distance_map_fetches;
-    int num_block_count;
-    int num_cell_count;
-    int num_trace_count;
 };
 
 Stats set_stats()

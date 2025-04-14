@@ -161,11 +161,6 @@ export default class ISOProcessor extends EventEmitter
 
     async generateDistanceMap(maxIters)
     {
-        if (!(this.computes.occupancyMap.tensor instanceof tf.Tensor)) 
-        {
-            throw new Error(`computeDistanceMap: occupancyMap is not computed`)
-        }
-
         console.time('generateDistanceMap') 
         const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
         const parameters = {...this.computes.occupancyMap.parameters}
@@ -253,24 +248,21 @@ export default class ISOProcessor extends EventEmitter
             
             for (let distance = 1; distance < maxDistance; distance++) 
             {   
-                [distances, frontier] = tf.tidy(() => 
-                {
-                    // Compute the new frontier by expanding frontier regions
-                    const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
-                                    
-                    // Identify the newly occupied voxel wavefront
-                    const wavefront = tf.notEqual(newFrontier, frontier)
+                // Compute the new frontier by expanding frontier regions
+                const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+                                
+                // Identify the newly occupied voxel wavefront
+                const wavefront = tf.notEqual(newFrontier, frontier)
 
-                    // Compute and add distances for the newly occupied voxels at this step
-                    const newDistances = tf.where(wavefront, distance, distances)
+                // Compute and add distances for the newly occupied voxels at this step
+                const newDistances = tf.where(wavefront, distance, distances)
 
-                    // Dispose old tensors 
-                    tf.dispose([distances, frontier, wavefront])
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, wavefront])
 
-                    // Update new tensors for the next iteration
-                    return [newDistances, newFrontier] 
-                })
-                
+                // Update new tensors for the next iteration
+                distances = newDistances
+                frontier = newFrontier
             }
 
             return distances

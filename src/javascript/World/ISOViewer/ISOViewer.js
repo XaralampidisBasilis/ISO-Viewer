@@ -261,17 +261,5 @@ export default class ISOViewer extends EventEmitter
         this.gui = null
 
         console.log("ISOViewer destroyed")
-    }
-
-    logGPU()
-    {
-        console.log(`$Tensors = ${tf.memory().numTensors}, Textures = ${this.renderer.instance.info.memory.textures}`)
-    }
-
-    logMemory()
-    {
-        console.log('TensorFlow', tf.memory())
-        console.log('WebGLRenderer', this.renderer.instance.info.memory)
-    }
-    
+    } 
 }

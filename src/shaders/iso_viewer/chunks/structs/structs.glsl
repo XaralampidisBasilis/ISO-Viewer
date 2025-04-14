@@ -5,6 +5,7 @@
 #include "./struct_trace"
 #include "./struct_cell"
 #include "./struct_block"
+#include "./struct_poly"
 
 #if DEBUG_ENABLED == 1
 #include "./struct_debug"

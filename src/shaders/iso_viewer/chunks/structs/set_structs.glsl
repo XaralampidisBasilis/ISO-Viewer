@@ -5,6 +5,7 @@ Trace  trace  = set_trace();
 Cell   cell   = set_cell();
 Block  block  = set_block();
 Frag   frag   = set_frag();
+Poly   poly   = set_poly();
 
 #if DEBUG_ENABLED == 1
 Debug debug = set_debug();
