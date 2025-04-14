@@ -1,7 +1,7 @@
 
 #include "./modules/start_march"
 
-for (int count = 0; count < u_rendering.max_cell_count; count++) 
+for (int count = 0; count < MAX_CELL_COUNT; count++) 
 {
     #include "./modules/update_cell"
 
