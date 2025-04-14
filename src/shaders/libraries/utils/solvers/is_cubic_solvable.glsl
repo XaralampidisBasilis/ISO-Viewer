@@ -7,12 +7,29 @@
 #ifndef CUBIC_POWS
 #include "./cubic_pows"
 #endif
+#ifndef AND
+#include "../logical/and"
+#endif
 
-// compute cubic derivative factors
-bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float end)
+
+/**
+ * Determines whether the cubic polynomial defined by the given coefficients
+ * intersects a target value within a specific interval.
+ * 
+ * Solves: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x = value
+ * within the interval (start, end), using the Intermediate Value Theorem and
+ * checking local extrema for additional root existence.
+ * 
+ * @param coeffs A vec4 of cubic coefficients (constant, linear, quadratic, cubic terms).
+ * @param value  The target value to solve the cubic equation against.
+ * @param start  The start of the interval to check (exclusive).
+ * @param end    The end of the interval to check (exclusive).
+ * @return       True if a solution to the cubic equation exists within the interval.
+ */
+bool is_cubic_solvable(in vec4 coeffs, in float target, in float start, in float end)
 {
     // normalize cubic equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
     // compute the cubic at the boundary values
     vec2 boundary_values = vec2
@@ -53,16 +70,16 @@ bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float 
     return is_solvable;
 }
 
-bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float end, in float start_value, in float end_value)
+bool is_cubic_solvable(in vec4 coeffs, in float target, in float start, in float end, in float start_value, in float end_value)
 {
     // normalize cubic equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
     // compute the cubic at the boundary values
     vec2 boundary_values = vec2
     (
-        start_value - value,
-        end_value - value
+        start_value - target,
+        end_value - target
     );
 
     // compute the derivative of cubic and solve for the extrema values
@@ -96,5 +113,6 @@ bool is_cubic_solvable(in vec4 coeffs, in float value, in float start, in float 
     // return result
     return is_solvable;
 }
+
 
 #endif

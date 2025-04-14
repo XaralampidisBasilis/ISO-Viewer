@@ -15,7 +15,6 @@ for (int i = 0; i < 8; i++)
 {
     vec3 uvw_offset = trace.uvw + u_intensity_map.inv_dimensions * center_offsets[i];
     intensities[i] = texture(u_textures.intensity_map, uvw_offset).r;
-    intensities[i] /= exp2(sum(outside_open(0.0, 1.0, uvw_offset))); // correct edge cases due to trilinear interpolation and clamp to edge wrapping   
 }
 
 // Precompute summed groups of intensities for better clarity

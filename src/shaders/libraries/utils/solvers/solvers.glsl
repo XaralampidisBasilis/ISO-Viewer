@@ -9,6 +9,7 @@
 #include "./cubic_maxima"
 #include "./cubic_extrema"
 #include "./is_cubic_solvable"
+#include "./is_cubic_solvable_2"
 #include "./is_quadratic_solvable"
 
 #endif

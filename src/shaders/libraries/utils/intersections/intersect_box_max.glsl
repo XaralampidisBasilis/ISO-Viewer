@@ -44,7 +44,7 @@ float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out iv
     vec3 b_max = (box_max - start) * inv_dir;
     vec3 t_max = max(b_min, b_max);
     float t_exit = mmin(t_max);
-    axes  = ivec3(lessThan(t_max, t_exit)); 
+    axes = ivec3(lessThan(t_max, vec3(t_exit))); 
     return t_exit;
 }
 

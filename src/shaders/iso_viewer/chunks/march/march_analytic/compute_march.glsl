@@ -4,6 +4,7 @@
 for (int count = 0; count < MAX_CELL_COUNT; count++) 
 {
     #include "./modules/update_cell"
+    #include "./modules/update_poly"
 
     if (trace.intersected)
     {

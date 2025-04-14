@@ -8,6 +8,7 @@ struct Cell
     bool  terminated;
     ivec3 coords;
     ivec3 coords_step;
+    int   axis;
     vec3  min_position;
     vec3  max_position;
     float entry_distance;
@@ -26,6 +27,7 @@ Cell set_cell()
     cell.terminated         = false;
     cell.coords             = ivec3(0);
     cell.coords_step        = ivec3(0);
+    cell.axis               = 0;
     cell.min_position       = vec3(0.0);
     cell.max_position       = vec3(0.0);
     cell.entry_distance     = 0.0;

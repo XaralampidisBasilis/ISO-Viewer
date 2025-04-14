@@ -3,6 +3,9 @@
 
 struct Poly 
 {
+    vec2 entry;
+    vec2 exit;
+    vec3 roots;
     vec4 intensities;    
     vec4 distances;
     vec4 coefficients;    
@@ -13,6 +16,9 @@ struct Poly
 Poly set_poly()
 {
     Poly poly;
+    poly.entry = vec2(0.0, 0.0);
+    poly.exit = vec2(1.0, 0.0);
+    poly.roots = vec3(0.0);
     poly.intensities = vec4(0.0);
     poly.distances = vec4(0.0);
     poly.coefficients = vec4(0.0);

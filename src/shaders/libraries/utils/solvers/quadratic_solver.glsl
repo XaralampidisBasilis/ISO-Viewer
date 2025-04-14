@@ -6,13 +6,13 @@
 #define MICRO_TOLERANCE 1e-6
 #endif
 
-vec2 quadratic_solver(in vec3 coeffs, in float value)
+vec2 quadratic_solver(in vec3 coeffs, in float target)
 {
     // set default roots
     vec2 default_roots = vec2(-1.0);
 
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
 
     /* LINEAR */ 
@@ -58,13 +58,13 @@ vec2 quadratic_solver(in vec3 coeffs, in float value)
     
 }
 
-vec2 quadratic_solver(in vec3 coeffs, in float value, in float flag)
+vec2 quadratic_solver(in vec3 coeffs, in float target, in float flag)
 {
     // set default roots
     vec2 default_roots = vec2(flag);
 
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
 
     /* LINEAR */ 
@@ -111,13 +111,13 @@ vec2 quadratic_solver(in vec3 coeffs, in float value, in float flag)
 }
 
 // STRICTLY QUADRATIC SOLVERS
-vec2 _quadratic_solver(in vec3 coeffs, in float value)
+vec2 _quadratic_solver(in vec3 coeffs, in float target)
 {
     // set default roots
     vec2 default_roots = vec2(-1.0);
 
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
     // compute normalized quadratic coefficients 
     vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
@@ -134,13 +134,13 @@ vec2 _quadratic_solver(in vec3 coeffs, in float value)
     return (quadratic_discriminant < 0.0) ? default_roots : quadratic_roots;
 }
 
-vec2 _quadratic_solver(in vec3 coeffs, in float value, in float flag)
+vec2 _quadratic_solver(in vec3 coeffs, in float target, in float flag)
 {
     // set default roots
     vec2 default_roots = vec2(flag);
 
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    coeffs.x -= target;
 
     // compute normalized quadratic coefficients 
     vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
