@@ -11,9 +11,9 @@ in mat4  v_clip_space_matrix;
 
 out vec4 fragColor;
 
+#include "./chunks/uniforms/uniforms"
 #include "./chunks/utils/utils"
 #include "./chunks/consts/consts"
-#include "./chunks/uniforms/uniforms"
 #include "./chunks/structs/structs"
 
 void main() 

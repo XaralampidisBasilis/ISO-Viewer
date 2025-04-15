@@ -101,14 +101,10 @@ bool is_cubic_solvable(in vec4 coeffs, in float target, in float start, in float
 
     // check solution based on the first extrema value inside the interval
     is_solvable = is_solvable || 
-
-        (is_inside.x && ((extrema_values.x * boundary_values.x < 0.0) ||
-                         (extrema_values.x * boundary_values.y < 0.0) || 
-                         (abs(extrema_values.x) < 0.0))) ||
-
-        (is_inside.y && ((extrema_values.y * boundary_values.x < 0.0) ||
-                         (extrema_values.y * boundary_values.y < 0.0) || 
-                         (abs(extrema_values.y) < 0.0))); 
+        (is_inside.x && ((extrema_values.x * boundary_values.x <= 0.0)   ||
+                         (extrema_values.x * boundary_values.y <= 0.0))) ||
+        (is_inside.y && ((extrema_values.y * boundary_values.x <= 0.0)   ||
+                         (extrema_values.y * boundary_values.y <= 0.0)));
 
     // return result
     return is_solvable;

@@ -6,10 +6,15 @@ for (int n = 0; n < MAX_GROUPS; n++)
 {
     #include "./modules/march_blocks/march_blocks"
     
+    if (!(block.occupied || block.terminated)) 
+    {
+        continue;
+    }
+
     #include "./modules/march_cells/march_cells"
 
     // Termination condition
-    if (cell.intersected || block.terminated) 
+    if (cell.intersected || cell.terminated) 
     {
         break;
     }

@@ -16,10 +16,10 @@ block.max_position = (vec3(block.max_coords + 1) + MILLI_TOLERANCE) * u_distance
 
 // Compute block entry/exit distances
 block.entry_distance = block.exit_distance;
-block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
+block.entry_position = block.exit_position;
 
 // Compute block entry/exit positions
-block.entry_position = block.exit_position;
+block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // Compute termination condition
@@ -28,5 +28,4 @@ block.terminated = block.exit_distance > ray.end_distance;
 // Update stats
 #if STATS_ENABLED == 1
 stats.num_fetches += 1;
-stats.num_skips += 1;
 #endif

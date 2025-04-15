@@ -11,9 +11,5 @@ trace.uvw = trace.position * u_intensity_map.inv_size;
 trace.intensity = texture(u_textures.intensity_map, trace.uvw).r;
 trace.error = trace.intensity - u_rendering.intensity;
 
-if (trace.distance > ray.end_distance)
-{
-    #if DISCARDING_DISABLED == 0
-    discard;  
-    #endif
-}
+#include "./compute_gradient"
+

@@ -3,9 +3,9 @@
 if (cell.intersected) 
 {
     #include "./compute_intersection"
-    #include "./compute_gradients"
 }
-else
+
+if (!cell.intersected || trace.distance > ray.end_distance)
 {
     #if DISCARDING_DISABLED == 0
     discard;  
