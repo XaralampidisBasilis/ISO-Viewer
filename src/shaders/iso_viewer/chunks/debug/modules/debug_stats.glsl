@@ -5,10 +5,10 @@
 vec4 debug_stats_num_fetches = to_color(float(stats.num_fetches) / float(MAX_NUM_FETCHES) * 5.0);
 
 // num steps
-vec4 debug_stats_num_steps = to_color(float(stats.num_steps) / float(MAX_CELL_COUNT));
+vec4 debug_stats_num_steps = to_color(float(stats.num_steps) / float(MAX_CELLS));
 
 // num skips
-vec4 debug_stats_num_skips = to_color(float(stats.num_skips) / float(MAX_BLOCK_COUNT) * 2.0);
+vec4 debug_stats_num_skips = to_color(float(stats.num_skips) / float(MAX_BLOCKS) * 2.0);
 
 
 // PRINT DEBUG

@@ -25,10 +25,10 @@ vec4 debug_ray_start_position = to_color(map(box.min_position, box.max_position,
 vec4 debug_ray_end_position = to_color(map(box.min_position, box.max_position, ray.end_position));
 
 // max cell count
-vec4 debug_ray_max_cell_count = to_color(float(ray.max_cell_count) / float(u_rendering.max_cell_count));
+vec4 debug_ray_max_cells = to_color(float(ray.max_cells) / float(u_rendering.max_cells));
 
 // max block count
-vec4 debug_ray_max_block_count = to_color(float(ray.max_block_count) / float(u_rendering.max_block_count));
+vec4 debug_ray_max_blocks = to_color(float(ray.max_blocks) / float(u_rendering.max_blocks));
 
 
 // PRINT DEBUG
@@ -43,6 +43,6 @@ switch (u_debugging.option - debug.slot_ray)
     case  6: fragColor = debug_ray_span_distance;   break;
     case  7: fragColor = debug_ray_start_position;  break;
     case  8: fragColor = debug_ray_end_position;    break;
-    case  9: fragColor = debug_ray_max_cell_count;  break;
-    case 10: fragColor = debug_ray_max_block_count; break;
+    case  9: fragColor = debug_ray_max_cells;  break;
+    case 10: fragColor = debug_ray_max_blocks; break;
 }

@@ -155,11 +155,11 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCoords)
 
         // Update Defines
-        defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
-        defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
-        defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
-        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
+        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
+        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
 
     }
 
@@ -215,11 +215,11 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_intensity_map.value.max_position.copy(boundingBox.parameters.maxPosition) 
 
         // Update Defines
-        defines.MAX_CELL_COUNT = boundingBox.parameters.maxCellCount
-        defines.MAX_BLOCK_COUNT = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
-        defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
-        defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)        
+        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
+        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)        
 
         // Update Material
         this.material.needsUpdate = true

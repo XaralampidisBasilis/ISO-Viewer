@@ -21,8 +21,8 @@ struct Debug
     vec4 ray_span_distance;
     vec4 ray_start_position;
     vec4 ray_end_position;
-    vec4 ray_max_cell_count;
-    vec4 ray_max_block_count;
+    vec4 ray_MAX_CELLS;
+    vec4 ray_MAX_BLOCKS;
 
     vec4 trace_intersected;      
     vec4 trace_terminated;       
@@ -109,8 +109,8 @@ Debug set_debug()
     debug.ray_span_distance        = vec4(vec3(0.0), 1.0);
     debug.ray_start_position       = vec4(vec3(0.0), 1.0);
     debug.ray_end_position         = vec4(vec3(0.0), 1.0);
-    debug.ray_max_cell_count       = vec4(vec3(0.0), 1.0);
-    debug.ray_max_block_count      = vec4(vec3(0.0), 1.0);
+    debug.ray_MAX_CELLS       = vec4(vec3(0.0), 1.0);
+    debug.ray_MAX_BLOCKS      = vec4(vec3(0.0), 1.0);
 
     debug.trace_intersected        = vec4(vec3(0.0), 1.0);
     debug.trace_terminated         = vec4(vec3(0.0), 1.0);

@@ -64,10 +64,10 @@ export default function()
         
         u_rendering: new THREE.Uniform
         ({
-            intensity       : 0.53,
-            max_count       : 0,
-            max_cell_count  : 0,
-            max_block_count : 0,
+            intensity : 0.53,
+            max_count : 0,
+            max_cells : 0,
+            max_blocks: 0,
         }),
 
         u_shading: new THREE.Uniform
@@ -108,11 +108,11 @@ export default function()
         DEBUG_ENABLED          : 1,
         DISCARDING_DISABLED    : 0,
 
-        MAX_CELL_COUNT         : 1000,
-        MAX_BLOCK_COUNT        : 1000,
-        MAX_CELL_SUB_COUNT     : 10,
-        MAX_BLOCK_SUB_COUNT    : 20,
-        MAX_BATCH_COUNT        : 100,
+        MAX_CELLS           : 1000,
+        MAX_BLOCKS          : 1000,
+        MAX_CELLS_PER_BLOCK : 10,
+        MAX_BLOCKS_PER_GROUP: 20,
+        MAX_GROUPS          : 100,
     }
 
     const material = new THREE.ShaderMaterial

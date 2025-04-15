@@ -2,10 +2,10 @@
 // start march at ray start
 #include "./modules/start_march"
 
-for (int batch = 0; batch < MAX_BATCH_COUNT; batch++) 
+for (int batch = 0; batch < MAX_GROUPS; batch++) 
 {
     // Skip empty space using the precomputed chebyshev distance map 
-    for (int count = 0; count < MAX_BLOCK_SUB_COUNT; count++) 
+    for (int count = 0; count < MAX_BLOCKS_PER_GROUP; count++) 
     {
         // update block based on current trace
         #include "./modules/update_block"
@@ -27,7 +27,7 @@ for (int batch = 0; batch < MAX_BATCH_COUNT; batch++)
     // March analytically the volume cells inside an occupied block
     #include "./modules/start_cell"
 
-    for (int count = 0; count < MAX_CELL_SUB_COUNT; count++) 
+    for (int count = 0; count < MAX_CELLS_PER_BLOCK; count++) 
     {
         // update current cell, take samples, and compute if there is intersection
         #include "./modules/update_cell"

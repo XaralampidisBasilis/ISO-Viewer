@@ -1,7 +1,7 @@
 
 #include "./modules/start_march"
 
-for (int count = 0; count < MAX_CELL_COUNT; count++) 
+for (int count = 0; count < MAX_CELLS; count++) 
 {
     #include "./modules/update_cell"
     #include "./modules/update_poly"

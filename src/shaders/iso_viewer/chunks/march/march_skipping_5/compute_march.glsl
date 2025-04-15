@@ -1,7 +1,7 @@
 
 #include "./modules/start_march"
 
-for (int n = 0; n < MAX_BLOCK_COUNT; n++) 
+for (int n = 0; n < MAX_BLOCKS; n++) 
 {
     #include "./modules/update_block"
 
@@ -9,7 +9,7 @@ for (int n = 0; n < MAX_BLOCK_COUNT; n++)
     {
         #include "./modules/start_cell"
 
-        for (int i = 0; i < MAX_CELL_SUB_COUNT; i++) 
+        for (int i = 0; i < MAX_CELLS_PER_BLOCK; i++) 
         {
             #include "./modules/update_cell"
 
@@ -20,7 +20,9 @@ for (int n = 0; n < MAX_BLOCK_COUNT; n++)
         }
     }
 
-    if (cell.intersected || block.terminated) 
+    cell.terminated = cell.exit_distance > ray.end_distance;
+
+    if (cell.intersected || cell.terminated || block.terminated) 
     {
         break;
     }

@@ -4,12 +4,10 @@ poly.distances.x = poly.distances.w;
 poly.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, poly.weights.yzw);
 
 // compute the sample positions from the distances
-poly.intensities[0] = poly.intensities[3];
-for(int n = 1; n < 4; n++) 
-{
-    vec3 uvw = camera.uvw + ray.direction_uvw * poly.distances[n];
-    poly.intensities[n] = texture(u_textures.intensity_map, uvw).r;
-}
+poly.intensities.x = poly.intensities.w;
+poly.intensities.y = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * poly.distances.y).r;
+poly.intensities.z = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * poly.distances.z).r;
+poly.intensities.w = texture(u_textures.intensity_map, camera.uvw + ray.direction_uvw * poly.distances.w).r;
 
 // compute the intensity samples inside the cell from the intensity map texture
 poly.intensities.yzw -= u_rendering.intensity;

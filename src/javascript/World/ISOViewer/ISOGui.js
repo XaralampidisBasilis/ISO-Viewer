@@ -90,8 +90,8 @@ export default class ISOGui
         {
             isoIntensity       : folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { this.viewer.updateIsosurface(value) }),
             maxCount           : folder.add(uRendering, 'max_count').min(0).max(1000).step(1),
-            maxCellCount       : folder.add(uRendering, 'max_cell_count').min(0).max(1000).step(1),
-            maxBlockCount      : folder.add(uRendering, 'max_block_count').min(0).max(200).step(1),
+            maxCellCount       : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
+            maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
             enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
             enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
@@ -169,8 +169,8 @@ export default class ISOGui
                 ray_span_distance       : 106,
                 ray_start_position      : 107,
                 ray_end_position        : 108,
-                ray_max_cell_count      : 109,
-                ray_max_block_count     : 110,
+                ray_max_cells      : 109,
+                ray_max_blocks     : 110,
                  
                 trace_terminated        : 201,
                 trace_exhausted         : 202,
