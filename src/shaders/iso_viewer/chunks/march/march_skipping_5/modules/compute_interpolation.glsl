@@ -23,4 +23,3 @@ poly.exit.y = poly.intensities.w;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
 cell.intersected = is_cubic_solvable_2(poly.coefficients, poly.entry, poly.exit);
-cell.intersected = cell.intersected && block.occupied;

@@ -160,6 +160,7 @@ export default class ISOViewer extends EventEmitter
         defines.MAX_CELL_SUB_COUNT = 3 * distanceMap.parameters.subDivision - 2
         defines.MAX_BATCH_COUNT = Math.ceil(defines.MAX_CELL_COUNT / defines.MAX_CELL_SUB_COUNT)
         defines.MAX_BLOCK_SUB_COUNT = Math.ceil(defines.MAX_BLOCK_COUNT / defines.MAX_BATCH_COUNT)
+
     }
 
     setMesh()
