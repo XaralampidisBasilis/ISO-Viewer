@@ -38,10 +38,8 @@ vec3 backward = vec3(
     samples[0] + samples[2] + samples[1] + samples[6]  // z-axis
 );
 
-// Compute gradient
-trace.gradient = (forward - backward) / (u_intensity_map.spacing * 4.0);
+vec3 delta = u_intensity_map.spacing * 4.0;
 
-// Update stats
-#if STATS_ENABLED == 1
-stats.num_fetches += 8;
-#endif
+// Compute gradient
+trace.gradient = (forward - backward) / delta;
+

@@ -14,8 +14,3 @@ poly.coefficients = poly.inv_vander * poly.intensities;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
 cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, 0.0, 1.0, poly.intensities.x, poly.intensities.w);
-
-// Update stats
-#if STATS_ENABLED == 1
-stats.num_fetches += 3;
-#endif

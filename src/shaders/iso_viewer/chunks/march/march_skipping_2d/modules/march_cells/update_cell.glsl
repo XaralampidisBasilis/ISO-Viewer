@@ -5,6 +5,8 @@ cell.coords = ivec3(cell.exit_position + 0.5);
 // compute box 
 cell.min_position = vec3(cell.coords) - 0.5;
 cell.max_position = vec3(cell.coords) + 0.5;
+
+// to avoid boundaries when computing coordinates
 cell.min_position -= CENTI_TOLERANCE;
 cell.max_position += CENTI_TOLERANCE;
 

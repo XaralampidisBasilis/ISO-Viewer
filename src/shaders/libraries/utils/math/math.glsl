@@ -21,5 +21,6 @@
 #include "./prod" 
 #include "./ssign" 
 #include "./sum"
+#include "./select"
 
 #endif

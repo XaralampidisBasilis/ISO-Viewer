@@ -4,10 +4,18 @@ vec3 _ray_direction = ray.ray_direction * u_intensity_map.inv_dimensions;
 
 float sample_intensity_map(in float x)
 {
+    #if STATS_ENABLED == 1
+    stats.num_fetches += 1;
+    #endif
+
     return texture(u_textures.intensity_map, _ray_origin + _ray_direction * x).r;
 }
 
 float sample_intensity_map(in vec3 p)
 {
+    #if STATS_ENABLED == 1
+    stats.num_fetches += 1;
+    #endif
+    
     return texture(u_textures.intensity_map, p * u_intensity_map.inv_dimensions).r;
 }

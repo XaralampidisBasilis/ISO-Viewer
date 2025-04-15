@@ -2,14 +2,16 @@
 
 if (cell.intersected) 
 {
-    #include "./compute_intersection"
+    #include "./compute_trace"
 }
 
-if (!cell.intersected || trace.distance > ray.span_distance)
+if (trace.intersected)
+{
+    #include "./compute_gradient"
+}
+else
 {
     #if DISCARDING_DISABLED == 0
     discard;  
     #endif
 }
-
-trace.exhausted = !(cell.intersected || cell.terminated);
