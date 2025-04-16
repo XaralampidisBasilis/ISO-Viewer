@@ -13,9 +13,10 @@ struct Poly
     mat4 inv_vander; // inverse vandermonde matrix
 };
 
-Poly set_poly()
+Poly poly; // Global mutable struct
+
+void set_poly()
 {
-    Poly poly;
     poly.entry = vec2(0.0, 0.0);
     poly.exit = vec2(1.0, 0.0);
     poly.roots = vec3(0.0);
@@ -30,7 +31,6 @@ Poly set_poly()
         0.0, -4.5, 18.0, -13.5,
         0.0, 1.0, -4.5,   4.5 
     );
-    return poly;
 }
 
 #endif 

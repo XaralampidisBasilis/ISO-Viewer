@@ -4,6 +4,9 @@
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
 #endif
+#ifndef NANO_TOLERANCE
+#define NANO_TOLERANCE 1e-9
+#endif
 #ifndef SUM
 #include "../math/sum"
 #endif

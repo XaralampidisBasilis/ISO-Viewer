@@ -1,19 +1,11 @@
 
 #include "./modules/start_march"
 
-for (int count = 0; count < MAX_CELLS; count++) 
+for (int n = 0; n < MAX_CELLS; n++) 
 {
     #include "./modules/update_cell"
-    #include "./modules/update_poly"
 
-    if (trace.intersected)
-    {
-        break;
-    }
-
-    #include "./modules/update_trace"
-    
-    if (trace.terminated) 
+    if (cell.intersected || cell.terminated) 
     {
         break;
     }

@@ -59,8 +59,6 @@ export default class ISOProcessor extends EventEmitter
             invSize          : new THREE.Vector3().fromArray(this.volume.size.map(x => 1/x)),
             numVoxels        : this.volume.dimensions.reduce((voxels, dim) => voxels * dim, 1),
             shape            : this.volume.dimensions.toReversed().concat(1),
-            minIntensity     : this.volume.min,
-            maxIntensity     : this.volume.max,
         }
         console.timeEnd('setVolume')
     }
@@ -102,18 +100,18 @@ export default class ISOProcessor extends EventEmitter
         // console.log(this.computes.intensityMap.tensor.dataSync())
     }
 
-    async generateOccupancyMap(threshold, subDivision)
+    async generateOccupancyMap(threshold, stride)
     {
         console.time('generateOccupancyMap') 
-        const occupancyMap = await this.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, subDivision)
+        const occupancyMap = await this.computeOccupancyMap(this.computes.intensityMap.tensor, threshold, stride)
         const parameters = {}
 
         parameters.shape = occupancyMap.shape
         parameters.threshold = threshold
-        parameters.subDivision = subDivision
-        parameters.invSubDivision = 1/subDivision
+        parameters.stride = stride
+        parameters.invStride = 1/stride
         parameters.dimensions = new THREE.Vector3().fromArray(occupancyMap.shape.slice(0, 3).toReversed())
-        parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(subDivision)
+        parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(stride)
         parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
         parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
         parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
@@ -150,9 +148,9 @@ export default class ISOProcessor extends EventEmitter
 
         parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
         parameters.numCells = parameters.dimensions.toArray().reduce((cells, dim) => cells * dim, 1)
-        parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
+        parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.stride).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
         parameters.maxCellCount = parameters.dimensions.toArray().reduce((intersections, cells) => intersections + cells, -2)
-        parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
+        parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.stride).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
 
         this.computes.boundingBox.parameters = parameters
         console.timeEnd('generateBoundingBox') 

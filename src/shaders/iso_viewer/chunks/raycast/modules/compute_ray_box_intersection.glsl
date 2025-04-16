@@ -1,22 +1,21 @@
-// volume box 
+
+// compute box min/max positions in grid space
 box.min_position = vec3(0.0);
-box.max_position = u_intensity_map.size;
+box.max_position = vec3(u_intensity_map.dimensions);
+box.min_position += TOLERANCE.CENTI;
+box.max_position -= TOLERANCE.CENTI; 
 
-// shrink volume box by a small amount to avoid numerical instabilities in the boundary
-box.min_position += u_intensity_map.spacing * MILLI_TOLERANCE;
-box.max_position -= u_intensity_map.spacing * MILLI_TOLERANCE;
-
-// compute rays bound distances with the volume box
+// compute rays bound distances with the box
 vec2 ray_box_bounds = box_bounds(box.min_position, box.max_position, camera.position);
-box.min_entry_distance = ray_box_bounds.x;
-box.max_exit_distance  = ray_box_bounds.y;
-box.max_span_distance  = ray_box_bounds.y - ray_box_bounds.x;
 
 // compute current ray intersection distances with the volume box
 vec2 ray_box_distances = intersect_box(box.min_position, box.max_position, camera.position, ray.direction);
+ray_box_distances = max(ray_box_distances, 0.0); // set distances to zero when we are inside
 
-// clamp bbox distances above zero for the case we are inside
-ray_box_distances = max(ray_box_distances, 0.0);
+// update box bounds
+box.min_entry_distance = ray_box_bounds.x;
+box.max_exit_distance  = ray_box_bounds.y;
+box.max_span_distance  = ray_box_bounds.y - ray_box_bounds.x;
 
 // update ray if there is an intersection 
 if (ray_box_distances.x < ray_box_distances.y)
@@ -35,8 +34,11 @@ if (ray_box_distances.x < ray_box_distances.y)
     ray.end_position   = box.exit_position;
     ray.span_distance  = box.span_distance;
 }
-// discard ray if there is no intersection
-else
+else // discard ray if there is no intersection
 {
-    #include "./discard_ray"
+    #if DISCARDING_DISABLED == 0
+    discard;  
+    #else
+    ray.discarded = true;
+    #endif
 }

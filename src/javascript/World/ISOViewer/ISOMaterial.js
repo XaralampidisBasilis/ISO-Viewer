@@ -24,10 +24,6 @@ export default function()
             inv_dimensions        : new THREE.Vector3(),
             inv_spacing           : new THREE.Vector3(),
             inv_size              : new THREE.Vector3(),
-            min_position          : new THREE.Vector3(),
-            max_position          : new THREE.Vector3(),
-            min_intensity         : 0.0,
-            max_intensity         : 0.0,
         }),
 
         u_bbox : new THREE.Uniform
@@ -43,11 +39,11 @@ export default function()
         ({
             max_distance    : 0,
             max_iterations  : 50,
-            sub_division    : 4,
+            stride          : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_sub_division: 1/4,
+            inv_stride      : 1/4,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),
@@ -110,9 +106,9 @@ export default function()
 
         MAX_CELLS           : 1000,
         MAX_BLOCKS          : 1000,
+        MAX_GROUPS          : 100,
         MAX_CELLS_PER_BLOCK : 10,
         MAX_BLOCKS_PER_GROUP: 20,
-        MAX_GROUPS          : 100,
     }
 
     const material = new THREE.ShaderMaterial

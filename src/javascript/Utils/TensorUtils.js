@@ -128,6 +128,72 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
+export async function computeDistanceMap2(occupancyMap, maxDistance) 
+{
+    return tf.tidy(() => 
+    {
+        // Initialize the frontier (occupied voxels) and the distance tensor
+        let distances = tf.where(occupancyMap, 0, 1)
+        let frontier  = tf.cast(occupancyMap, 'bool')
+        
+        for (let distance = 2; distance <= maxDistance; distance++) 
+        {   
+            // Compute the new frontier by expanding frontier regions
+            const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+
+            // Identify the rest of the unvisited cells
+            const backline = tf.logicalNot(newFrontier)
+
+            // Update all backline cells with current distance
+            const newDistances = tf.where(backline, distance, distances)
+
+            // Dispose old tensors 
+            tf.dispose([distances, frontier, backline])
+
+            // Update new tensors for the next iteration
+            distances = newDistances
+            frontier = newFrontier
+        }
+
+        return distances
+    })
+}
+
+export async function computeDistanceMap3(occupancyMap, maxDistance) 
+{
+    return tf.tidy(() => 
+    {
+        // Compute an axis aligned kernel cone
+        let filter = tf.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 1, 1], 'float32')
+        
+        // Initialize the frontier (occupied voxels) and the distance tensor
+        let distances = tf.where(occupancyMap, 0, maxDistance)
+        let frontier  = tf.cast(occupancyMap, 'bool')
+
+        for (let distance = 1; distance < maxDistance; distance++) 
+        {   
+            // Expand frontier with a x-axis aligned kernel cone
+            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+            const newFrontier = expansion.cast('bool')
+
+            // Identify the non visited backline cells
+            const wavefront = tf.notEqual(newFrontier, frontier)
+
+            // Update all backline cells with current distance
+            const newDistances = tf.where(wavefront, distance, distances)
+
+            // Dispose old tensors 
+            tf.dispose([distances, frontier, expansion, wavefront])
+
+            // Update new tensors for the next iteration
+            distances = newDistances
+            frontier = newFrontier
+        }
+
+        return distances
+    })
+}
+
 /**
  * Computes a distance map for a specific subregion of a 4D occupancy map tensor,
  * then pads the result back to match the original tensor's shape.
@@ -224,5 +290,14 @@ export function mix(a, b, t)
         const result = a.add(offset)
         
         return result
+    })
+}
+
+export function map(min, max, x)
+{
+    return tf.tidy(() => 
+    {
+        const range = max - min        
+        return x.sub(min).div(range)
     })
 }

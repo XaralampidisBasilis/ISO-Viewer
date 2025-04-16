@@ -1,14 +1,16 @@
 
-if (trace.intersected) 
+if (cell.intersected) 
 {
-    #include "./compute_intersection"
-    #include "./compute_gradients"
+    #include "./compute_trace"
 }
 
-if (trace.terminated)
+if (trace.intersected)
+{
+    #include "./compute_gradient"
+}
+else
 {
     #if DISCARDING_DISABLED == 0
     discard;  
     #endif
 }
-

@@ -8,13 +8,13 @@ struct Camera
     vec3  direction;      // normalized direction in model coordinates 
 };
 
-Camera set_camera()
+Camera camera; // Global mutable struct
+
+void set_camera()
 {
-    Camera camera;
-    camera.position      = v_camera_position;
-    camera.uvw           = v_camera_position * u_intensity_map.inv_size;
-    camera.direction     = normalize(v_camera_direction);
-    return camera;
+    camera.position  = v_camera_position;
+    camera.uvw       = camera.position * u_intensity_map.inv_size;
+    camera.direction = normalize(v_camera_direction);
 }
 
 #endif // STRUCT_CAMERA

@@ -2,6 +2,7 @@
 #include "./uniforms_intensity_map"
 #include "./uniforms_distance_map"
 #include "./uniforms_color_map"
+#include "./uniforms_bbox"
 #include "./uniforms_rendering"
 #include "./uniforms_shading"
 #include "./uniforms_lighting"

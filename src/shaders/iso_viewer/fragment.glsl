@@ -11,10 +11,11 @@ in mat4  v_clip_space_matrix;
 
 out vec4 fragColor;
 
+#include "./chunks/utils"
 #include "./chunks/uniforms/uniforms"
-#include "./chunks/utils/utils"
 #include "./chunks/consts/consts"
 #include "./chunks/structs/structs"
+#include "./chunks/functions/functions"
 
 void main() 
 {
@@ -23,7 +24,7 @@ void main()
     #include "./chunks/march/compute_march"
     #include "./chunks/shade/compute_shade"
 
-    #if DEBUG_ENABLED == 1
-    #include "./chunks/debug/compute_debug"
-    #endif
+    // #if DEBUG_ENABLED == 1
+    // #include "./chunks/debug/compute_debug"
+    // #endif
 }

@@ -42,7 +42,7 @@ export default class ISOViewer extends EventEmitter
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         await this.processor.generateIntensityMap()
-        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.sub_division)
+        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
@@ -130,10 +130,6 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_intensity_map.value.dimensions.copy(intensityMap.parameters.dimensions)
         uniforms.u_intensity_map.value.spacing.copy(intensityMap.parameters.spacing)
         uniforms.u_intensity_map.value.size.copy(intensityMap.parameters.size)
-        uniforms.u_intensity_map.value.min_position.copy(boundingBox.parameters.minPosition)
-        uniforms.u_intensity_map.value.max_position.copy(boundingBox.parameters.maxPosition)
-        uniforms.u_intensity_map.value.min_intensity = intensityMap.parameters.minIntensity
-        uniforms.u_intensity_map.value.max_intensity = intensityMap.parameters.maxIntensity
         uniforms.u_intensity_map.value.size_length = intensityMap.parameters.sizeLength
         uniforms.u_intensity_map.value.spacing_length = intensityMap.parameters.spacingLength
         uniforms.u_intensity_map.value.inv_dimensions.copy(intensityMap.parameters.invDimensions)
@@ -141,11 +137,11 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_intensity_map.value.inv_size.copy(intensityMap.parameters.invSize)
  
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
-        uniforms.u_distance_map.value.sub_division = distanceMap.parameters.subDivision
+        uniforms.u_distance_map.value.stride = distanceMap.parameters.stride
         uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)
         uniforms.u_distance_map.value.spacing.copy(distanceMap.parameters.spacing)
         uniforms.u_distance_map.value.size.copy(distanceMap.parameters.size)
-        uniforms.u_distance_map.value.inv_sub_division = distanceMap.parameters.invSubDivision
+        uniforms.u_distance_map.value.inv_stride = distanceMap.parameters.invStride
         uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
@@ -153,11 +149,13 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_bbox.value.dimensions.copy(boundingBox.parameters.dimensions)
         uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCoords)
         uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCoords)
+        uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
+        uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
         defines.MAX_CELLS = boundingBox.parameters.maxCellCount
         defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
 
@@ -177,7 +175,7 @@ export default class ISOViewer extends EventEmitter
         const defines = this.material.defines
 
         // Recompute Maps
-        await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.sub_division)
+        await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
@@ -203,21 +201,25 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_rendering.value.intensity = threshold
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
-        uniforms.u_distance_map.value.sub_division = distanceMap.parameters.subDivision
+        uniforms.u_distance_map.value.stride = distanceMap.parameters.stride
         uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)
         uniforms.u_distance_map.value.spacing.copy(distanceMap.parameters.spacing)
         uniforms.u_distance_map.value.size.copy(distanceMap.parameters.size)
-        uniforms.u_distance_map.value.inv_sub_division = distanceMap.parameters.invSubDivision
+        uniforms.u_distance_map.value.inv_stride = distanceMap.parameters.invStride
         uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
-        uniforms.u_intensity_map.value.min_position.copy(boundingBox.parameters.minPosition)
-        uniforms.u_intensity_map.value.max_position.copy(boundingBox.parameters.maxPosition) 
+
+        uniforms.u_bbox.value.dimensions.copy(boundingBox.parameters.dimensions)
+        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCoords)
+        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCoords)
+        uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
+        uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
         defines.MAX_CELLS = boundingBox.parameters.maxCellCount
         defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.subDivision - 2
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)        
 

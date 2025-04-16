@@ -75,10 +75,8 @@ export default class ISOComputes extends EventEmitter
             shape            : source.dimensions.toReversed().concat(1),
         }
 
-        const min = source.min
-        const range = source.max - source.min
         const data = new Float32Array(source.data)
-        const tensor = tf.tidy(() => tf.tensor4d(data, parameters.shape,'float32').sub([min]).div([range]))        
+        const tensor = tf.tidy(() => TENSOR.map(source.min, source.max, tf.tensor4d(data, parameters.shape,'float32')))
 
         this.intensityMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeIntensityMap') 
@@ -113,8 +111,8 @@ export default class ISOComputes extends EventEmitter
         
         const parameters = {}
 
-        parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).addScalar(0).multiply(this.computes.occupancyMap.parameters.spacing)
-        parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(1).multiply(this.computes.occupancyMap.parameters.spacing)
+        parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).addScalar(0).multiply(this.occupancyMap.parameters.spacing)
+        parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(1).multiply(this.occupancyMap.parameters.spacing)
         parameters.minPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
         parameters.maxPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
 
@@ -126,9 +124,9 @@ export default class ISOComputes extends EventEmitter
         parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
         parameters.size = parameters.dimensions.clone().multiply(this.occupancyMap.parameters.spacing)
         parameters.numCells = parameters.dimensions.toArray().reduce((cells, dim) => cells * dim, 1)
-        parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
+        parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.occupancyMap.parameters.stride).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
         parameters.maxCellCount = parameters.dimensions.toArray().reduce((intersections, cells) => intersections + cells, -2)
-        parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.subDivision).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
+        parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.occupancyMap.parameters.stride).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
 
         // parameters.minCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
         // parameters.maxCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)

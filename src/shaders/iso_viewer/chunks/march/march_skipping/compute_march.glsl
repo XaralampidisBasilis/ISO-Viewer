@@ -1,54 +1,21 @@
 
-// start march at ray start
 #include "./modules/start_march"
 
-for (int batch = 0; batch < MAX_GROUPS; batch++) 
+for (int n = 0; n < MAX_GROUPS; n++) 
 {
-    // Skip empty space using the precomputed chebyshev distance map 
-    for (int count = 0; count < MAX_BLOCKS_PER_GROUP; count++) 
+    #include "./modules/march_blocks/march_blocks"
+    
+    if (!(block.occupied || block.terminated)) 
     {
-        // update block based on current trace
-        #include "./modules/update_block"
-
-        if (block.occupied) 
-        {
-            break;
-        }  
-        
-        // update trace to skip the current block
-        #include "./modules/skip_block"
-
-        if (trace.terminated) 
-        {
-            break;
-        } 
+        continue;
     }
 
-    // March analytically the volume cells inside an occupied block
-    #include "./modules/start_cell"
+    #include "./modules/march_cells/march_cells"
 
-    for (int count = 0; count < MAX_CELLS_PER_BLOCK; count++) 
-    {
-        // update current cell, take samples, and compute if there is intersection
-        #include "./modules/update_cell"
-
-        if (cell.intersected || cell.terminated) 
-        {
-            break;
-        }
-    }   
-
-    // Update the trace and check termination conditions
-    #include "./modules/update_trace"
-
-    if (trace.intersected || trace.terminated) 
+    if (cell.intersected || cell.terminated) 
     {
         break;
     }
 }   
 
-trace.exhausted = (trace.intersected || trace.terminated) ? false : true;
-// If batch marching is exhausted continue linearly?
-
-// terminate march, compute intersection and gradient
 #include "./modules/end_march"

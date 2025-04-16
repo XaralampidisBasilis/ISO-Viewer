@@ -6,8 +6,8 @@ vec4 debug_ray_discarded = to_color(ray.discarded);
 // ray direction
 vec4 debug_ray_direction = to_color(ray.direction * 0.5 + 0.5);
 
-// step distance
-vec4 debug_ray_step_distance = to_color(ray.step_distance / u_intensity_map.spacing_length);
+// spacing
+vec4 debug_ray_spacing = to_color(ray.spacing / u_intensity_map.spacing_length);
 
 // start distance
 vec4 debug_ray_start_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, ray.start_distance));
@@ -24,25 +24,17 @@ vec4 debug_ray_start_position = to_color(map(box.min_position, box.max_position,
 // end position
 vec4 debug_ray_end_position = to_color(map(box.min_position, box.max_position, ray.end_position));
 
-// max cell count
-vec4 debug_ray_max_cells = to_color(float(ray.max_cells) / float(u_rendering.max_cells));
-
-// max block count
-vec4 debug_ray_max_blocks = to_color(float(ray.max_blocks) / float(u_rendering.max_blocks));
-
 
 // PRINT DEBUG
 
 switch (u_debugging.option - debug.slot_ray)
 {
-    case  1: fragColor = debug_ray_discarded;       break;
-    case  2: fragColor = debug_ray_direction;       break;
-    case  3: fragColor = debug_ray_step_distance;   break;
-    case  4: fragColor = debug_ray_start_distance;  break;
-    case  5: fragColor = debug_ray_end_distance;    break;
-    case  6: fragColor = debug_ray_span_distance;   break;
-    case  7: fragColor = debug_ray_start_position;  break;
-    case  8: fragColor = debug_ray_end_position;    break;
-    case  9: fragColor = debug_ray_max_cells;  break;
-    case 10: fragColor = debug_ray_max_blocks; break;
+    case 1: fragColor = debug_ray_discarded;       break;
+    case 2: fragColor = debug_ray_direction;       break;
+    case 3: fragColor = debug_ray_spacing;         break;
+    case 4: fragColor = debug_ray_start_distance;  break;
+    case 5: fragColor = debug_ray_end_distance;    break;
+    case 6: fragColor = debug_ray_span_distance;   break;
+    case 7: fragColor = debug_ray_start_position;  break;
+    case 8: fragColor = debug_ray_end_position;    break;
 }

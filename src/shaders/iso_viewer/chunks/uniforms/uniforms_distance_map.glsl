@@ -5,11 +5,11 @@ struct DistanceMap
 {
     int   max_distance;
     int   max_iterations;
-    int   sub_division;
+    int   stride;
     ivec3 dimensions;    
     vec3  spacing;                  
     vec3  size;            
-    float inv_sub_division;      
+    float inv_stride;      
     vec3  inv_dimensions;   
     vec3  inv_spacing;          
     vec3  inv_size;              

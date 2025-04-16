@@ -16,9 +16,10 @@ struct Box
    
 };
 
-Box set_box()
+Box box; // Global mutable struct
+
+void set_box()
 {
-    Box box;
     box.entry_position     = vec3(0.0);
     box.exit_position      = vec3(0.0);
     box.entry_distance     = 0.0;
@@ -29,11 +30,6 @@ Box set_box()
     box.min_entry_distance = 0.0;
     box.max_exit_distance  = 0.0;
     box.max_span_distance  = 0.0;
-    return box;
-}
-
-void discard_box(inout Box box)
-{
 }
 
 #endif // STRUCT_BOX

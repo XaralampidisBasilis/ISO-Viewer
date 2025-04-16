@@ -21,9 +21,10 @@ struct Frag
     float camera_angle;
 };
 
-Frag set_frag()
+Frag frag; // Global mutable struct
+
+void set_frag()
 {
-    Frag frag;
     frag.depth            = 0.0;
     frag.position         = vec3(0.0);
     frag.mapped_intensity = 0.0;
@@ -40,10 +41,9 @@ Frag set_frag()
     frag.view_angle       = 0.0;
     frag.halfway_angle    = 0.0;
     frag.camera_angle     = 0.0;
-    return frag;
 }
 
-void discard_frag(inout Frag frag)
+void discard_frag()
 {
     frag.depth            = 0.0;
     frag.position         = vec3(0.0);
