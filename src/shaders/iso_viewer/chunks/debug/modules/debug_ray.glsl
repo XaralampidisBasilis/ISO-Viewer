@@ -7,7 +7,7 @@ vec4 debug_ray_discarded = to_color(ray.discarded);
 vec4 debug_ray_direction = to_color(ray.direction * 0.5 + 0.5);
 
 // spacing
-vec4 debug_ray_spacing = to_color(ray.spacing / u_intensity_map.spacing_length);
+vec4 debug_ray_spacing = to_color(ray.spacing);
 
 // start distance
 vec4 debug_ray_start_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, ray.start_distance));
@@ -27,7 +27,7 @@ vec4 debug_ray_end_position = to_color(map(box.min_position, box.max_position, r
 
 // PRINT DEBUG
 
-switch (u_debugging.option - debug.slot_ray)
+switch (u_debugging.option - 100)
 {
     case 1: fragColor = debug_ray_discarded;       break;
     case 2: fragColor = debug_ray_direction;       break;

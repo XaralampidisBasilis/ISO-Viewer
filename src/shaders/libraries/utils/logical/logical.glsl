@@ -1,5 +1,3 @@
-#ifndef LOGICAL
-#define LOGICAL
 
 #include "./on"
 #include "./off"
@@ -9,6 +7,3 @@
 #include "./nand"
 #include "./nor"
 #include "./xnor"
-
-#endif 
-

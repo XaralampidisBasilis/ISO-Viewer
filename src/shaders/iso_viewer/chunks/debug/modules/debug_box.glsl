@@ -18,7 +18,7 @@ vec4 debug_box_exit_position = to_color(map(box.min_position, box.max_position, 
 
 // PRINT DEBUG
 
-switch (u_debugging.option - debug.slot_box)
+switch (u_debugging.option - 600)
 {
     case 1: fragColor = debug_box_entry_distance;     break;
     case 2: fragColor = debug_box_exit_distance;      break;

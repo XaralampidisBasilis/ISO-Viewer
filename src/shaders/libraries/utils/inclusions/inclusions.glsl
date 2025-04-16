@@ -1,5 +1,3 @@
-#ifndef INCLUSIONS
-#define INCLUSIONS
 
 #include "./inside_open"
 #include "./inside_closed"
@@ -9,5 +7,3 @@
 #include "./outside_closed"
 #include "./inside_open_box"
 #include "./inside_closed_box"
-
-#endif

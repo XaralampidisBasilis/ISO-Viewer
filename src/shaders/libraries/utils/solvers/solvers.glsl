@@ -1,5 +1,3 @@
-#ifndef SOLVERS
-#define SOLVERS
 
 #include "./linsolve"
 #include "./linear_solver"
@@ -11,5 +9,3 @@
 #include "./is_cubic_solvable"
 #include "./is_cubic_solvable_2"
 #include "./is_quadratic_solvable"
-
-#endif

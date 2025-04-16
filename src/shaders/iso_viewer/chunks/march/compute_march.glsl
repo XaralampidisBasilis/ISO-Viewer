@@ -1,6 +1,8 @@
 
-#if SKIPPING_ENABLED == 1
+// #if SKIPPING_ENABLED == 1
+// #include "./march_analytic/compute_march"
+// #else
+// #include "./march_skipping/compute_march"
+// #endif
+
 #include "./march_analytic/compute_march"
-#else
-#include "./march_skipping/compute_march"
-#endif

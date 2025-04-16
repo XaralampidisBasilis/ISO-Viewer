@@ -106,9 +106,9 @@ export default class ISOViewer extends EventEmitter
   
     setGeometry()
     {
-        const size = this.parameters.volume.size
-        const center = this.parameters.volume.size.clone().divideScalar(2)
-        this.geometry = new THREE.BoxGeometry(...size).translate(...center) 
+        const size = new THREE.Vector3().setScalar(1)
+        const offset = new THREE.Vector3().setScalar(0.5)
+        this.geometry = new THREE.BoxGeometry(...size).translate(offset) 
     }
 
     setMaterial()
@@ -158,12 +158,12 @@ export default class ISOViewer extends EventEmitter
         defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
-
     }
 
     setMesh()
     {   
         this.mesh = new THREE.Mesh(this.geometry, this.material)
+        this.mesh.scale.copy(this.parameters.volume.size)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
     }

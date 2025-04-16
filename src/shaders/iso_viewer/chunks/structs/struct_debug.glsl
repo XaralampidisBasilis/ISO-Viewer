@@ -3,16 +3,6 @@
 
 struct Debug 
 {
-    int  slot_ray;
-    int  slot_trace;
-    int  slot_cell;
-    int  slot_block;
-    int  slot_frag;
-    int  slot_box;
-    int  slot_camera;
-    int  slot_stats;
-    int  slot_variables;
-
     vec4 variable1;
     vec4 variable2;
     vec4 variable3;

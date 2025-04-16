@@ -9,8 +9,8 @@ vec4 debug_camera_position = to_color(map(box.min_position, box.max_position, ca
 
 // PRINT DEBUG
 
-switch (u_debugging.option - debug.slot_camera)
+switch (u_debugging.option - 700)
 {
-    case 1: fragColor = debug_camera_position;      break;
-    case 2: fragColor = debug_camera_direction;     break;
+    case 1: fragColor = debug_camera_position;  break;
+    case 2: fragColor = debug_camera_direction; break;
 }

@@ -1,7 +1,4 @@
 
-#ifndef MATH
-#define MATH
-
 #include "./argmax" 
 #include "./argmin" 
 #include "./cbrt" 
@@ -22,5 +19,3 @@
 #include "./ssign" 
 #include "./sum"
 #include "./select"
-
-#endif
