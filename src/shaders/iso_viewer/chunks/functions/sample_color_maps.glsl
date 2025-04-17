@@ -14,9 +14,9 @@ vec3 sample_color_maps(in float x)
 
     // interpolate the u-coordinate within the colormap texture columns
     float u = mix(u_color_map.start_coords.x, u_color_map.end_coords.x, n);
+    float v = u_color_map.start_coords.y;
 
     // Create the UV coordinates for the texture lookup
-    float v = u_color_map.start_coords.y;
     vec2 uv = vec2(u, v);
 
     return texture(u_textures.color_maps, uv).rgb;

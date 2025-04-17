@@ -1,10 +1,11 @@
 // Compute ambient component
 #include "./modules/compute_scene"
+#include "./modules/compute_color"
 #include "./modules/compute_ambient"
-#include "./modules/compute_edge"
-#include "./modules/compute_shadow"
 #include "./modules/compute_diffuse"
 #include "./modules/compute_specular"
+#include "./modules/compute_edge"
+#include "./modules/compute_shadow"
 
 // Compute directional component
 vec3 directional_color = mix(frag.diffuse_color, frag.specular_color, specular);

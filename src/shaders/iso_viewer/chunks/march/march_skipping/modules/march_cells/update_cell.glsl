@@ -1,6 +1,6 @@
 
 // compute coordinates
-cell.coords = ivec3(cell.exit_position + 0.5);
+cell.coords = ivec3(floor(cell.exit_position + 0.5));
 
 // compute box min/max positions
 // avoid boundaries when computing coordinates
