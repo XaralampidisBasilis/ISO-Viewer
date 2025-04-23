@@ -21,10 +21,12 @@ const vec3 _offsets[8] = vec3[8]
 );
 
 float samples[8];
+#pragma unroll_loop_start 
 for (int i = 0; i < 8; i++)
 {
     samples[i] = sample_intensity_map(trace.position + _offsets[i]);
 }
+#pragma unroll_loop_end
 
 vec3 forward = vec3(
     samples[1] + samples[5] + samples[6] + samples[7], // x-axis

@@ -22,7 +22,7 @@ void set_ray()
 {
     ray.discarded      = false;
     ray.direction      = normalize(v_ray_direction);
-    ray.octant         = ivec3(ssign(ray.direction));
+    ray.octant         = ivec3(ssign(v_ray_direction));
     ray.spacing        = 0.0;
     ray.start_position = vec3(0.0);
     ray.end_position   = vec3(0.0);
