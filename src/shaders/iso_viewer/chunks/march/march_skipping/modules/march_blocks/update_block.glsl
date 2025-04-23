@@ -7,9 +7,9 @@ block.radius = sample_distance_map(block.coords);
 block.occupied = block.radius == 0;
 
 // compute box min/max coords
-int padding = max(block.radius, 1);
-block.min_coords = block.coords - padding + 1;
-block.max_coords = block.coords + padding;
+int radius = max(block.radius, 1);
+block.min_coords = block.coords - radius + 1;
+block.max_coords = block.coords + radius;
 
 // compute box min/max positions
 // avoid boundaries when computing coordinates
@@ -25,6 +25,13 @@ block.entry_position = block.exit_position;
 // compute exit from cell ray intersection 
 block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
+
+// compute next coordinates 
+// int coordinate = block.coords[block.axis];
+// coordinate += radius * ray.octant[block.axis];
+
+// block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
+// block.coords[block.axis] = coordinate;
 
 // Compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;

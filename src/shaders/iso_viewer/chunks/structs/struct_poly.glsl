@@ -3,8 +3,8 @@
 
 struct Poly 
 {
-    vec2 entry;
-    vec2 exit;
+    vec2 start;
+    vec2 end;
     vec3 roots;
     vec4 intensities;    
     vec4 distances;
@@ -17,8 +17,8 @@ Poly poly; // Global mutable struct
 
 void set_poly()
 {
-    poly.entry = vec2(0.0, 0.0);
-    poly.exit = vec2(1.0, 0.0);
+    poly.start = vec2(0.0, 0.0);
+    poly.end = vec2(1.0, 0.0);
     poly.roots = vec3(0.0);
     poly.intensities = vec4(0.0);
     poly.distances = vec4(0.0);

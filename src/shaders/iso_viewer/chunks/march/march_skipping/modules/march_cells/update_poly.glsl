@@ -1,5 +1,5 @@
 
-// given the entry and exit compute the sampling distances inside the cell
+// given the start and exit compute the sampling distances inside the cell
 poly.distances.x = poly.distances.w;
 poly.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, poly.weights.yzw);
 
@@ -13,4 +13,6 @@ poly.intensities.w = sample_intensity_map(camera.position + ray.direction * poly
 poly.coefficients = poly.inv_vander * poly.intensities;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
-cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, 0.0, 1.0, poly.intensities.x, poly.intensities.w);
+poly.start.y = poly.intensities.x;
+poly.end.y = poly.intensities.w;
+cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, poly.start, poly.end);
