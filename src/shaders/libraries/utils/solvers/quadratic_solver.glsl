@@ -8,9 +8,6 @@
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
 #endif
-#ifndef POWN
-#include "../math/pown"
-#endif
 
 vec2 quadratic_solver(in vec3 coeffs, in float target)
 {
@@ -40,7 +37,7 @@ vec2 quadratic_solver(in vec3 coeffs, in float target)
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + vec2(-1.0, 1.0) * sqrt_quadratic_discriminant;
+    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* SOLUTIONS */ 

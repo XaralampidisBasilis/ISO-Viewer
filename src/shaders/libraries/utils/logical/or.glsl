@@ -5,10 +5,10 @@
 #include "./on"
 #endif
 
-bool  or(in bool  a, in bool  b) { return a || b; }
-bvec2 or(in bvec2 a, in bvec2 b) { return bvec2(uvec2(a) | uvec2(b)); }
-bvec3 or(in bvec3 a, in bvec3 b) { return bvec3(uvec3(a) | uvec3(b)); }
-bvec4 or(in bvec4 a, in bvec4 b) { return bvec4(uvec4(a) | uvec4(b)); }
+bool  or(in bool  a, in bool  b) { return (a || b); }
+bvec2 or(in bvec2 a, in bvec2 b) { return bvec2(a.x || b.x, a.y || b.y); }
+bvec3 or(in bvec3 a, in bvec3 b) { return bvec3(a.x || b.x, a.y || b.y, a.z || b.z); }
+bvec4 or(in bvec4 a, in bvec4 b) { return bvec4(a.x || b.x, a.y || b.y, a.z || b.z, a.w || b.w); }
 
 bool  or(in int   a, in int   b) { return or(on(a), on(b)); }
 bvec2 or(in ivec2 a, in ivec2 b) { return or(on(a), on(b)); }

@@ -13,6 +13,4 @@ poly.intensities.w = sample_intensity_map(camera.position + ray.direction * poly
 poly.coefficients = poly.inv_vander * poly.intensities;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
-poly.start.y = poly.intensities.x;
-poly.end.y = poly.intensities.w;
-cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, poly.start, poly.end);
+cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, poly.interval, poly.intensities.xw);

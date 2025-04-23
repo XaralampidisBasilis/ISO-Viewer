@@ -4,108 +4,104 @@
 #ifndef QUADRATIC_SOLVER
 #include "./quadratic_solver"
 #endif
-#ifndef AND
-#include "../logical/and"
-#endif
-#ifndef CUBIC_POWS
-#include "./cubic_pows"
+#ifndef EVAL_POLY
+#include "./eval_poly"
 #endif
 
 /**
- * Determines whether the cubic polynomial defined by the given coefficients
- * intersects a target value within a specific interval.
+ * Checks whether a cubic polynomial can be equal to a target value within a specified closed interval.
+ * The function uses the Intermediate Value Theorem and evaluates the polynomial
+ * at its local extrema to detect any sign change indicating a root within the interval.
  * 
- * Solves: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x = value
- * within the interval (start, end), using the Intermediate Value Theorem and
- * checking local extrema for additional root existence.
+ * @param coeffs  The coefficients of the cubic polynomial, of the form: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x
+ * @param f_target    The value to check if the cubic can be equal
+ * @param t_interval  The interval that we search the target
  * 
- * @param coeffs A vec4 of cubic coefficients (constant, linear, quadratic, cubic terms).
- * @param value  The target value to solve the cubic equation against.
- * @param start  The start of the interval to check (exclusive).
- * @param end    The end of the interval to check (exclusive).
- * @return       True if a solution to the cubic equation exists within the interval.
+ * @return True if a root exists in the closed interval, otherwise false.
  */
-bool is_cubic_solvable(in vec4 coeffs, in float target, in float start, in float end)
+bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
 {
-    // normalize cubic equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
-    coeffs.x -= target;
+    // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
+    coeffs.x -= f_target;
 
-    // compute the cubic at the boundary values
-    vec2 limits = vec2(
-        dot(coeffs, cubic_pows(start)),
-        dot(coeffs, cubic_pows(end))
+    // compute the cubic at the boundaries
+    vec2 f_interval = vec2(
+        eval_poly(coeffs, t_interval.x),
+        eval_poly(coeffs, t_interval.y)
     );
 
     // compute the derivative of cubic and solve for the extrema values
-    vec3 derivative_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
-    vec2 critical_roots = quadratic_solver(derivative_coeffs, 0.0, start);
+    vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
+    vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
 
-    // compute the cubic at the extrema values
-    vec2 extrema = vec2(
-        dot(coeffs, cubic_pows(critical_roots.x)),
-        dot(coeffs, cubic_pows(critical_roots.y))
+    // check if the critical roots are within the interval 
+    bvec2 is_inside = inside_closed(t_interval.x, t_interval.y, t_critical);
+
+    // compute the cubic extrema values at the critical points
+    vec2 f_extrema = vec2(
+        eval_poly(coeffs, t_critical.x),
+        eval_poly(coeffs, t_critical.y)
     );
-    
-    // check if the extrema are within the interval and evaluate the cubic at those points
-    bvec2 is_inside = inside_open(start, end, critical_roots);
 
-    // check solution based on intermediate value theorem
-    bool is_solvable = (limits.x * limits.y <= 0.0);
+   // check sign change for intermediate value theorem
+    bvec3 is_crossing = bvec3(
+        is_inside.x && (f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0),
+        is_inside.y && (f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0),
+        (f_interval.x * f_interval.y <= 0.0)
+    );
 
-    // check solution based on the first extrema value inside the interval
-    is_solvable = is_solvable || 
-
-        (is_inside.x && ((extrema.x * limits.x < 0.0) ||
-                         (extrema.x * limits.y < 0.0) || 
-                         (abs(extrema.x) < 0.0))) ||
-
-        (is_inside.y && ((extrema.y * limits.x < 0.0) ||
-                         (extrema.y * limits.y < 0.0) || 
-                         (abs(extrema.y) < 0.0))); 
+    // check if cubic is solvable
+    bool is_solvable = any(is_crossing);
 
     // return result
     return is_solvable;
 }
 
-bool is_cubic_solvable(in vec4 coeffs, in float target, in float start, in float end, in float start_value, in float end_value)
+/**
+ * Checks whether a cubic polynomial can be equal to a target value within a specified closed interval.
+ * The function uses the Intermediate Value Theorem and evaluates the polynomial
+ * at its local extrema to detect any sign change indicating a root within the interval.
+ * 
+ * @param coeffs  The coefficients of the cubic polynomial, of the form: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x
+ * @param f_target    The value to check if the cubic can be equal
+ * @param t_interval  The interval that we search the target
+ * @param f_interval  The interval function values that we know beforehand
+ * 
+ * @return True if a root exists in the closed interval, otherwise false.
+ */
+bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in vec2 f_interval)
 {
-    // normalize cubic equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
-    coeffs.x -= target;
+    // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
+    coeffs.x -= f_target;
 
-    // compute the cubic at the boundary values
-    vec2 limits = vec2
-    (
-        start_value - target,
-        end_value - target
-    );
+    // normalize function interval values
+    f_interval -= f_target;
 
     // compute the derivative of cubic and solve for the extrema values
-    vec3 derivative_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
-    vec2 critical_roots = quadratic_solver(derivative_coeffs, 0.0, start);
+    vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
+    vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
 
-    // compute the cubic at the extrema values
-    vec2 extrema = vec2
-    (
-        dot(coeffs, cubic_pows(critical_roots.x)),
-        dot(coeffs, cubic_pows(critical_roots.y))
+    // check if the critical points are within the interval 
+    bvec2 is_inside = inside_closed(t_interval.x, t_interval.y, t_critical);
+
+    // compute the cubic extrema values at the critical points
+    vec2 f_extrema = vec2(
+        eval_poly(coeffs, t_critical.x),
+        eval_poly(coeffs, t_critical.y)
     );
     
-    // check if the extrema are within the interval and evaluate the cubic at those points
-    bvec2 is_inside = inside_open(start, end, critical_roots);
+    // check sign change detection for intermediate value theorem
+    bvec3 is_crossing = bvec3(
+        is_inside.x && (f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0),
+        is_inside.y && (f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0),
+        (f_interval.x * f_interval.y <= 0.0)
+    );
 
-    // check solution based on intermediate value theorem
-    bool is_solvable = (limits.x * limits.y <= 0.0);
-
-    // check solution based on the first extrema value inside the interval
-    is_solvable = is_solvable || 
-        (is_inside.x && ((extrema.x * limits.x <= 0.0)   ||
-                         (extrema.x * limits.y <= 0.0))) ||
-        (is_inside.y && ((extrema.y * limits.x <= 0.0)   ||
-                         (extrema.y * limits.y <= 0.0)));
+    // check if cubic is solvable
+    bool is_solvable = any(is_crossing);
 
     // return result
     return is_solvable;
 }
-
 
 #endif

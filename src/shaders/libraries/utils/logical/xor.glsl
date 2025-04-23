@@ -6,10 +6,10 @@
 #endif
 
 
-bool  xor(in bool  a, in bool  b) { return a ^^ b; }
-bvec2 xor(in bvec2 a, in bvec2 b) { return bvec2(uvec2(a) ^ uvec2(b)); }
-bvec3 xor(in bvec3 a, in bvec3 b) { return bvec3(uvec3(a) ^ uvec3(b)); }
-bvec4 xor(in bvec4 a, in bvec4 b) { return bvec4(uvec4(a) ^ uvec4(b)); }
+bool  xor(in bool  a, in bool  b) { return (a != b); }
+bvec2 xor(in bvec2 a, in bvec2 b) { return bvec2(a.x != b.x, a.y != b.y); }
+bvec3 xor(in bvec3 a, in bvec3 b) { return bvec3(a.x != b.x, a.y != b.y, a.z != b.z); }
+bvec4 xor(in bvec4 a, in bvec4 b) { return bvec4(a.x != b.x, a.y != b.y, a.z != b.z, a.w != b.w); }
 
 bool  xor(in int   a, in int   b) { return xor(on(a), on(b)); }
 bvec2 xor(in ivec2 a, in ivec2 b) { return xor(on(a), on(b)); }
