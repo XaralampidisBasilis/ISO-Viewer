@@ -41,11 +41,11 @@ export default function()
         ({
             max_distance    : 0,
             max_iterations  : 50,
-            stride          : 4,
+            stride          : 3,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_stride      : 1/4,
+            inv_stride      : 1/3,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),
