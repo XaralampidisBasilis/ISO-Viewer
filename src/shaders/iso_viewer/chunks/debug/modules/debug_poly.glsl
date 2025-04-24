@@ -14,7 +14,7 @@ vec4 debug_poly_coefficients = to_color(poly.coefficients.xyz / poly.coefficient
 
 switch (u_debugging.option - 800)
 { 
-    case 0: fragColor = debug_poly_distances;    break;
-    case 1: fragColor = debug_poly_intensities;  break;
-    case 2: fragColor = debug_poly_coefficients; break;
+    case 1: fragColor = debug_poly_distances;    break;
+    case 2: fragColor = debug_poly_intensities;  break;
+    case 3: fragColor = debug_poly_coefficients; break;
 }

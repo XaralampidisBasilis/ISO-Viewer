@@ -1,6 +1,7 @@
 
 // compute coordinates
-block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
+block.coords = ivec3(floor(block.entry_position + 0.5)) / u_distance_map.stride;
+block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
 
 // compute radius
 block.radius = sample_distance_map(block.coords);
@@ -20,12 +21,12 @@ block.min_position -= TOLERANCE.MILLI;
 block.max_position += TOLERANCE.MILLI;
 
 // compute entry from previous exit
-block.entry_distance = block.exit_distance;
-block.entry_position = block.exit_position;
+block.exit_distance = block.entry_distance;
+block.exit_position = block.entry_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
-block.exit_position = camera.position + ray.direction * block.exit_distance;
+block.entry_distance = intersect_box_min(block.min_position, block.max_position, camera.position, ray.direction);
+block.entry_position = camera.position + ray.direction * block.entry_distance;
 
 // Compute termination condition
-block.terminated = block.exit_distance > ray.end_distance;
+block.terminated = block.entry_distance < ray.start_distance;

@@ -158,7 +158,8 @@ export default class ISOGui
 
         this.controllers.debugging = 
         {
-            option: folder.add(uniforms, 'option').options({ 
+            option: folder.add(uniforms, 'option').options(
+            { 
                 default                 : 0,
 
                 ray_discarded           : 101,
@@ -227,8 +228,6 @@ export default class ISOGui
 
                 camera_position         : 701,
                 camera_direction        : 702,
-                camera_far_distance     : 703,
-                camera_near_distance    : 704,
 
                 poly_distances          : 801,
                 poly_intensities        : 802,

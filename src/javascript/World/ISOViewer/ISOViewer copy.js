@@ -4,7 +4,8 @@ import Experience from '../../Experience'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOMaterial from './ISOMaterial'
 import ISOGui from './ISOGui'
-import ISOProcessor from './ISOProcessor'
+import ISOComputes from './ISOComputes'
+import ISOTextures from './ISOTextures'
 
 export default class ISOViewer extends EventEmitter
 {
@@ -29,79 +30,19 @@ export default class ISOViewer extends EventEmitter
         this.sizes = this.experience.sizes
         this.debug = this.experience.debug
         this.material = ISOMaterial()
-        this.gui = new ISOGui(this)
-        this.processor = new ISOProcessor(this.resources.items.intensityMap)
-        this.processor.on('ready', () =>
+        this.computes = new ISOComputes()
+        this.textures = new ISOTextures()
+
+        // Wait for textures
+        this.textures.on('ready', () =>
         {
-            this.generateMaps().then(() => this.setViewer())
+            this.setGeometry()
+            this.setMaterial()
+            this.setMesh()
+
+            this.gui = new ISOGui(this)
+            this.trigger('ready')
         })
-    }
-    
-    async generateMaps()
-    {
-        const uRendering = this.material.uniforms.u_rendering.value
-        const uDistanceMap = this.material.uniforms.u_distance_map.value
-        await this.processor.generateIntensityMap()
-        await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
-        await this.processor.generateBoundingBox()
-        await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
-        tf.dispose(this.processor.computes.occupancyMap.tensor)
-    }
-
-    setViewer()
-    {
-        this.setParameters()
-        this.setTextures()
-        this.setGeometry()
-        this.setMaterial()
-        this.setMesh()
-        this.trigger('ready')
-    }
-
-    setParameters()
-    {
-        this.parameters = {}
-        this.parameters.volume = { ...this.processor.volume.parameters}
-    }
-
-    setTextures()
-    {
-        this.textures = {}
-
-        // color maps
-        this.textures.colorMaps = this.resources.items.colorMaps                      
-        this.textures.colorMaps.colorSpace = THREE.SRGBColorSpace
-        this.textures.colorMaps.minFilter = THREE.LinearFilter
-        this.textures.colorMaps.magFilter = THREE.LinearFilter         
-        this.textures.colorMaps.generateMipmaps = false
-        this.textures.colorMaps.needsUpdate = true 
-        
-        // distance map
-        this.textures.distanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
-            ...this.processor.computes.distanceMap.parameters.dimensions
-        )
-        this.textures.distanceMap.format = THREE.RedIntegerFormat
-        this.textures.distanceMap.type = THREE.ByteType
-        this.textures.distanceMap.minFilter = THREE.NearestFilter
-        this.textures.distanceMap.magFilter = THREE.NearestFilter
-        this.textures.distanceMap.computeMipmaps = false
-        this.textures.distanceMap.needsUpdate = true
-        tf.dispose(this.processor.computes.distanceMap.tensor)
-
-        // intensity map
-        this.textures.intensityMap = new THREE.Data3DTexture(
-            this.processor.volume.data, 
-            ...this.processor.volume.parameters.dimensions
-        )
-        this.textures.intensityMap.format = THREE.RedFormat
-        this.textures.intensityMap.type = THREE.FloatType
-        this.textures.intensityMap.minFilter = THREE.LinearFilter
-        this.textures.intensityMap.magFilter = THREE.LinearFilter
-        this.textures.intensityMap.computeMipmaps = false
-        this.textures.intensityMap.needsUpdate = true
-        delete this.processor.volume.data
-        delete this.resources.items.intensityMap.data
     }
   
     setGeometry()
@@ -113,14 +54,14 @@ export default class ISOViewer extends EventEmitter
 
     setMaterial()
     {        
-        // Computes
-        const intensityMap = this.processor.computes.intensityMap
-        const distanceMap =  this.processor.computes.distanceMap
-        const boundingBox = this.processor.computes.boundingBox
-
         // Uniforms/Defines        
         const uniforms = this.material.uniforms
         const defines = this.material.defines
+
+        // Computes
+        const intensityMap = this.computes.intensityMap
+        const distanceMap =  this.computes.distanceMap
+        const boundingBox = this.computes.boundingBox
 
         // Update Uniforms
         uniforms.u_textures.value.intensity_map = this.textures.intensityMap
@@ -146,62 +87,49 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
-        uniforms.u_bbox.value.min_block_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(boundingBox.parameters.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(boundingBox.parameters.maxCellCoords)
+        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCellCoords)
         uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
         uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
-        defines.MAX_CELLS = boundingBox.parameters.maxCells
-        defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
-        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
+        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
-
-        console.log(this.material)
     }
 
     setMesh()
     {   
+        const intensityMap = this.computes.intensityMap
+        const size = intensityMap.parameters.size
+
         this.mesh = new THREE.Mesh(this.geometry, this.material)
-        this.mesh.scale.copy(this.parameters.volume.size)
-        this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
+        this.mesh.scale.copy(size)
+        this.mesh.position.copy(size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
     }
 
-    async updateIsosurface(threshold)
+
+    async update(threshold)
     {
         // Uniforms/Defines        
         const uniforms = this.material.uniforms
         const defines = this.material.defines
 
-        // Recompute Maps
-        await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.stride)
-        await this.processor.generateBoundingBox()
-        await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
-        tf.dispose(this.processor.computes.occupancyMap.tensor)
+        // Update threshold
+        uniforms.u_rendering.value.intensity = threshold
+
+
+        await this.computes.update()
+        await this.textures.update()
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap
         const boundingBox = this.processor.computes.boundingBox 
-
-        // Update Textures
-        this.textures.distanceMap.dispose()
-        this.textures.distanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
-            ...distanceMap.parameters.dimensions)
-        this.textures.distanceMap.format = THREE.RedIntegerFormat
-        this.textures.distanceMap.type = THREE.ByteType
-        this.textures.distanceMap.minFilter = THREE.NearestFilter
-        this.textures.distanceMap.magFilter = THREE.NearestFilter
-        this.textures.distanceMap.computeMipmaps = false
-        this.textures.distanceMap.needsUpdate = true
-        tf.dispose(this.processor.computes.distanceMap.tensor)
         
         // Update Uniforms
-        uniforms.u_rendering.value.intensity = threshold
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
         uniforms.u_distance_map.value.stride = distanceMap.parameters.stride
@@ -213,19 +141,17 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
-        uniforms.u_bbox.value.min_block_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(boundingBox.parameters.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(boundingBox.parameters.maxCellCoords)
+        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCellCoords)
         uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
         uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
-        defines.MAX_CELLS = boundingBox.parameters.maxCells
-        defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
-        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
+        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
+        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
-        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)    
+        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)      
 
         // Update Material
         this.material.needsUpdate = true

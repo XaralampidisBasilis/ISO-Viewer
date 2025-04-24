@@ -134,23 +134,22 @@ export default class ISOProcessor extends EventEmitter
    
         console.time('generateBoundingBox') 
         const boundingBox = await this.computeBoundingBox(this.computes.occupancyMap.tensor)
+    
         const parameters = {}
-        
-        parameters.minPosition = new THREE.Vector3().fromArray(boundingBox.minCoords).addScalar(0).multiply(this.computes.occupancyMap.parameters.spacing)
-        parameters.maxPosition = new THREE.Vector3().fromArray(boundingBox.maxCoords).addScalar(1).multiply(this.computes.occupancyMap.parameters.spacing)
-        parameters.minPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
-        parameters.maxPosition.clamp(new THREE.Vector3(), this.volume.parameters.size)
+        const stride = this.computes.occupancyMap.parameters.stride
+        parameters.minBlockCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
+        parameters.maxBlockCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
+        parameters.minCellCoords = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride)
+        parameters.maxCellCoords = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(1)     
+        parameters.blockDimensions = new THREE.Vector3().subVectors(parameters.maxBlockCoords, parameters.minBlockCoords).addScalar(1)
+        parameters.cellDimensions = new THREE.Vector3().subVectors(parameters.maxCellCoords, parameters.minCellCoords).addScalar(1)
+        parameters.maxCells = parameters.cellDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
+        parameters.maxBlocks = parameters.blockDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
+        parameters.maxCellsPerBlock = stride * 3 - 2
 
-        parameters.minCoords = new THREE.Vector3().copy(parameters.minPosition).divide(this.volume.parameters.spacing).addScalar(0.5).floor() // included in bbox
-        parameters.maxCoords = new THREE.Vector3().copy(parameters.maxPosition).divide(this.volume.parameters.spacing).subScalar(0.5).floor() // included in bbox
-        parameters.minCoords.clamp(new THREE.Vector3(), this.volume.parameters.dimensions)
-        parameters.maxCoords.clamp(new THREE.Vector3(), this.volume.parameters.dimensions)
-
-        parameters.dimensions = new THREE.Vector3().subVectors(parameters.maxCoords, parameters.minCoords).addScalar(1)
-        parameters.numCells = parameters.dimensions.toArray().reduce((cells, dim) => cells * dim, 1)
-        parameters.numBlocks = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.stride).ceil().toArray().reduce((blocks, dim) => blocks * dim, 1)
-        parameters.maxCellCount = parameters.dimensions.toArray().reduce((intersections, cells) => intersections + cells, -2)
-        parameters.maxBlockCount = parameters.dimensions.clone().divideScalar(this.computes.occupancyMap.parameters.stride).ceil().toArray().reduce((intersections, blocks) => intersections + blocks, -2)
+        // min/max bounding box positions in voxel grid space
+        parameters.minPosition = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5)
+        parameters.maxPosition = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(0.5)
 
         this.computes.boundingBox.parameters = parameters
         console.timeEnd('generateBoundingBox') 

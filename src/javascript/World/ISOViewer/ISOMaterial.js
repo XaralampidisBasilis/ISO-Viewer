@@ -28,11 +28,12 @@ export default function()
 
         u_bbox : new THREE.Uniform
         ({
-            dimensions  : new THREE.Vector3(),
-            min_coords  : new THREE.Vector3(),
-            max_coords  : new THREE.Vector3(),
-            min_position: new THREE.Vector3(),
-            max_position: new THREE.Vector3(),
+            min_cell_coords : new THREE.Vector3(),
+            max_cell_coords : new THREE.Vector3(),
+            min_block_coords: new THREE.Vector3(),
+            max_block_coords: new THREE.Vector3(),
+            min_position    : new THREE.Vector3(),
+            max_position    : new THREE.Vector3(),
         }),
 
         u_distance_map : new THREE.Uniform
