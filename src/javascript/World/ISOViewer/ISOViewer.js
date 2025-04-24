@@ -45,6 +45,7 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(uDistanceMap.max_iterations)
+        await this.processor.generateDistance3Map(uDistanceMap.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
     }
 
@@ -89,6 +90,19 @@ export default class ISOViewer extends EventEmitter
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
 
+        // distance3 map
+        this.textures.distance3Map = new THREE.Data3DTexture(
+            new Int8Array(this.processor.computes.distance3Map.tensor.dataSync()), 
+            ...this.processor.computes.distance3Map.parameters.dimensions
+        )
+        this.textures.distance3Map.format = THREE.RGBAIntegerFormat
+        this.textures.distance3Map.type = THREE.ByteType
+        this.textures.distance3Map.minFilter = THREE.NearestFilter
+        this.textures.distance3Map.magFilter = THREE.NearestFilter
+        this.textures.distance3Map.computeMipmaps = false
+        this.textures.distance3Map.needsUpdate = true
+        tf.dispose(this.processor.computes.distance3Map.tensor)
+
         // intensity map
         this.textures.intensityMap = new THREE.Data3DTexture(
             this.processor.volume.data, 
@@ -125,6 +139,7 @@ export default class ISOViewer extends EventEmitter
         // Update Uniforms
         uniforms.u_textures.value.intensity_map = this.textures.intensityMap
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.distance3_map = this.textures.distance3Map
         uniforms.u_textures.value.color_maps = this.textures.colorMaps   
 
         uniforms.u_intensity_map.value.dimensions.copy(intensityMap.parameters.dimensions)
@@ -159,8 +174,6 @@ export default class ISOViewer extends EventEmitter
         defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
-
-        console.log(this.material)
     }
 
     setMesh()
@@ -181,10 +194,12 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(uniforms.u_distance_map.value.max_iterations)
+        await this.processor.generateDistance3Map(uniforms.u_distance_map.value.max_iterations)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
 
         // Computes
         const distanceMap = this.processor.computes.distanceMap
+        const distance3Map = this.processor.computes.distance3Map
         const boundingBox = this.processor.computes.boundingBox 
 
         // Update Textures
@@ -199,10 +214,25 @@ export default class ISOViewer extends EventEmitter
         this.textures.distanceMap.computeMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
+
+        this.textures.distance3Map.dispose()
+        this.textures.distance3Map = new THREE.Data3DTexture(
+            new Int8Array(this.processor.computes.distance3Map.tensor.dataSync()), 
+            ...distance3Map.parameters.dimensions)
+        this.textures.distance3Map.format = THREE.RGBAIntegerFormat
+        this.textures.distance3Map.type = THREE.ByteType
+        this.textures.distance3Map.minFilter = THREE.NearestFilter
+        this.textures.distance3Map.magFilter = THREE.NearestFilter
+        this.textures.distance3Map.computeMipmaps = false
+        this.textures.distance3Map.needsUpdate = true
+        tf.dispose(this.processor.computes.distance3Map.tensor)
         
         // Update Uniforms
         uniforms.u_rendering.value.intensity = threshold
+
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.distance3_map = this.textures.distance3Map
+
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance
         uniforms.u_distance_map.value.stride = distanceMap.parameters.stride
         uniforms.u_distance_map.value.dimensions.copy(distanceMap.parameters.dimensions)

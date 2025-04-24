@@ -11,6 +11,7 @@ export default function()
         ({
             intensity_map : null,
             distance_map  : null,
+            distance3_map : null,
             color_maps    : null,
         }),
 

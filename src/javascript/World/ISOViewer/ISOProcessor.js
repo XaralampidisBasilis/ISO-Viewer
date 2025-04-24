@@ -25,10 +25,11 @@ export default class ISOProcessor extends EventEmitter
     {
         this.computes = 
         {
-            intensityMap : { parameters: null, tensor: null},
-            occupancyMap : { parameters: null, tensor: null},
-            distanceMap  : { parameters: null, tensor: null},
-            boundingBox  : { parameters: null},
+            intensityMap: { parameters: null, tensor: null},
+            occupancyMap: { parameters: null, tensor: null},
+            distanceMap : { parameters: null, tensor: null},
+            distance3Map: { parameters: null, tensor: null},
+            boundingBox : { parameters: null},
         }
 
     }
@@ -159,7 +160,7 @@ export default class ISOProcessor extends EventEmitter
     async generateDistanceMap(maxIters)
     {
         console.time('generateDistanceMap') 
-        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
+        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, 50)
         const parameters = {...this.computes.occupancyMap.parameters}
         const maxTensor = distanceMap.max()
         const meanTensor = distanceMap.mean()
@@ -173,6 +174,19 @@ export default class ISOProcessor extends EventEmitter
         console.timeEnd('generateDistanceMap') 
         // console.log(this.computes.distanceMap.parameters)
         // console.log(this.computes.distanceMap.tensor.dataSync())
+    }
+
+    async generateDistance3Map(maxIters)
+    {
+        console.time('generateDistance3Map') 
+        const distance3Map = await this.computeDistance3Map(this.computes.occupancyMap.tensor, 50)
+        const parameters = {...this.computes.occupancyMap.parameters}
+
+        this.computes.distance3Map.tensor = distance3Map
+        this.computes.distance3Map.parameters = parameters
+        console.timeEnd('generateDistance3Map') 
+        // console.log(this.computes.distance3Map.parameters)
+        console.log(this.computes.distance3Map.tensor.dataSync())
     }
 
     // Helpers
@@ -264,6 +278,113 @@ export default class ISOProcessor extends EventEmitter
 
             return distances
         })
+    }
+
+    
+    async computeDistance3Map(occupancyMap, maxDistance) 
+    {
+        const distancesX = tf.tidy(() => 
+        {
+            // Compute an x-axis aligned kernel cone
+            let filter = tf.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 1, 1], 'float32')
+            
+            // Initialize the frontier and  distance tensors
+            let distances = tf.where(occupancyMap, 0, 1)
+            let frontier  = tf.cast(occupancyMap, 'bool')
+    
+            for (let distance = 1; distance <= maxDistance; distance++) 
+            {   
+                // Expand frontier with a x-axis aligned kernel cone
+                const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+                const newFrontier = expansion.cast('bool')
+    
+                // Identify the non visited backline cells
+                const wavefront = tf.notEqual(newFrontier, frontier)
+    
+                // Update all backline cells with current distance
+                const newDistances = tf.where(wavefront, distance, distances)
+    
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, expansion, wavefront])
+    
+                // Update new tensors for the next iteration
+                distances = newDistances
+                frontier = newFrontier
+            }
+    
+            return distances
+        })
+    
+        const distancesY = tf.tidy(() => 
+        {
+            // Compute an y-axis aligned kernel cone
+            let filter = tf.tensor([1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1], [3, 3, 3, 1, 1], 'float32') 
+    
+            // Initialize the frontier and  distance tensors
+            let distances = tf.where(occupancyMap, 0, 1)
+            let frontier  = tf.cast(occupancyMap, 'bool')
+    
+            for (let distance = 1; distance <= maxDistance; distance++) 
+            {   
+                // Expand frontier with a y-axis aligned kernel cone
+                const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+                const newFrontier = expansion.cast('bool')
+    
+                // Identify the non visited backline cells
+                const wavefront = tf.notEqual(newFrontier, frontier)
+    
+                // Update all backline cells with current distance
+                const newDistances = tf.where(wavefront, distance, distances)
+    
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, expansion, wavefront])
+    
+                // Update new tensors for the next iteration
+                distances = newDistances
+                frontier = newFrontier
+            }
+    
+            return distances
+        })
+    
+        const distancesZ = tf.tidy(() => 
+        {
+            // Compute an z-axis aligned kernel cone
+            let filter = tf.tensor([1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1], [3, 3, 3, 1, 1], 'float32')
+    
+            // Initialize the frontier and  distance tensors
+            let distances = tf.where(occupancyMap, 0, 1)
+            let frontier  = tf.cast(occupancyMap, 'bool')
+    
+            for (let distance = 1; distance <= maxDistance; distance++) 
+            {   
+                // Expand frontier with a z-axis aligned kernel cone
+                const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+                const newFrontier = expansion.cast('bool')
+    
+                // Identify the non visited backline cells
+                const wavefront = tf.notEqual(newFrontier, frontier)
+    
+                // Update all backline cells with current distance
+                const newDistances = tf.where(wavefront, distance, distances)
+    
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, expansion, wavefront])
+    
+                // Update new tensors for the next iteration
+                distances = newDistances
+                frontier = newFrontier
+            }
+    
+            return distances
+        })
+    
+        // Combine axial distance maps
+        // we need an extra channel to use RGBAIntegerFormat
+        const distances = tf.concat([distancesZ, distancesY, distancesX, distancesX], 3)
+        tf.dispose([[distancesX, distancesY, distancesZ]])
+    
+        return distances
     }
 
     async computeDistanceMapFromSlice(occupancyMap, maxDistance, begin, sliceSize)

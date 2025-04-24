@@ -5,6 +5,7 @@ struct Textures
 {
     sampler3D intensity_map;
     isampler3D distance_map;
+    isampler3D distance3_map;
     sampler2D color_maps;      
 };
 

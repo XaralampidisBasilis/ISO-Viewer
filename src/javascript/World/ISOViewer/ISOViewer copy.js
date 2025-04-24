@@ -87,15 +87,17 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
 
-        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCellCoords)
+        uniforms.u_bbox.value.min_block_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_block_coords.copy(boundingBox.parameters.maxCellCoords)
+        uniforms.u_bbox.value.min_cell_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_cell_coords.copy(boundingBox.parameters.maxCellCoords)
         uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
         uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
-        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
-        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
+        defines.MAX_CELLS = boundingBox.parameters.maxCells
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
+        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
     }
@@ -140,18 +142,20 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.parameters.invDimensions)
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.parameters.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.parameters.invSize)
-
-        uniforms.u_bbox.value.min_coords.copy(boundingBox.parameters.minCellCoords)
-        uniforms.u_bbox.value.max_coords.copy(boundingBox.parameters.maxCellCoords)
+        
+        uniforms.u_bbox.value.min_block_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_block_coords.copy(boundingBox.parameters.maxCellCoords)
+        uniforms.u_bbox.value.min_cell_coords.copy(boundingBox.parameters.minCellCoords)
+        uniforms.u_bbox.value.max_cell_coords.copy(boundingBox.parameters.maxCellCoords)
         uniforms.u_bbox.value.min_position.copy(boundingBox.parameters.minPosition)
         uniforms.u_bbox.value.max_position.copy(boundingBox.parameters.maxPosition)
 
         // Update Defines
-        defines.MAX_CELLS = boundingBox.parameters.maxCellCount
-        defines.MAX_BLOCKS = boundingBox.parameters.maxBlockCount
-        defines.MAX_CELLS_PER_BLOCK = 3 * distanceMap.parameters.stride - 2
+        defines.MAX_CELLS = boundingBox.parameters.maxCells
+        defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
+        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
-        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)      
+        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
 
         // Update Material
         this.material.needsUpdate = true

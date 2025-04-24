@@ -109,22 +109,19 @@ export default class ISOComputes extends EventEmitter
         console.time('computeBoundingBox') 
         const boundingBox = await TENSOR.computeBoundingBox(this.binaryMap.tensor)
 
-         const parameters = {}
+        const parameters = {}
         const stride = this.occupancyMap.parameters.stride
         parameters.minBlockCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
         parameters.maxBlockCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
         parameters.minCellCoords = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride)
         parameters.maxCellCoords = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(1)     
+        parameters.minPosition = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
+        parameters.maxPosition = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
         parameters.blockDimensions = new THREE.Vector3().subVectors(parameters.maxBlockCoords, parameters.minBlockCoords).addScalar(1)
         parameters.cellDimensions = new THREE.Vector3().subVectors(parameters.maxCellCoords, parameters.minCellCoords).addScalar(1)
         parameters.maxCells = parameters.cellDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
         parameters.maxBlocks = parameters.blockDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
         parameters.maxCellsPerBlock = stride * 3 - 2
-
-        // min/max bounding box positions in voxel grid space
-        parameters.minPosition = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5)
-        parameters.maxPosition = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(0.5)
-
 
         this.boundingBox = { parameters : parameters }
         console.timeEnd('computeBoundingBox') 
@@ -138,8 +135,9 @@ export default class ISOComputes extends EventEmitter
         const blockDimensions = this.boundingBox.parameters.blockDimensions.toArray()
         const begin = minBlockCoords.toReversed().concat(0)
         const sliceSize = blockDimensions.toReversed().concat(1)
+        const maxIterations = Math.min(Math.max(...sliceSize), 255)
 
-        const tensor = await TENSOR.computeDistanceMapFromSlice(this.occupancyMap.tensor, begin, sliceSize, 255)
+        const tensor = await TENSOR.computeDistanceMapFromSlice(this.occupancyMap.tensor, begin, sliceSize, maxIterations)
 
         const parameters = {...this.occupancyMap.parameters}
         parameters.maxDistance = tf.tidy(() => tensor.max().arraySync())  
