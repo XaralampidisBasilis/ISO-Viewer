@@ -6,7 +6,7 @@ float solution = mmin(select(is_inside, solutions, vec3(1.0)));
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, solution);
-trace.position = camera.position + ray.direction * trace.distance; 
+trace.position = mix(cell.entry_position, cell.exit_position, solution); 
 trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.distance);
 
 // compute error

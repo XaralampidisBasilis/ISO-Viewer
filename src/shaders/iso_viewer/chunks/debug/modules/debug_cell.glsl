@@ -17,7 +17,7 @@ vec4 debug_cell_entry_distance = to_color(map(box.min_entry_distance, box.max_ex
 vec4 debug_cell_exit_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, cell.exit_distance)); 
 
 // span distance
-vec4 debug_cell_span_distance = to_color((cell.exit_distance - cell.entry_distance) / u_intensity_map.spacing_length); 
+vec4 debug_cell_span_distance = to_color((cell.exit_distance - cell.entry_distance) / length(cell.max_position - cell.min_position)); 
 
 // min position
 vec4 debug_cell_min_position = to_color(map(box.min_position, box.max_position, cell.min_position)); 
