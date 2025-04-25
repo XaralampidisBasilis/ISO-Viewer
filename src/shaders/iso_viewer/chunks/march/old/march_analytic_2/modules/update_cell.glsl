@@ -15,7 +15,7 @@ cell.exit_position = camera.position + ray.direction * cell.exit_distance;
 cell.terminated = cell.exit_distance > ray.end_distance;
 
 // Compute next coords
-cell.coords[cell.axis] += ray.octant[cell.axis];
+cell.coords[cell.axis] += ray.signs[cell.axis];
 
 // Compute interpolation inside the cell
 #include "./compute_interpolation"

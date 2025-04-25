@@ -164,7 +164,7 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     return tf.tidy(() => 
     {
         // Compute block kernel
-        const filter = tf.ones([3, 3, 3, 1, 1], 'float32')
+        let filter = tf.ones([3, 3, 3, 1, 1], 'float32')
         
         // Initialize the frontier and  distance tensors
         let distances = tf.where(occupancyMap, 0, 1)
@@ -194,21 +194,20 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
-export async function computeDistance3Map(occupancyMap, maxDistance) 
+export async function computeAxialDistanceMap(occupancyMap, maxDistance, axis) 
 {
-    // Compute x-axis distance map
-    const xDistances = tf.tidy(() => 
+    return tf.tidy(() => 
     {
-        // Compute an x-axis aligned kernel cone
-        let filter = tf.tensor([1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 1, 1], 'float32')
+        // Compute an positive x-axis aligned kernel cone
+        let filter = tf.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 1, 1], 'float32')
         
         // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, 1)
+        let distances = tf.where(occupancyMap, 0, maxDistance)
         let frontier  = tf.cast(occupancyMap, 'bool')
 
-        for (let distance = 1; distance <= maxDistance; distance++) 
+        for (let distance = 1; distance < maxDistance; distance++) 
         {   
-            // Expand frontier with a x-axis aligned kernel cone
+            // Expand frontier with a positive x-axis aligned kernel cone
             const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
             const newFrontier = expansion.cast('bool')
 
@@ -228,78 +227,60 @@ export async function computeDistance3Map(occupancyMap, maxDistance)
 
         return distances
     })
+}
 
-    // Compute y-axis distance map
-    const yDistances = tf.tidy(() => 
-    {
-        // Compute an y-axis aligned kernel cone
-        let filter = tf.tensor([1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1], [3, 3, 3, 1, 1], 'float32') 
+export async function computeOctantDistanceMap(occupancyMap, maxDistance, axes) 
+{
+    return tf.tidy(() => 
+    {            
+        // Initialize the frontier  and the distance tensor
+        let source = tf.reverse(occupancyMap, axes)
+        let distances = tf.where(source, 0, maxDistance)
+        let frontier = tf.cast(source, 'bool')
+        tf.dispose(source)
 
-        // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, 1)
-        let frontier  = tf.cast(occupancyMap, 'bool')
-
-        for (let distance = 1; distance <= maxDistance; distance++) 
+        for (let distance = 1; distance < maxDistance; distance++) 
         {   
-            // Expand frontier with a y-axis aligned kernel cone
-            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
-            const newFrontier = expansion.cast('bool')
-
-            // Identify the non visited backline cells
+            // Compute the new frontier by expanding frontier regions
+            const newFrontier = tf.maxPool3d(frontier, [2, 2, 2], [1, 1, 1], 'same')
+                            
+            // Identify the newly occupied voxel wavefront
             const wavefront = tf.notEqual(newFrontier, frontier)
 
-            // Update all backline cells with current distance
+            // Compute and add distances for the newly occupied voxels at this step
             const newDistances = tf.where(wavefront, distance, distances)
 
             // Dispose old tensors 
-            tf.dispose([distances, frontier, expansion, wavefront])
+            tf.dispose([distances, frontier, wavefront])
 
             // Update new tensors for the next iteration
             distances = newDistances
             frontier = newFrontier
         }
 
-        return distances
+        return tf.reverse(distances, axes)
     })
+}
 
-    // Compute z-axis distance map
-    const zDistances = tf.tidy(() => 
-    {
-        // Compute an z-axis aligned kernel cone
-        let filter = tf.tensor([1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1], [3, 3, 3, 1, 1], 'float32')
+export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance) 
+{  
+    // compute octant distance maps with binary code order
+    let distances = [
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, []),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 2]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 2]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1, 2]),
+    ]
 
-        // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, 1)
-        let frontier  = tf.cast(occupancyMap, 'bool')
+    // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
+    let distanceMap = tf.concat(distances, 0)
+    tf.dispose(distances)
 
-        for (let distance = 1; distance <= maxDistance; distance++) 
-        {   
-            // Expand frontier with a z-axis aligned kernel cone
-            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
-            const newFrontier = expansion.cast('bool')
-
-            // Identify the non visited backline cells
-            const wavefront = tf.notEqual(newFrontier, frontier)
-
-            // Update all backline cells with current distance
-            const newDistances = tf.where(wavefront, distance, distances)
-
-            // Dispose old tensors 
-            tf.dispose([distances, frontier, expansion, wavefront])
-
-            // Update new tensors for the next iteration
-            distances = newDistances
-            frontier = newFrontier
-        }
-
-        return distances
-    })
-
-    // Combine axial distance maps
-    const distances = tf.concat([xDistances, yDistances, zDistances], 3)
-    tf.dispose([[xDistances, yDistances, zDistances]])
-
-    return distances
+    return distanceMap
 }
 
 /**

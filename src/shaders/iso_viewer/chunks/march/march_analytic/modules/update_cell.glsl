@@ -15,7 +15,7 @@ cell.exit_position = camera.position + ray.direction * cell.exit_distance;
 cell.terminated = cell.exit_distance > ray.end_distance; 
 
 // compute next coordinates
-cell.coords += cell.axes * ray.octant;
+cell.coords += cell.axes * ray.signs;
 
 // compute polynomial interpolation inside cell
 #include "./update_poly"

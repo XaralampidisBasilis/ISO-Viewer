@@ -15,4 +15,4 @@ cell.exit_position = camera.position + ray.direction * cell.exit_distance;
 
 // Compute next coords step
 cell.coords_step = ivec3(0);
-cell.coords_step[cell.axis] = ray.octant[cell.axis];
+cell.coords_step[cell.axis] = ray.signs[cell.axis];

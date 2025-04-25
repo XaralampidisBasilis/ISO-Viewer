@@ -1,3 +1,5 @@
+// Start ray
+#include "./modules/start_ray"
 
 // Compute intersection of ray with volume box
 #include "./modules/compute_ray_box_intersection"
@@ -11,8 +13,5 @@
 #if INTERSECT_BVOL_ENABLED == 1
 #include "./modules/compute_ray_bvol_intersection/compute_ray_bvol_intersection"
 #endif
-
-// Compute ray spacing
-#include "./modules/compute_ray_spacing"
 
 

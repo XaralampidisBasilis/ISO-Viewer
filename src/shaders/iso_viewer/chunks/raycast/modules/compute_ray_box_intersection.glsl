@@ -1,7 +1,7 @@
 
 // compute box min/max positions in grid space
 box.min_position = vec3(0.0);
-box.max_position = u_intensity_map.dimensions;
+box.max_position = vec3(u_intensity_map.dimensions);
 
 // deflate box to avoid boundaries
 box.min_position += TOLERANCE.CENTI;

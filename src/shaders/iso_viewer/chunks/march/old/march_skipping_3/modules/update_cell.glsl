@@ -23,7 +23,7 @@ cell.terminated = cell.exit_distance > ray.end_distance;
 // Compute next coordinates 
 int stride = max(block.radius * u_distance_map.stride, 1);
 int coordinate = cell.coords[cell.axis];
-coordinate += ray.octant[cell.axis] * stride;
+coordinate += ray.signs[cell.axis] * stride;
 
 cell.coords = ivec3(cell.exit_position * u_intensity_map.inv_spacing + 0.5);
 cell.coords[cell.axis] = coordinate;

@@ -5,5 +5,7 @@ float sample_intensity_map(in vec3 pos)
     stats.num_fetches += 1;
     #endif
     
-    return texture(u_textures.intensity_map, pos * u_intensity_map.inv_dimensions).r;
+    vec3 uvw = pos * u_intensity_map.inv_dimensions;
+
+    return texture(u_textures.intensity_map, uvw).r;
 }

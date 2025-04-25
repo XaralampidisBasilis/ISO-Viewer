@@ -1,5 +1,4 @@
 
-
 vec3 sample_color_maps(in float x)
 {
     #if STATS_ENABLED == 1

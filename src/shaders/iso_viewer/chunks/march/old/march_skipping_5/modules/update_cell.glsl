@@ -12,7 +12,7 @@ cell.exit_distance = intersect_box_max(cell.min_position, cell.max_position, cam
 cell.exit_position = camera.position + ray.direction * cell.exit_distance; 
 
 // Compute next coords
-cell.coords[cell.axis] += ray.octant[cell.axis];
+cell.coords[cell.axis] += ray.signs[cell.axis];
 
 // Compute termination condition
 cell.terminated = cell.exit_distance > block.exit_distance;
