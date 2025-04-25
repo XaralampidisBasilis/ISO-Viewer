@@ -5,9 +5,9 @@ block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
 // compute radius
 block.radius = sample_distance_map(block.coords);
 block.occupied = block.radius == 0;
+block.radius = max(block.radius, 1);
 
 // compute box min/max coords
-block.radius = max(block.radius, 1);
 block.min_coords = block.coords - block.radius + 1;
 block.max_coords = block.coords + block.radius;
 

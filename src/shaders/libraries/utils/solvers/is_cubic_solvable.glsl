@@ -34,24 +34,28 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
     vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
 
-    // check if the critical roots are within the interval 
-    bvec2 is_inside = inside_closed(t_interval.x, t_interval.y, t_critical);
-
     // compute the cubic extrema values at the critical points
     vec2 f_extrema = vec2(
         eval_poly(coeffs, t_critical.x),
         eval_poly(coeffs, t_critical.y)
     );
 
-   // check sign change for intermediate value theorem
+    // check if the critical points are within the interval 
+    bvec2 is_inside = bvec2(
+        t_interval.x <= t_critical.x && t_critical.x <= t_interval.y,
+        t_interval.x <= t_critical.y && t_critical.y <= t_interval.y
+    );
+    
+    // check sign change detection for intermediate value theorem
     bvec3 is_crossing = bvec3(
-        is_inside.x && (f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0),
-        is_inside.y && (f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0),
-        (f_interval.x * f_interval.y <= 0.0)
+        f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0,
+        f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0,
+        f_interval.x * f_interval.y <= 0.0
     );
 
     // check if cubic is solvable
-    bool is_solvable = any(is_crossing);
+    bool is_solvable = is_crossing.z || is_inside.y && is_crossing.y || is_inside.x && is_crossing.x;
+
 
     // return result
     return is_solvable;
@@ -73,32 +77,33 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in
 {
     // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
     coeffs.x -= f_target;
-
-    // normalize function interval values
     f_interval -= f_target;
 
     // compute the derivative of cubic and solve for the extrema values
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
     vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
 
-    // check if the critical points are within the interval 
-    bvec2 is_inside = inside_closed(t_interval.x, t_interval.y, t_critical);
-
     // compute the cubic extrema values at the critical points
     vec2 f_extrema = vec2(
         eval_poly(coeffs, t_critical.x),
         eval_poly(coeffs, t_critical.y)
     );
+
+    // check if the critical points are within the interval 
+    bvec2 is_inside = bvec2(
+        t_interval.x <= t_critical.x && t_critical.x <= t_interval.y,
+        t_interval.x <= t_critical.y && t_critical.y <= t_interval.y
+    );
     
     // check sign change detection for intermediate value theorem
     bvec3 is_crossing = bvec3(
-        is_inside.x && (f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0),
-        is_inside.y && (f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0),
-        (f_interval.x * f_interval.y <= 0.0)
+        f_interval.x * f_extrema.x <= 0.0 || f_extrema.x * f_interval.y <= 0.0,
+        f_interval.x * f_extrema.y <= 0.0 || f_extrema.y * f_interval.y <= 0.0,
+        f_interval.x * f_interval.y <= 0.0
     );
 
     // check if cubic is solvable
-    bool is_solvable = any(is_crossing);
+    bool is_solvable = is_crossing.z || is_inside.y && is_crossing.y || is_inside.x && is_crossing.x;
 
     // return result
     return is_solvable;

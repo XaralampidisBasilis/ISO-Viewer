@@ -33,4 +33,15 @@ float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out in
     return t_entry;
 }
 
+float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out ivec3 axes) 
+{
+    vec3 inv_dir = 1.0 / dir;
+    vec3 t_min_tmp = (box_min - start) * inv_dir;
+    vec3 t_max_tmp = (box_max - start) * inv_dir;
+    vec3 t_min = min(t_min_tmp, t_max_tmp);
+    float t_entry = mmax(t_min);
+    axes = ivec3(equal(t_min, vec3(t_entry)));
+    return t_entry;
+}
+
 #endif // INTERSECT_BOX_MIN

@@ -10,7 +10,7 @@ export default class Sizes extends EventEmitter
         // Setup
         this.width = window.innerWidth
         this.height = window.innerHeight
-        this.pixelRatio = Math.min(window.devicePixelRatio, 2)
+        this.pixelRatio = Math.min(window.devicePixelRatio, 1)
 
         // Bind resize event
         this.onResize = this.onResize.bind(this)
@@ -22,7 +22,7 @@ export default class Sizes extends EventEmitter
         // Update dimensions
         this.width = window.innerWidth
         this.height = window.innerHeight
-        this.pixelRatio = Math.min(window.devicePixelRatio, 2)
+        this.pixelRatio = Math.min(window.devicePixelRatio, 1)
 
         // Emit the `resize` event
         this.trigger('resize', {
