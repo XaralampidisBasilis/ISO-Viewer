@@ -262,18 +262,54 @@ export async function computeOctantDistanceMap(occupancyMap, maxDistance, axes)
     })
 }
 
+export async function computePrismalDistanceMap(occupancyMap, maxDistance, axes) 
+{
+    return tf.tidy(() => 
+    {            
+        // Compute a x-axis octant prismal kernel
+        let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32')
+        
+        let source = tf.reverse(occupancyMap, axes)
+        // Initialize the frontier  and the distance tensor
+        let distances = tf.where(source, 0, maxDistance)
+        let frontier = tf.cast(source, 'bool')
+
+        for (let distance = 1; distance < maxDistance; distance++) 
+        {   
+            // Expand frontier with kernel
+            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+            const newFrontier = expansion.cast('bool')
+                                
+            // Identify the newly occupied voxel wavefront
+            const wavefront = tf.notEqual(newFrontier, frontier)
+
+            // Compute and add distances for the newly occupied voxels at this step
+            const newDistances = tf.where(wavefront, distance, distances)
+
+            // Dispose old tensors 
+            tf.dispose([distances, frontier, wavefront])
+
+            // Update new tensors for the next iteration
+            distances = newDistances
+            frontier = newFrontier
+        }
+
+        return tf.reverse(distances, axes)
+    })
+}
+
 export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance) 
 {  
     // compute octant distance maps with binary code order
     let distances = [
         await this.computeOctantDistanceMap(occupancyMap, maxDistance, []),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1]),
         await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 2]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 2]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1, 2]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 0]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 0]),
+        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
     ]
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions

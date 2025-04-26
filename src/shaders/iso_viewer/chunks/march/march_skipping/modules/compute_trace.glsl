@@ -1,8 +1,9 @@
 
-// compute solution
+// compute minimum intersection inside the cell
 vec3 roots = cubic_solver(poly.coefficients, u_rendering.intensity);
-bvec3 is_inside = inside_closed(0.0, 1.0, roots);
-float solution = mmin(select(is_inside, roots, vec3(1.0)));
+bvec3 is_inside = inside_closed(poly.interval.x, poly.interval.y, roots);
+vec3 valid_roots = mix(vec3(poly.interval.y), roots, is_inside);
+float solution = mmin(valid_roots);
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, solution);

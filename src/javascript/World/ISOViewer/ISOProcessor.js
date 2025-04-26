@@ -27,11 +27,10 @@ export default class ISOProcessor extends EventEmitter
         {
             intensityMap          : { parameters: null, tensor: null},
             occupancyMap          : { parameters: null, tensor: null},
+            boundingBox           : { parameters: null},
             distanceMap           : { parameters: null, tensor: null},
             anisotropicDistanceMap: { parameters: null, tensor: null},
-            boundingBox           : { parameters: null},
         }
-
     }
 
     setVolume(volume)
@@ -160,7 +159,7 @@ export default class ISOProcessor extends EventEmitter
     async generateDistanceMap(maxIters)
     {
         console.time('generateDistanceMap') 
-        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, 50)
+        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, 64)
         const parameters = {...this.computes.occupancyMap.parameters}
         const maxTensor = distanceMap.max()
         const meanTensor = distanceMap.mean()
@@ -179,13 +178,16 @@ export default class ISOProcessor extends EventEmitter
     async generateAnisotropicDistanceMap(maxIters)
     {
         console.time('generateAnisotropicDistanceMap') 
-        const anisotropicDistanceMap = await this.computeAnisotropicDistanceMap(this.computes.occupancyMap.tensor, 50)
+        const anisotropicDistanceMap = await this.computeAnisotropicDistanceMap(this.computes.occupancyMap.tensor, 64)
         const parameters = {...this.computes.occupancyMap.parameters}
+        parameters.dimensions = parameters.dimensions.clone()
+        parameters.dimensions.z *= 8
 
         this.computes.anisotropicDistanceMap.tensor = anisotropicDistanceMap
         this.computes.anisotropicDistanceMap.parameters = parameters
         console.timeEnd('generateAnisotropicDistanceMap') 
         // console.log(this.computes.distanceMap.parameters)
+        // console.log(this.computes.distanceMap)
         // console.log(this.computes.distanceMap.tensor.dataSync())
     }
 
@@ -318,13 +320,13 @@ export default class ISOProcessor extends EventEmitter
         // compute octant distance maps with binary code order
         let distances = [
             await this.computeOctantDistanceMap(occupancyMap, maxDistance, []),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1]),
             await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 2]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 2]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0, 1, 2]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 0]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 0]),
+            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
         ]
 
         // compute anisotropic distance map by concatenating octant distance maps in depth dimensions

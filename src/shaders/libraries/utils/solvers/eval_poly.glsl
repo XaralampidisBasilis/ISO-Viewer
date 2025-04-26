@@ -1,8 +1,8 @@
 #ifndef EVAL_POLY
 #define EVAL_POLY
 
-#ifndef MAX_DEGREE
-#define MAX_DEGREE 8
+#ifndef EVAL_POLY_MAX_DEGREE
+#define EVAL_POLY_MAX_DEGREE 24
 #endif
 
 float eval_poly(in vec2 coeffs, in float t) 
@@ -20,14 +20,13 @@ float eval_poly(in vec4 coeffs, in float t)
     return ((coeffs.w * t + coeffs.z) * t + coeffs.y) * t + coeffs.x;
 }
 
-
-float eval_poly(in float coeffs[MAX_DEGREE + 1], in int degree, in float t) 
+float eval_poly(in float coeffs[EVAL_POLY_MAX_DEGREE + 1], in int degree, in float t) 
 {    
-    float result = coeffs[MAX_DEGREE];
+    float result = coeffs[EVAL_POLY_MAX_DEGREE];
 
-    // evaluate polynomial using Horner's method
+    // Evaluate polynomial using Horner's method
     #pragma unroll_loop_start
-    for (int i = MAX_DEGREE - 1; i >= 0; --i) 
+    for (int i = EVAL_POLY_MAX_DEGREE - 1; i >= 0; --i) 
     {
         result = result * t + coeffs[i];
     }

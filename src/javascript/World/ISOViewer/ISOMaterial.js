@@ -9,10 +9,10 @@ export default function()
     {
         u_textures: new THREE.Uniform
         ({
+            color_maps    : null,
             intensity_map : null,
             distance_map  : null,
-            distance3_map : null,
-            color_maps    : null,
+            anisotropic_distance_map : null,
         }),
 
         u_intensity_map : new THREE.Uniform
@@ -41,11 +41,11 @@ export default function()
         ({
             max_distance    : 0,
             max_iterations  : 50,
-            stride          : 3,
+            stride          : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_stride      : 1/3,
+            inv_stride      : 1/4,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),
