@@ -262,15 +262,19 @@ export async function computeOctantDistanceMap(occupancyMap, maxDistance, axes)
     })
 }
 
-export async function computePrismalDistanceMap(occupancyMap, maxDistance, axes) 
+export async function computePrismalDistanceMap(occupancyMap, maxDistance, axes, i) 
 {
     return tf.tidy(() => 
     {            
+        // compute filter prism
+        const order = [0, 1, 2, 3, 4]
+        [order[0], order[i]] = [order[i], order[0]]
+
         // Compute a x-axis octant prismal kernel
-        let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32')
+        let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
         
-        let source = tf.reverse(occupancyMap, axes)
         // Initialize the frontier  and the distance tensor
+        let source = tf.reverse(occupancyMap, axes)
         let distances = tf.where(source, 0, maxDistance)
         let frontier = tf.cast(source, 'bool')
 

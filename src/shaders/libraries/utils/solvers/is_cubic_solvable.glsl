@@ -34,7 +34,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = strictly_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points
@@ -76,7 +76,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = strictly_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points

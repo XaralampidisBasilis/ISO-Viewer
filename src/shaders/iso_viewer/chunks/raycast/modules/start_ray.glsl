@@ -8,6 +8,9 @@ ray.signs = ivec3(ssign(ray.direction));
 ivec3 bits = ivec3(vec3(ray.signs) * -0.5 + 0.5); 
 ray.octant = (bits.z << 2) | (bits.y << 1) | bits.x;
 
+// compute the prism index from direction 
+// ray.prism = argmin(abs(ray.direction));
+
 // compute directional mean cell spacing 
 vec3 weights = abs(ray.direction);
 ray.spacing = 1.0 / sum(weights);

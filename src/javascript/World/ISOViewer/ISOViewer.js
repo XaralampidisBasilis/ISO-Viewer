@@ -6,6 +6,55 @@ import ISOMaterial from './ISOMaterial'
 import ISOGui from './ISOGui'
 import ISOProcessor from './ISOProcessor'
 
+let floatView = new Float32Array( 1 );
+let int32View = new Int32Array( floatView.buffer );
+
+/* This method is faster than the OpenEXR implementation (very often
+ * used, eg. in Ogre), with the additional benefit of rounding, inspired
+ * by James Tursa?s half-precision code. */
+function toHalf( val ) {
+
+    floatView[ 0 ] = val;
+    let x = int32View[ 0 ];
+
+    let bits = ( x >> 16 ) & 0x8000; /* Get the sign */
+    let m = ( x >> 12 ) & 0x07ff; /* Keep one extra bit for rounding */
+    let e = ( x >> 23 ) & 0xff; /* Using int is faster here */
+
+    /* If zero, or denormal, or exponent underflows too much for a denormal
+        * half, return signed zero. */
+    if ( e < 103 ) return bits;
+
+    /* If NaN, return NaN. If Inf or exponent overflow, return Inf. */
+    if ( e > 142 ) {
+
+        bits |= 0x7c00;
+        /* If exponent was 0xff and one mantissa bit was set, it means NaN,
+         * not Inf, so make sure we set one mantissa bit too. */
+        bits |= ( ( e == 255 ) ? 0 : 1 ) && ( x & 0x007fffff );
+        return bits;
+
+    }
+
+    /* If exponent underflows but not too much, return a denormal */
+    if ( e < 113 ) {
+
+        m |= 0x0800;
+        /* Extra rounding may overflow and set mantissa to 0 and exponent
+         * to 1, which is OK. */
+        bits |= ( m >> ( 114 - e ) ) + ( ( m >> ( 113 - e ) ) & 1 );
+        return bits;
+
+    }
+
+    bits |= ( ( e - 112 ) << 10 ) | ( m >> 1 );
+    /* Extra rounding. An overflow will set mantissa to 0 and increment
+     * the exponent, which is OK. */
+    bits += m & 1;
+    return bits;
+
+}
+
 export default class ISOViewer extends EventEmitter
 {
     static instance = null
@@ -78,15 +127,21 @@ export default class ISOViewer extends EventEmitter
         this.textures.colorMaps.needsUpdate = true 
         
         // intensity map
+        const data = new Uint16Array(this.processor.volume.data.length)
+        for (let i = 0; i < this.processor.volume.data.length; i++)
+        {
+            data[i] = toHalf(this.processor.volume.data[i])
+        }
+        
         this.textures.intensityMap = new THREE.Data3DTexture(
-            this.processor.volume.data, 
+            data, 
             ...this.processor.volume.parameters.dimensions
         )
         this.textures.intensityMap.format = THREE.RedFormat
-        this.textures.intensityMap.type = THREE.FloatType
+        this.textures.intensityMap.type = THREE.HalfFloatType
         this.textures.intensityMap.minFilter = THREE.LinearFilter
         this.textures.intensityMap.magFilter = THREE.LinearFilter
-        this.textures.intensityMap.computeMipmaps = false
+        this.textures.intensityMap.generateMipmaps = false
         this.textures.intensityMap.needsUpdate = true
         delete this.processor.volume.data
         delete this.resources.items.intensityMap.data
@@ -98,9 +153,10 @@ export default class ISOViewer extends EventEmitter
         )
         this.textures.distanceMap.format = THREE.RedIntegerFormat
         this.textures.distanceMap.type = THREE.ByteType
+        this.textures.distanceMap.internalFormat = 'R8I'
         this.textures.distanceMap.minFilter = THREE.NearestFilter
         this.textures.distanceMap.magFilter = THREE.NearestFilter
-        this.textures.distanceMap.computeMipmaps = false
+        this.textures.distanceMap.generateMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
 
@@ -113,7 +169,7 @@ export default class ISOViewer extends EventEmitter
         this.textures.anisotropicDistanceMap.type = THREE.ByteType
         this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
         this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
-        this.textures.anisotropicDistanceMap.computeMipmaps = false
+        this.textures.anisotropicDistanceMap.generateMipmaps = false
         this.textures.anisotropicDistanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
 
@@ -208,10 +264,10 @@ export default class ISOViewer extends EventEmitter
             new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
             ...distanceMap.parameters.dimensions)
         this.textures.distanceMap.format = THREE.RedIntegerFormat
-        this.textures.distanceMap.type = THREE.ByteType
+        this.textures.distanceMap.type = THREE.ByteType 
         this.textures.distanceMap.minFilter = THREE.NearestFilter
         this.textures.distanceMap.magFilter = THREE.NearestFilter
-        this.textures.distanceMap.computeMipmaps = false
+        this.textures.distanceMap.generateMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
 
@@ -225,7 +281,7 @@ export default class ISOViewer extends EventEmitter
         this.textures.anisotropicDistanceMap.type = THREE.ByteType
         this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
         this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
-        this.textures.anisotropicDistanceMap.computeMipmaps = false
+        this.textures.anisotropicDistanceMap.generateMipmaps = false
         this.textures.anisotropicDistanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
 
