@@ -165,7 +165,7 @@ export default class ISOGui
                 ray_discarded           : 101,
                 ray_direction           : 102,
                 ray_signs               : 103,
-                ray_octant              : 104,
+                ray_group               : 104,
                 ray_spacing             : 105,
                 ray_start_distance      : 106,
                 ray_end_distance        : 107,

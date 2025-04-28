@@ -194,7 +194,7 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
-export async function computeAxialDistanceMap(occupancyMap, maxDistance, axis) 
+export async function computeDirectional6DistanceMap(occupancyMap, maxDistance, axis) 
 {
     return tf.tidy(() => 
     {
@@ -229,7 +229,7 @@ export async function computeAxialDistanceMap(occupancyMap, maxDistance, axis)
     })
 }
 
-export async function computeOctantDistanceMap(occupancyMap, maxDistance, axes) 
+export async function computeDirectional8DistanceMap(occupancyMap, maxDistance, axes) 
 {
     return tf.tidy(() => 
     {            
@@ -262,12 +262,13 @@ export async function computeOctantDistanceMap(occupancyMap, maxDistance, axes)
     })
 }
 
-export async function computePrismalDistanceMap(occupancyMap, maxDistance, axes, i) 
+export async function computeDirectional24DistanceMap(occupancyMap, maxDistance, axes, i) 
 {
+    const order = [0, 1, 2, 3, 4]
+
     return tf.tidy(() => 
     {            
-        // compute filter prism
-        const order = [0, 1, 2, 3, 4]
+        // compute correct order for transpose
         [order[0], order[i]] = [order[i], order[0]]
 
         // Compute a x-axis octant prismal kernel
@@ -302,23 +303,134 @@ export async function computePrismalDistanceMap(occupancyMap, maxDistance, axes,
     })
 }
 
-export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance) 
+export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance = 255) 
 {  
     // compute octant distance maps with binary code order
     let distances = [
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, []),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 0]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 0]),
-        await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
+        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
     ]
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
     let distanceMap = tf.concat(distances, 0)
     tf.dispose(distances)
+
+    return distanceMap
+}
+
+export async function computeExtAnisotropicDistanceMap(occupancyMap, maxDistance = 31) 
+{  
+    // compute distance maps with binary code order
+    const distances = [
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 0),
+        
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 1),
+        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 0),
+    ]
+
+    // compute anisotropic distance map by concatenating directional distance maps in depth dimensions
+    let distanceMap = tf.concat(distances, 0)
+    tf.dispose(distances)
+
+    return distanceMap
+}
+
+export async function computeExtAnisotropicDistanceMap(occupancyMap, maxDistance = 31) 
+{  
+    // compute distance maps with binary code order
+    const distances = [
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 0),
+        ],
+        [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 0),
+        ],
+    ]
+
+    // Compute packed distances 
+    const packedDistances = []
+
+    for (let distances of allDistances)
+    {
+        const xDistances = distances[0]
+        const yDistances = distances[1]
+        const zDistances = distances[2]
+
+        // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
+        packedDistances.push( tf.tidy(() => occupancyMap.add(xDistances.mul(2)).add(yDistances.mul(32)).add(zDistances.mul(2048))) )
+        tf.dispose([xDistances, yDistances, zDistances])
+    }
+
+    // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
+    let distanceMap = tf.concat(packedDistances, 0)
+    tf.dispose(packedDistances)
 
     return distanceMap
 }

@@ -13,6 +13,7 @@ export default function()
             intensity_map : null,
             distance_map  : null,
             anisotropic_distance_map : null,
+            ext_anisotropic_distance_map : null,
         }),
 
         u_intensity_map : new THREE.Uniform

@@ -25,11 +25,12 @@ export default class ISOProcessor extends EventEmitter
     {
         this.computes = 
         {
-            intensityMap          : { parameters: null, tensor: null},
-            occupancyMap          : { parameters: null, tensor: null},
-            boundingBox           : { parameters: null},
-            distanceMap           : { parameters: null, tensor: null},
-            anisotropicDistanceMap: { parameters: null, tensor: null},
+            intensityMap             : { parameters: null, tensor: null},
+            occupancyMap             : { parameters: null, tensor: null},
+            boundingBox              : { parameters: null},
+            distanceMap              : { parameters: null, tensor: null},
+            anisotropicDistanceMap   : { parameters: null, tensor: null},
+            extAnisotropicDistanceMap: { parameters: null, tensor: null},
         }
     }
 
@@ -159,36 +160,62 @@ export default class ISOProcessor extends EventEmitter
     async generateDistanceMap(maxIters)
     {
         console.time('generateDistanceMap') 
-        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, 64)
+        const distanceMap = await this.computeDistanceMap(this.computes.occupancyMap.tensor, maxIters)
         const parameters = {...this.computes.occupancyMap.parameters}
         const maxTensor = distanceMap.max()
         const meanTensor = distanceMap.mean()
 
         parameters.maxDistance = maxTensor.arraySync()  
-        parameters.meanTensor = meanTensor.arraySync()  
+        parameters.meanDistance = meanTensor.arraySync()  
         tf.dispose([maxTensor, meanTensor])
 
         this.computes.distanceMap.tensor = distanceMap
         this.computes.distanceMap.parameters = parameters
         console.timeEnd('generateDistanceMap') 
-        // console.log(this.computes.distanceMap.parameters)
+        console.log(this.computes.distanceMap.parameters)
         // console.log(this.computes.distanceMap.tensor.dataSync())
     }
 
     async generateAnisotropicDistanceMap(maxIters)
     {
         console.time('generateAnisotropicDistanceMap') 
-        const anisotropicDistanceMap = await this.computeAnisotropicDistanceMap(this.computes.occupancyMap.tensor, 64)
+        const anisotropicDistanceMap = await this.computeAnisotropicDistanceMap(this.computes.occupancyMap.tensor, maxIters)
         const parameters = {...this.computes.occupancyMap.parameters}
+        const maxTensor = anisotropicDistanceMap.max()
+        const meanTensor = anisotropicDistanceMap.mean()
+        
         parameters.dimensions = parameters.dimensions.clone()
         parameters.dimensions.z *= 8
+        parameters.maxDistance = maxTensor.arraySync()  
+        parameters.meanDistance = meanTensor.arraySync()  
+        tf.dispose([maxTensor, meanTensor])
 
         this.computes.anisotropicDistanceMap.tensor = anisotropicDistanceMap
         this.computes.anisotropicDistanceMap.parameters = parameters
         console.timeEnd('generateAnisotropicDistanceMap') 
-        // console.log(this.computes.distanceMap.parameters)
-        // console.log(this.computes.distanceMap)
-        // console.log(this.computes.distanceMap.tensor.dataSync())
+        // console.log(this.computes.anisotropicDistanceMap.parameters)
+        // console.log(this.computes.anisotropicDistanceMap.tensor.dataSync())
+    }
+
+    async generateExtAnisotropicDistanceMap(maxIters)
+    {
+        console.time('generateExtAnisotropicDistanceMap') 
+        const extAnisotropicDistanceMap = await this.computeExtAnisotropicDistanceMap(this.computes.occupancyMap.tensor, maxIters)
+        const parameters = {...this.computes.occupancyMap.parameters}
+        const maxTensor = extAnisotropicDistanceMap.max()
+        const meanTensor = extAnisotropicDistanceMap.mean()
+
+        parameters.dimensions = parameters.dimensions.clone()
+        parameters.dimensions.z *= 24
+        parameters.maxDistance = maxTensor.arraySync()  
+        parameters.meanDistance = meanTensor.arraySync()  
+        tf.dispose([maxTensor, meanTensor])
+
+        this.computes.extAnisotropicDistanceMap.tensor = extAnisotropicDistanceMap
+        this.computes.extAnisotropicDistanceMap.parameters = parameters
+        console.timeEnd('generateExtAnisotropicDistanceMap') 
+        // console.log(this.computes.extAnisotropicDistanceMap.parameters)
+        // console.log(this.computes.extAnisotropicDistanceMap.tensor.dataSync())
     }
 
     // Helpers
@@ -282,7 +309,7 @@ export default class ISOProcessor extends EventEmitter
         })
     }
     
-    async computeOctantDistanceMap(occupancyMap, maxDistance, axes) 
+    async computeDirectional8DistanceMap(occupancyMap, maxDistance = 255, axes) 
     {
         return tf.tidy(() => 
         {            
@@ -315,24 +342,110 @@ export default class ISOProcessor extends EventEmitter
         })
     }
 
+    async computeDirectional24DistanceMap(occupancyMap, maxDistance = 31, axes, index) 
+    {
+        // compute correct order for transpose
+        const order = [0, 1, 2, 3, 4]
+
+        return tf.tidy(() => 
+        {            
+            // swap order based on index
+            [order[0], order[index]] = [order[index], order[0]]
+
+            // Compute a x-axis octant prismal kernel
+            let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
+            
+            // Initialize the frontier  and the distance tensor
+            let source = tf.reverse(occupancyMap, axes)
+            let distances = tf.where(source, 0, maxDistance)
+            let frontier = tf.cast(source, 'bool')
+    
+            for (let distance = 1; distance < maxDistance; distance++) 
+            {   
+                // Expand frontier with kernel
+                const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+                const newFrontier = expansion.cast('bool')
+                                    
+                // Identify the newly occupied voxel wavefront
+                const wavefront = tf.notEqual(newFrontier, frontier)
+    
+                // Compute and add distances for the newly occupied voxels at this step
+                const newDistances = tf.where(wavefront, distance, distances)
+    
+                // Dispose old tensors 
+                tf.dispose([distances, frontier, wavefront])
+    
+                // Update new tensors for the next iteration
+                distances = newDistances
+                frontier = newFrontier
+            }
+    
+            return tf.reverse(distances, axes)
+        })
+    }
+
     async computeAnisotropicDistanceMap(occupancyMap, maxDistance) 
     {  
         // compute octant distance maps with binary code order
         let distances = [
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, []),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [0]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 0]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [1, 0]),
-            await this.computeOctantDistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
+            await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
         ]
 
         // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
         let distanceMap = tf.concat(distances, 0)
         tf.dispose(distances)
 
+        return distanceMap
+    }
+
+    async computeExtAnisotropicDistanceMap(occupancyMap, maxDistance) 
+    {  
+        // compute distance maps with binary code order
+        const distances = [
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 0),
+            
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 0),
+        ]
+    
+        // compute anisotropic distance map by concatenating directional distance maps in depth dimensions
+        let distanceMap = tf.concat(distances, 0)
+        tf.dispose(distances)
+    
         return distanceMap
     }
 

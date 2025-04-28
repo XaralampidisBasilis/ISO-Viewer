@@ -7,7 +7,7 @@ struct Ray
     vec3  direction;       // direction vector for each step along the ray
     float spacing;         // fixed step distance for each ray 
     ivec3 signs;           // the sign of the direction vector
-    int   octant;          // the octant index of the ray direction vector
+    int   group;           // the group index of the ray direction vector
     float start_distance;  // starting distance along the current ray from origin for ray march  
     vec3  start_position;  // starting position of the current ray in 3d model coordinates for ray march
     float end_distance;    // ending distance along the current ray from origin for ray march
@@ -24,7 +24,7 @@ void set_ray()
     ray.discarded      = false;
     ray.direction      = vec3(0.0);
     ray.signs          = ivec3(0);
-    ray.octant         = 0;
+    ray.group          = 0;
     ray.spacing        = 0.0;
     ray.start_position = vec3(0.0);
     ray.end_position   = vec3(0.0);

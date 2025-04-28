@@ -9,8 +9,8 @@ vec4 debug_ray_direction = to_color(ray.direction * 0.5 + 0.5);
 // signs
 vec4 debug_ray_signs = to_color(vec3(ray.signs) * 0.5 + 0.5);
 
-// octant
-vec4 debug_ray_octant = to_color(float(ray.octant) / 7.0);
+// group
+vec4 debug_ray_group = to_color(float(ray.group) / 24.0);
 
 // spacing
 vec4 debug_ray_spacing = to_color(ray.spacing);
@@ -38,7 +38,7 @@ switch (u_debugging.option - 100)
     case  1: fragColor = debug_ray_discarded;       break;
     case  2: fragColor = debug_ray_direction;       break;
     case  3: fragColor = debug_ray_signs;           break;
-    case  4: fragColor = debug_ray_octant;          break;
+    case  4: fragColor = debug_ray_group;           break;
     case  5: fragColor = debug_ray_spacing;         break;
     case  6: fragColor = debug_ray_start_distance;  break;
     case  7: fragColor = debug_ray_end_distance;    break;
