@@ -371,7 +371,7 @@ export async function computeExtAnisotropicDistanceMap(occupancyMap, maxDistance
 export async function computeExtAnisotropicDistanceMap(occupancyMap, maxDistance = 31) 
 {  
     // compute distance maps with binary code order
-    const distances = [
+    const allDistances = [
         [
             await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
             await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
@@ -422,10 +422,11 @@ export async function computeExtAnisotropicDistanceMap(occupancyMap, maxDistance
         const xDistances = distances[0]
         const yDistances = distances[1]
         const zDistances = distances[2]
+        const wDistances = tf.logicalNot(occupancyMap)
 
-        // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
-        packedDistances.push( tf.tidy(() => occupancyMap.add(xDistances.mul(2)).add(yDistances.mul(32)).add(zDistances.mul(2048))) )
-        tf.dispose([xDistances, yDistances, zDistances])
+        // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint 
+        packedDistances.push( tf.tidy(() => wDistances.add(zDistances.mul(2)).add(yDistances.mul(32)).add(xDistances.mul(2048))) ) // (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
+        tf.dispose([xDistances, yDistances, zDistances, wDistances])
     }
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions

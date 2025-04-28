@@ -8,9 +8,11 @@ ray.signs = ivec3(ssign(ray.direction));
 vec3 weights = abs(ray.direction);
 ray.spacing = 1.0 / sum(weights);
 
-// compute the octant and axis indices from direction
-ivec3 bits = ivec3(vec3(ray.signs) * -0.5 + 0.5); 
+// compute the 8 groups index
+ivec3 bits = ivec3(vec3(ray.signs) * 0.5 + 0.5); 
 int octant = (bits.z << 2) | (bits.y << 1) | bits.x;
-int axis = argmin(abs(ray.direction));
-// ray.group = octant;            // for 8 direction groups
-ray.group = octant * 3 + axis; // for 24 direction groups
+ray.group8 = octant;          
+
+// compute the 24 groups index
+int axis = argmax(abs(ray.direction));
+ray.group24 = octant * 3 + axis;

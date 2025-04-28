@@ -46,6 +46,7 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(31)
+        await this.processor.generateAnisotropicDistanceMap(31)
         await this.processor.generateExtAnisotropicDistanceMap(31)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
     }
@@ -100,37 +101,37 @@ export default class ISOViewer extends EventEmitter
 
         // distance map
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
             ...this.processor.computes.distanceMap.parameters.dimensions
         )
         this.textures.distanceMap.format = THREE.RedIntegerFormat
-        this.textures.distanceMap.type = THREE.ByteType
+        this.textures.distanceMap.type = THREE.UnsignedByteType
         this.textures.distanceMap.minFilter = THREE.NearestFilter
         this.textures.distanceMap.magFilter = THREE.NearestFilter
         this.textures.distanceMap.generateMipmaps = false
         this.textures.distanceMap.needsUpdate = true
         tf.dispose(this.processor.computes.distanceMap.tensor)
 
-        // // anisotropic distance map
-        // this.textures.anisotropicDistanceMap = new THREE.Data3DTexture(
-        //     new Int8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync()), 
-        //     ...this.processor.computes.anisotropicDistanceMap.parameters.dimensions
-        // )
-        // this.textures.anisotropicDistanceMap.format = THREE.RedIntegerFormat
-        // this.textures.anisotropicDistanceMap.type = THREE.ByteType
-        // this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
-        // this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
-        // this.textures.anisotropicDistanceMap.generateMipmaps = false
-        // this.textures.anisotropicDistanceMap.needsUpdate = true
-        // tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
+        // anisotropic distance map
+        this.textures.anisotropicDistanceMap = new THREE.Data3DTexture(
+            new Uint8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync()), 
+            ...this.processor.computes.anisotropicDistanceMap.parameters.dimensions
+        )
+        this.textures.anisotropicDistanceMap.format = THREE.RedIntegerFormat
+        this.textures.anisotropicDistanceMap.type = THREE.UnsignedByteType
+        this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
+        this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
+        this.textures.anisotropicDistanceMap.generateMipmaps = false
+        this.textures.anisotropicDistanceMap.needsUpdate = true
+        tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
 
         // ext anisotropic distance map
         this.textures.extAnisotropicDistanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.extAnisotropicDistanceMap.tensor.dataSync()), 
+            new Uint8Array(this.processor.computes.extAnisotropicDistanceMap.tensor.dataSync()), 
             ...this.processor.computes.extAnisotropicDistanceMap.parameters.dimensions
         )
         this.textures.extAnisotropicDistanceMap.format = THREE.RedIntegerFormat
-        this.textures.extAnisotropicDistanceMap.type = THREE.ByteType
+        this.textures.extAnisotropicDistanceMap.type = THREE.UnsignedByteType 
         this.textures.extAnisotropicDistanceMap.minFilter = THREE.NearestFilter
         this.textures.extAnisotropicDistanceMap.magFilter = THREE.NearestFilter
         this.textures.extAnisotropicDistanceMap.generateMipmaps = false
@@ -161,7 +162,7 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_textures.value.color_maps = this.textures.colorMaps   
         uniforms.u_textures.value.intensity_map = this.textures.intensityMap
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
-        // uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
+        uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
         uniforms.u_textures.value.ext_anisotropic_distance_map = this.textures.extAnisotropicDistanceMap
 
         uniforms.u_intensity_map.value.dimensions.copy(intensityMap.parameters.dimensions)
@@ -216,6 +217,7 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(31)
+        await this.processor.generateAnisotropicDistanceMap(31)
         await this.processor.generateExtAnisotropicDistanceMap(31)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
 
@@ -226,10 +228,10 @@ export default class ISOViewer extends EventEmitter
         // Update Textures
         this.textures.distanceMap.dispose()
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
             ...distanceMap.parameters.dimensions)
         this.textures.distanceMap.format = THREE.RedIntegerFormat
-        this.textures.distanceMap.type = THREE.ByteType 
+        this.textures.distanceMap.type = THREE.UnsignedByteType 
         this.textures.distanceMap.minFilter = THREE.NearestFilter
         this.textures.distanceMap.magFilter = THREE.NearestFilter
         this.textures.distanceMap.generateMipmaps = false
@@ -237,27 +239,27 @@ export default class ISOViewer extends EventEmitter
         tf.dispose(this.processor.computes.distanceMap.tensor)
 
         // anisotropic distance map
-        // this.textures.anisotropicDistanceMap.dispose()
-        // this.textures.anisotropicDistanceMap = new THREE.Data3DTexture(
-        //     new Int8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync()), 
-        //     ...this.processor.computes.anisotropicDistanceMap.parameters.dimensions
-        // )
-        // this.textures.anisotropicDistanceMap.format = THREE.RedIntegerFormat
-        // this.textures.anisotropicDistanceMap.type = THREE.ByteType
-        // this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
-        // this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
-        // this.textures.anisotropicDistanceMap.generateMipmaps = false
-        // this.textures.anisotropicDistanceMap.needsUpdate = true
-        // tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
+        this.textures.anisotropicDistanceMap.dispose()
+        this.textures.anisotropicDistanceMap = new THREE.Data3DTexture(
+            new Uint8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync()), 
+            ...this.processor.computes.anisotropicDistanceMap.parameters.dimensions
+        )
+        this.textures.anisotropicDistanceMap.format = THREE.RedIntegerFormat
+        this.textures.anisotropicDistanceMap.type = THREE.UnsignedByteType
+        this.textures.anisotropicDistanceMap.minFilter = THREE.NearestFilter
+        this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
+        this.textures.anisotropicDistanceMap.generateMipmaps = false
+        this.textures.anisotropicDistanceMap.needsUpdate = true
+        tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
 
         // ext anisotropic distance map
         this.textures.extAnisotropicDistanceMap.dispose()
         this.textures.extAnisotropicDistanceMap = new THREE.Data3DTexture(
-            new Int8Array(this.processor.computes.extAnisotropicDistanceMap.tensor.dataSync()), 
+            new Uint8Array(this.processor.computes.extAnisotropicDistanceMap.tensor.dataSync()), 
             ...this.processor.computes.extAnisotropicDistanceMap.parameters.dimensions
         )
-        this.textures.extAnisotropicDistanceMap.format = THREE.RedIntegerFormat
-        this.textures.extAnisotropicDistanceMap.type = THREE.ByteType
+        this.textures.extAnisotropicDistanceMap.format = THREE.RedIntegerFormat 
+        this.textures.extAnisotropicDistanceMap.type = THREE.UnsignedByteType
         this.textures.extAnisotropicDistanceMap.minFilter = THREE.NearestFilter
         this.textures.extAnisotropicDistanceMap.magFilter = THREE.NearestFilter
         this.textures.extAnisotropicDistanceMap.generateMipmaps = false
@@ -269,7 +271,7 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_rendering.value.intensity = threshold
 
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
-        // uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
+        uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
         uniforms.u_textures.value.ext_anisotropic_distance_map = this.textures.extAnisotropicDistanceMap
 
         uniforms.u_distance_map.value.max_distance = distanceMap.parameters.maxDistance

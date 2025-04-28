@@ -1,4 +1,5 @@
 
+
 int sample_ext_anisotropic_distance_map(in ivec3 coords, in int group)
 {
     #if STATS_ENABLED == 1
@@ -6,17 +7,18 @@ int sample_ext_anisotropic_distance_map(in ivec3 coords, in int group)
     #endif
 
     coords.z += group * u_distance_map.dimensions.z;
-    return texelFetch(u_textures.ext_anisotropic_distance_map, coords, 0).r;
+    return int(texelFetch(u_textures.ext_anisotropic_distance_map, coords, 0).r);
 }
 
-// int sample_ext_anisotropic_distance_map(in ivec3 coords, in int octant, out bool occupied)
+
+// ivec3 sample_ext_anisotropic_distance_map(in ivec3 coords, in int group, out bool occupied)
 // {
 //     #if STATS_ENABLED == 1
 //     stats.num_fetches += 1;
 //     #endif
 
 //     // sample the correct distance map
-//     coords.z += octant * u_distance_map.dimensions.z;
+//     coords.z += group * u_distance_map.dimensions.z;
 //     uint packed = texelFetch(u_textures.ext_anisotropic_distance_map, coords, 0).r;
 
 //     // unpack bits 
@@ -26,7 +28,7 @@ int sample_ext_anisotropic_distance_map(in ivec3 coords, in int group)
 //     uint a = packed         & 0x1u;  // Extract bit 0
 
 //     // return values
-//     occupied = a == 0;
+//     occupied = a == 0u;
 
-//     return ivec3(r, g, b)
+//     return ivec3(r, g, b);
 // }

@@ -7,5 +7,5 @@ int sample_anisotropic_distance_map(in ivec3 coords, in int octant)
 
     coords.z += octant * u_distance_map.dimensions.z;
 
-    return texelFetch(u_textures.anisotropic_distance_map, coords, 0).r;
+    return int(texelFetch(u_textures.anisotropic_distance_map, coords, 0).r);
 }
