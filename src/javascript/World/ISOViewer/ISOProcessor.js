@@ -289,7 +289,7 @@ export default class ISOProcessor extends EventEmitter
             for (let distance = 1; distance < maxDistance; distance++) 
             {   
                 // Compute the new frontier by expanding frontier regions
-                const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+                const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], 1, 'same')
                                 
                 // Identify the newly occupied voxel wavefront
                 const wavefront = tf.notEqual(newFrontier, frontier)
@@ -322,7 +322,7 @@ export default class ISOProcessor extends EventEmitter
             for (let distance = 1; distance < maxDistance; distance++) 
             {   
                 // Compute the new frontier by expanding frontier regions
-                const newFrontier = tf.maxPool3d(frontier, [2, 2, 2], [1, 1, 1], 'same')
+                const newFrontier = tf.maxPool3d(frontier, [2, 2, 2], 1, 'same')
                                 
                 // Identify the newly occupied voxel wavefront
                 const wavefront = tf.notEqual(newFrontier, frontier)
@@ -363,7 +363,7 @@ export default class ISOProcessor extends EventEmitter
             for (let distance = 1; distance < maxDistance; distance++) 
             {   
                 // Expand frontier with kernel
-                const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+                const expansion = tf.conv3d(frontier, filter, 1, 'same')
                 const newFrontier = expansion.cast('bool')
                                     
                 // Identify the newly occupied voxel wavefront
@@ -407,6 +407,8 @@ export default class ISOProcessor extends EventEmitter
 
     async computeExtAnisotropicDistanceMap(occupancyMap, maxDistance) 
     {  
+        // let notOccupancy = tf.logicalNot(occupancyMap).cast('float32')
+
         // compute distance maps with binary code order
         const distances = [
             await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
