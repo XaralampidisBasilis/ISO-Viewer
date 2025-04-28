@@ -353,7 +353,7 @@ export default class ISOProcessor extends EventEmitter
             [order[0], order[index]] = [order[index], order[0]]
 
             // Compute a x-axis octant prismal kernel
-            let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
+            let filter = tf.tensor([1, 1, 1, 1, 0, 0, 0, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
             
             // Initialize the frontier  and the distance tensor
             let source = tf.reverse(occupancyMap, axes)
