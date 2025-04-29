@@ -12,6 +12,10 @@ block.max_coords = block.coords + block.radius;
 block.min_position = vec3(block.min_coords * u_distance_map.stride) - 0.5;
 block.max_position = vec3(block.max_coords * u_distance_map.stride) - 0.5;  
 
+// inflate to avoid boundaries
+block.min_position -= TOLERANCE.MILLI;
+block.max_position += TOLERANCE.MILLI; 
+
 // compute entry from previous exit
 block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;

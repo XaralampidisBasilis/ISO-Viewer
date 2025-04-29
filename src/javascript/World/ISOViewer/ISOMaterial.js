@@ -13,7 +13,7 @@ export default function()
             intensity_map : null,
             distance_map  : null,
             anisotropic_distance_map : null,
-            ext_anisotropic_distance_map : null,
+            extended_anisotropic_distance_map : null,
         }),
 
         u_intensity_map : new THREE.Uniform
@@ -41,7 +41,7 @@ export default function()
         u_distance_map : new THREE.Uniform
         ({
             max_distance    : 0,
-            max_iterations  : 50,
+            max_iterations  : 31,
             stride          : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
@@ -63,8 +63,8 @@ export default function()
         
         u_rendering: new THREE.Uniform
         ({
-            intensity : 0.53,
-            max_count : 0,
+            intensity : 0.6,
+            max_groups : 0,
             max_cells : 0,
             max_blocks: 0,
         }),

@@ -5,6 +5,7 @@
 struct Block
 {
     int   radius;
+    ivec3 radii;
     bool  occupied;
     bool  terminated;
     ivec3 coords;  
@@ -25,6 +26,7 @@ Block block; // Global mutable struct
 void set_block()
 {
     block.radius         = 0;
+    block.radii          = ivec3(0);
     block.occupied       = false;
     block.terminated     = false;
     block.coords         = ivec3(0);
