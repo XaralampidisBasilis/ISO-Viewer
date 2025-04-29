@@ -20,7 +20,7 @@ for (int i = 0; i <= iterations; i++)
     block.entry_position = block.exit_position;
 
     // compute exit from block ray intersection 
-    block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction, block.axes);
+    block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction, block.axes);
     block.exit_position = camera.position + ray.direction * block.exit_distance;
 
     // compute next coordinates

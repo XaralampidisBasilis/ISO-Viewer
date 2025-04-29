@@ -25,7 +25,7 @@ block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
+block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // compute termination condition

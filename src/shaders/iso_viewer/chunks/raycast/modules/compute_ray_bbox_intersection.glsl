@@ -8,7 +8,7 @@ bbox_min_position = clamp(bbox_min_position, box.min_position, box.max_position)
 bbox_max_position = clamp(bbox_max_position, box.min_position, box.max_position);
 
 // compute ray intersection distances with bounding box
-vec2 ray_bbox_distances = intersect_box(bbox_min_position, bbox_max_position, camera.position, ray.direction);
+vec2 ray_bbox_distances = intersect_box(bbox_min_position, bbox_max_position, camera.position, ray.inv_direction);
 ray_bbox_distances = max(ray_bbox_distances, 0.0); // clamp bbox distances above zero for the case we are inside
 
 // update ray if there is an intersection

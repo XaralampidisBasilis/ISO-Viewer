@@ -15,9 +15,8 @@
 #include "../math/argmin"
 #endif
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir) 
 {
-    vec3 inv_dir = 1.0 / dir;
     vec3 b_min = (box_min - start) * inv_dir;
     vec3 b_max = (box_max - start) * inv_dir;
     vec3 t_max = max(b_min, b_max);
@@ -25,9 +24,8 @@ float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir)
     return t_exit;
 }
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out int axis) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out int axis) 
 {
-    vec3 inv_dir = 1.0 / dir;
     vec3 b_min = (box_min - start) * inv_dir;
     vec3 b_max = (box_max - start) * inv_dir;
     vec3 t_max = max(b_min, b_max);
@@ -36,9 +34,8 @@ float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out in
     return t_exit;
 }
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 dir, out ivec3 axes) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out ivec3 axes) 
 {
-    vec3 inv_dir = 1.0 / dir;
     vec3 b_min = (box_min - start) * inv_dir;
     vec3 b_max = (box_max - start) * inv_dir;
     vec3 t_max = max(b_min, b_max);
