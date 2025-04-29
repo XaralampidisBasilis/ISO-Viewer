@@ -4,7 +4,7 @@
 struct Rendering 
 {
     float intensity;  
-    int   max_count;         
+    int   max_groups;         
     int   max_cells;     
     int   max_blocks;   
 };
