@@ -97,7 +97,7 @@ export default class ISOViewer extends EventEmitter
         // Update Defines
         defines.MAX_CELLS = boundingBox.parameters.maxCells
         defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
-        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
+        defines.MAX_CELLS_PER_BLOCK = distanceMap.parameters.stride * 3
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
     }
@@ -153,7 +153,7 @@ export default class ISOViewer extends EventEmitter
         // Update Defines
         defines.MAX_CELLS = boundingBox.parameters.maxCells
         defines.MAX_BLOCKS = boundingBox.parameters.maxBlocks
-        defines.MAX_CELLS_PER_BLOCK = boundingBox.parameters.maxCellsPerBlock
+        defines.MAX_CELLS_PER_BLOCK = distanceMap.parameters.stride * 3
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
 

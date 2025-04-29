@@ -146,7 +146,6 @@ export default class ISOProcessor extends EventEmitter
         parameters.cellDimensions = new THREE.Vector3().subVectors(parameters.maxCellCoords, parameters.minCellCoords).addScalar(1)
         parameters.maxCells = parameters.cellDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
         parameters.maxBlocks = parameters.blockDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
-        parameters.maxCellsPerBlock = stride * 3 - 2
 
         // min/max bounding box positions in voxel grid space
         parameters.minPosition = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5)
