@@ -5,6 +5,7 @@ import EventEmitter from '../../Utils/EventEmitter'
 import ISOMaterial from './ISOMaterial'
 import ISOGui from './ISOGui'
 import ISOProcessor from './ISOProcessor'
+import Controls from '../../Utils/Controls'
 import { toHalfFloat } from 'three/src/extras/DataUtils.js'
 
 export default class ISOViewer extends EventEmitter
@@ -29,6 +30,7 @@ export default class ISOViewer extends EventEmitter
         this.camera = this.experience.camera
         this.sizes = this.experience.sizes
         this.debug = this.experience.debug
+        this.controls = new Controls()
         this.material = ISOMaterial()
         this.gui = new ISOGui(this)
         this.processor = new ISOProcessor(this.resources.items.intensityMap)
@@ -45,8 +47,8 @@ export default class ISOViewer extends EventEmitter
         await this.processor.generateIntensityMap()
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
-        await this.processor.generateDistanceMap(255)
-        await this.processor.generateAnisotropicDistanceMap(124)
+        await this.processor.generateDistanceMap(31)
+        await this.processor.generateAnisotropicDistanceMap(31)
         await this.processor.generateExtendedAnisotropicDistanceMap(31)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
     }
@@ -205,6 +207,7 @@ export default class ISOViewer extends EventEmitter
         this.mesh.scale.copy(this.parameters.volume.size)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
+        this.controls.instance.attach(this.mesh)
     }
 
     async updateIsosurface(threshold)
@@ -216,8 +219,8 @@ export default class ISOViewer extends EventEmitter
         // Recompute Maps
         await this.processor.generateOccupancyMap(threshold, uniforms.u_distance_map.value.stride)
         await this.processor.generateBoundingBox()
-        await this.processor.generateDistanceMap(255)
-        await this.processor.generateAnisotropicDistanceMap(124)
+        await this.processor.generateDistanceMap(31)
+        await this.processor.generateAnisotropicDistanceMap(31)
         await this.processor.generateExtendedAnisotropicDistanceMap(31)
         tf.dispose(this.processor.computes.occupancyMap.tensor)
 

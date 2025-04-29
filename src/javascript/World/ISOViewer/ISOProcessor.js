@@ -450,7 +450,7 @@ export default class ISOProcessor extends EventEmitter
         ]
     
         // Compute packed distances 
-        const pack5551 = (r, g, b, a) => a.mod(2).add(b.mul(2 ** 1)).add(g.mul(2 ** 6)).add(r.mul(2 ** 11)) // (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
+        const pack5551 = (r, g, b, a) => a.mod(2).add(b.mul(2)).add(g.mul(64)).add(r.mul(2048)) // (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
         const packedDistances = []
     
         for (let distance of distances)
