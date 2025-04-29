@@ -99,6 +99,7 @@
         "Texels",
         "timeit",
         "topk",
+        "usampler",
         "vander",
         "viridis",
         "voldim",

@@ -1,5 +1,6 @@
 // compute normalized direction 
 ray.direction = normalize(v_ray_direction);
+ray.inv_direction = 1.0 / ray.direction;
 
 // compute the octant sign of the direction 
 ray.signs = ivec3(ssign(ray.direction));

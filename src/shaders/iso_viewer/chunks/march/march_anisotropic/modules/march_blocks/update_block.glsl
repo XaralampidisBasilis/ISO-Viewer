@@ -1,6 +1,6 @@
 
 // compute coordinates
-block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
+block.coords = ivec3(round(block.exit_position)) / u_distance_map.stride;
 block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
 
 // compute radius

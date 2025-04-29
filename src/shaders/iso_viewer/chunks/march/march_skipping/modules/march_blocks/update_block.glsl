@@ -1,22 +1,21 @@
 
 // compute coordinates
-block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
-block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
+block.coords = ivec3(round(block.exit_position)) / u_distance_map.stride;
 
 // compute radius
 block.radius = sample_distance_map(block.coords);
 block.occupied = block.radius == 0;
 block.radius = max(block.radius, 1);
 
-// compute box min/max coords
+// compute min/max coords
 block.min_coords = block.coords - block.radius + 1;
 block.max_coords = block.coords + block.radius;
 
-// compute box min/max positions
+// compute min/max positions
 block.min_position = vec3(block.min_coords * u_distance_map.stride) - 0.5;
 block.max_position = vec3(block.max_coords * u_distance_map.stride) - 0.5;  
 
-// inflate box to avoid boundaries when computing coordinates
+// inflate to avoid boundaries when computing coordinates
 block.min_position -= TOLERANCE.MILLI; 
 block.max_position += TOLERANCE.MILLI;
 

@@ -5,6 +5,7 @@ struct Ray
 {
     bool  discarded;       // flag indicating if the ray has been discarded
     vec3  direction;       // direction vector for each step along the ray
+    vec3  inv_direction;   // inverse of the direction vector
     float spacing;         // fixed step distance for each ray 
     ivec3 signs;           // the sign of the direction vector
     int   group8;          // the group index of the ray direction vector for 8 octant groups
@@ -24,6 +25,7 @@ void set_ray()
 {
     ray.discarded      = false;
     ray.direction      = vec3(0.0);
+    ray.inv_direction  = vec3(0.0);
     ray.signs          = ivec3(0);
     ray.group8         = 0;
     ray.group24        = 0;
