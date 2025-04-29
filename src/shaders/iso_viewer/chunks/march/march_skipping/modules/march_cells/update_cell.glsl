@@ -19,3 +19,8 @@ cell.coords += cell.axes * ray.signs;
 
 // compute polynomial interpolation inside cell
 #include "./update_poly"
+
+// update stats
+#if STATS_ENABLED == 1
+stats.num_cells += 1;
+#endif

@@ -4,8 +4,8 @@
 struct Stats
 {
     int num_fetches; // texture fetch
-    int num_steps;
-    int num_skips;
+    int num_cells;
+    int num_blocks;
 };
 
 Stats stats; // Global mutable struct
@@ -13,8 +13,8 @@ Stats stats; // Global mutable struct
 void set_stats()
 {
     stats.num_fetches = 0;
-    stats.num_steps   = 0;
-    stats.num_skips   = 0;
+    stats.num_cells   = 0;
+    stats.num_blocks   = 0;
 }
 
 #endif // STRUCT_STATS

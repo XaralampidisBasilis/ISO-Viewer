@@ -32,5 +32,5 @@ cell.terminated = cell.exit_distance > block.exit_distance; // REALLY IMPORTANT 
 // Update stats
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
-stats.num_steps += 1;
+stats.num_cells += 1;
 #endif

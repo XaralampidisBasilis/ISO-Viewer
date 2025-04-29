@@ -28,5 +28,10 @@ block.entry_position = block.exit_position;
 block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.direction);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
-// Compute termination condition
+// compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;
+
+// update stats
+#if STATS_ENABLED == 1
+stats.num_blocks += 1;
+#endif

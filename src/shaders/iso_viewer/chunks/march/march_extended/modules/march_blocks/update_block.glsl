@@ -1,7 +1,7 @@
 
 // compute coordinates
 block.coords = ivec3(floor(block.exit_position + 0.5)) / u_distance_map.stride;
-block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
+// block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
 
 // compute radius
 block.radius = sample_ext_anisotropic_distance_map(block.coords, ray.group24);
@@ -30,3 +30,8 @@ block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // Compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;
+
+// update stats
+#if STATS_ENABLED == 1
+stats.num_blocks += 1;
+#endif

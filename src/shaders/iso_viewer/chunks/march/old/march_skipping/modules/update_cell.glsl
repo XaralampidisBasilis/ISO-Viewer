@@ -28,5 +28,5 @@ cell.intersected = is_cubic_solvable(poly.coefficients, u_rendering.intensity, 0
 // Update stats
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
-stats.num_steps += 1;
+stats.num_cells += 1;
 #endif

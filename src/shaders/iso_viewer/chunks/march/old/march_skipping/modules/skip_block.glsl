@@ -5,5 +5,5 @@ trace.terminated = trace.distance > ray.end_distance;
 
 // Update stats
 #if STATS_ENABLED == 1
-stats.num_skips += 1;
+stats.num_blocks += 1;
 #endif

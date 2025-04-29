@@ -1,5 +1,8 @@
 // COMPUTE DEBUG 
 
+// intersected
+vec4 debug_trace_intersected = to_color(trace.intersected);
+
 // exhausted
 vec4 debug_trace_exhausted = to_color(trace.exhausted);
 
@@ -34,14 +37,15 @@ vec4 debug_trace_gradient_length = to_color(map(0.0, mmax(u_intensity_map.inv_sp
 
 switch (u_debugging.option - 200)
 { 
-    case  1: fragColor = debug_trace_terminated;      break;
-    case  2: fragColor = debug_trace_exhausted;       break;
-    case  3: fragColor = debug_trace_outside;         break;
-    case  4: fragColor = debug_trace_distance;        break;
-    case  5: fragColor = debug_trace_position;        break;
-    case  6: fragColor = debug_trace_intensity;       break;
-    case  7: fragColor = debug_trace_error;           break;
-    case  8: fragColor = debug_trace_abs_error;       break;
-    case  9: fragColor = debug_trace_gradient;        break;
-    case 10: fragColor = debug_trace_gradient_length; break;
+    case  1: fragColor = debug_trace_intersected;     break;
+    case  2: fragColor = debug_trace_terminated;      break;
+    case  3: fragColor = debug_trace_exhausted;       break;
+    case  4: fragColor = debug_trace_outside;         break;
+    case  5: fragColor = debug_trace_distance;        break;
+    case  6: fragColor = debug_trace_position;        break;
+    case  7: fragColor = debug_trace_intensity;       break;
+    case  8: fragColor = debug_trace_error;           break;
+    case  9: fragColor = debug_trace_abs_error;       break;
+    case 10: fragColor = debug_trace_gradient;        break;
+    case 11: fragColor = debug_trace_gradient_length; break;
 }

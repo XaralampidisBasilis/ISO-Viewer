@@ -30,3 +30,8 @@ block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // Compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;
+
+// update stats
+#if STATS_ENABLED == 1
+stats.num_blocks += 1;
+#endif
