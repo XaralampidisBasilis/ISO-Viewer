@@ -14,4 +14,4 @@ npm run dev
 # Build for production in the dist/ directory
 npm run build
 ```
-![iso_volume_normals](https://raw.githubusercontent.com/XaralampidisBasilis/volume-rendering/iso_viewer/static/images/Screenshot%202025-04-29%20165120.png)
+![iso_volume_normals](https://raw.githubusercontent.com/XaralampidisBasilis/volume-rendering/iso_viewer/static/images/iso_volume_normals.png)
