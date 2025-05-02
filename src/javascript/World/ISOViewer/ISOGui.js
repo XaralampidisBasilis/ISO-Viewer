@@ -184,6 +184,7 @@ export default class ISOGui
                 trace_abs_error         : 209,
                 trace_gradient          : 210,
                 trace_gradient_length   : 211,
+                trace_curvature         : 212,
                 
                 cell_intersected        : 301,
                 cell_terminated         : 302,

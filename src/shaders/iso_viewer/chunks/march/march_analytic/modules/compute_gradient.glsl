@@ -11,20 +11,18 @@
  */
 
 // Sample neighbors
-const vec2 set = vec2(-0.5, 0.5);
-const vec3 offsets[8] = vec3[8]
-(
-    set.xxx, set.yxx, 
-    set.xyx, set.xxy, 
-    set.xyy, set.yxy,
-    set.yyx, set.yyy 
-);
+vec2 offset = vec2(-1.0, 1.0) * 0.5;
 
-float samples[8];
-for (int i = 0; i < 8; i++)
-{
-    samples[i] = sample_intensity_map(trace.position + offsets[i]);
-}
+float samples[8] = float[8](
+    sample_intensity_map(trace.position + offset.xxx),
+    sample_intensity_map(trace.position + offset.yxx),
+    sample_intensity_map(trace.position + offset.xyx),
+    sample_intensity_map(trace.position + offset.xxy),
+    sample_intensity_map(trace.position + offset.xyy),
+    sample_intensity_map(trace.position + offset.yxy),
+    sample_intensity_map(trace.position + offset.yyx),
+    sample_intensity_map(trace.position + offset.yyy)
+);
 
 vec3 forward = vec3(
     samples[1] + samples[5] + samples[6] + samples[7], // x-axis

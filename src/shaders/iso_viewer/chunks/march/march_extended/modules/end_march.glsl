@@ -6,7 +6,7 @@ if (cell.intersected)
 
 if (trace.intersected)
 {
-    #include "./compute_gradient"
+    #include "./compute_derivatives_2"
 }
 else
 {
