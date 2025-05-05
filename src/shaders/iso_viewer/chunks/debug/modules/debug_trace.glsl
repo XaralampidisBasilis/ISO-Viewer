@@ -51,5 +51,5 @@ switch (u_debugging.option - 200)
     case  9: fragColor = debug_trace_abs_error;       break;
     case 10: fragColor = debug_trace_gradient;        break;
     case 11: fragColor = debug_trace_gradient_length; break;
-    case 11: fragColor = debug_trace_curvature; break;
+    case 12: fragColor = debug_trace_curvature;       break;
 }

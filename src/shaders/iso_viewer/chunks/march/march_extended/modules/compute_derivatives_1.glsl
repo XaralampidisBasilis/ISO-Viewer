@@ -14,7 +14,7 @@
 float delta = u_debugging.variable1;
 vec3 offset = vec3(-1.0, 0.0, 1.0) * delta;
 
-float samples[20] = float[20]
+float samples[9] = float[9]
 (
     sample_intensity_map(trace.position + offset.xxx),
     sample_intensity_map(trace.position + offset.zxx),
@@ -24,21 +24,7 @@ float samples[20] = float[20]
     sample_intensity_map(trace.position + offset.zxz),
     sample_intensity_map(trace.position + offset.zzx),
     sample_intensity_map(trace.position + offset.zzz),
-
-    sample_intensity_map(trace.position + offset.yxx),
-    sample_intensity_map(trace.position + offset.yzx),
-    sample_intensity_map(trace.position + offset.yxz),
-    sample_intensity_map(trace.position + offset.yzz),
-
-    sample_intensity_map(trace.position + offset.xyx),
-    sample_intensity_map(trace.position + offset.zyx),
-    sample_intensity_map(trace.position + offset.xyz),
-    sample_intensity_map(trace.position + offset.zyz),
-
-    sample_intensity_map(trace.position + offset.xxy),
-    sample_intensity_map(trace.position + offset.zxy),
-    sample_intensity_map(trace.position + offset.xzy),
-    sample_intensity_map(trace.position + offset.zzy),
+    sample_intensity_map(trace.position + offset.yyy)
 );
 
 vec2 x_samples = vec2(
@@ -98,16 +84,7 @@ vec3 scale = u_intensity_map.spacing * delta;
 hessian /= outerProduct(scale, scale);
 gradient /= scale;
 
-// Compute mean curvature
-float a = length(gradient);
-float a2 = a * a;
-float a3 = a2 * a;
-float b = dot(gradient * hessian, gradient);
-float c = hessian[0][0] + hessian[1][1] + hessian[2][2];
-float curvature = (b - a2 * c) / (a3 * 2.0);
-
 // Update trace
 trace.intensity = samples[8];
 trace.gradient = gradient;
-trace.curvature = curvature;
 trace.error = trace.intensity - u_rendering.intensity;

@@ -11,11 +11,12 @@
  */
 
 // Sample neighbors
-float delta = u_debugging.variable1;
-vec3 offset = vec3(-1.0, 0.0, 1.0) * delta;
+float delta = 0.5;
+vec3 offset = vec3(-1.0, -2.0/3.0, 0.0, 2.0/3.0, 1.0) * delta;
 
 float samples[20] = float[20]
 (
+    // trilinear differences
     sample_intensity_map(trace.position + offset.xxx),
     sample_intensity_map(trace.position + offset.zxx),
     sample_intensity_map(trace.position + offset.xzx),
@@ -25,36 +26,30 @@ float samples[20] = float[20]
     sample_intensity_map(trace.position + offset.zzx),
     sample_intensity_map(trace.position + offset.zzz),
 
-    sample_intensity_map(trace.position + offset.yxx),
-    sample_intensity_map(trace.position + offset.yzx),
-    sample_intensity_map(trace.position + offset.yxz),
-    sample_intensity_map(trace.position + offset.yzz),
-
-    sample_intensity_map(trace.position + offset.xyx),
-    sample_intensity_map(trace.position + offset.zyx),
-    sample_intensity_map(trace.position + offset.xyz),
-    sample_intensity_map(trace.position + offset.zyz),
-
-    sample_intensity_map(trace.position + offset.xxy),
-    sample_intensity_map(trace.position + offset.zxy),
-    sample_intensity_map(trace.position + offset.xzy),
-    sample_intensity_map(trace.position + offset.zzy),
+    // central differences
+    sample_intensity_map(trace.position + offset.yyy),
+    sample_intensity_map(trace.position + offset.xyy),
+    sample_intensity_map(trace.position + offset.zyy),
+    sample_intensity_map(trace.position + offset.yxy),
+    sample_intensity_map(trace.position + offset.yzy),
+    sample_intensity_map(trace.position + offset.yyx),
+    sample_intensity_map(trace.position + offset.yyz),
 );
 
 vec2 x_samples = vec2(
     samples[0] + samples[2] + samples[3] + samples[4],
     samples[1] + samples[5] + samples[6] + samples[7]
-) / 4.0;
+);
 
 vec2 y_samples = vec2(
     samples[0] + samples[1] + samples[3] + samples[5],
     samples[2] + samples[4] + samples[6] + samples[7]
-) / 4.0;
+);
 
 vec2 z_samples = vec2(
     samples[0] + samples[1] + samples[2] + samples[6],
     samples[3] + samples[4] + samples[5] + samples[7]
-) / 4.0;
+);
 
 vec2 xy_samples = vec2(
     samples[1] + samples[2] + samples[4] + samples[5],

@@ -12,18 +12,17 @@
 
 // Sample neighbors
 float delta = 0.5;
-vec3 offset = vec3(-1.0, 0.0, 1.0) * delta;
+vec2 offset = vec2(-1.0, 1.0) * delta;
 
-float samples[8] = float[8]
-(
+float samples[8] = float[8](
     sample_intensity_map(trace.position + offset.xxx),
-    sample_intensity_map(trace.position + offset.zxx),
-    sample_intensity_map(trace.position + offset.xzx),
-    sample_intensity_map(trace.position + offset.xxz),
-    sample_intensity_map(trace.position + offset.xzz),
-    sample_intensity_map(trace.position + offset.zxz),
-    sample_intensity_map(trace.position + offset.zzx),
-    sample_intensity_map(trace.position + offset.zzz),
+    sample_intensity_map(trace.position + offset.yxx),
+    sample_intensity_map(trace.position + offset.xyx),
+    sample_intensity_map(trace.position + offset.xxy),
+    sample_intensity_map(trace.position + offset.xyy),
+    sample_intensity_map(trace.position + offset.yxy),
+    sample_intensity_map(trace.position + offset.yyx),
+    sample_intensity_map(trace.position + offset.yyy)
 );
 
 vec2 x_samples = vec2(
@@ -42,14 +41,14 @@ vec2 z_samples = vec2(
 );
 
 // first order partial derivatives
-vec3 gradient;
-gradient[0] = (x_samples.y - x_samples.x) / 8.0; 
-gradient[1] = (y_samples.y - y_samples.x) / 8.0; 
-gradient[2] = (z_samples.y - z_samples.x) / 8.0; 
+vec3 gradient = vec3(
+     x_samples.y - x_samples.x,
+     y_samples.y - y_samples.x,
+     z_samples.y - z_samples.x
+);
 
 // Scale derivatives
-vec3 scale = u_intensity_map.spacing * delta;
-gradient /= scale;
+gradient /= u_intensity_map.spacing * delta * 8.0;
 
 // Update trace
 trace.gradient = gradient;
