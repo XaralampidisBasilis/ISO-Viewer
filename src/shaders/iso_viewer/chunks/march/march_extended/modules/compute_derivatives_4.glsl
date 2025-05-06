@@ -12,7 +12,7 @@
 
 // Sample neighbors
 float delta = 0.5;
-vec3 offset = vec3(-1.0, -2.0/3.0, 0.0, 2.0/3.0, 1.0) * delta;
+vec3 offset = vec3(-1.0, 0.0, 1.0) * delta;
 
 float samples[20] = float[20]
 (

@@ -14,7 +14,7 @@ void set_stats()
 {
     stats.num_fetches = 0;
     stats.num_cells   = 0;
-    stats.num_blocks   = 0;
+    stats.num_blocks  = 0;
 }
 
 #endif // STRUCT_STATS
