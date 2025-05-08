@@ -94,6 +94,8 @@ export default function()
             variable1 : 0,
             variable2 : 0,
             variable3 : 0,
+            variable4 : 0,
+            variable5 : 0,
         }),
     }
 

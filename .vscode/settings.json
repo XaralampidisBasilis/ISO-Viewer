@@ -43,6 +43,7 @@
         "dtype",
         "extremamap",
         "extremap",
+        "frobenius",
         "glsl",
         "hexacontratentant",
         "highp",

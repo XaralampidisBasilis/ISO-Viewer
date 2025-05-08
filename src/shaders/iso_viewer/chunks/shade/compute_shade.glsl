@@ -10,6 +10,7 @@
 // Compute directional component
 vec3 directional_color = mix(frag.diffuse_color, frag.specular_color, specular);
 directional_color *= min(shadows_fading, edge_fading);
+directional_color *= smoothstep(-0.5, 0.5, length(trace.gradient));
 
 // Compose colors
 frag.shaded_color.rgb = frag.ambient_color + directional_color;

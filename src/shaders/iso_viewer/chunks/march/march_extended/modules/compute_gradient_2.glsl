@@ -13,6 +13,7 @@
 // Sample neighbors
 float delta = 0.5;
 vec2 offset = vec2(-1.0, 1.0) * delta;
+vec3 scale = normalize(u_intensity_map.spacing);
 
 float samples[8] = float[8](
     sample_intensity_map(trace.position + offset.xxx),
@@ -40,15 +41,22 @@ vec2 z_samples = vec2(
     samples[3] + samples[4] + samples[5] + samples[7]
 );
 
+// compute average samples
+x_samples /= 4.0;
+y_samples /= 4.0;
+z_samples /= 4.0;
+
 // first order partial derivatives
 vec3 gradient = vec3(
-     x_samples.y - x_samples.x,
-     y_samples.y - y_samples.x,
-     z_samples.y - z_samples.x
+    x_samples.y - x_samples.x,
+    y_samples.y - y_samples.x,
+    z_samples.y - z_samples.x
 );
 
-// Scale derivatives
-gradient /= u_intensity_map.spacing * delta * 8.0;
+gradient /= delta * 2.0;
+
+// Scale derivatives to physical space
+gradient /= scale;
 
 // Update trace
 trace.gradient = gradient;

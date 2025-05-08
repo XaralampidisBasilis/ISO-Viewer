@@ -36,6 +36,7 @@ vec3 backward = vec3(
     samples[0] + samples[2] + samples[1] + samples[6]  // z-axis
 );
 
+
 vec3 delta = u_intensity_map.spacing * 4.0;
 
 // Compute gradient

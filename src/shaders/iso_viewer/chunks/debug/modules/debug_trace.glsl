@@ -28,10 +28,10 @@ vec4 debug_trace_error = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-
 vec4 debug_trace_abs_error = to_color(mmix(COLOR.BLACK, COLOR.RED, abs(trace.error / MILLI_TOLERANCE)));
 
 // gradient
-vec4 debug_trace_gradient = to_color((trace.gradient / mmax(u_intensity_map.inv_spacing)) * 0.5 + 0.5);
+vec4 debug_trace_gradient = to_color(trace.gradient * 0.5 + 0.5);
 
 // gradient length
-vec4 debug_trace_gradient_length = to_color(map(0.0, mmax(u_intensity_map.inv_spacing), length(trace.gradient)));
+vec4 debug_trace_gradient_length = to_color(map(0.0, 1.0, length(trace.gradient)));
 
 // curvature
 vec4 debug_trace_curvature = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-2.0, 2.0, trace.curvature)));
