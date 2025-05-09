@@ -1,24 +1,62 @@
-// Compute ambient component
-#include "./modules/compute_scene"
-#include "./modules/compute_color"
-#include "./modules/compute_ambient"
-#include "./modules/compute_diffuse"
-#include "./modules/compute_specular"
-#include "./modules/compute_edge"
-#include "./modules/compute_shadow"
+// Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
-// Compute directional component
-vec3 directional_color = mix(frag.diffuse_color, frag.specular_color, specular);
-directional_color *= min(shadows_fading, edge_fading);
-directional_color *= smoothstep(-0.5, 0.5, length(trace.gradient));
+// Compute light position in texture coordinated
+vec3 light_position = camera.position;
+
+// Compute shading vectors in texture coordinated
+frag.light_vector = light_position - trace.position;
+frag.view_vector = camera.position - trace.position;
+frag.halfway_vector = frag.light_vector + frag.view_vector;
+
+// Normalize shading vectors in model coordinates
+vec3 scale = normalize(u_intensity_map.spacing);
+frag.light_vector = normalize(frag.light_vector * scale);
+frag.view_vector = normalize(frag.view_vector * scale);
+frag.halfway_vector = normalize(frag.halfway_vector * scale);
+
+// Compute normal vector
+frag.normal_vector = normalize(trace.gradient);
+frag.normal_vector *= ssign(dot(frag.normal_vector, frag.view_vector));
+
+// Compute vector angles
+frag.light_angle = dot(frag.light_vector, frag.normal_vector);
+frag.view_angle = dot(frag.view_vector, frag.normal_vector);
+frag.halfway_angle = dot(frag.halfway_vector, frag.normal_vector);
+
+// Compute parameters
+float lambertian = clamp(frag.light_angle, 0.0, 1.0);
+float specular = pow(clamp(frag.halfway_angle, 0.0, 1.0), u_shading.shininess);
+
+// Edges 
+frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle));
+
+// Gradient
+frag.gradient_factor = softstep_hill(0.0, 0.3, length(trace.gradient), 0.9);
+
+// Material
+frag.material_color = sample_color_maps(trace.intensity);
+
+// Ambient 
+frag.ambient_color = u_shading.ambient_reflectance * u_lighting.ambient_color;
+frag.ambient_color *= frag.material_color;
+
+// Diffuse
+frag.diffuse_color = u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian;
+frag.diffuse_color *= frag.material_color;
+
+// Specular
+frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shading.specular_reflectance * specular);
+
+// Directional
+frag.direct_color = mix(frag.diffuse_color, frag.specular_color, specular);
+frag.direct_color *= min(frag.edge_factor, frag.gradient_factor);
 
 // Compose colors
-frag.shaded_color.rgb = frag.ambient_color + directional_color;
-frag.shaded_color.rgb *= u_lighting.intensity;
+frag.color = frag.ambient_color + frag.direct_color;
+frag.color *= u_lighting.intensity;
 
 // Assign frag color
-fragColor = frag.shaded_color;
+fragColor = vec4(frag.color, 1.0);
 
 // Compute fragment depth
 #include "./modules/compute_depth"
-

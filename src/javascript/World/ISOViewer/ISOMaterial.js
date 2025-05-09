@@ -73,9 +73,9 @@ export default function()
         ({
             ambient_reflectance  : 0.2,
             diffuse_reflectance  : 1.0,
-            specular_reflectance : 1.0,
+            specular_reflectance : 0.6,
             shininess            : 40.0,
-            edge_contrast        : 0.0,
+            edge_contrast        : 0.4,
         }),
         
         u_lighting: new THREE.Uniform

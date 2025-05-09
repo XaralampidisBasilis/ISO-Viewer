@@ -207,7 +207,8 @@ export default class ISOViewer extends EventEmitter
         this.mesh.scale.copy(this.parameters.volume.size)
         this.mesh.position.copy(this.parameters.volume.size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
-        this.controls.instance.attach(this.mesh)
+        
+        // this.controls.instance.attach(this.mesh)
     }
 
     async updateIsosurface(threshold)
