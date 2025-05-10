@@ -34,7 +34,7 @@ vec4 debug_trace_gradient = to_color(trace.gradient * 0.5 + 0.5);
 vec4 debug_trace_gradient_length = to_color(map(0.0, 1.0, length(trace.gradient)));
 
 // curvature
-vec4 debug_trace_curvature = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-2.0, 2.0, trace.curvature)));
+vec4 debug_trace_curvature = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, trace.curvature)));
 
 // PRINT DEBUG
 

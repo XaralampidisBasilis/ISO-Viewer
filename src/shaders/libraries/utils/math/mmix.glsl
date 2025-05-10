@@ -183,4 +183,86 @@ vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in vec4 pct) {
     );
 }
 
+// Element-wise mix for mat2
+mat2 mmix(mat2 A, mat2 B, float alpha) {
+    return mat2(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha)
+    );
+}
+
+// Element-wise mix for mat3
+mat3 mmix(mat3 A, mat3 B, float alpha) {
+    return mat3(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha),
+        mix(A[2], B[2], alpha)
+    );
+}
+
+// Element-wise mix for mat4
+mat4 mmix(mat4 A, mat4 B, float alpha) {
+    return mat4(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha),
+        mix(A[2], B[2], alpha),
+        mix(A[3], B[3], alpha)
+    );
+}
+
+// Element-wise mix for mat2x3 (2 columns, 3 rows)
+mat2x3 mmix(mat2x3 A, mat2x3 B, float alpha) {
+    return mat2x3(
+        mix(A[0], B[0], alpha), // vec3
+        mix(A[1], B[1], alpha)  // vec3
+    );
+}
+
+// Element-wise mix for mat3x2 (3 columns, 2 rows)
+mat3x2 mmix(mat3x2 A, mat3x2 B, float alpha) {
+    return mat3x2(
+        mix(A[0], B[0], alpha), // vec2
+        mix(A[1], B[1], alpha), // vec2
+        mix(A[2], B[2], alpha)  // vec2
+    );
+}
+
+// Element-wise mix for mat2x4 (2 columns, 4 rows)
+mat2x4 mmix(mat2x4 A, mat2x4 B, float alpha) {
+    return mat2x4(
+        mix(A[0], B[0], alpha), // vec4
+        mix(A[1], B[1], alpha)  // vec4
+    );
+}
+
+// Element-wise mix for mat4x2 (4 columns, 2 rows)
+mat4x2 mmix(mat4x2 A, mat4x2 B, float alpha) {
+    return mat4x2(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha),
+        mix(A[2], B[2], alpha),
+        mix(A[3], B[3], alpha)
+    );
+}
+
+// Element-wise mix for mat3x4 (3 columns, 4 rows)
+mat3x4 mmix(mat3x4 A, mat3x4 B, float alpha) {
+    return mat3x4(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha),
+        mix(A[2], B[2], alpha)
+    );
+}
+
+// Element-wise mix for mat4x3 (4 columns, 3 rows)
+mat4x3 mmix(mat4x3 A, mat4x3 B, float alpha) {
+    return mat4x3(
+        mix(A[0], B[0], alpha),
+        mix(A[1], B[1], alpha),
+        mix(A[2], B[2], alpha),
+        mix(A[3], B[3], alpha)
+    );
+}
+
+
 #endif // MMIX

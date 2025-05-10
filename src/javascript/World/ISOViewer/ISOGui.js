@@ -250,11 +250,11 @@ export default class ISOGui
                 variable3               : 1003,
             }),
 
-            variable1 : folder.add(uniforms, 'variable1').min(-2).max(2).step(0.00000001),
-            variable2 : folder.add(uniforms, 'variable2').min(0).max(256).step(0.00000001),
-            variable3 : folder.add(uniforms, 'variable3').min(0).max(10).step(1),
-            variable4 : folder.add(uniforms, 'variable4').min(-2).max(2).step(0.00000001),
-            variable5 : folder.add(uniforms, 'variable5').min(-2).max(2).step(0.00000001),
+            variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(0.1),
+            variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(0.1),
+            variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.1),
+            variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(0.1),
+            variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(0.1),
             discarding: folder.add(objects, 'DISCARDING_DISABLED').name('disable_discarding').onFinishChange((value) => { defines.DISCARDING_DISABLED = Number(value), material.needsUpdate = true }),
         }
     }
