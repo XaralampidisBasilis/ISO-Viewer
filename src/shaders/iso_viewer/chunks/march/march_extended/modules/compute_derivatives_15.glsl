@@ -69,9 +69,9 @@ vec2 yz_samples = vec2(
 );
 
 // first order partial derivatives with approximate sobel
-surface.gradient[0] = (samples[ 9] - samples[ 8]) / 2.0; 
-surface.gradient[1] = (samples[11] - samples[10]) / 2.0; 
-surface.gradient[2] = (samples[13] - samples[12]) / 2.0; 
+surface.gradient[0] = (samples[ 9] - samples[ 8]) / 8.0; 
+surface.gradient[1] = (samples[11] - samples[10]) / 8.0; 
+surface.gradient[2] = (samples[13] - samples[12]) / 8.0; 
 
 // pure second order partial derivatives with central differences
 surface.hessian[0][0] = samples[ 8] + samples[ 9] - samples[14] * 2.0;
@@ -98,6 +98,7 @@ surface.hessian /= outerProduct(spacing1, spacing1);
 // Compute curvatures
 surface.curvatures = principal_curvatures(surface.gradient, surface.hessian, surface.curvients);
 surface.curvatures *= ssign(dot(surface.gradient, camera.position - trace.position));
+surface.curvients *= ssign(dot(surface.gradient, camera.position - trace.position));
 
 // Special curvatures
 surface.mean_curvature = mean(surface.curvatures);
@@ -108,10 +109,11 @@ surface.max_curvature = maxabs(surface.curvatures);
 trace.gradient = surface.gradient;
 trace.curvature = (surface.curvatures.x + surface.curvatures.y) * 0.5;
 
-// debug.variable2 = to_color(vec3(hessian[0][0], hessian[1][1], hessian[2][2]) * 0.5 + 0.5);
-// debug.variable2 = to_color(vec3(hessian[0][0], hessian[1][1], hessian[2][2]) * 0.5 + 0.5);
-// debug.variable2 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-1.0, 1.0, hessian[0][0])));
-// debug.variable2 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-1.0, 1.0, hessian[0][0])));
+// debug.variable2 = to_color(vec3(surface.hessian[0][0], surface.hessian[1][1], surface.hessian[2][2]) * 0.5 + 0.5);
+// debug.variable3 = to_color(vec3(surface.hessian[1][2], surface.hessian[0][2], surface.hessian[0][1]) * 0.5 + 0.5);
+
 debug.variable2 = to_color(normalize(surface.curvients[0]) * 0.5 + 0.5);
-// debug.variable3 = to_color(normalize(surface.curvients[1]) * 0.5 + 0.5);
-debug.variable3 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-1.0, 1.0, surface.max_curvature)));
+debug.variable3 = to_color(normalize(surface.curvients[1]) * 0.5 + 0.5);
+
+// debug.variable2 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.mean_curvature)));
+// debug.variable3 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.max_curvature)));

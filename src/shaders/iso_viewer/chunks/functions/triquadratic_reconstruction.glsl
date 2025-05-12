@@ -4,7 +4,7 @@
     Derivatives at the Cost of One Additional Texture Fetch
 */
 
-vec4 triquadratic_reconstruction(in sampler3D tex, in vec3 coordinates, out vec3 gradient, out mat3 hessian)
+float triquadratic_reconstruction(in sampler3D tex, in vec3 coordinates, out vec3 gradient, out mat3 hessian)
 {
     // Transform to voxel-centered coordinates
     vec3 inv_size = 1.0 / vec3(textureSize(tex, 0));
@@ -87,15 +87,15 @@ vec4 triquadratic_reconstruction(in sampler3D tex, in vec3 coordinates, out vec3
     float s = texture(tex, p).r;
     vec2 s_x = vec2(
         texture(tex, vec3(p.x - inv_size.x, p.y, p.z)).r,
-        texture(tex, vec3(p.x + inv_size.x, p.y, p.z)).r,
+        texture(tex, vec3(p.x + inv_size.x, p.y, p.z)).r
     );
     vec2 s_y = vec2(
         texture(tex, vec3(p.x, p.y - inv_size.y, p.z)).r,
-        texture(tex, vec3(p.x, p.y + inv_size.y, p.z)).r,
+        texture(tex, vec3(p.x, p.y + inv_size.y, p.z)).r
     );
     vec2 s_z = vec2(
         texture(tex, vec3(p.x, p.y, p.z - inv_size.z)).r,
-        texture(tex, vec3(p.x, p.y, p.z + inv_size.z)).r,
+        texture(tex, vec3(p.x, p.y, p.z + inv_size.z)).r
     );
 
     // Pure second derivatives
