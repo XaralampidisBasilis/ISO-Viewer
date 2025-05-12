@@ -27,7 +27,7 @@ vec2 principal_curvatures(in vec3 gradient, in mat3 hessian)
     tangent[1] = cross(normal, tangent[0]);
 
     // compute shape operator projected into the tangent space
-    mat2 shape = -(transpose(tangent) * hessian) * tangent / length(gradient);
+    mat2 shape = (transpose(tangent) * hessian) * tangent / length(gradient);
     float determinant = determinant(shape);
     float trace = (shape[0][0] + shape[1][1]) * 0.5;
 
@@ -62,7 +62,7 @@ vec2 principal_curvatures(in vec3 gradient, in mat3 hessian, out mat2x3 directio
     tangent[1] = cross(normal, tangent[0]);
 
     // compute shape operator projected into the tangent space
-    mat2 shape = -(transpose(tangent) * hessian) * tangent / length(gradient);
+    mat2 shape = (transpose(tangent) * hessian) * tangent / length(gradient);
     float determinant = determinant(shape);
     float trace = (shape[0][0] + shape[1][1]) * 0.5;
 

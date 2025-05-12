@@ -6,7 +6,7 @@ if (cell.intersected)
 
 if (trace.intersected)
 {
-    #include "./compute_derivatives_15c"
+    #include "./compute_derivatives_15"
 }
 else
 {

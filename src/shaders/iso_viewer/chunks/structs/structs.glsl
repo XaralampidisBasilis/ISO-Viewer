@@ -6,6 +6,7 @@
 #include "./struct_cell"
 #include "./struct_block"
 #include "./struct_poly"
+#include "./struct_surface"
 
 #if DEBUG_ENABLED == 1
 #include "./struct_debug"
