@@ -9,8 +9,8 @@ surface.gradient /= spacing;
 
 // Compute curvatures
 surface.curvatures = principal_curvatures(surface.gradient, surface.hessian, surface.curvients);
-surface.curvatures *= -ssign(dot(surface.gradient, camera.position - trace.position));
-surface.curvients *= -ssign(dot(surface.gradient, camera.position - trace.position));
+surface.curvatures *= ssign(dot(surface.gradient, camera.position - trace.position));
+surface.curvients *= ssign(dot(surface.gradient, camera.position - trace.position));
 
 // Special curvatures
 surface.mean_curvature = mean(surface.curvatures);

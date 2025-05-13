@@ -1,6 +1,6 @@
 
 // Compute gradient and hessian with triquadratic reconstruction
-triquadratic_sampling(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
+triquadratic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
 
 // Scale derivatives
 vec3 spacing = normalize(u_intensity_map.spacing);

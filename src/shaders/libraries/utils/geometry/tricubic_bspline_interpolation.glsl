@@ -1,7 +1,7 @@
 #ifndef TRICUBIC_BSPLINE_INTERPOLATION
 #define TRICUBIC_BSPLINE_INTERPOLATION
 
-/* Papers
+/* Sources
 Efficient GPU-Based Texture Interpolation using Uniofm B-Splines  
 (https://www.tandfonline.com/doi/abs/10.1080/2151237X.2008.10129269),
 
@@ -99,25 +99,34 @@ void tricubic_bspline_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out v
     dp1 = dh1 * t;
 }
 
-// Tricubic B-spline interpolation of value    
+// Tricubic B-spline interpolation samples
 
-float tricubic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+void tricubic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, out vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1)
 {
-    // Interpolated value
-    // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
+    // Sample the 8 corner points of the interpolation cube based on p0, p1
+
+    s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
         texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
         texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
         texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
         texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
     );
 
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
+    s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
         texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
         texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
         texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
         texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
     );
+}
+
+// Tricubic B-spline interpolation of value    
+
+float tricubic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+{
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -127,8 +136,8 @@ float tricubic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 
     // Interpolate along y
     vec2 s_xyz0_xyz1 = mix(
-        vec2(s_xy0z0_xy1z0_xy0z1_xy1z1.yw),
-        vec2(s_xy0z0_xy1z0_xy0z1_xy1z1.xz),
+        s_xy0z0_xy1z0_xy0z1_xy1z1.yw,
+        s_xy0z0_xy1z0_xy0z1_xy1z1.xz,
     g0.y);
 
     // Interpolate along z
@@ -140,42 +149,26 @@ float tricubic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
     return s_xyz;
 }
 
-float tricubic_bspline_value(in sampler3D tex, in vec3 coords)
-{
-     vec3 p0; vec3 p1; vec3 g0;
-    tricubic_bspline_basis(tex, coords, p0, p1, g0);
-
-    // Value
-    return tricubic_bspline_xyz(tex, p0, p1, g0);
-}
-
 // Tricubic B-spline interpolation of first derivatives
 
 float tricubic_bspline_dxyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
-    // Partial derivative of y axis
-    // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
+    // First derivative of x axis
 
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Differentiate along x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1) * g0.x;
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
+        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 -
+        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 
+    ) * g0.x;
 
     // Interpolate along y
     vec2 s_dxyz0_dxyz1 = mix(
-        vec2(s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
-        vec2(s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw,
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz,
     g0.y);
 
     // Interpolate along z
@@ -189,21 +182,11 @@ float tricubic_bspline_dxyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
 
 float tricubic_bspline_xdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
-    // Partial derivative of y axis
-    // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
+    // First derivative of y axis
 
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -212,7 +195,10 @@ float tricubic_bspline_xdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
     g0.x);
 
     // Differentiate along y
-    vec2 s_xdyz0_xdyz1 = (s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz) * g0.y;
+    vec2 s_xdyz0_xdyz1 = (
+        s_xy0z0_xy1z0_xy0z1_xy1z1.xz -
+        s_xy0z0_xy1z0_xy0z1_xy1z1.yw
+    ) * g0.y;
 
     // Interpolate along z
     float s_xdyz = mix(
@@ -225,21 +211,11 @@ float tricubic_bspline_xdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
 
 float tricubic_bspline_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
-     // Partial derivative of z axis
-     // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
-
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // First derivative of z axis
+    
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -249,12 +225,15 @@ float tricubic_bspline_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
 
     // Interpolate along y
     vec2 s_xyz0_xyz1 = mix(
-        vec2(s_xy0z0_xy1z0_xy0z1_xy1z1.yw),
-        vec2(s_xy0z0_xy1z0_xy0z1_xy1z1.xz),
+        s_xy0z0_xy1z0_xy0z1_xy1z1.yw,
+        s_xy0z0_xy1z0_xy0z1_xy1z1.xz,
     g0.y);
 
     // Differentiate along z
-    float s_xydz = (s_xyz0_xyz1.y - s_xyz0_xyz1.x) * g0.z;
+    float s_xydz = (
+        s_xyz0_xyz1.x -
+        s_xyz0_xyz1.y
+    ) * g0.z;
 
     return s_xydz;
 }
@@ -286,35 +265,15 @@ vec3 tricubic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, i
     return vec3(s_dxyz, s_xdyz, s_xydz);
 }
 
-vec3 tricubic_bspline_gradient(in sampler3D tex, in vec3 coords)
-{
-    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
-    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
- 
-    // Gradient
-    return tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
-}
-
 // Tricubic B-spline interpolation of second derivatives
 
 float tricubic_bspline_xdydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
     // Mixed second derivative of yz axes
 
-    // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
-
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -323,10 +282,16 @@ float tricubic_bspline_xdydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     g0.x);
 
     // Differentiate along y
-    vec2 s_xdyz0_xdyz1 = (s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz) * g0.y;
+    vec2 s_xdyz0_xdyz1 = (
+        s_xy0z0_xy1z0_xy0z1_xy1z1.xz -
+        s_xy0z0_xy1z0_xy0z1_xy1z1.yw
+    ) * g0.y;
 
     // Differentiate along z
-    float s_xdydz = (s_xdyz0_xdyz1.y - s_xdyz0_xdyz1.x) *  g0.z;
+    float s_xdydz = (
+        s_xdyz0_xdyz1.x -
+        s_xdyz0_xdyz1.y
+    ) *  g0.z;
 
     return s_xdydz;
 }
@@ -335,32 +300,27 @@ float tricubic_bspline_dxydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
 {
     // Mixed second derivative of xz axes
 
-    // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
-
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Differentiate along x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1) * g0.x;
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
+        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 -
+        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1
+    ) * g0.x;
 
     // Interpolate along y
     vec2 s_dxyz0_dxyz1 = mix(
-        vec2(s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
-        vec2(s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw,
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz,
     g0.y);
 
     // Differentiate along z
-    float s_dxydz = (s_dxyz0_dxyz1.y - s_dxyz0_dxyz1.x) * g0.z;
+    float s_dxydz = (
+        s_dxyz0_dxyz1.x -
+        s_dxyz0_dxyz1.y
+    ) * g0.z;
 
     return s_dxydz;
 }
@@ -369,30 +329,25 @@ float tricubic_bspline_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
 {
     // Mixed second derivative of xy axes
 
-     // Sample the 8 corner points of the interpolation cube 
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        texture(tex, vec3(p0.x, p0.y, p0.z)).r, // x0y0z0
-        texture(tex, vec3(p0.x, p1.y, p0.z)).r, // x0y1z0
-        texture(tex, vec3(p0.x, p0.y, p1.z)).r, // x0y0z1
-        texture(tex, vec3(p0.x, p1.y, p1.z)).r  // x0y1z1
-    );
-
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        texture(tex, vec3(p1.x, p0.y, p0.z)).r, // x1y0z0
-        texture(tex, vec3(p1.x, p1.y, p0.z)).r, // x1y1z0
-        texture(tex, vec3(p1.x, p0.y, p1.z)).r, // x1y0z1
-        texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
-    );
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
      // Differentiate along x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1) * g0.x;
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
+        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 -
+        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1
+    ) * g0.x;
 
     // Differentiate along y
-    vec2 s_dxdyz0_dxdyz1 = (s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw - s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz) * g0.y;
+    vec2 s_dxdyz0_dxdyz1 = (
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz -
+        s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw
+    ) * g0.y;
 
     // Interpolate along z
     float s_dxdyz = mix(
-        s_dxdyz0_dxdyz1.y,
+        s_dxdyz0_dxdyz1.y, 
         s_dxdyz0_dxdyz1.x, 
     g0.z);
     
@@ -408,33 +363,23 @@ vec3 tricubic_bspline_d2x_d2y_d2z(in sampler3D tex,  in vec3 coords)
     vec3 t = 1.0 / size;
     vec3 p = coords * t;
 
-    // Compute scaled center sample
-    float s2 = texture(tex, p).r * 2.0;
+     // Central differences samples
+    float s = texture(tex, p).r;
 
-    // Central differences for x axis
-    vec2 s_x0_x1 = vec2(
+    vec3 s_x0_y0_z0 = vec3(
         texture(tex, vec3(p.x - t.x, p.y, p.z)).r,
-        texture(tex, vec3(p.x + t.x, p.y, p.z)).r
-    );
-
-    // Central differences for y axis
-    vec2 s_y0_y1 = vec2(
         texture(tex, vec3(p.x, p.y - t.y, p.z)).r,
-        texture(tex, vec3(p.x, p.y + t.y, p.z)).r
+        texture(tex, vec3(p.x, p.y, p.z - t.z)).r
     );
 
-    // Central differences for z axis
-    vec2 s_z0_z1 = vec2(
-        texture(tex, vec3(p.x, p.y, p.z - t.z)).r,
+    vec3 s_x1_y1_z1 = vec3(
+        texture(tex, vec3(p.x + t.x, p.y, p.z)).r,
+        texture(tex, vec3(p.x, p.y + t.y, p.z)).r,
         texture(tex, vec3(p.x, p.y, p.z + t.z)).r
     );
 
     // Pure second derivatives
-    vec3 s_d2x_d2y_d2z = vec3(
-       s_x0_x1.x + s_x0_x1.y - s2,
-       s_y0_y1.x + s_y0_y1.y - s2,
-       s_z0_z1.x + s_z0_z1.y - s2
-    );
+    vec3 s_d2x_d2y_d2z = s_x0_y0_z0 + s_x1_y1_z1 - s * 2.0;
 
     return s_d2x_d2y_d2z;
 }
@@ -473,6 +418,26 @@ mat3 tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(in sampler3D tex, in vec3 c
    );
 }
 
+// Tricubic B-spline combined interpolations
+
+float tricubic_bspline_value(in sampler3D tex, in vec3 coords)
+{
+    vec3 p0; vec3 p1; vec3 g0;
+    tricubic_bspline_basis(tex, coords, p0, p1, g0);
+
+    // Value
+    return tricubic_bspline_xyz(tex, p0, p1, g0);
+}
+
+vec3 tricubic_bspline_gradient(in sampler3D tex, in vec3 coords)
+{
+    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
+    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Gradient
+    return tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
+}
+
 mat3 tricubic_bspline_hessian(in sampler3D tex, in vec3 coords)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
@@ -481,8 +446,6 @@ mat3 tricubic_bspline_hessian(in sampler3D tex, in vec3 coords)
     // Intensity
     return tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
 }
-
-// Tricubic B-spline combined interpolations
 
 void tricubic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
 {
@@ -536,3 +499,4 @@ void tricubic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coords, o
 }
 
 #endif
+
