@@ -17,6 +17,7 @@
         "boxmax",
         "boxmin",
         "boxn",
+        "bspline",
         "bvec",
         "bvol",
         "cbrt",
