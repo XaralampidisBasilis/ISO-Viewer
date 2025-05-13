@@ -49,7 +49,6 @@ frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shad
 
 // Directional
 frag.direct_color = mix(frag.diffuse_color, frag.specular_color, specular);
-frag.direct_color *= min(frag.edge_factor, frag.gradient_factor);
 
 // Compose colors
 frag.color = frag.ambient_color + frag.direct_color;
