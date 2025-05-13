@@ -6,4 +6,4 @@
 #include "./sample_extended_anisotropic_distance_map"
 #include "./softstep_hill"
 #include "./triquadratic_sampling"
-#include "./tricubic_sampling"
+#include "./tricubic_bspline_interpolation"
