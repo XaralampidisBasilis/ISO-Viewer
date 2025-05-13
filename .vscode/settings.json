@@ -109,6 +109,7 @@
         "Texels",
         "timeit",
         "topk",
+        "tricubic",
         "triquadratic",
         "usampler",
         "vander",

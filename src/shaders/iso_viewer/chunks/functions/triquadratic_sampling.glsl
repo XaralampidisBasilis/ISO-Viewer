@@ -59,7 +59,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates)
     gamma0.z);
 
     // Intensity
-    return s_xyz.x;
+    return s_xyz;
 }
 
 float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 gradient)
@@ -101,7 +101,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.x);
 
     // Differentiate along x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1;
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1) * 2.0;
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -110,7 +110,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.y);
 
     // Differentiate along y
-    vec2 s_xdyz0_xdyz1 = s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz;
+    vec2 s_xdyz0_xdyz1 = (s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz) * 2.0;
 
     // Final interpolation along z, building value and partials
     vec3 s_xyz_dxyz_xdyz = mix(
@@ -119,7 +119,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.z);
 
     // Differentiate along z
-    float s_xydz = s_xyz0_xyz1_dxyz0_dxyz1.y - s_xyz0_xyz1_dxyz0_dxyz1.x;
+    float s_xydz = (s_xyz0_xyz1_dxyz0_dxyz1.y - s_xyz0_xyz1_dxyz0_dxyz1.x) * 2.0;
 
     // Gradient
     gradient = vec3(s_xyz_dxyz_xdyz.yz, s_xydz);
@@ -167,7 +167,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.x);
 
     // Differentiate along x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1;
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - s_x0y0z0_x0y1z0_x0y0z1_x0y1z1) * 2.0;
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -176,7 +176,7 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.y);
 
     // Differentiate along y
-    vec2 s_xdyz0_xdyz1 = s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz;
+    vec2 s_xdyz0_xdyz1 = (s_xy0z0_xy1z0_xy0z1_xy1z1.yw - s_xy0z0_xy1z0_xy0z1_xy1z1.xz) * 2.0;
 
     // Final interpolation along z, building value and partials
     vec3 s_xyz_dxyz_xdyz = mix(
@@ -185,10 +185,10 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.z);
 
     // Differentiate along z
-    float s_xydz = s_xyz0_xyz1_dxyz0_dxyz1.y - s_xyz0_xyz1_dxyz0_dxyz1.x;
+    float s_xydz = (s_xyz0_xyz1_dxyz0_dxyz1.y - s_xyz0_xyz1_dxyz0_dxyz1.x) * 2.0;
 
     // Differentiate across y
-    vec2 s_dxdyz0_dxdyz1 = s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw - s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz;
+    vec2 s_dxdyz0_dxdyz1 = (s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw - s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz) * 2.0;
 
     // Interpolate along z
     float s_dxdyz = mix(
@@ -197,10 +197,10 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     gamma0.z);
 
     // Differentiate along z
-    float s_dxydz = s_xyz0_xyz1_dxyz0_dxyz1.w - s_xyz0_xyz1_dxyz0_dxyz1.z;
+    float s_dxydz = (s_xyz0_xyz1_dxyz0_dxyz1.w - s_xyz0_xyz1_dxyz0_dxyz1.z) * 2.0;
 
     // Differentiate along z
-    float s_xdydz = s_xdyz0_xdyz1.y - s_xdyz0_xdyz1.x;
+    float s_xdydz = (s_xdyz0_xdyz1.y - s_xdyz0_xdyz1.x) * 2.0;
 
     // Sample the 6 central differences
     float s = texture(tex, p).r;
@@ -218,25 +218,21 @@ float triquadratic_sampling(in sampler3D tex, in vec3 coordinates, out vec3 grad
     );
 
     // Pure second derivatives
-    float s_d2x = s_x.x + s_x.y - s * 2.0;
-    float s_d2y = s_y.x + s_y.y - s * 2.0;
-    float s_d2z = s_z.x + s_z.y - s * 2.0;
-
-    // Gradient
-    gradient[0] = s_xyz_dxyz_xdyz.y;
-    gradient[1] = s_xyz_dxyz_xdyz.z;
-    gradient[2] = s_xydz;
+    vec3 s_d2x_d2y_d2z = vec3(
+       s_x.x + s_x.y - 2.0 * s,
+       s_y.x + s_y.y - 2.0 * s,
+       s_z.x + s_z.y - 2.0 * s
+    );
 
     // Hessian
-    hessian[0][0] = s_d2x;
-    hessian[1][1] = s_d2y;
-    hessian[2][2] = s_d2z;
-    hessian[0][1] = s_dxdyz;
-    hessian[0][2] = s_dxydz;
-    hessian[1][2] = s_xdydz;
-    hessian[1][0] = hessian[0][1];
-    hessian[2][0] = hessian[0][2];
-    hessian[2][1] = hessian[1][2];
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_dxdyz, s_dxydz,  
+       s_dxdyz, s_d2x_d2y_d2z.y, s_xdydz,  
+       s_dxydz, s_xdydz, s_d2x_d2y_d2z.z     
+   );
+
+    // Gradient
+    gradient = vec3(s_xyz_dxyz_xdyz.yz, s_xydz);
         
     // Intensity
     return s_xyz_dxyz_xdyz.x;

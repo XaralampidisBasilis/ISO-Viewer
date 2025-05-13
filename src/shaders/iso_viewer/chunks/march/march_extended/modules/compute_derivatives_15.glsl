@@ -69,9 +69,9 @@ vec2 yz_samples = vec2(
 );
 
 // first order partial derivatives with approximate sobel
-surface.gradient[0] = (samples[ 9] - samples[ 8]) / 8.0; 
-surface.gradient[1] = (samples[11] - samples[10]) / 8.0; 
-surface.gradient[2] = (samples[13] - samples[12]) / 8.0; 
+surface.gradient[0] = (x_samples.y - x_samples.x) * 0.25; 
+surface.gradient[1] = (y_samples.y - y_samples.x) * 0.25; 
+surface.gradient[2] = (z_samples.y - z_samples.x) * 0.25; 
 
 // pure second order partial derivatives with central differences
 surface.hessian[0][0] = samples[ 8] + samples[ 9] - samples[14] * 2.0;
@@ -79,9 +79,9 @@ surface.hessian[1][1] = samples[10] + samples[11] - samples[14] * 2.0;
 surface.hessian[2][2] = samples[12] + samples[13] - samples[14] * 2.0;
 
 // mixed second order partial derivatives with sobel8
-surface.hessian[0][1] = (xy_samples.x - xy_samples.y) / 4.0;
-surface.hessian[0][2] = (xz_samples.x - xz_samples.y) / 4.0;
-surface.hessian[1][2] = (yz_samples.x - yz_samples.y) / 4.0;
+surface.hessian[0][1] = (xy_samples.x - xy_samples.y) * 0.5;
+surface.hessian[0][2] = (xz_samples.x - xz_samples.y) * 0.5;
+surface.hessian[1][2] = (yz_samples.x - yz_samples.y) * 0.5;
 
 // symmetric mixed second order partial derivatives
 surface.hessian[1][0] = surface.hessian[0][1];
@@ -89,11 +89,9 @@ surface.hessian[2][0] = surface.hessian[0][2];
 surface.hessian[2][1] = surface.hessian[1][2];
 
 // Scale derivatives
-vec3 scale = normalize(u_intensity_map.spacing);
-vec3 spacing0 = scale * delta0;
-vec3 spacing1 = scale * delta1;
-surface.gradient /= spacing0;
-surface.hessian /= outerProduct(spacing1, spacing1);
+vec3 spacing = normalize(u_intensity_map.spacing);
+surface.hessian /= outerProduct(spacing, spacing);
+surface.gradient /= spacing;
 
 // Compute curvatures
 surface.curvatures = principal_curvatures(surface.gradient, surface.hessian, surface.curvients);
@@ -109,11 +107,14 @@ surface.max_curvature = maxabs(surface.curvatures);
 trace.gradient = surface.gradient;
 trace.curvature = (surface.curvatures.x + surface.curvatures.y) * 0.5;
 
-// debug.variable2 = to_color(vec3(surface.hessian[0][0], surface.hessian[1][1], surface.hessian[2][2]) * 0.5 + 0.5);
-// debug.variable3 = to_color(vec3(surface.hessian[1][2], surface.hessian[0][2], surface.hessian[0][1]) * 0.5 + 0.5);
+debug.variable2 = to_color(map(-2.0, 2.0, vec3(surface.hessian[0][0], surface.hessian[1][1], surface.hessian[2][2])));
+debug.variable3 = to_color(map(-2.0, 2.0, vec3(surface.hessian[1][2], surface.hessian[0][2], surface.hessian[0][1])));
 
-debug.variable2 = to_color(normalize(surface.curvients[0]) * 0.5 + 0.5);
-debug.variable3 = to_color(normalize(surface.curvients[1]) * 0.5 + 0.5);
+// debug.variable2 = to_color(normalize(surface.curvients[0]) * 0.5 + 0.5);
+// debug.variable3 = to_color(normalize(surface.curvients[1]) * 0.5 + 0.5);
 
 // debug.variable2 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.mean_curvature)));
 // debug.variable3 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.max_curvature)));
+
+// debug.variable2 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.curvatures.x)));
+// debug.variable3 = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-2.0, 2.0, surface.curvatures.y)));
