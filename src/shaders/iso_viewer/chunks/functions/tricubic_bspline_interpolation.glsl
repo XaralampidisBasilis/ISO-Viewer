@@ -1,7 +1,7 @@
 #ifndef TRICUBIC_BSPLINE_INTERPOLATION
 #define TRICUBIC_BSPLINE_INTERPOLATION
 
-/* Papers
+/* Sources
 Efficient GPU-Based Texture Interpolation using Uniofm B-Splines  
 (https://www.tandfonline.com/doi/abs/10.1080/2151237X.2008.10129269),
 
@@ -420,41 +420,29 @@ mat3 tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(in sampler3D tex, in vec3 c
 
 // Tricubic B-spline combined interpolations
 
-float tricubic_bspline_value(in sampler3D tex, in vec3 coords)
+void tricubic_bspline_value(in sampler3D tex, in vec3 coords, out float value)
 {
     vec3 p0; vec3 p1; vec3 g0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0);
 
     // Value
-    return tricubic_bspline_xyz(tex, p0, p1, g0);
+    value = tricubic_bspline_xyz(tex, p0, p1, g0);
 }
 
-vec3 tricubic_bspline_gradient(in sampler3D tex, in vec3 coords)
+void tricubic_bspline_gradient(in sampler3D tex, in vec3 coords, out vec3 gradient)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
  
     // Gradient
-    return tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
+    gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
 }
 
-mat3 tricubic_bspline_hessian(in sampler3D tex, in vec3 coords)
+void tricubic_bspline_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
  
-    // Intensity
-    return tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
-}
-
-void tricubic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
-{
-    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
-    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
- 
-    // Gradient
-    gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0); 
-
     // Hessian
     hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
 }
@@ -478,6 +466,18 @@ void tricubic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out float 
  
     // Value
     value = tricubic_bspline_xyz(tex, p0, p1, g0);
+
+    // Hessian
+    hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+}
+
+void tricubic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
+{
+    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
+    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Gradient
+    gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0); 
 
     // Hessian
     hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);

@@ -1,5 +1,5 @@
-#ifndef TRICUBIC_BSPLINE_INTERPOLATION
-#define TRICUBIC_BSPLINE_INTERPOLATION
+#ifndef TRICUBIC_BSPLINE
+#define TRICUBIC_BSPLINE
 
 /* Sources
 Efficient GPU-Based Texture Interpolation using Uniofm B-Splines  
@@ -354,6 +354,33 @@ float tricubic_bspline_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     return s_dxdyz;
 }
 
+mat3 tricubic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0, in vec3 dp0, in vec3 dp1, in vec3 dg0)
+{
+    // Mixed second derivative of yz axes
+    float s_xdydz = tricubic_bspline_xdydz(tex, 
+        vec3(p0.x, dp0.y, dp0.z), 
+        vec3(p1.x, dp1.y, dp1.z), 
+        vec3(g0.x, dg0.y, dg0.z)
+    );
+
+    // Mixed second derivative of xz axes
+    float s_dxydz = tricubic_bspline_dxydz(tex, 
+        vec3(dp0.x, p0.y, dp0.z), 
+        vec3(dp1.x, p1.y, dp1.z), 
+        vec3(dg0.x, g0.y, dg0.z)
+    );
+
+    // Mixed second derivative of xy axes
+    float s_dxdyz = tricubic_bspline_dxdyz(tex, 
+        vec3(dp0.x, dp0.y, p0.z), 
+        vec3(dp1.x, dp1.y, p1.z), 
+        vec3(dg0.x, dg0.y, g0.z)
+    );
+
+    // Mixed second derivatives
+    return vec3(s_xdydz, s_dxydz, s_dxdyz)
+}
+
 vec3 tricubic_bspline_d2x_d2y_d2z(in sampler3D tex,  in vec3 coords)
 {
     // Pure second derivatives of xyz aces
@@ -379,48 +406,12 @@ vec3 tricubic_bspline_d2x_d2y_d2z(in sampler3D tex,  in vec3 coords)
     );
 
     // Pure second derivatives
-    vec3 s_d2x_d2y_d2z = s_x0_y0_z0 + s_x1_y1_z1 - s * 2.0;
-
-    return s_d2x_d2y_d2z;
-}
-
-mat3 tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(in sampler3D tex, in vec3 coords, in vec3 p0, in vec3 p1, in vec3 g0, in vec3 dp0, in vec3 dp1, in vec3 dg0)
-{
-    // Mixed second derivative of yz axes
-    float s_xdydz = tricubic_bspline_xdydz(tex, 
-        vec3(p0.x, dp0.y, dp0.z), 
-        vec3(p1.x, dp1.y, dp1.z), 
-        vec3(g0.x, dg0.y, dg0.z)
-    );
-
-    // Mixed second derivative of xz axes
-    float s_dxydz = tricubic_bspline_dxydz(tex, 
-        vec3(dp0.x, p0.y, dp0.z), 
-        vec3(dp1.x, p1.y, dp1.z), 
-        vec3(dg0.x, g0.y, dg0.z)
-    );
-
-    // Mixed second derivative of xy axes
-    float s_dxdyz = tricubic_bspline_dxdyz(tex, 
-        vec3(dp0.x, dp0.y, p0.z), 
-        vec3(dp1.x, dp1.y, p1.z), 
-        vec3(dg0.x, dg0.y, g0.z)
-    );
-
-    // Pure second derivatives of xyz axes
-    vec3 s_d2x_d2y_d2z = tricubic_bspline_d2x_d2y_d2z(tex, coords);
-
-    // Hessian
-    return mat3(
-       s_d2x_d2y_d2z.x, s_dxdyz, s_dxydz,  
-       s_dxdyz, s_d2x_d2y_d2z.y, s_xdydz,  
-       s_dxydz, s_xdydz, s_d2x_d2y_d2z.z     
-   );
+    return s_x0_y0_z0 + s_x1_y1_z1 - s * 2.0;
 }
 
 // Tricubic B-spline combined interpolations
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float value)
+void tricubic_bspline_value(in sampler3D tex, in vec3 coords, out float value)
 {
     vec3 p0; vec3 p1; vec3 g0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0);
@@ -429,7 +420,7 @@ void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out fl
     value = tricubic_bspline_xyz(tex, p0, p1, g0);
 }
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float gradient)
+void tricubic_bspline_gradient(in sampler3D tex, in vec3 coords, out vec3 gradient)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
@@ -438,28 +429,26 @@ void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out fl
     gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
 }
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float hessian)
+void tricubic_bspline_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
  
-    // Hessian
-    hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
-}
-
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
-{
-    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
-    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+    // Mixed second derivatives
+    vec3 s_xdydz_dxydz_dxdyz = tricubic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0, dp0, dp1, dg0);
  
-    // Gradient
-    gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0); 
+    // Pure second derivatives
+    vec3 s_d2x_d2y_d2z = tricubic_bspline_d2x_d2y_d2z(tex, coords);
 
     // Hessian
-    hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
+       s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
+       s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
+   );
 }
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
+void tricubic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
@@ -471,7 +460,7 @@ void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out fl
     gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0);
 }
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
+void tricubic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
@@ -479,11 +468,42 @@ void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out fl
     // Value
     value = tricubic_bspline_xyz(tex, p0, p1, g0);
 
+    // Mixed second derivatives
+    vec3 s_xdydz_dxydz_dxdyz = tricubic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Pure second derivatives
+    vec3 s_d2x_d2y_d2z = tricubic_bspline_d2x_d2y_d2z(tex, coords);
+
     // Hessian
-    hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
+       s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
+       s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
+   );
 }
 
-void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
+void tricubic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
+{
+    vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
+    tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Gradient
+    gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0); 
+
+    // Mixed second derivatives
+    vec3 s_xdydz_dxydz_dxdyz = tricubic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Pure second derivatives
+    vec3 s_d2x_d2y_d2z = tricubic_bspline_d2x_d2y_d2z(tex, coords);
+
+    // Hessian
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
+       s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
+       s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
+   );}
+
+void tricubic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(tex, coords, p0, p1, g0, dp0, dp1, dg0);
@@ -494,8 +514,18 @@ void triquadratic_bspline_interpolation(in sampler3D tex, in vec3 coords, out fl
     // Gradient
     gradient = tricubic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0, dp0, dp1, dg0); 
 
+    // Mixed second derivatives
+    vec3 s_xdydz_dxydz_dxdyz = tricubic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0, dp0, dp1, dg0);
+ 
+    // Pure second derivatives
+    vec3 s_d2x_d2y_d2z = tricubic_bspline_d2x_d2y_d2z(tex, coords);
+
     // Hessian
-    hessian = tricubic_bspline_xdydz_dxydz_dxdyz_d2x_d2y_d2z_(tex, coords, p0, p1, g0, dp0, dp1, dg0);
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
+       s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
+       s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
+   );
 }
 
 #endif
