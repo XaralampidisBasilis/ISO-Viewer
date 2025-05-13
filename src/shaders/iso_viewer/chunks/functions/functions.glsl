@@ -5,4 +5,4 @@
 #include "./sample_anisotropic_distance_map"
 #include "./sample_extended_anisotropic_distance_map"
 #include "./softstep_hill"
-#include "./triquadratic_reconstruction"
+#include "./triquadratic_sampling"
