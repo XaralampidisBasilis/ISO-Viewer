@@ -2,10 +2,8 @@
 #define TRILINEAR_SOBEL_FILTER
 
 /* Sources
-One Step Further Beyond Trilinear Interpolation and Central
-Differences: Triquadratic Reconstruction and its Analytic
-Derivatives at the Cost of One Additional Texture Fetch 
-(https://onlinelibrary.wiley.com/doi/10.1111/cgf.14753),
+MRIcroGL Gradients
+(https://github.com/neurolabusc/blog/blob/main/GL-gradients/README.md),
 
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
@@ -13,14 +11,11 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 
 // Trilinear sobel interpolation basis
 
-void trilinear_sobel_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out vec3 p1, out vec3 g0)
+void trilinear_sobel_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out vec3 p1)
 {
     // Get size and normalized step
     vec3 size = vec3(textureSize(tex, 0));
     vec3 t = 1.0 / size;
-
-    // 1D B-spline filter coefficients for each axis
-    g0 = vec3(0.5);
 
     // 1D B-spline filter normalized positions for each axis
     vec3 p = coords * t;
@@ -51,7 +46,7 @@ void trilinear_sobel_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4 
 
 // Trilinear sobel interpolation of value    
 
-float trilinear_sobel_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+float trilinear_sobel_xyz(in sampler3D tex, in vec3 p0, in vec3 p1)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -61,19 +56,19 @@ float trilinear_sobel_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Interpolate along y
     vec2 s_xyz0_xyz1 = mix(
         s_xy0z0_xy1z0_xy0z1_xy1z1.yw,
         s_xy0z0_xy1z0_xy0z1_xy1z1.xz,
-    g0.y);
+    0.5);
 
     // Interpolate along z
     float s_xyz = mix(
         s_xyz0_xyz1.y,
         s_xyz0_xyz1.x, 
-    g0.z);
+    0.5);
 
     // Intensity
     return s_xyz;
@@ -81,7 +76,7 @@ float trilinear_sobel_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 
 // Trilinear sobel interpolation of gradient
 
-vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -91,7 +86,7 @@ vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -103,7 +98,7 @@ vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec2 s_xdyz0_xdyz1 = (
@@ -115,7 +110,7 @@ vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in
     vec2 s_dxyz_xdyz = mix(
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.w, s_xdyz0_xdyz1.y),
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.z, s_xdyz0_xdyz1.x), 
-    g0.z);
+    0.5);
 
     // Differentiate across z
     float s_xydz = (
@@ -129,7 +124,7 @@ vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in
 
 // Trilinear sobel interpolation of hessian
 
-vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1)
 {
     // Mixed second derivatives of xyz axes
 
@@ -141,7 +136,7 @@ vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1,
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -153,7 +148,7 @@ vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1,
     vec2 s_dxyz0_dxyz1 = mix(
         s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw,
         s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz,
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
@@ -165,7 +160,7 @@ vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1,
     float s_dxdyz = mix(
         s_xdyz0_xdyz1_dxdyz0_dxdyz1.w,
         s_xdyz0_xdyz1_dxdyz0_dxdyz1.z,
-    g0.z);
+    0.5);
 
     // Differentiate across z 
     vec2 s_xdydz_dxydz = (
@@ -211,29 +206,29 @@ vec3 trilinear_sobel_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
 
 void trilinear_sobel_value(in sampler3D tex, in vec3 coords, out float value)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
 
     // Value
-    value = trilinear_sobel_xyz(tex, p0, p1, g0);
+    value = trilinear_sobel_xyz(tex, p0, p1);
 }
 
 void trilinear_sobel_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradient)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
  
     // Gradient
-    gradient = trilinear_sobel_dxyz_xdyz_xydz(tex, p0, p1, g0);
+    gradient = trilinear_sobel_dxyz_xdyz_xydz(tex, p0, p1);
 }
  
 void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {
-    vec3 p0; vec3 p1; vec3 g0; 
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1; 
+    trilinear_sobel_basis(tex, coords, p0, p1);
  
     // Mixed derivatives
-    vec3 s_xdydz_dxydz_dxdyz = trilinear_sobel_xdydz_dxydz_dxdyz(tex, p0, p1, g0);
+    vec3 s_xdydz_dxydz_dxdyz = trilinear_sobel_xdydz_dxydz_dxdyz(tex, p0, p1);
 
     // Pure derivatives
     vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
@@ -248,8 +243,8 @@ void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 
 void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -259,7 +254,7 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float v
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -271,7 +266,7 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float v
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
@@ -283,7 +278,7 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float v
     vec2 s_xyz_dxdyz = mix(
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.y, s_xdyz0_xdyz1_dxdyz0_dxdyz1.w),
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.x, s_xdyz0_xdyz1_dxdyz0_dxdyz1.z),
-    g0.z);
+    0.5);
 
     // Differentiate across z
     vec2 s_dxydz_xdydz = (
@@ -307,8 +302,8 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float v
 
 void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -318,7 +313,7 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float 
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -330,7 +325,7 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float 
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec2 s_xdyz0_xdyz1 = (
@@ -342,7 +337,7 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float 
     vec3 s_xyz_dxyz_xdyz = mix(
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1.y),
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1.x), 
-    g0.z);
+    0.5);
 
     // Differentiate across z
     float s_xydz = (
@@ -359,8 +354,8 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float 
 
 void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -370,7 +365,7 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -382,7 +377,7 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
@@ -394,7 +389,7 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3
     vec3 s_dxyz_xdyz_dxdyz = mix(
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.w, s_xdyz0_xdyz1_dxdyz0_dxdyz1.yw),
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.z, s_xdyz0_xdyz1_dxdyz0_dxdyz1.xz), 
-    g0.z);
+    0.5);
 
     // Differentiate across z
     vec3 s_xydz_dxydz_xdydz = (
@@ -416,11 +411,10 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3
    );
 }
 
-
 void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
 {
-    vec3 p0; vec3 p1; vec3 g0;
-    trilinear_sobel_basis(tex, coords, p0, p1, g0);
+    vec3 p0; vec3 p1;
+    trilinear_sobel_basis(tex, coords, p0, p1);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -430,7 +424,7 @@ void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, ou
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
+    0.5);
 
     // Differentiate across x
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
@@ -442,7 +436,7 @@ void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, ou
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    g0.y);
+    0.5);
 
     // Differentiate across y
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
@@ -454,7 +448,7 @@ void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, ou
     vec4 s_xyz_dxyz_xdyz_dxdyz = mix(
         vec4(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.yw),
         vec4(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.xz),
-    g0.z);
+    0.5);
 
     // Differentiate across z
     vec3 s_xydz_dxydz_xdydz = (
