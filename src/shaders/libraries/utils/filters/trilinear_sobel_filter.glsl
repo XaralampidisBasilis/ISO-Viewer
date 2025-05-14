@@ -1,5 +1,5 @@
-#ifndef TRIQUADRATIC_BSPLINE_INTERPOLATION
-#define TRIQUADRATIC_BSPLINE_INTERPOLATION
+#ifndef TRILINEAR_SOBEL_FILTER
+#define TRILINEAR_SOBEL_FILTER
 
 /* Sources
 One Step Further Beyond Trilinear Interpolation and Central
@@ -11,33 +11,26 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
 
-// Triquadratic B-spline interpolation basis
+// Trilinear sobel interpolation basis
 
-void triquadratic_bspline_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out vec3 p1, out vec3 g0)
+void trilinear_sobel_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out vec3 p1, out vec3 g0)
 {
     // Get size and normalized step
     vec3 size = vec3(textureSize(tex, 0));
     vec3 t = 1.0 / size;
 
-    // Convert to voxel-space and compute local coordinates
-    vec3 x = coords - 0.5;
-    vec3 b = x - round(x);
-
     // 1D B-spline filter coefficients for each axis
-    g0 = 0.5 - b;
-
-    // 1D B-spline filter offsets for each axis
-    vec3 h0 = (0.5 + b) * 0.5;
+    g0 = vec3(0.5);
 
     // 1D B-spline filter normalized positions for each axis
     vec3 p = coords * t;
-    p0 = p - h0 * t;
-    p1 = p0 + 0.5 * t;
+    p0 = p - 0.5 * t;
+    p1 = p + 0.5 * t;
 }
 
-// Triquadratic B-spline interpolation samples
+// Trilinear sobel interpolation samples
 
-void triquadratic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, out vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1)
+void trilinear_sobel_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, out vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1)
 {
     // Sample the 8 corner points of the interpolation cube based on p0, p1
 
@@ -56,13 +49,13 @@ void triquadratic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out 
     );
 }
 
-// Triquadratic B-spline interpolation of value    
+// Trilinear sobel interpolation of value    
 
-float triquadratic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+float trilinear_sobel_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -86,13 +79,13 @@ float triquadratic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3
     return s_xyz;
 }
 
-// Triquadratic B-spline interpolation of gradient
+// Trilinear sobel interpolation of gradient
 
-vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -104,7 +97,7 @@ vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -116,7 +109,7 @@ vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p
     vec2 s_xdyz0_xdyz1 = (
         s_xy0z0_xy1z0_xy0z1_xy1z1.yw - 
         s_xy0z0_xy1z0_xy0z1_xy1z1.xz
-    ) * 2.0;
+    );
 
     // Interpolate along z
     vec2 s_dxyz_xdyz = mix(
@@ -128,21 +121,21 @@ vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p
     float s_xydz = (
         s_xyz0_xyz1_dxyz0_dxyz1.y - 
         s_xyz0_xyz1_dxyz0_dxyz1.x
-    ) * 2.0;
+    );
 
     // Gradient
     return vec3(s_dxyz_xdyz, s_xydz);
 }
 
-// Triquadratic B-spline interpolation of hessian
+// Trilinear sobel interpolation of hessian
 
-vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
+vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
     // Mixed second derivatives of xyz axes
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -154,7 +147,7 @@ vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 -
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec2 s_dxyz0_dxyz1 = mix(
@@ -166,7 +159,7 @@ vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) - 
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    ) * 2.0;
+    );
 
     // Interpolate along z
     float s_dxdyz = mix(
@@ -178,13 +171,13 @@ vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec
     vec2 s_xdydz_dxydz = (
         vec2(s_xdyz0_xdyz1_dxdyz0_dxdyz1.y, s_dxyz0_dxyz1.y) - 
         vec2(s_xdyz0_xdyz1_dxdyz0_dxdyz1.x, s_dxyz0_dxyz1.x)
-    ) * 2.0;
+    );
 
     // Mixes derivatives
     return vec3(s_xdydz_dxydz, s_dxdyz);
 }
 
-vec3 triquadratic_bspline_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
+vec3 trilinear_sobel_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
 {
     // Pure second derivatives of xyz axes
 
@@ -214,36 +207,36 @@ vec3 triquadratic_bspline_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
     return s_d2x_d2y_d2z;
 }
 
-// Triquadratic B-spline interpolations
+// Trilinear sobel interpolations
 
-void triquadratic_bspline_value(in sampler3D tex, in vec3 coords, out float value)
+void trilinear_sobel_value(in sampler3D tex, in vec3 coords, out float value)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
 
     // Value
-    value = triquadratic_bspline_xyz(tex, p0, p1, g0);
+    value = trilinear_sobel_xyz(tex, p0, p1, g0);
 }
 
-void triquadratic_bspline_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradient)
+void trilinear_sobel_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradient)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
  
     // Gradient
-    gradient = triquadratic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0);
+    gradient = trilinear_sobel_dxyz_xdyz_xydz(tex, p0, p1, g0);
 }
  
-void triquadratic_bspline_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
+void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; 
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
  
     // Mixed derivatives
-    vec3 s_xdydz_dxydz_dxdyz = triquadratic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0);
+    vec3 s_xdydz_dxydz_dxdyz = trilinear_sobel_xdydz_dxydz_dxdyz(tex, p0, p1, g0);
 
     // Pure derivatives
-    vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
+    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
 
     // Hessian
     hessian = mat3(
@@ -253,14 +246,14 @@ void triquadratic_bspline_hessian(in sampler3D tex, in vec3 coords, out mat3 hes
    );
 }
 
-void triquadratic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
+void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -272,7 +265,7 @@ void triquadratic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out fl
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -284,7 +277,7 @@ void triquadratic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out fl
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) - 
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    ) * 2.0;
+    );
 
     // Interpolate along z
     vec2 s_xyz_dxdyz = mix(
@@ -296,10 +289,10 @@ void triquadratic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out fl
     vec2 s_dxydz_xdydz = (
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.w, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
         vec2(s_xyz0_xyz1_dxyz0_dxyz1.z, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
-    ) * 2.0;
+    );
 
     // Pure derivatives
-    vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
+    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
 
     // Value
     value = s_xyz_dxdyz.x;
@@ -312,14 +305,14 @@ void triquadratic_bspline_value_hessian(in sampler3D tex, in vec3 coords, out fl
    );
 }
 
-void triquadratic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
+void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -331,7 +324,7 @@ void triquadratic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out f
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -343,7 +336,7 @@ void triquadratic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out f
     vec2 s_xdyz0_xdyz1 = (
         s_xy0z0_xy1z0_xy0z1_xy1z1.yw - 
         s_xy0z0_xy1z0_xy0z1_xy1z1.xz
-    ) * 2.0;
+    );
 
     // Interpolate along z
     vec3 s_xyz_dxyz_xdyz = mix(
@@ -355,7 +348,7 @@ void triquadratic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out f
     float s_xydz = (
         s_xyz0_xyz1_dxyz0_dxyz1.y - 
         s_xyz0_xyz1_dxyz0_dxyz1.x
-    ) * 2.0;
+    );
 
     // Value
     value = s_xyz_dxyz_xdyz.x;
@@ -364,14 +357,14 @@ void triquadratic_bspline_value_gradient(in sampler3D tex, in vec3 coords, out f
     gradient = vec3(s_xyz_dxyz_xdyz.yz, s_xydz);
 }
 
-void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
+void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -383,7 +376,7 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -395,7 +388,7 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) -
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    ) * 2.0;
+    );
 
     // Interpolate along z
     vec3 s_dxyz_xdyz_dxdyz = mix(
@@ -407,10 +400,10 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
     vec3 s_xydz_dxydz_xdydz = (
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
-    ) * 2.0;
+    );
 
     // Pure derivatives
-    vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
+    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
 
     // Gradient
     gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
@@ -423,14 +416,15 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
    );
 }
 
-void triquadratic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
+
+void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0;
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
+    trilinear_sobel_basis(tex, coords, p0, p1, g0);
 
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+    trilinear_sobel_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
     vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
@@ -442,7 +436,7 @@ void triquadratic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coord
     vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
         s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
         s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    ) * 2.0;
+    );
 
     // Interpolate along y
     vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
@@ -454,7 +448,7 @@ void triquadratic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coord
     vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) - 
         vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    ) * 2.0;
+    );
 
     // Interpolate along z
     vec4 s_xyz_dxyz_xdyz_dxdyz = mix(
@@ -466,10 +460,10 @@ void triquadratic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coord
     vec3 s_xydz_dxydz_xdydz = (
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
         vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
-    ) * 2.0;
+    );
 
     // Pure derivatives
-    vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
+    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
 
     // Value
     value = s_xyz_dxyz_xdyz_dxdyz.x;

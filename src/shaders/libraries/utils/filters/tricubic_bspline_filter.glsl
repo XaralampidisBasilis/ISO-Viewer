@@ -1,5 +1,5 @@
-#ifndef TRICUBIC_BSPLINE
-#define TRICUBIC_BSPLINE
+#ifndef TRICUBIC_BSPLINE_FILTER
+#define TRICUBIC_BSPLINE_FILTER
 
 /* Sources
 Efficient GPU-Based Texture Interpolation using Uniofm B-Splines  
@@ -354,7 +354,7 @@ float tricubic_bspline_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     return s_dxdyz;
 }
 
-mat3 tricubic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0, in vec3 dp0, in vec3 dp1, in vec3 dg0)
+vec3 tricubic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0, in vec3 dp0, in vec3 dp1, in vec3 dg0)
 {
     // Mixed second derivative of yz axes
     float s_xdydz = tricubic_bspline_xdydz(tex, 
@@ -378,7 +378,7 @@ mat3 tricubic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1
     );
 
     // Mixed second derivatives
-    return vec3(s_xdydz, s_dxydz, s_dxdyz)
+    return vec3(s_xdydz, s_dxydz, s_dxdyz);
 }
 
 vec3 tricubic_bspline_d2x_d2y_d2z(in sampler3D tex,  in vec3 coords)
@@ -501,7 +501,8 @@ void tricubic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec
        s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
        s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
        s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
-   );}
+   );
+}
 
 void tricubic_bspline_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
 {

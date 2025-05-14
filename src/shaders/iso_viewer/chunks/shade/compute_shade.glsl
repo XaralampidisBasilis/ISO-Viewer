@@ -33,6 +33,9 @@ frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle)
 // Gradient
 frag.gradient_factor = softstep_hill(0.0, 0.3, length(trace.gradient), 0.9);
 
+// Curvature
+// float factor = softstep_hill(-2.0*u_debugging.variable2, -2.0*u_debugging.variable3, min(surface.max_curvature, 0.0), u_debugging.variable4);
+
 // Material
 frag.material_color = sample_color_maps(trace.intensity);
 
@@ -49,6 +52,7 @@ frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shad
 
 // Directional
 frag.direct_color = mix(frag.diffuse_color, frag.specular_color, specular);
+frag.direct_color *= mmin(frag.edge_factor, frag.gradient_factor);
 
 // Compose colors
 frag.color = frag.ambient_color + frag.direct_color;

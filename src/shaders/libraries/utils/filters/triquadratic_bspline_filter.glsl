@@ -1,5 +1,5 @@
-#ifndef TRIQUADRATIC_BSPLINE
-#define TRIQUADRATIC_BSPLINE
+#ifndef TRIQUADRATIC_BSPLINE_FILTER
+#define TRIQUADRATIC_BSPLINE_FILTER
 
 /* Sources
 One Step Further Beyond Trilinear Interpolation and Central

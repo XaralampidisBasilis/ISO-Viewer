@@ -10,6 +10,7 @@
 #include "../../libraries/utils/sdf/box_bounds"
 #include "../../libraries/utils/colors/to_color"
 #include "../../libraries/utils/colors/posterize"
+#include "../../libraries/utils/filters/filters"
 #include "../../libraries/utils/geometry/principal_curvatures"
 
 
