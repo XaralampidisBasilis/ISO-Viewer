@@ -1,7 +1,6 @@
 
 // given the start and exit compute the sampling distances inside the cell
-poly.distances.x = poly.distances.w;
-poly.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, poly.weights.yzw);
+poly.distances = mmix(cell.entry_distance, cell.exit_distance, poly.weights);
 
 // compute the intensity samples inside the cell from the intensity map texture
 poly.intensities.x = poly.intensities.w;
