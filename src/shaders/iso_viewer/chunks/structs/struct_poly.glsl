@@ -6,6 +6,7 @@ struct Poly
     vec2 interval;
     vec3 roots;
     vec4 intensities;    
+    vec4 errors;
     vec4 distances;
     vec4 coefficients;    
     vec4 weights;
@@ -20,6 +21,7 @@ void set_poly()
     poly.interval = vec2(0.0, 1.0);
     poly.roots = vec3(0.0);
     poly.intensities = vec4(0.0);
+    poly.errors = vec4(0.0);
     poly.distances = vec4(0.0);
     poly.coefficients = vec4(0.0);
     poly.weights = vec4(0.0, 1.0, 2.0, 3.0) / 3.0;
