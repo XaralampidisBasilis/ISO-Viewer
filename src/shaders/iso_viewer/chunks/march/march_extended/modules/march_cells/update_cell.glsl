@@ -18,15 +18,7 @@ cell.terminated = cell.exit_distance > ray.end_distance;
 cell.coords += cell.axes * ray.signs;
 
 // compute cell polynomial interpolation
-
-if (u_debugging.variable2 < 0.5)
-{
-    #include "./update_poly"
-}
-else 
-{
-    #include "./update_poly_2"
-}
+#include "./update_poly"
 
 // update stats
 #if STATS_ENABLED == 1

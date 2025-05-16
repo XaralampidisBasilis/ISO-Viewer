@@ -6,23 +6,7 @@ if (cell.intersected)
 
 if (trace.intersected)
 {
-    if (u_debugging.variable1 < 0.5)
-    {
-        #include "./compute_derivatives_15l"
-    }
-    else 
-    {
-        #include "./compute_derivatives_15q"
-
-        // if (u_debugging.variable2 < 0.5)
-        // {
-        //     #include "./compute_derivatives_15q"
-        // }
-        // else 
-        // {
-        //     #include "./compute_derivatives_15c"
-        // }
-    }
+    #include "./compute_derivatives_15q"
 }
 else
 {

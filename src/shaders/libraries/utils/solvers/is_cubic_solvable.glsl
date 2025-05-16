@@ -1,8 +1,8 @@
 #ifndef IS_CUBIC_SOLVABLE
 #define IS_CUBIC_SOLVABLE
 
-#ifndef QUADRATIC_SOLVER
-#include "./quadratic_solver"
+#ifndef QUADRATIC_ROOTS
+#include "./quadratic_roots"
 #endif
 #ifndef POLY_HORNER
 #include "../math/poly_horner"
@@ -32,7 +32,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = strict_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = quadratic_roots(deriv_coeffs, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points
@@ -40,10 +40,10 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
     poly_horner(coeffs, t_critical, f_extrema);
 
     // combine function values into a single vector
-    vec4 f_values = vec4(f_interval, f_extrema);
+    vec4 f_values = vec4(f_interval.x, f_extrema,f_interval.y);
 
     // compute sign changes for intermediate value theorem
-    bvec3 is_crossing = lessThanEqual(f_values.xzw * f_values.zwy, vec3(0.0));
+    bvec3 is_crossing = lessThanEqual(f_values.xyz * f_values.yzw, vec3(0.0));
 
     // return result
     return any(is_crossing);
@@ -72,7 +72,7 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = strict_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = quadratic_roots(deriv_coeffs, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points
@@ -80,10 +80,10 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in
     poly_horner(coeffs, t_critical, f_extrema);
 
     // combine function values into a single vector
-    vec4 f_values = vec4(f_interval, f_extrema);
+    vec4 f_values = vec4(f_interval.x, f_extrema,f_interval.y);
 
     // compute sign changes for intermediate value theorem
-    bvec3 is_crossing = lessThanEqual(f_values.xzw * f_values.zwy, vec3(0.0));
+    bvec3 is_crossing = lessThanEqual(f_values.xyz * f_values.yzw, vec3(0.0));
 
     // return result
     return any(is_crossing);

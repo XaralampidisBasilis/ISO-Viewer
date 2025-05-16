@@ -26,7 +26,6 @@ struct MathConstants {
     float RAD_TO_DEG;     
     float CATALAN;        
     float APERY;   
-    float NAN;       
 };
 
 const MathConstants MATH = MathConstants(
@@ -53,8 +52,7 @@ const MathConstants MATH = MathConstants(
     0.01745329252,   
     57.2957795131,   
     0.91596559417,   
-    1.20205690316,
-    uintBitsToFloat(0x7f800001u)  
+    1.20205690316
 );
 
 #endif

@@ -1,52 +1,67 @@
 #ifndef IS_QUADRATIC_SOLVABLE
 #define IS_QUADRATIC_SOLVABLE
 
-#ifndef MICRO_TOLERANCE
-#define MICRO_TOLERANCE 1e-6
+#ifndef LINEAR_ROOTS
+#include "./linear_root"
 #endif
-#ifndef LINEAR_SOLVER
-#include "./linear_solver"
-#endif
-#ifndef QUADRATIC_POWS
-#include "./quadratic_pows"
+#ifndef POLY_HORNER
+#include "../math/poly_horner"
 #endif
 
-// compute quadratic derivative factors
-
-bool is_quadratic_solvable(in vec3 coeffs, in float value, in float start, in float end)
+bool is_quadratic_solvable(in vec3 coeffs, in float f_target, in vec2 t_interval)
 {
-    // normalize quadratic equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
-    coeffs.x -= value;
+    // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
+    coeffs.x -= f_target;
 
-    // compute the quadratic at the boundary values
-    vec2 boundary_values = vec2
-    (
-        dot(coeffs, quadratic_pows(start)),
-        dot(coeffs, quadratic_pows(end))
-    );
+    // compute the quadratic at the boundaries
+    vec2 f_interval;
+    poly_horner(coeffs, t_interval, f_interval);
 
-    // compute the derivative of quadratic and solve for the extrema values
-    vec2 linear_coeffs = coeffs.yz * vec2(1.0, 2.0);
-    float linear_root = linear_solver(linear_coeffs, 0.0, start);
+    // compute quadratic derivative coefficients
+    vec2 deriv_coeffs = vec2(coeffs.y, coeffs.z * 2.0);
 
-    // compute the extrema value
-    float extrema_value = dot(coeffs, quadratic_pows(linear_root));
-    
-    // check if the extrema are within the interval and evaluate the quadratic at those points
-    bool is_inside = inside_open(start, end, linear_root);
+    // solve for the critical point of the quadratic polynomial
+    float t_critical = linear_root(deriv_coeffs);
+    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
-    // check solution based on intermediate value theorem
-    bool is_solvable = (boundary_values.x * boundary_values.y <= MICRO_TOLERANCE);
+    // compute the quadratic extrema value at the critical point
+    float f_extrema;
+    poly_horner(coeffs, t_critical, f_extrema);
 
-    // check solution based on the extrema values inside the interval
-    is_solvable = is_solvable || 
+    // combine function values into a single vector
+    vec3 f_values = vec3(f_interval.x, f_extrema, f_interval.y);
 
-        (is_inside && ((extrema_value * boundary_values.x < MICRO_TOLERANCE) ||
-                       (extrema_value * boundary_values.y < MICRO_TOLERANCE) || 
-                       (abs(extrema_value) < MICRO_TOLERANCE)));
+    // compute sign changes for intermediate value theorem
+    bvec2 is_crossing = lessThanEqual(f_values.xy * f_values.yz, vec2(0.0));
 
     // return result
-    return is_solvable;
+    return any(is_crossing);
+}
+
+bool is_quadratic_solvable(in vec3 coeffs, in float f_target, in vec2 t_interval, in vec2 f_interval)
+{
+    // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
+    coeffs.x -= f_target;
+
+    // compute quadratic derivative coefficients
+    vec2 deriv_coeffs = vec2(coeffs.y, coeffs.z * 2.0);
+
+    // solve for the critical point of the quadratic polynomial
+    float t_critical = linear_root(deriv_coeffs);
+    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
+
+    // compute the quadratic extrema value at the critical point
+    float f_extrema;
+    poly_horner(coeffs, t_critical, f_extrema);
+
+    // combine function values into a single vector
+    vec3 f_values = vec3(f_interval.x, f_extrema, f_interval.y);
+
+    // compute sign changes for intermediate value theorem
+    bvec2 is_crossing = lessThanEqual(f_values.xy * f_values.yz, vec2(0.0));
+
+    // return result
+    return any(is_crossing);
 }
 
 #endif

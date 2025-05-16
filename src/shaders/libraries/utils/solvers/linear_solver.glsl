@@ -5,43 +5,42 @@
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
 #endif
+#ifndef LINEAR_ROOT
+#include "./linear_root"
+#endif
 
-float linear_solver(in vec2 coeffs, in float target)
+// Solves the general linear equation: c[0] + c[1]*x = y
+// xf is the fallback root
+
+float linear_solver(in vec2 c, in float y, in float xf)
 {
-
-    // normalize equation coeffs.y * t + (coeffs.x - target) = 0
-    coeffs.x -= target;
-
-    // set default root
-    float default_root = -1.0;
-
-    // compute normalized linear coefficients 
-    float linear_coeff = coeffs.x / coeffs.y;
+    // normalize equation c.x - y + c.y*t = 0
+    c.x -= y;
 
     // compute linear root
-    float linear_root = - linear_coeff;
+    float x = linear_root(c);
+
+    // check if linear equation
+    bool is_line = abs(c.y) > MICRO_TOLERANCE;
    
-    // linear solutions
-    return (abs(coeffs.y) < MICRO_TOLERANCE) ? default_root : linear_root;
+    // solution
+    return (is_line) ? x : xf;
 }
 
-float linear_solver(in vec2 coeffs, in float target, in float flag)
-{
-    // normalize equation coeffs.y * t + (coeffs.x - target) = 0
-    coeffs.x -= target;
+// // branching
+// float linear_solver(in vec2 c, in float y, in float xf)
+// {
+//     // normalize equation c.x - y + c.y*t = 0
+//     c.x -= y;
 
-    // set default root
-    float default_root = flag;
+//     // solutions
+//     if (abs(c.y) > MICRO_TOLERANCE)
+//     {
+//         return linear_root(c);
+//     }
 
-    // compute normalized linear coefficients 
-    float linear_coeff = coeffs.x / coeffs.y;
-
-    // compute linear root
-    float linear_root = - linear_coeff;
-   
-    // linear solutions
-    return (abs(coeffs.y) < MICRO_TOLERANCE) ? default_root : linear_root;
-}
+//     return xf;
+// }
 
 #endif
 

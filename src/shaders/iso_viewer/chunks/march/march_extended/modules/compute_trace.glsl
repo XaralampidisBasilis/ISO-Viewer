@@ -1,8 +1,6 @@
 
-poly.coefficients = poly.inv_vander * poly.intensities;
-
 // compute minimum intersection inside the cell
-vec3 roots = cubic_solver(poly.coefficients, u_rendering.intensity);
+vec3 roots = cubic_solver(poly.coefficients, u_rendering.intensity, poly.interval.y);
 bvec3 is_inside = inside_closed(poly.interval.x, poly.interval.y, roots);
 vec3 valid_roots = mix(vec3(poly.interval.y), roots, is_inside);
 float root = mmin(valid_roots);
