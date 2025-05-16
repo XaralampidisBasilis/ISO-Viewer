@@ -1,4 +1,6 @@
 
+poly.coefficients = poly.inv_vander * poly.intensities;
+
 // compute minimum intersection inside the cell
 vec3 roots = cubic_solver(poly.coefficients, u_rendering.intensity);
 bvec3 is_inside = inside_closed(poly.interval.x, poly.interval.y, roots);
