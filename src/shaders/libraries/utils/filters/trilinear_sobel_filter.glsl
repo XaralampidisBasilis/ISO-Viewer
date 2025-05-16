@@ -71,7 +71,7 @@ void trilinear_sobel_sample_cube(in sampler3D tex, in vec3 coords, out vec4 s_x0
 float trilinear_sobel_xyz(in sampler3D tex, in vec3 coords)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -101,7 +101,7 @@ float trilinear_sobel_xyz(in sampler3D tex, in vec3 coords)
 vec3 trilinear_sobel_dxyz_xdyz_xydz(in sampler3D tex, in vec3 coords)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -151,7 +151,7 @@ vec3 trilinear_sobel_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 coords)
     // Mixed second derivatives of xyz axes
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -199,7 +199,7 @@ vec3 trilinear_sobel_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
     // Pure second derivatives of xyz axes
 
     // Sample central cross
-    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_sobel_sample_cross(tex, coords, s_x1y1z1, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // Pure second derivatives
@@ -243,7 +243,7 @@ void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, 
 void trilinear_sobel_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float laplacian)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Sample cross
@@ -270,7 +270,7 @@ void trilinear_sobel_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing
 void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out mat3 hessian)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -327,7 +327,7 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, in vec3 spa
 void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out vec3 gradient)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -377,7 +377,7 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, in vec3 sp
 void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out vec3 gradient, out mat3 hessian)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -435,7 +435,7 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 
 void trilinear_sobel_gradient_hessian_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing, out vec3 gradient, out mat3 hessian, out float laplacian)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Sample cross
@@ -508,7 +508,7 @@ void trilinear_sobel_gradient_hessian_laplacian(in sampler3D tex, in vec3 coords
 void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out vec3 gradient, out mat3 hessian)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x

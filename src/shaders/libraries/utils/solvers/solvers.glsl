@@ -5,6 +5,7 @@
 #include "./quadratic_solver"
 #include "./cubic_roots"
 #include "./cubic_solver"
+#include "./quartic_roots"
 #include "./is_cubic_solvable"
 #include "./is_quadratic_solvable"
 // #include "./linsolve"

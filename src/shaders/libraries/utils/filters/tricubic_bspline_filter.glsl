@@ -125,7 +125,7 @@ void tricubic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4
 float tricubic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -156,7 +156,7 @@ float tricubic_bspline_dxyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
     // First derivative of x axis
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Differentiate along x
@@ -185,7 +185,7 @@ float tricubic_bspline_xdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
     // First derivative of y axis
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -214,7 +214,7 @@ float tricubic_bspline_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0
     // First derivative of z axis
     
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -272,7 +272,7 @@ float tricubic_bspline_xdydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     // Mixed second derivative of yz axes
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Interpolate along x
@@ -301,7 +301,7 @@ float tricubic_bspline_dxydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     // Mixed second derivative of xz axes
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
     // Differentiate along x
@@ -330,7 +330,7 @@ float tricubic_bspline_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g
     // Mixed second derivative of xy axes
 
     // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1; vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
     tricubic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
 
      // Differentiate along x

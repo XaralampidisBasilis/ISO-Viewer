@@ -17,5 +17,3 @@ cell.intersected = any(lessThanEqual(poly.errors.xyz * poly.errors.yzw, vec3(0.0
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
 cell.intersected = cell.intersected || is_cubic_solvable(poly.coefficients, u_rendering.intensity, poly.interval, poly.intensities.xw);
-
-

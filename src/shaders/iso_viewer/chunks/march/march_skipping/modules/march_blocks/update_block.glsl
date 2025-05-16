@@ -30,7 +30,7 @@ block.terminated = block.exit_distance > ray.end_distance;
 // compute next coordinates
 ivec3 coordinates = ivec3(round(block.exit_position)) / u_distance_map.stride;
 block.coords += block.radius * block.axes * ray.signs;
-block.coords = select(bvec3(block.axes), block.coords, coordinates);
+block.coords = pick(bvec3(block.axes), block.coords, coordinates);
 
 // update stats
 #if STATS_ENABLED == 1

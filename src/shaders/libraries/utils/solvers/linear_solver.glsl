@@ -10,25 +10,25 @@
 #endif
 
 // Solves the general linear equation: c[0] + c[1]*x = y
-// xf is the fallback root
+// x0 is the fallback root
 
-float linear_solver(in vec2 c, in float y, in float xf)
+float linear_solver(in vec2 c, in float y, in float x0)
 {
     // normalize equation c.x - y + c.y*t = 0
     c.x -= y;
 
     // compute linear root
-    float x = linear_root(c);
+    float x1 = linear_root(c);
 
     // check if linear equation
     bool is_line = abs(c.y) > MICRO_TOLERANCE;
    
     // solution
-    return (is_line) ? x : xf;
+    return (is_line) ? x1 : x0;
 }
 
 // // branching
-// float linear_solver(in vec2 c, in float y, in float xf)
+// float linear_solver(in vec2 c, in float y, in float x0)
 // {
 //     // normalize equation c.x - y + c.y*t = 0
 //     c.x -= y;
@@ -39,7 +39,7 @@ float linear_solver(in vec2 c, in float y, in float xf)
 //         return linear_root(c);
 //     }
 
-//     return xf;
+//     return x0;
 // }
 
 #endif

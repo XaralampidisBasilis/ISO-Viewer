@@ -65,7 +65,7 @@ void trilinear_central_samples(in sampler3D tex, in vec3 coords, out float s_x1y
 void trilinear_central_gradient(in sampler3D tex, in vec3 coords, out vec3 gradient)
 {
     // Sample central cross
-    vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_central_samples(tex, coords, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // First order central differences across xyz
@@ -80,7 +80,7 @@ void trilinear_central_laplacian(in sampler3D tex, in vec3 coords, out vec3 lapl
     // Pure second derivatives of xyz axes
 
     // Sample central cross
-    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_central_samples(tex, coords, s_x1y1z1, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // Second order finite differences across xyz
@@ -95,7 +95,7 @@ void trilinear_central_gradient_laplacian(in sampler3D tex, in vec3 coords, out 
     // Pure second derivatives of xyz axes
 
     // Sample central cross
-    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_central_samples(tex, coords, s_x1y1z1, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // First order central differences across xyz
@@ -112,7 +112,7 @@ void trilinear_central_gradient_laplacian(in sampler3D tex, in vec3 coords, out 
 void triquadratic_central_value(in sampler3D tex, in vec3 coords, out float value)
 {
     // Sample central cross
-    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_central_samples(tex, coords, s_x1y1z1, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // Second order finite differences across xyz
@@ -133,7 +133,7 @@ void triquadratic_central_value(in sampler3D tex, in vec3 coords, out float valu
 void triquadratic_central_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
 {
     // Sample central cross
-    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0; vec3 s_x2y1z1_x1y2z1_x1y1z2;
+    float s_x1y1z1; vec3 s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2;
     trilinear_central_samples(tex, coords, s_x1y1z1, s_x0y1z1_x1y0z1_x1y1z0, s_x2y1z1_x1y2z1_x1y1z2);
 
     // First order central differences across xyz

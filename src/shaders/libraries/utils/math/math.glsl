@@ -18,5 +18,5 @@
 #include "./prod" 
 #include "./ssign" 
 #include "./sum"
-#include "./select"
+#include "./pick"
 #include "./poly_horner"
