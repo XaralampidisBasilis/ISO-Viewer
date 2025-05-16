@@ -44,17 +44,16 @@ vec3 cubic_solver(in vec4 coeffs, in float target)
     /* QUADRATIC */ 
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs.xyz;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float quadratic_stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec3 quadratic_roots = - quadratic_coeffs.y + vec3(-1.0, 1.0, 1.0) * sqrt_quadratic_discriminant;
-
-    // filter quadratic roots based on determinant
+    vec3 quadratic_roots = vec3(quadratic_stable_root / coeffs.zz, coeffs.x / quadratic_stable_root);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* CUBIC */ 
@@ -139,15 +138,16 @@ vec3 cubic_solver(in vec4 coeffs, in float target, in float flag)
     /* QUADRATIC */ 
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs.xyz;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float quadratic_stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec3 quadratic_roots = - quadratic_coeffs.y + vec3(-1.0, 1.0, 1.0) * sqrt_quadratic_discriminant;
+    vec3 quadratic_roots = vec3(quadratic_stable_root / coeffs.zz, coeffs.x / quadratic_stable_root);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* CUBIC */ 

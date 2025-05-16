@@ -8,6 +8,9 @@
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
 #endif
+#ifndef SSIGN
+#include "../math/ssign"
+#endif
 
 vec2 quadratic_solver(in vec3 coeffs, in float target)
 {
@@ -29,15 +32,16 @@ vec2 quadratic_solver(in vec3 coeffs, in float target)
     /* QUADRATIC */ 
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
+    vec2 quadratic_roots = vec2(stable_root / coeffs.z, coeffs.x / stable_root);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* SOLUTIONS */ 
@@ -68,15 +72,16 @@ vec2 quadratic_solver(in vec3 coeffs, in float target, in float flag)
     /* QUADRATIC */ 
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
+    vec2 quadratic_roots = vec2(stable_root / coeffs.z, coeffs.x / stable_root);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* SOLUTIONS */ 
@@ -107,15 +112,16 @@ vec2 quadratic_solver(in vec3 coeffs, in float target, in float flag, out int co
     /* QUADRATIC */ 
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
+    vec2 quadratic_roots = vec2(stable_root / coeffs.z, coeffs.x / stable_root);
     quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
 
     /* SOLUTIONS */ 
@@ -136,18 +142,20 @@ vec2 strict_quadratic_solver(in vec3 coeffs, in float target)
     vec2 default_roots = vec2(-1.0);
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
+    vec2 quadratic_roots = vec2(stable_root / coeffs.z, coeffs.x / stable_root);
+    quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
    
     // quadratic solutions
-    return (quadratic_discriminant < 0.0) ? default_roots : quadratic_roots;
+    return quadratic_roots;
 }
 
 vec2 strict_quadratic_solver(in vec3 coeffs, in float target, in float flag)
@@ -159,18 +167,20 @@ vec2 strict_quadratic_solver(in vec3 coeffs, in float target, in float flag)
     vec2 default_roots = vec2(flag);
 
     // compute normalized quadratic coefficients 
-    vec2 quadratic_coeffs = coeffs.xy / coeffs.z;
-    quadratic_coeffs.y /= 2.0;
+    vec3 quadratic_coeffs = coeffs;
+    quadratic_coeffs.y /= -2.0;
 
     // compute quadratic discriminant
-    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.x;
+    float quadratic_discriminant = quadratic_coeffs.y * quadratic_coeffs.y - quadratic_coeffs.z * quadratic_coeffs.x;
     float sqrt_quadratic_discriminant = sqrt(abs(quadratic_discriminant));
+    float stable_root = quadratic_coeffs.y + sqrt_quadratic_discriminant * ssign(quadratic_coeffs.y);
 
     // compute quadratic roots 
-    vec2 quadratic_roots = - quadratic_coeffs.y + sqrt_quadratic_discriminant * vec2(-1.0, 1.0);
-
+    vec2 quadratic_roots = vec2(stable_root / coeffs.z, coeffs.x / stable_root);
+    quadratic_roots = (quadratic_discriminant >= 0.0) ? quadratic_roots : default_roots;
+    
     // quadratic solutions
-    return (quadratic_discriminant < 0.0) ? default_roots : quadratic_roots;
+    return quadratic_roots;
 }
 
 #endif
