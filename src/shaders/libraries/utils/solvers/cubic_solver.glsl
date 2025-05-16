@@ -1,6 +1,11 @@
-// Based on Blinn's paper (https://courses.cs.washington.edu/courses/cse590b/13au/lecture_notes/solvecubic_p5.pdf)
-// Article by Christoph Peters (https://momentsingraphics.de/CubicRoots.html#_Blinn07b)
-// Shadertoy example (// https://www.shadertoy.com/view/7tBGzK)
+
+/* Sources
+Based on Blinn's paper (https://courses.cs.washington.edu/courses/cse590b/13au/lecture_notes/solvecubic_p5.pdf),
+Article by Christoph Peters (https://momentsingraphics.de/CubicRoots.html#_Blinn07b),
+Shadertoy Cubic Equation Solver II (https://www.shadertoy.com/view/7tBGzK),
+Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
+*/
+
 // Solves a cubic equation given the coefficients: coefficient[0] * x^0 + coefficient[1] * x^1 + coefficient[2] * x^2 + coefficient[3] * x^3
 
 #ifndef CUBIC_SOLVER
@@ -14,6 +19,9 @@
 #endif
 #ifndef CBRT
 #include "../math/cbrt"
+#endif
+#ifndef POLY_HORNER
+#include "../math/poly_horner"
 #endif
 
 vec3 cubic_solver(in vec4 coeffs, in float target)
@@ -92,6 +100,15 @@ vec3 cubic_solver(in vec4 coeffs, in float target)
 
     // choose cubic roots based on discriminant sign 
     vec3 cubic_roots = (cubic_discriminant < 0.0) ? cubic_roots12 : cubic_roots3;
+
+    // Improve numerical stability with Newton–Raphson correction
+    vec3 f; vec3 f1;
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1; 
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1;  
 
     /* SOLUTIONS */ 
 
@@ -177,6 +194,15 @@ vec3 cubic_solver(in vec4 coeffs, in float target, in float flag)
     // choose cubic roots based on discriminant sign 
     vec3 cubic_roots = (cubic_discriminant < 0.0) ? cubic_roots12 : cubic_roots3;
 
+    // Improve numerical stability with Newton–Raphson correction
+    vec3 f; vec3 f1;
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1; 
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1;  
+
     /* SOLUTIONS */ 
 
     bool is_cubic = abs(coeffs.w) > MICRO_TOLERANCE;
@@ -186,7 +212,7 @@ vec3 cubic_solver(in vec4 coeffs, in float target, in float flag)
     return  (is_cubic) ? cubic_roots : (is_quadratic) ? quadratic_roots : (is_linear) ? linear_roots : default_roots;
 }
 
-vec3 strictly_cubic_solver(in vec4 coeffs, in float target)
+vec3 strict_cubic_solver(in vec4 coeffs, in float target)
 {
     // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - value) = 0
     coeffs.x -= target;
@@ -230,8 +256,20 @@ vec3 strictly_cubic_solver(in vec4 coeffs, in float target)
     // revert transformation and sort the three real roots eq(0.2) and eq(0.16)
     cubic_roots3 = - cubic_coeffs.z + 2.0 * cubic_roots3 * sqrt(max(0.0, -depressed_cubic_coeffs.y)); 
 
+    // choose cubic roots based on discriminant sign 
+    vec3 cubic_roots = (cubic_discriminant < 0.0) ? cubic_roots12 : cubic_roots3;
+
+    // Improve numerical stability with Newton–Raphson correction
+    vec3 f; vec3 f1;
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1; 
+
+    poly_horner(coeffs, cubic_roots, f, f1);
+    cubic_roots -= f / f1; 
+
     // cubic solutions
-    return (cubic_discriminant < 0.0) ? cubic_roots12 : cubic_roots3;
+    return cubic_roots;
 }
 
 #endif

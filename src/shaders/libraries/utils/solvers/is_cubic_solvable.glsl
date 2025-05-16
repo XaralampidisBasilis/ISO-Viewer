@@ -4,8 +4,8 @@
 #ifndef QUADRATIC_SOLVER
 #include "./quadratic_solver"
 #endif
-#ifndef POLY
-#include "../math/poly"
+#ifndef POLY_HORNER
+#include "../math/poly_horner"
 #endif
 
 /**
@@ -26,20 +26,18 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
 
     // compute the cubic at the boundaries
     vec2 f_interval;
-    poly(coeffs, t_interval.x, f_interval.x)
-    poly(coeffs, t_interval.y, f_interval.y)
+    poly_horner(coeffs, t_interval, f_interval);
 
     // compute cubic derivative coefficients
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = strictly_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = strict_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points
     vec2 f_extrema;
-    poly(coeffs, t_critical.x, f_extrema.x)
-    poly(coeffs, t_critical.y, f_extrema.y)
+    poly_horner(coeffs, t_critical, f_extrema);
 
     // combine function values into a single vector
     vec4 f_values = vec4(f_interval, f_extrema);
@@ -74,13 +72,12 @@ bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in
     vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = strictly_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
+    vec2 t_critical = strict_quadratic_solver(deriv_coeffs, 0.0, t_interval.x);
     t_critical = clamp(t_critical, t_interval.x, t_interval.y);
 
     // compute the cubic extrema values at the critical points
     vec2 f_extrema;
-    poly(coeffs, t_critical.x, f_extrema.x)
-    poly(coeffs, t_critical.y, f_extrema.y)
+    poly_horner(coeffs, t_critical, f_extrema);
 
     // combine function values into a single vector
     vec4 f_values = vec4(f_interval, f_extrema);

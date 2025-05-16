@@ -127,7 +127,7 @@ vec2 quadratic_solver(in vec3 coeffs, in float target, in float flag, out int co
     return (is_quadratic) ? quadratic_roots : (is_linear) ? linear_roots : default_roots;
 }
 
-vec2 strictly_quadratic_solver(in vec3 coeffs, in float target)
+vec2 strict_quadratic_solver(in vec3 coeffs, in float target)
 {
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
     coeffs.x -= target;
@@ -150,7 +150,7 @@ vec2 strictly_quadratic_solver(in vec3 coeffs, in float target)
     return (quadratic_discriminant < 0.0) ? default_roots : quadratic_roots;
 }
 
-vec2 strictly_quadratic_solver(in vec3 coeffs, in float target, in float flag)
+vec2 strict_quadratic_solver(in vec3 coeffs, in float target, in float flag)
 {
     // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
     coeffs.x -= target;
