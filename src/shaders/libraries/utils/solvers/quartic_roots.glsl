@@ -56,7 +56,7 @@ float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
     // choose cubic roots based on discriminant sign 
     float U_max = (d >= 0.0) ? U3_max : U1;
 
-    // Improve numerical stability of roots with Newton–Raphson correction
+    // Improve numerical stability of max root with Newton–Raphson correction
     float f, f1;
     poly_horner(c, U_max, f, f1);
     U_max -= f / f1; 
@@ -129,9 +129,13 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
 
     // Return the transformation y = x + b
     // Flip solution if we solved for reciprocal
-    // Replace degenerates with fallback root
     vec4 x = y + coeff.w;
     x = (flip) ? 1.0/x : x;
+
+    // Replace degenerates with fallback root
+    // 1) when the quartic coefficient is 0 we have 4 nan solutions
+    // 2) when U_max is negative then we have 4 nan solutions
+    // 3) when a quadratic is unsolvable produces 2 nan solutions
     x = pick(isnan(x), vec4(x0), x);
 
     // Return solutions
