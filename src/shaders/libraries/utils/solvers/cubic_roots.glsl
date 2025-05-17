@@ -43,7 +43,7 @@ vec3 cubic_roots(in vec4 c, in float x0)
     vec3 h = vec3(
         nc.y - nc.z * nc.z,                          // δ1 = c.w * c.y - c.z^2
         nc.x - nc.y * nc.z,                          // δ2 = c.w * c.x - c.y * c.z
-        dot(vec2(nc.z, -nc.y), nc.xy)    // δ3 = c.z * c.x - c.y * c.x
+        dot(vec2(nc.z, -nc.y), nc.xy)    // δ3 = c.z * c.x - c.y^2
     );
 
     // compute cubic discriminant eq(0.7)
@@ -65,12 +65,12 @@ vec3 cubic_roots(in vec4 c, in float x0)
     vec2 x2 = vec2(cos(theta), sin(theta));
     vec3 x3 = vec3(
         x2.x,                                 // First root
-        dot(vec2(-0.5, -0.5 * SQRT_3), x2),   // Second root (rotated by 120 degrees)
-        dot(vec2(-0.5,  0.5 * SQRT_3), x2)    // Third root (rotated by -120 degrees)
+        dot(x2, vec2(-0.5, -0.5 * SQRT_3)),   // Second root (rotated by 120 degrees)
+        dot(x2, vec2(-0.5,  0.5 * SQRT_3))    // Third root (rotated by -120 degrees)
     );
 
     // revert transformation eq(0.2) and eq(0.16)
-    x3 = x3 * sqrt(max(0.0, -rc.y)) * 2.0 - nc.z; 
+    x3 = x3 * sqrt(abs(-rc.y)) * 2.0 - nc.z; 
 
     // Improve numerical stability of roots with Newton–Raphson correction
     vec4 x3_x1 = vec4( x3, x1);
@@ -128,7 +128,7 @@ vec3 cubic_roots(in vec4 c, in float x0)
 //     );
 
 //     // revert transformation eq(0.2) and eq(0.16)
-//     x3 = x3 * sqrt(max(0.0, -rc.y)) * 2.0 - nc.z; 
+//     x3 = x3 * sqrt(abs(-rc.y)) * 2.0 - nc.z; 
 
 //     // choose cubic roots based on discriminant sign 
 //     vec3 x = (d >= 0.0) ? x3 : vec3(x1, vec2(x0));

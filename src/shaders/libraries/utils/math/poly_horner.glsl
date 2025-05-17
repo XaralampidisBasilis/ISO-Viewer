@@ -11,7 +11,7 @@
 
 // Evaluate polynomial and derivatives using Horner's method
 // Coefficients are provided in ascending order:
-//  p(t) = c.x + c.y t + c.z t^2 + ... + c_n t^n
+//  p(t) = c0 + c1 t + c2 t^2 + ... + cn t^n
 
 // linear 
 void poly_horner(in vec2 c, in float t, out float f) 

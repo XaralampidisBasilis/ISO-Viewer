@@ -11,18 +11,78 @@ The Art of Problem Solving Quartic Equation
 #ifndef CUBIC_ROOTS
 #include "./cubic_roots"
 #endif
-#ifndef QUADRATIC_ROOTS
-#include "./quadratic_roots"
-#endif
 #ifndef PICK
 #include "../math/pick"
 #endif
 #ifndef SSIGN
 #include "../math/ssign"
 #endif
-#ifndef NAN
-#define NAN uintBitsToFloat(0x7fc00000u)
-#endif
+
+// Solve resolvent cubic rc + rbU + raU^2 + U^3 
+// for the max root U, where U = u^2
+float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
+{
+    // normalize coefficients
+    vec4 c = vec3(rc, rb, ra, 1.0);
+    vec3 nc = c.xyz;
+    nc.yz /= 3.0;
+
+    // compute hessian coefficients eq(0.4)
+    vec3 h = vec3(
+        nc.y - nc.z * nc.z,                          // δ1 = c.w * c.y - c.z^2
+        nc.x - nc.y * nc.z,                          // δ2 = c.w * c.x - c.y * c.z
+        dot(vec2(nc.z, -nc.y), nc.xy)    // δ3 = c.z * c.x - c.y * c.x
+    );
+
+    // compute cubic discriminant eq(0.7)
+    float d = dot(vec2(h.x * 4.0, -h.y), h.zy); // Δ = δ1 * δ3 - δ2^2
+    float sqrt_d = sqrt(abs(d));
+
+    // compute depressed cubic eq(0.16), rc[0] + rc[1] * x + x^3 eq(0.11) eq(0.16)
+    vec2 rc = vec2(h.y - nc.z * h.x * 2.0, h.x);
+    
+    // compute real root using cubic root formula for one real and two complex roots eq(0.15)
+    float U1 = 
+        cbrt((-rc.x + sqrt_d) * 0.5) +
+        cbrt((-rc.x - sqrt_d) * 0.5) -
+        nc.z;
+
+    // compute max cubic root from three real roots using complex number formula eq(0.14)  
+    // revert transformation eq(0.2) and eq(0.16)
+    float theta = atan(sqrt_d, -rc.x) / 3.0;
+    float U3_max = cos(theta) * 2.0;
+    U3_max = U3_max * sqrt(abs(-rc.y)) - nc.z; 
+
+    // choose cubic roots based on discriminant sign 
+    float U_max = (d >= 0.0) ? U3_max : U1;
+
+    // Improve numerical stability of roots with Newton–Raphson correction
+    float f, f1;
+    poly_horner(c, U_max, f, f1);
+    U_max -= f / f1; 
+    poly_horner(c, U_max, f, f1);
+    U_max -= f / f1; 
+
+    return U_max;
+}
+
+
+// Solve the pair of factored quadratics in parallel
+// t + sy + y^2, v + uy + y^2 where y = x + b
+vec4 factored_quadratics_roots(in float t, in float s, in float v, in float u)
+{
+    // Solve in parallel the factored quadratics from the quartic 
+    vec4 tsvu = vec4(t, s, v, u);
+    tsvu.yw /= -2.0;
+    
+    // compute the fused quadratic discriminants
+    // and solve roots via stable formulas
+    vec2 d = tsvu.yw * tsvu.yw - tsvu.xz;
+    vec2 q = tsvu.yw + sqrt(d) * ssign(tsvu.yw);
+    vec4 y = vec4(q, tsvu.xz / q);
+
+    return y;
+}
 
 // Solve quartic equation c0 + c1x^1 + c2x^2 + c3x^3 + c4x^4 = 0 
 // using Ferrari's method assuming quartic coefficient is nonzero
@@ -51,46 +111,31 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
     float rb =  p * p - 4.0 * r;
     float rc = -q * q;
 
-    // Solve reduced cubic rc + rbU + raU^2 + U^3 where U = u^2
-    vec4 cubic = vec4(ra, rb, rc, 1.0);
-    vec3 U = cubic_roots(cubic, -1.0);
+    // Solve resolvent cubic rc + rbU + raU^2 + U^3 
+    // for the max root U, where U = u^2
+    float U_max = resolvent_cubic_max_root(rc, rb, ra);
 
-    // Take maximum root and check if positive
-    float U_max = max(U.x, max(U.y, U.z));
-    bool is_quat = U_max >= 0.0;
-
-    // Compute factored quadratics coefficients
+    // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)
-    float u = sqrt(max(U_max, 0.0));
+    float u = sqrt(U_max);
     float qu = q / u;
     float t = (p + qu + u * u) * 0.5;
     float v = t - qu;
     float s = - u;
 
-    // Solve in parallel the quadratics factored from the quartic 
-    vec4 tsvu = vec4(t, s, v, u);
-    tsvu.yw /= -2.0;
-    
-    // compute the fused quadratic discriminants
-    vec2 d = tsvu.yw * tsvu.yw - tsvu.xz;
-    vec2 sqrt_d = sqrt(d);
-    vec2 q = tsvu.yw + sqrt_d * ssign(tsvu.yw);
-
-    // compute the fused quadratic roots via stable formulas
-    vec4 y = vec4(q, tsvu.xz / q);
-    bvec2 d_pos = greaterThanEqual(d, 0.0);
-    y = pick(d_pos.xyxy, y, vec4(NAN));
+    // Solve the pair of factored quadratics in parallel
+    // t + sy + y^2, v + uy + y^2
+    vec4 y = factored_quadratics_roots(t, s, v, u);
 
     // Return the transformation y = x + b
-    // and flip solution if we solved for reciprocal
+    // Flip solution if we solved for reciprocal
+    // Replace degenerates with fallback root
     vec4 x = y + coeff.w;
     x = (flip) ? 1.0/x : x;
-
-    // Replace nan with fallback root
     x = pick(isnan(x), vec4(x0), x);
 
     // Return solutions
-    return (is_quat) ? x : vec4(x0);
+    return x;
 }
 
 #endif
