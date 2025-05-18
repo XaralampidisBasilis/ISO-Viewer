@@ -23,15 +23,15 @@ The Art of Problem Solving Quartic Equation
 float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
 {
     // normalize coefficients
-    vec4 c = vec3(rc, rb, ra, 1.0);
-    vec3 nc = c.xyz;
-    nc.yz /= 3.0;
+    vec4 c = vec4(rc, rb, ra, 1.0);
+    vec3 n = c.xyz;
+    n.yz /= 3.0;
 
     // compute hessian coefficients eq(0.4)
     vec3 h = vec3(
-        nc.y - nc.z * nc.z,                          // δ1 = c.w * c.y - c.z^2
-        nc.x - nc.y * nc.z,                          // δ2 = c.w * c.x - c.y * c.z
-        dot(vec2(nc.z, -nc.y), nc.xy)    // δ3 = c.z * c.x - c.y * c.x
+        n.y - n.z * n.z,                          // δ1 = c.w * c.y - c.z^2
+        n.x - n.y * n.z,                          // δ2 = c.w * c.x - c.y * c.z
+        dot(vec2(n.z, -n.y), n.xy)    // δ3 = c.z * c.x - c.y * c.x
     );
 
     // compute cubic discriminant eq(0.7)
@@ -39,19 +39,19 @@ float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
     float sqrt_d = sqrt(abs(d));
 
     // compute depressed cubic eq(0.16), rc[0] + rc[1] * x + x^3 eq(0.11) eq(0.16)
-    vec2 rc = vec2(h.y - nc.z * h.x * 2.0, h.x);
+    vec2 r = vec2(h.y - n.z * h.x * 2.0, h.x);
     
     // compute real root using cubic root formula for one real and two complex roots eq(0.15)
     float U1 = 
-        cbrt((-rc.x + sqrt_d) * 0.5) +
-        cbrt((-rc.x - sqrt_d) * 0.5) -
-        nc.z;
+        cbrt((-r.x + sqrt_d) * 0.5) +
+        cbrt((-r.x - sqrt_d) * 0.5) -
+        n.z;
 
     // compute max cubic root from three real roots using complex number formula eq(0.14)  
     // revert transformation eq(0.2) and eq(0.16)
-    float theta = atan(sqrt_d, -rc.x) / 3.0;
+    float theta = atan(sqrt_d, -r.x) / 3.0;
     float U3_max = cos(theta) * 2.0;
-    U3_max = U3_max * sqrt(abs(-rc.y)) - nc.z; 
+    U3_max = U3_max * sqrt(abs(-r.y)) - n.z; 
 
     // choose cubic roots based on discriminant sign 
     float U_max = (d >= 0.0) ? U3_max : U1;
@@ -130,7 +130,7 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
     // Return the transformation y = x + b
     // Flip solution if we solved for reciprocal
     vec4 x = y + coeff.w;
-    x = (flip) ? 1.0/x : x;
+    x = (flip) ? 1.0 / x : x;
 
     // Replace degenerates with fallback root
     // 1) when the quartic coefficient is 0 we have 4 nan solutions
