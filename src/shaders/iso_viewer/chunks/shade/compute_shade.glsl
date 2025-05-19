@@ -40,12 +40,11 @@ frag.gradient_factor = softstep_hill(0.0, 0.3, length(surface.gradient), 0.9);
 frag.material_color = sample_color_maps(trace.intensity);
 
 // Ambient 
-frag.ambient_color = u_shading.ambient_reflectance * u_lighting.ambient_color;
-frag.ambient_color *= frag.material_color;
+frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);
+frag.ambient_color *= smoothstep(-2.0, 0.0, surface.max_curvature); 
 
 // Diffuse
-frag.diffuse_color = u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian;
-frag.diffuse_color *= frag.material_color;
+frag.diffuse_color = frag.material_color * (u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian);
 
 // Specular
 frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shading.specular_reflectance * specular);

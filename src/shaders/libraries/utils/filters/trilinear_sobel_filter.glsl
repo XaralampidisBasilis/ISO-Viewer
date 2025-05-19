@@ -220,7 +220,7 @@ void trilinear_sobel_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradie
 {
     // Gradient
     gradient = trilinear_sobel_dxyz_xdyz_xydz(tex, coords);
-=}
+}
 
 void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {

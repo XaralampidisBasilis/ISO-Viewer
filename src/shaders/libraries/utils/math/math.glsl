@@ -8,6 +8,7 @@
 #include "./decimate" 
 #include "./diff" 
 #include "./map" 
+#include "./remap" 
 #include "./maxabs" 
 #include "./mean" 
 #include "./minabs" 
