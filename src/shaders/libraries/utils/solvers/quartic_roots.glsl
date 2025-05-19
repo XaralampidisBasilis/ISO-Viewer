@@ -2,7 +2,9 @@
 Shadertoy Quartic Reflections
 (https://www.shadertoy.com/view/flBfzm)
 The Art of Problem Solving Quartic Equation
-(https://artofproblemsolving.com/wiki/index.php/Quartic_Equation?srsltid=AfmBOopSANTJHc7S64HX0aGEq-1givy_pDVC5sSkCsuzxnhjmFQ123q-)
+(https://artofproblemsolving.com/wiki/index.php/Quartic_Equation?srsltid=AfmBOopSANTJHc7S64HX0aGEq-1givy_pDVC5sSkCsuzxnhjmFQ123q-),
+Wikipedia quartic equation
+(https://www.wikiwand.com/en/articles/Quartic_equation)
 */
 
 #ifndef QUARTIC_ROOTS
@@ -17,6 +19,30 @@ The Art of Problem Solving Quartic Equation
 #ifndef SSIGN
 #include "../math/ssign"
 #endif
+#ifndef MICRO_TOLERANCE
+#define MICRO_TOLERANCE 1e-6
+#endif
+
+// Solve the depressed quartic when q = 0 resulting in a biquadratic
+// r + qy + py^2 + y^4 = r + pz + z^2 where z = y^2
+vec4 degenerate_biquadratic_roots(in float r, in float p)
+{
+    // biquadratic coefficients
+    vec2 c = vec2(r, p);
+    c.y /= -2.0;
+    
+    // compute the biquadratic discriminant
+    // and solve roots via stable formulas
+    vec2 d = c.y * c.y - c.x;
+    vec2 q = c.y + sqrt(d) * ssign(c.y); // can produce Nan
+    vec2 z = vec2(q, c / q);
+
+    // compute the y roots
+    vec2 sqrt_z = sqrt(z); // can produce Nan
+    vec4 y = vec4(-sqrt_z, sqrt_z);
+
+    return y;
+}
 
 // Solve resolvent cubic rc + rbU + raU^2 + U^3 
 // for the max root U, where U = u^2
@@ -66,7 +92,6 @@ float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
     return U_max;
 }
 
-
 // Solve the pair of factored quadratics in parallel
 // t + sy + y^2, v + uy + y^2 where y = x + b
 vec4 factored_quadratics_roots(in float t, in float s, in float v, in float u)
@@ -78,18 +103,19 @@ vec4 factored_quadratics_roots(in float t, in float s, in float v, in float u)
     // compute the fused quadratic discriminants
     // and solve roots via stable formulas
     vec2 d = tsvu.yw * tsvu.yw - tsvu.xz;
-    vec2 q = tsvu.yw + sqrt(d) * ssign(tsvu.yw);
+    vec2 sqrt_d = sqrt(d); // can produce Nan
+    vec2 q = tsvu.yw + sqrt_d * ssign(tsvu.yw); 
     vec4 y = vec4(q, tsvu.xz / q);
 
     return y;
 }
 
 // Solve quartic equation c0 + c1x^1 + c2x^2 + c3x^3 + c4x^4 = 0 
-// using Ferrari's method assuming quartic coefficient is nonzero
+// using Ferrari-Descartes method assuming quartic coefficient is nonzero
 vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float c4, in float x0) 
 {
     // Solve for the smallest cubic term, this produces the least wild behavior.
-    bool flip = abs(c3 * c0) >= abs(c1 * c4);
+    bool flip = abs(c3 * c0) > abs(c1 * c4);
     vec4 coeff = (flip) ? 
         vec4(c4, c3, c2, c1) / c0 : // Solve for reciprocal
         vec4(c0, c1, c2, c3) / c4;
@@ -97,13 +123,17 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
     // To simplify depressed quartic computations
     // e + dx^1 + cx^2 + 4bx^3 + x^4
     coeff.w /= 4.0;
-    float w2 = coeff.w * coeff.w;
 
     // Depress the quartic e + dx^1 + cx^2 + 4bx^3 + x^4
     // to r + qy + py^2 + y^4 by substituting x = y - b
+    float w2 = coeff.w * coeff.w;
     float p = coeff.z - w2 * 6.0;
     float q = coeff.y - coeff.z * coeff.w * 2.0 + coeff.w * w2 * 8.0;
     float r = coeff.x - coeff.y * coeff.w + coeff.z * w2 - w2 * w2 * 3.0;
+
+    // Solve for the degenerate case of biquadratic
+    bool is_biq = abs(q) < MICRO_TOLERANCE;
+    vec4 y4 = degenerate_biquadratic_roots(r, p);
 
     // Solve for a root to (u^2)^3 + 2p(u^2)^2 + (p^2 - 4r)(u^2) - q^2 which resolves the
     // system of equations relating the product of two quadratics to the depressed quartic
@@ -117,7 +147,7 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
 
     // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)
-    float u = sqrt(U_max);
+    float u = sqrt(U_max); // can produce Nan
     float qu = q / u;
     float t = (p + qu + u * u) * 0.5;
     float v = t - qu;
@@ -125,10 +155,12 @@ vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float 
 
     // Solve the pair of factored quadratics in parallel
     // t + sy + y^2, v + uy + y^2
-    vec4 y = factored_quadratics_roots(t, s, v, u);
+    vec4 y22 = factored_quadratics_roots(t, s, v, u);
 
+    // Select correct case
     // Return the transformation y = x + b
     // Flip solution if we solved for reciprocal
+    vec4 y = (is_biq) ? y4 : y22;
     vec4 x = y + coeff.w;
     x = (flip) ? 1.0 / x : x;
 

@@ -2,11 +2,7 @@ clear, clc
 syms a b c d e p q r x y z
 assume([a b c d e p q r x y z], 'real')
  
-f = dot([x^4, x^3, x^2, x, 1], [a, b, c, d, e]);
-f = simplify(coeffs(subs(f, x, 1/z), z, 'All'));
-disp(f)
-
-f = dot([x^4, x^3, x^2, x, 1], [1, 4*b, c, d, e]);
+f = dot([x^4, x^3, x^2, x, 1], [1, 4 *b, c, d, e]);
 f = simplify(coeffs(subs(f, x, y - b), y, 'All'));
 disp(f)
 
