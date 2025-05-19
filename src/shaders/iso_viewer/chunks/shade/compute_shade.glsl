@@ -1,5 +1,8 @@
 // Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
+// Compute surface properties
+#include "./modules/compute_surface"
+
 // Compute light position in texture coordinated
 vec3 light_position = camera.position;
 
@@ -10,17 +13,17 @@ frag.halfway_vector = frag.light_vector + frag.view_vector;
 
 // Normalize shading vectors in model coordinates
 vec3 scale = normalize(u_intensity_map.spacing);
-frag.light_vector = normalize(frag.light_vector * scale);
-frag.view_vector = normalize(frag.view_vector * scale);
+frag.light_vector   = normalize(frag.light_vector * scale);
+frag.view_vector    = normalize(frag.view_vector * scale);
 frag.halfway_vector = normalize(frag.halfway_vector * scale);
 
 // Compute normal vector
-frag.normal_vector = normalize(trace.gradient);
+frag.normal_vector = surface.normal;
 frag.normal_vector *= ssign(dot(frag.normal_vector, frag.view_vector));
 
 // Compute vector angles
-frag.light_angle = dot(frag.light_vector, frag.normal_vector);
-frag.view_angle = dot(frag.view_vector, frag.normal_vector);
+frag.light_angle   = dot(frag.light_vector, frag.normal_vector);
+frag.view_angle    = dot(frag.view_vector, frag.normal_vector);
 frag.halfway_angle = dot(frag.halfway_vector, frag.normal_vector);
 
 // Compute parameters
@@ -31,10 +34,7 @@ float specular = pow(clamp(frag.halfway_angle, 0.0, 1.0), u_shading.shininess);
 frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle));
 
 // Gradient
-frag.gradient_factor = softstep_hill(0.0, 0.3, length(trace.gradient), 0.9);
-
-// Curvature
-// float factor = softstep_hill(-2.0*u_debugging.variable2, -2.0*u_debugging.variable3, min(surface.max_curvature, 0.0), u_debugging.variable4);
+frag.gradient_factor = softstep_hill(0.0, 0.3, length(surface.gradient), 0.9);
 
 // Material
 frag.material_color = sample_color_maps(trace.intensity);

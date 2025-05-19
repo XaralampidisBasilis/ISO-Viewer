@@ -33,8 +33,8 @@ vec4 degenerate_biquadratic_roots(in float r, in float p)
     
     // compute the biquadratic discriminant
     // and solve roots via stable formulas
-    vec2 d = c.y * c.y - c.x;
-    vec2 q = c.y + sqrt(d) * ssign(c.y); // can produce Nan
+    float d = c.y * c.y - c.x;
+    float q = c.y + sqrt(d) * ssign(c.y); // can produce Nan
     vec2 z = vec2(q, c / q);
 
     // compute the y roots

@@ -216,14 +216,13 @@ void trilinear_sobel_value(in sampler3D tex, in vec3 coords, out float value)
     value = trilinear_sobel_xyz(tex, coords);
 }
 
-void trilinear_sobel_gradient(in sampler3D tex, in vec3 coords, in vec3 spacing,  out vec3 gradient)
+void trilinear_sobel_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradient)
 {
     // Gradient
     gradient = trilinear_sobel_dxyz_xdyz_xydz(tex, coords);
-    gradient /= spacing;
-}
+=}
 
-void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out mat3 hessian)
+void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
 {
     // Mixed derivatives
     vec3 s_xdydz_dxydz_dxdyz = trilinear_sobel_xdydz_dxydz_dxdyz(tex, coords);
@@ -237,37 +236,9 @@ void trilinear_sobel_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, 
        s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
        s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
    );
-   hessian /= outerProduct(spacing, spacing);
 }
 
-void trilinear_sobel_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float laplacian)
-{
-    // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
-
-    // Sample cross
-    float s_x3y3z3; vec3 s_x2y3z3_x3y2z3_x3y3z2; vec3 s_x4y3z3_x3y4z3_x3y3z4;
-    trilinear_sobel_sample_cross(tex, coords, s_x3y3z3, s_x2y3z3_x3y2z3_x3y3z2, s_x4y3z3_x3y4z3_x3y3z4);
-
-    // Axis-aligned second derivatives
-    vec3 s_d2x_d2y_d2z = s_x2y3z3_x3y2z3_x3y3z2 + s_x4y3z3_x3y4z3_x3y3z4 - s_x3y3z3 * 2.0;
-    s_d2x_d2y_d2z /= spacing * spacing;
-
-    // Diagonal second order derivatives
-    vec4 s_d2ppp_d2pnp_d2ppn_d2pnn = s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 + s_x1y0z0_x1y1z0_x1y0z1_x1y1z1.wzyx - s_x3y3z3 * 2.0;
-    s_d2ppp_d2pnp_d2ppn_d2pnn /= dot(spacing * 0.5, spacing * 0.5);
-
-    // Cube Cross, laplacians
-    float axis_laplacian = dot(s_d2x_d2y_d2z, vec3(1.0));
-    float diag_laplacian = dot(s_d2ppp_d2pnp_d2ppn_d2pnn, vec4(1.0));
-
-    // Weighted average for better isotropy and rotational symmetry
-    // (https://www.wikiwand.com/en/articles/Discrete_Laplace_operator)
-    laplacian = mix(axis_laplacian, diag_laplacian, 1.0/3.0);
-}
-
-void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out mat3 hessian)
+void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, out float value, out mat3 hessian)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -321,10 +292,9 @@ void trilinear_sobel_value_hessian(in sampler3D tex, in vec3 coords, in vec3 spa
        s_xyz_dxdyz.y, s_d2x_d2y_d2z.y, s_dxydz_xdydz.y,  
        s_dxydz_xdydz.x, s_dxydz_xdydz.y, s_d2x_d2y_d2z.z     
    );
-    hessian /= outerProduct(spacing, spacing);
 }
 
-void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out vec3 gradient)
+void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -371,10 +341,9 @@ void trilinear_sobel_value_gradient(in sampler3D tex, in vec3 coords, in vec3 sp
 
     // Gradient
     gradient = vec3(s_xyz_dxyz_xdyz.yz, s_xydz);
-    gradient /= spacing;
 }
 
-void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out vec3 gradient, out mat3 hessian)
+void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
 {
     // Sample cube
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
@@ -421,7 +390,6 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 
 
     // Gradient
     gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
-    gradient /= spacing;
 
     // Hessian
     hessian = mat3(
@@ -429,7 +397,92 @@ void trilinear_sobel_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 
        s_dxyz_xdyz_dxdyz.z, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
        s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
    );
-    hessian /= outerProduct(spacing, spacing);
+}
+
+void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, out float value, out vec3 gradient, out mat3 hessian)
+{
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+
+    // Interpolate along x
+    vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
+        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
+        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
+    0.5);
+
+    // Differentiate across x
+    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
+        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
+        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
+    );
+
+    // Interpolate along y
+    vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
+        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
+        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
+    0.5);
+
+    // Differentiate across y
+    vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
+        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) - 
+        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
+    );
+
+    // Interpolate along z
+    vec4 s_xyz_dxyz_xdyz_dxdyz = mix(
+        vec4(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.yw),
+        vec4(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.xz),
+    0.5);
+
+    // Differentiate across z
+    vec3 s_xydz_dxydz_xdydz = (
+        vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
+        vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
+    );
+
+    // Pure derivatives
+    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
+
+    // Value
+    value = s_xyz_dxyz_xdyz_dxdyz.x;
+
+    // Gradient
+    gradient = vec3(s_xyz_dxyz_xdyz_dxdyz.yz, s_xydz_dxydz_xdydz.x);
+
+    // Hessian
+    hessian = mat3(
+       s_d2x_d2y_d2z.x, s_xyz_dxyz_xdyz_dxdyz.w, s_xydz_dxydz_xdydz.y,  
+       s_xyz_dxyz_xdyz_dxdyz.w, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
+       s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
+   );
+}
+
+void trilinear_sobel_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float laplacian)
+{
+    // Sample cube
+    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
+    trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
+
+    // Sample cross
+    float s_x3y3z3; vec3 s_x2y3z3_x3y2z3_x3y3z2; vec3 s_x4y3z3_x3y4z3_x3y3z4;
+    trilinear_sobel_sample_cross(tex, coords, s_x3y3z3, s_x2y3z3_x3y2z3_x3y3z2, s_x4y3z3_x3y4z3_x3y3z4);
+
+    // Axis-aligned second derivatives
+    vec3 s_d2x_d2y_d2z = s_x2y3z3_x3y2z3_x3y3z2 + s_x4y3z3_x3y4z3_x3y3z4 - s_x3y3z3 * 2.0;
+    s_d2x_d2y_d2z /= spacing * spacing;
+
+    // Diagonal second order derivatives
+    vec4 s_d2ppp_d2pnp_d2ppn_d2pnn = s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 + s_x1y0z0_x1y1z0_x1y0z1_x1y1z1.wzyx - s_x3y3z3 * 2.0;
+    s_d2ppp_d2pnp_d2ppn_d2pnn /= dot(spacing * 0.5, spacing * 0.5);
+
+    // Cube Cross, laplacians
+    float axis_laplacian = dot(s_d2x_d2y_d2z, vec3(1.0));
+    float diag_laplacian = dot(s_d2ppp_d2pnp_d2ppn_d2pnn, vec4(1.0));
+
+    // Weighted average for better isotropy and rotational symmetry
+    // (https://www.wikiwand.com/en/articles/Discrete_Laplace_operator)
+    laplacian = mix(axis_laplacian, diag_laplacian, 1.0/3.0);
 }
 
 void trilinear_sobel_gradient_hessian_laplacian(in sampler3D tex, in vec3 coords, in vec3 spacing, out vec3 gradient, out mat3 hessian, out float laplacian)
@@ -505,65 +558,5 @@ void trilinear_sobel_gradient_hessian_laplacian(in sampler3D tex, in vec3 coords
     laplacian = mix(laplacian, diag_laplacian, 1.0/3.0);
 }
 
-void trilinear_sobel_value_gradient_hessian(in sampler3D tex, in vec3 coords, in vec3 spacing, out float value, out vec3 gradient, out mat3 hessian)
-{
-    // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    trilinear_sobel_sample_cube(tex, coords, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
-
-    // Interpolate along x
-    vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
-        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
-        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    0.5);
-
-    // Differentiate across x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
-        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
-        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    );
-
-    // Interpolate along y
-    vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    0.5);
-
-    // Differentiate across y
-    vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) - 
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    );
-
-    // Interpolate along z
-    vec4 s_xyz_dxyz_xdyz_dxdyz = mix(
-        vec4(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.yw),
-        vec4(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.xz),
-    0.5);
-
-    // Differentiate across z
-    vec3 s_xydz_dxydz_xdydz = (
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
-    );
-
-    // Pure derivatives
-    vec3 s_d2x_d2y_d2z = trilinear_sobel_d2x_d2y_d2z(tex, coords);
-
-    // Value
-    value = s_xyz_dxyz_xdyz_dxdyz.x;
-
-    // Gradient
-    gradient = vec3(s_xyz_dxyz_xdyz_dxdyz.yz, s_xydz_dxydz_xdydz.x);
-    gradient /= spacing;
-
-    // Hessian
-    hessian = mat3(
-       s_d2x_d2y_d2z.x, s_xyz_dxyz_xdyz_dxdyz.w, s_xydz_dxydz_xdydz.y,  
-       s_xyz_dxyz_xdyz_dxdyz.w, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
-       s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
-   );
-    hessian /= outerProduct(spacing, spacing);
-}
 
 #endif

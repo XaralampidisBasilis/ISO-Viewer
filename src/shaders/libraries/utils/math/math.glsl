@@ -14,6 +14,7 @@
 #include "./mmax" 
 #include "./mmin" 
 #include "./mmix" 
+#include "./mmix2" 
 #include "./pown" 
 #include "./prod" 
 #include "./ssign" 

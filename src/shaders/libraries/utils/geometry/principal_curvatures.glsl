@@ -74,8 +74,8 @@ vec2 principal_curvatures(in vec3 gradient, in mat3 hessian, out mat2x3 directio
     vec2 alpha = curvatures;
     vec2 beta = curvatures + shape[1][1] - shape[0][0];
     directions = mat2x3(
-        tangent[0] * alpha.x + tangent[1] * beta.x,
-        tangent[0] * alpha.y + tangent[1] * beta.y
+        normalize(tangent[0] * alpha.x + tangent[1] * beta.x),
+        normalize(tangent[0] * alpha.y + tangent[1] * beta.y)
     );
 
     // return curvatures

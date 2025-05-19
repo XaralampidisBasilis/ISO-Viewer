@@ -2,6 +2,7 @@
 #include "./modules/debug_trace"  
 #include "./modules/debug_cell"  
 #include "./modules/debug_block"  
+#include "./modules/debug_surface"  
 #include "./modules/debug_frag"               
 #include "./modules/debug_box"   
 #include "./modules/debug_camera"          
