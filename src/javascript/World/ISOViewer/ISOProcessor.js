@@ -220,6 +220,11 @@ export default class ISOProcessor extends EventEmitter
 
     // Helpers
 
+    async computeLaplacianMap(intensityMap)
+    {
+         
+    }
+
     async computeOccupancyMap(intensityMap, threshold, blockSize) 
     {
         return tf.tidy(() =>
@@ -238,17 +243,16 @@ export default class ISOProcessor extends EventEmitter
             padding[3] = [0, 0]
             const padded = tf.pad(intensityMap, padding) 
 
-            // Compute if voxel values is above/bellow  threshold
-            const isBellow = tf.lessEqual(padded, threshold)
-            const isAbove = tf.greaterEqual(padded, threshold)
-    
             // Compute if cell has values above/bellow threshold
-            const hasAbove = tf.maxPool3d(isAbove, filterSize, strides, 'valid')
-            const hasBellow = tf.maxPool3d(isBellow, filterSize, strides, 'valid')
-    
+            const max = tf.maxPool3d(padded, filterSize, strides, 'valid')
+            const negMin = tf.maxPool3d(padded.neg(), filterSize, strides, 'valid')
+
+            // Compute if voxel values is above/bellow  threshold
+            const isAbove = tf.lessEqual(-threshold, negMin)
+            const isBellow = tf.lessEqual(threshold, max)    
+
             // Compute cell occupation if above and bellow values from threshold
-            const occupancyMap = tf.logicalAnd(hasAbove, hasBellow)
-            return occupancyMap
+            return tf.logicalAnd(isAbove, isBellow)
         })
     }
 
@@ -256,27 +260,49 @@ export default class ISOProcessor extends EventEmitter
     {
         return tf.tidy(() => 
         {
-            // Helper to find first and last index where the value is truthy
-            const bounds = (array) => [array.findIndex(Boolean), array.findLastIndex(Boolean)]
-    
             // Collapse occupancy map across axes to identify active voxels
             // For each axis, reduce all other axes and get a 1D boolean array
-            const collapsedX = occupancyMap.any([1, 2, 3]).arraySync().flat() 
-            const collapsedY = occupancyMap.any([0, 2, 3]).arraySync().flat() 
-            const collapsedZ = occupancyMap.any([0, 1, 3]).arraySync().flat() 
+            const xOccupancy = occupancyMap.any([1, 2, 3]).arraySync().flat() 
+            const yOccupancy = occupancyMap.any([0, 2, 3]).arraySync().flat() 
+            const zOccupancy = occupancyMap.any([0, 1, 3]).arraySync().flat() 
     
-            // Get bounds (min and max index) for each axis
-            const [xMin, xMax] = bounds(collapsedX)
-            const [yMin, yMax] = bounds(collapsedY)
-            const [zMin, zMax] = bounds(collapsedZ)
-
             // Compute mix/max bounding box coords
-            const minCoords = [zMin, yMin, xMin]
-            const maxCoords = [zMax, yMax, xMax]
+            const minCoords = [zOccupancy.findIndex(Boolean), yOccupancy.findIndex(Boolean), xOccupancy.findIndex(Boolean)]
+            const maxCoords = [zOccupancy.findLastIndex(Boolean), yOccupancy.findLastIndex(Boolean), xOccupancy.findLastIndex(Boolean)]
     
             return { minCoords, maxCoords }
         })
     }
+
+    // async computeBoundingBox(occupancyMap) 
+    // {
+    //     return tf.tidy(() => 
+    //     {    
+    //         // Collapse occupancy map across axes to identify active voxels
+    //         // For each axis, reduce all other axes and get a 1D boolean array
+    //         const xOccupancy = occupancyMap.any([1, 2, 3])
+    //         const yOccupancy = occupancyMap.any([0, 2, 3])
+    //         const zOccupancy = occupancyMap.any([0, 1, 3])
+    
+    //         // Get argmin 
+    //         const xMin = xOccupancy.argMax().arraySync()
+    //         const yMin = yOccupancy.argMax().arraySync()
+    //         const zMin = zOccupancy.argMax().arraySync()
+            
+    //         // Get argmax
+    //         const xMax = occupancyMap.shape[2] - 1 - zOccupancy.argMax().arraySync()
+    //         const yMax = occupancyMap.shape[1] - 1 - yOccupancy.argMax().arraySync()
+    //         const zMax = occupancyMap.shape[0] - 1 - xOccupancy.argMax().arraySync()
+
+    //         // Compute mix/max bounding box coords
+    //         const iMin = [xMin, yMin, zMin]
+    //         const iMax = [xMax, yMax, zMax]
+
+    //         console.log({minCoords: iMin, maxCoords: iMax})
+    
+    //         return { minCoords: iMin, maxCoords: iMax }
+    //     })
+    // }
 
     async computeDistanceMap(occupancyMap, maxDistance) 
     {
@@ -342,6 +368,66 @@ export default class ISOProcessor extends EventEmitter
         })
     }
 
+    // its not faster than 3 computeDirectional24DistanceMap
+    // async compute3Directional8DistanceMap(occupancyMap, maxDistance = 31, axes) 
+    // {
+    //     return tf.tidy(() => 
+    //     {            
+    //         // Create the axial filters
+    //         let filters = [
+    //             tf.tensor([1, 1, 0, 1, 0, 1, 0, 1], [2, 2, 2], 'float32'), // z
+    //             tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2], 'float32'), // y
+    //             tf.tensor([1, 0, 1, 1, 0, 0, 1, 1], [2, 2, 2], 'float32'), // x
+    //         ]
+
+    //         // Fuse axis filters into a separable 5d filter
+    //         let filter = tf.buffer([2, 2, 2, 3, 3], 'float32')
+
+    //         for (let c = 0; c < 3; c++) {
+    //             const f = filters[c].arraySync()
+    //             for (let d = 0; d < 2; d++)
+    //                 for (let h = 0; h < 2; h++)
+    //                     for (let w = 0; w < 2; w++) 
+    //                         filter.set(f[d][h][w], d, h, w, c, c)
+    //         }
+
+    //         filter = filter.toTensor()
+    
+    //         // Reverse occupancy based on target octant axes and tile result
+    //         let source = tf.tile(tf.reverse(occupancyMap, axes), [1, 1, 1, 3])
+
+    //         // Initialize the frontier and the distance tensor
+    //         let distances = tf.where(source, 0, maxDistance)
+    //         let frontier = tf.cast(source, 'bool')
+    
+    //         for (let d = 1; d < maxDistance; d++) 
+    //         {   
+    //             // Expand frontier with kernel
+    //             const expansion = tf.conv3d(frontier, filter, 1, 'same')
+    //             const newFrontier = expansion.cast('bool')
+                                    
+    //             // Identify the newly occupied voxel wavefront
+    //             const wavefront = tf.notEqual(newFrontier, frontier)
+    
+    //             // Compute and add distances for the newly occupied voxels at this step
+    //             const newDistances = tf.where(wavefront, d, distances)
+    
+    //             // Dispose old tensors 
+    //             tf.dispose([distances, frontier, wavefront])
+    
+    //             // Update new tensors for the next iteration
+    //             distances = newDistances
+    //             frontier = newFrontier
+    //         }
+            
+    //         // Reverse distances based on target octant and unstack result
+    //         let distanceMaps = tf.unstack(tf.reverse(distances, axes), -1)
+            
+    //         // pack distance and occupancy maps
+    //         return this.uint5551(distanceMaps[0], distanceMaps[1], distanceMaps[2], occupancyMap.squeeze())
+    //     })
+    // }
+
     async computeDirectional24DistanceMap(occupancyMap, maxDistance = 31, axes, index) 
     {
         return tf.tidy(() => 
@@ -353,7 +439,7 @@ export default class ISOProcessor extends EventEmitter
             // Compute a x-axis octant prismal kernel
             let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
             
-            // Initialize the frontier  and the distance tensor
+            // Initialize the frontier and the distance tensor
             let source = tf.reverse(occupancyMap, axes)
             let distances = tf.where(source, 0, maxDistance)
             let frontier = tf.cast(source, 'bool')
@@ -450,7 +536,6 @@ export default class ISOProcessor extends EventEmitter
         ]
     
         // Compute packed distances 
-        const pack5551 = (r, g, b, a) => a.mod(2).add(b.mul(2)).add(g.mul(64)).add(r.mul(2048)) // (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
         const packedDistances = []
     
         for (let distance of distances)
@@ -460,7 +545,7 @@ export default class ISOProcessor extends EventEmitter
             const zDistances = distance[2]
     
             // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint 
-            packedDistances.push( tf.tidy(() => pack5551(xDistances, yDistances, zDistances, occupancyMap)) ) 
+            packedDistances.push( tf.tidy(() => this.uint5551(xDistances, yDistances, zDistances, occupancyMap)) ) 
             tf.dispose([xDistances, yDistances, zDistances])
         }
     
@@ -497,4 +582,24 @@ export default class ISOProcessor extends EventEmitter
         })
 
     } 
+
+    uint5551(R, G, B, A) 
+    {
+        return tf.tidy(() => 
+        {
+            // Clamp and floor all channels to fit their bit-widths
+            const R5 = R.clipByValue(0, 31) // R & 0x1F
+            const G5 = G.clipByValue(0, 31) // G & 0x1F
+            const B5 = B.clipByValue(0, 31) // B & 0x1F
+            const A1 = A.clipByValue(0, 1)  // A & 0x1
+
+            // Shift each channel to correct bit position
+            const R11 = R5.mul(2048) // R << 11
+            const G6  = G5.mul(64)   // G << 6
+            const B1  = B5.mul(2)    // B << 1
+
+            // Combine all into one 16-bit packed value
+            return A1.add(B1).add(G6).add(R11)
+        })
+    }
 }
