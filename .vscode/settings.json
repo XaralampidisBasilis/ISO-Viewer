@@ -119,6 +119,7 @@
         "timeit",
         "topk",
         "tricubic",
+        "trilinearly",
         "triquadratic",
         "tsvu",
         "usampler",

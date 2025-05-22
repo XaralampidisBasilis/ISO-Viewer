@@ -8,86 +8,63 @@
 #include "../math/poly_horner"
 #endif
 
-/**
- * Checks whether a cubic polynomial can be equal to a target value within a specified closed interval.
- * The function uses the Intermediate Value Theorem and evaluates the polynomial
- * at its local extrema to detect any sign change indicating a root within the interval.
- * 
- * @param coeffs  The coefficients of the cubic polynomial, of the form: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x
- * @param f_target    The value to check if the cubic can be equal
- * @param t_interval  The interval that we search the target
- * 
- * @return True if a root exists in the closed interval, otherwise false.
- */
-bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval)
-{
-    // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
-    coeffs.x -= f_target;
+// compute if cubic polynomial c0 + c1x + c2x^2 + c3x^3 = y is solvable for x in [xa, xb]
 
-    // compute the cubic at the boundaries
-    vec2 f_interval;
-    poly_horner(coeffs, t_interval, f_interval);
+bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb)
+{
+    // normalize equation c0 + c1x + c2x^2 + c3x^3 = y
+    c.x -= y;
 
     // compute cubic derivative coefficients
-    vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
+    vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = quadratic_roots(deriv_coeffs, t_interval.x);
-    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
+    vec2 x0_x1 = quadratic_roots(d, xa_xb.x);
+    x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
-    vec2 f_extrema;
-    poly_horner(coeffs, t_critical, f_extrema);
+    vec2 y0_y1;
+    poly_horner(c, x0_x1, y0_y1);
 
-    // combine function values into a single vector
-    vec4 f_values = vec4(f_interval.x, f_extrema,f_interval.y);
+  // compute the cubic at the boundaries
+    vec2 ya_yb;
+    poly_horner(c, xa_xb, ya_yb);
+
+    // combine function values
+    vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
     // compute sign changes for intermediate value theorem
-    bvec3 is_crossing = lessThanEqual(f_values.xyz * f_values.yzw, vec3(0.0));
+    bvec3 sa0_s01_s1b = lessThanEqual(ya_y0_y1_yb.xyz * ya_y0_y1_yb.yzw, vec3(0.0));
 
     // return result
-    return any(is_crossing);
+    return any(sa0_s01_s1b);
 }
 
-/**
- * Checks whether a cubic polynomial can be equal to a target value within a specified closed interval.
- * The function uses the Intermediate Value Theorem and evaluates the polynomial
- * at its local extrema to detect any sign change indicating a root within the interval.
- * 
- * @param coeffs  The coefficients of the cubic polynomial, of the form: coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + coeffs.x
- * @param f_target    The value to check if the cubic can be equal
- * @param t_interval  The interval that we search the target
- * @param f_interval  The interval function values that we know beforehand
- * 
- * @return True if a root exists in the closed interval, otherwise false.
- */
-
-bool is_cubic_solvable(in vec4 coeffs, in float f_target, in vec2 t_interval, in vec2 f_interval)
+bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
 {
-    // normalize equation coeffs.w * t^3 + coeffs.z * t^2 + coeffs.y * t + (coeffs.x - target) = 0
-    coeffs.x -= f_target;
-    f_interval -= f_target;
+    // normalize equation c0 + c1x + c2x^2 + c3x^3 = y
+    c.x -= y;
+    ya_yb -= y;
 
     // compute cubic derivative coefficients
-    vec3 deriv_coeffs = coeffs.yzw * vec3(1.0, 2.0, 3.0);
+    vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 t_critical = quadratic_roots(deriv_coeffs, t_interval.x);
-    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
+    vec2 x0_x1 = quadratic_roots(d, xa_xb.x);
+    x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
-    vec2 f_extrema;
-    poly_horner(coeffs, t_critical, f_extrema);
+    vec2 y0_y1;
+    poly_horner(c, x0_x1, y0_y1);
 
-    // combine function values into a single vector
-    vec4 f_values = vec4(f_interval.x, f_extrema,f_interval.y);
+    // combine function values
+    vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
     // compute sign changes for intermediate value theorem
-    bvec3 is_crossing = lessThanEqual(f_values.xyz * f_values.yzw, vec3(0.0));
+    bvec3 sa0_s01_s1b = lessThanEqual(ya_y0_y1_yb.xyz * ya_y0_y1_yb.yzw, vec3(0.0));
 
     // return result
-    return any(is_crossing);
+    return any(sa0_s01_s1b);
 }
-
 
 #endif

@@ -1,15 +1,16 @@
 
 // given the start and exit compute the sampling distances inside the cell
-poly.distances = mmix(cell.entry_distance, cell.exit_distance, poly.weights);
+poly.distances.x = poly.distances.w;
+poly.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, poly.weights.yzw);
 
 // compute the intensity samples inside the cell from the intensity map texture
 poly.intensities.x = poly.intensities.w;
 poly.intensities.y = sample_intensity_map(camera.position + ray.direction * poly.distances.y);
 poly.intensities.z = sample_intensity_map(camera.position + ray.direction * poly.distances.z);
 poly.intensities.w = sample_intensity_map(camera.position + ray.direction * poly.distances.w);
-poly.errors = poly.intensities - u_rendering.intensity;
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
+poly.errors = poly.intensities - u_rendering.intensity;
 poly.coefficients = poly.inv_vander * poly.intensities;
 
 // check if there are sign crossings between samples

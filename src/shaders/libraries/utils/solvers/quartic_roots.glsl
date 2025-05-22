@@ -112,13 +112,13 @@ vec4 factored_quadratics_roots(in float t, in float s, in float v, in float u)
 
 // Solve quartic equation c0 + c1x^1 + c2x^2 + c3x^3 + c4x^4 = 0 
 // using Ferrari-Descartes method assuming quartic coefficient is nonzero
-vec4 quartic_roots(in float c0, in float c1, in float c2, in float c3, in float c4, in float x0) 
+vec4 quartic_roots(in float c[5], in float x0) 
 {
     // Solve for the smallest cubic term, this produces the least wild behavior.
-    bool flip = abs(c3 * c0) > abs(c1 * c4);
+    bool flip = abs(c[3] * c[0]) > abs(c[1] * c[4]);
     vec4 coeff = (flip) ? 
-        vec4(c4, c3, c2, c1) / c0 : // Solve for reciprocal
-        vec4(c0, c1, c2, c3) / c4;
+        vec4(c[4], c[3], c[2], c[1]) / c[0] : // Solve for reciprocal
+        vec4(c[0], c[1], c[2], c[3]) / c[4];
 
     // To simplify depressed quartic computations
     // e + dx^1 + cx^2 + 4bx^3 + x^4

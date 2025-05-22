@@ -188,7 +188,192 @@ void poly_horner(in vec4 c, in vec4 t, out vec4 f, out vec4 f1, out vec4 f2)
     f2 = b1 * 2.0;
 }
 
-// general
+// quartic
+void poly_horner(in float c[5], in float t, out float f) 
+{
+    f = c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec2 t, out vec2 f) 
+{
+    f = vec2(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec3 t, out vec3 f) 
+{
+    f = vec3(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec4 t, out vec4 f) 
+{
+    f = vec4(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[5], in float t, out float f, out float f1) 
+{
+    f1 = 0.0;
+    f  = c[4];
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec2 t, out vec2 f, out vec2 f1) 
+{
+    f1 = vec2(0.0);
+    f  = vec2(c[4]);
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec3 t, out vec3 f, out vec3 f1) 
+{
+    f1 = vec3(0.0);
+    f  = vec3(c[4]);
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[5], in vec4 t, out vec4 f, out vec4 f1) 
+{
+    f1 = vec4(0.0);
+    f  = vec4(c[4]);
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+
+// quintic 
+void poly_horner(in float c[6], in float t, out float f) 
+{
+    f = c[5];
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec2 t, out vec2 f) 
+{
+    f = vec2(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec3 t, out vec3 f) 
+{
+    f = vec3(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec4 t, out vec4 f) 
+{
+    f = vec4(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+}
+void poly_horner(in float c[6], in float t, out float f, out float f1) 
+{
+    f1 = 0.0;
+    f  = c[5];
+    f1 = f1 * t + f;
+    f  = f * t + c[4];
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec2 t, out vec2 f, out vec2 f1) 
+{
+    f1 = vec2(0.0);
+    f  = vec2(c[5]);
+    f1 = f1 * t + f;
+    f  = f * t + c[4];
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec3 t, out vec3 f, out vec3 f1) 
+{
+    f1 = vec3(0.0);
+    f  = vec3(c[5]);
+    f1 = f1 * t + f;
+    f  = f * t + c[4];
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+void poly_horner(in float c[6], in vec4 t, out vec4 f, out vec4 f1) 
+{
+    f1 = vec4(0.0);
+    f  = vec4(c[5]);
+    f1 = f1 * t + f;
+    f  = f * t + c[4];
+    f1 = f1 * t + f;
+    f  = f * t + c[3];
+    f1 = f1 * t + f;
+    f  = f * t + c[2];
+    f1 = f1 * t + f;
+    f  = f * t + c[1];
+    f1 = f1 * t + f;
+    f  = f * t + c[0];
+}
+
+// general polynomial
+
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float f) 
 {    
     f = c[POLY_HORNER_MAX_DEGREE];

@@ -26,12 +26,12 @@ export default class ISOProcessor extends EventEmitter
         this.computes = 
         {
             intensityMap                        : { parameters: null, tensor: null},
+            laplaceIntensityMap                 : { parameters: null, tensor: null},
             occupancyMap                        : { parameters: null, tensor: null},
             boundingBox                         : { parameters: null},
             distanceMap                         : { parameters: null, tensor: null},
             anisotropicDistanceMap              : { parameters: null, tensor: null},
             extendedAnisotropicDistanceMap      : { parameters: null, tensor: null},
-            packedExtendedAnisotropicDistanceMap: { parameters: null, tensor: null},
         }
     }
 
@@ -100,6 +100,16 @@ export default class ISOProcessor extends EventEmitter
         console.timeEnd('generateIntensityMap') 
         // console.log(this.computes.intensityMap.parameters)
         // console.log(this.computes.intensityMap.tensor.dataSync())
+    }
+
+    async generateLaplaceIntensityMap()
+    {
+        console.time('generateLaplaceIntensityMap') 
+        this.computes.laplaceIntensityMap.tensor = this.computeLaplaceIntensityMap(this.computes.intensityMap.tensor)          
+        this.computes.laplaceIntensityMap.parameters = {...this.computes.intensityMap.parameters}
+        console.timeEnd('generateLaplaceIntensityMap') 
+        // console.log(this.computes.laplaceIntensityMap.parameters)
+        // console.log(this.computes.laplaceIntensityMap.tensor.dataSync())
     }
 
     async generateOccupancyMap(threshold, stride)
@@ -200,10 +210,10 @@ export default class ISOProcessor extends EventEmitter
     async generateExtendedAnisotropicDistanceMap(maxIters)
     {
         console.time('generateExtendedAnisotropicDistanceMap') 
-        const extAnisotropicDistanceMap = await this.computeExtendedAnisotropicDistanceMap(this.computes.occupancyMap.tensor, maxIters)
+        const extendedAnisotropicDistanceMap = await this.computeExtendedAnisotropicDistanceMap(this.computes.occupancyMap.tensor, maxIters)
         const parameters = {...this.computes.occupancyMap.parameters}
-        const maxTensor = extAnisotropicDistanceMap.max()
-        const meanTensor = extAnisotropicDistanceMap.mean()
+        const maxTensor = extendedAnisotropicDistanceMap.max()
+        const meanTensor = extendedAnisotropicDistanceMap.mean()
 
         parameters.dimensions = parameters.dimensions.clone()
         parameters.dimensions.z *= 8
@@ -211,18 +221,32 @@ export default class ISOProcessor extends EventEmitter
         parameters.meanDistance = meanTensor.arraySync()  
         tf.dispose([maxTensor, meanTensor])
 
-        this.computes.extendedAnisotropicDistanceMap.tensor = extAnisotropicDistanceMap
+        this.computes.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicDistanceMap
         this.computes.extendedAnisotropicDistanceMap.parameters = parameters
         console.timeEnd('generateExtendedAnisotropicDistanceMap') 
-        // console.log(this.computes.extAnisotropicDistanceMap.parameters)
-        // console.log(this.computes.extAnisotropicDistanceMap.tensor.dataSync())
+        // console.log(this.computes.extendedAnisotropicDistanceMap.parameters)
+        // console.log(this.computes.extendedAnisotropicDistanceMap.tensor.dataSync())
     }
 
     // Helpers
 
-    async computeLaplacianMap(intensityMap)
-    {
-         
+    async computeLaplaceIntensityMap(intensityMap)
+   {
+        return tf.tidy(() => 
+        {            
+            // Compute 3 fused second-order derivatives filter
+            let xFilter = tf.tensor([0.5, -1, 0.5], [1, 1, 3, 1, 1], 'float32')
+            let yFilter = tf.tensor([0.5, -1, 0.5], [1, 3, 1, 1, 1], 'float32')
+            let zFilter = tf.tensor([0.5, -1, 0.5], [3, 1, 1, 1, 1], 'float32')
+    
+            // Compute second-order derivatives 
+            let xlLaplace = tf.conv3d(intensityMap, xFilter, 1, 'same')
+            let ylLaplace = tf.conv3d(intensityMap, yFilter, 1, 'same')
+            let zlLaplace = tf.conv3d(intensityMap, zFilter, 1, 'same')
+
+            // Concatenate laplace vector with intensity map 
+            return tf.concat([xlLaplace, ylLaplace, zlLaplace, intensityMap], 3)
+        })
     }
 
     async computeOccupancyMap(intensityMap, threshold, blockSize) 
@@ -256,23 +280,77 @@ export default class ISOProcessor extends EventEmitter
         })
     }
 
+    // async computeOccupancyMap(intensityMap, threshold, blockSize) 
+    // {
+    //     return tf.tidy(() =>
+    //     {
+    //         // Prepare strides and size for pooling operations
+    //         const shape = intensityMap.shape
+    //         const strides = [blockSize, blockSize, blockSize]
+    //         const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+    
+    //         // Compute shape in order to be appropriate for valid pool operations
+    //         const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+    //         const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+    
+    //         // Calculate necessary padding for valid subdivisions and boundary handling
+    //         const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
+    //         padding[3] = [0, 0]
+    //         const padded = tf.pad(intensityMap, padding) 
+
+    //         // Compute if voxel values is above/bellow  threshold
+    //         const isBellow = tf.lessEqual(padded, threshold)
+    //         const isAbove = tf.greaterEqual(padded, threshold)
+    
+    //         // Compute if cell has values above/bellow threshold
+    //         const hasAbove = tf.maxPool3d(isAbove, filterSize, strides, 'valid')
+    //         const hasBellow = tf.maxPool3d(isBellow, filterSize, strides, 'valid')
+    
+    //         // Compute cell occupation if above and bellow values from threshold
+    //         return tf.logicalAnd(hasAbove, hasBellow)
+    //     })
+    // }
+
     async computeBoundingBox(occupancyMap) 
     {
         return tf.tidy(() => 
         {
             // Collapse occupancy map across axes to identify active voxels
             // For each axis, reduce all other axes and get a 1D boolean array
-            const xOccupancy = occupancyMap.any([1, 2, 3]).arraySync().flat() 
+            const xOccupancy = occupancyMap.any([0, 1, 3]).arraySync().flat() 
             const yOccupancy = occupancyMap.any([0, 2, 3]).arraySync().flat() 
-            const zOccupancy = occupancyMap.any([0, 1, 3]).arraySync().flat() 
+            const zOccupancy = occupancyMap.any([1, 2, 3]).arraySync().flat() 
     
             // Compute mix/max bounding box coords
-            const minCoords = [zOccupancy.findIndex(Boolean), yOccupancy.findIndex(Boolean), xOccupancy.findIndex(Boolean)]
-            const maxCoords = [zOccupancy.findLastIndex(Boolean), yOccupancy.findLastIndex(Boolean), xOccupancy.findLastIndex(Boolean)]
+            const minCoords = [xOccupancy.findIndex(Boolean), yOccupancy.findIndex(Boolean), zOccupancy.findIndex(Boolean)]
+            const maxCoords = [xOccupancy.findLastIndex(Boolean), yOccupancy.findLastIndex(Boolean), zOccupancy.findLastIndex(Boolean)]
     
             return { minCoords, maxCoords }
         })
     }
+
+    // async computeBoundingBox(occupancyMap) 
+    // {
+    //     return tf.tidy(() => 
+    //     {
+    //         // Collapse occupancy map across axes to identify active voxels
+    //         // For each axis, reduce all other axes and get a 1D boolean array
+    //         const xMin = occupancyMap.argMax(0).min().arraySync()
+    //         const yMin = occupancyMap.argMax(1).min().arraySync()
+    //         const zMin = occupancyMap.argMax(2).min().arraySync()
+
+
+    //         const xMax = occupancyMap.shape[2] - 1 - occupancyMap.reverse(0).argMax(0).min().arraySync()
+    //         const yMax = occupancyMap.shape[1] - 1 - occupancyMap.reverse(1).argMax(1).min().arraySync()
+    //         const zMax = occupancyMap.shape[0] - 1 - occupancyMap.reverse(2).argMax(2).min().arraySync()
+    
+    //         // Compute mix/max bounding box coords
+    //         const iMin = [xMin, yMin, zMin]
+    //         const iMax = [xMax, yMax, zMax]
+    
+    //         return { minCoords: iMin, maxCoords: iMax }
+    //     })
+    // }
 
     // async computeBoundingBox(occupancyMap) 
     // {

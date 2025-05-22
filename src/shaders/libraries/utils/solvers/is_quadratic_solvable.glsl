@@ -8,60 +8,63 @@
 #include "../math/poly_horner"
 #endif
 
-bool is_quadratic_solvable(in vec3 coeffs, in float f_target, in vec2 t_interval)
+// compute if quadratic polynomial c0 + c1x + c2x^2 = y is solvable for x in [xa, xb]
+
+bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb)
 {
-    // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
-    coeffs.x -= f_target;
+    // normalize equation c0 + c1x + c2x^2 = y
+    c.x -= y;
+
+    // compute quadratic derivative coefficients
+    vec2 d = vec2(c.y, c.z * 2.0);
+
+    // solve for the critical point of the quadratic polynomial
+    float x0 = linear_root(d);
+    x0 = clamp(x0, xa_xb.x, xa_xb.y);
+
+    // compute the quadratic extrema value at the critical point
+    float y0;
+    poly_horner(c, x0, y0);
 
     // compute the quadratic at the boundaries
-    vec2 f_interval;
-    poly_horner(coeffs, t_interval, f_interval);
-
-    // compute quadratic derivative coefficients
-    vec2 deriv_coeffs = vec2(coeffs.y, coeffs.z * 2.0);
-
-    // solve for the critical point of the quadratic polynomial
-    float t_critical = linear_root(deriv_coeffs);
-    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
-
-    // compute the quadratic extrema value at the critical point
-    float f_extrema;
-    poly_horner(coeffs, t_critical, f_extrema);
+    vec2 ya_yb;
+    poly_horner(c, xa_xb, ya_yb);
 
     // combine function values into a single vector
-    vec3 f_values = vec3(f_interval.x, f_extrema, f_interval.y);
+    vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
     // compute sign changes for intermediate value theorem
-    bvec2 is_crossing = lessThanEqual(f_values.xy * f_values.yz, vec2(0.0));
+    bvec2 sa0_s0b = lessThanEqual(ya_y0_yb.xy * ya_y0_yb.yz, vec2(0.0));
 
     // return result
-    return any(is_crossing);
+    return any(sa0_s0b);
 }
 
-bool is_quadratic_solvable(in vec3 coeffs, in float f_target, in vec2 t_interval, in vec2 f_interval)
+bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
 {
-    // normalize equation coeffs.z * t^2 + coeffs.y * t + (coeffs.x - f_target) = 0
-    coeffs.x -= f_target;
+    // normalize equation c0 + c1x + c2x^2 = y
+    c.x -= y;
+    ya_yb -= y;
 
     // compute quadratic derivative coefficients
-    vec2 deriv_coeffs = vec2(coeffs.y, coeffs.z * 2.0);
+    vec2 d = vec2(c.y, c.z * 2.0);
 
     // solve for the critical point of the quadratic polynomial
-    float t_critical = linear_root(deriv_coeffs);
-    t_critical = clamp(t_critical, t_interval.x, t_interval.y);
+    float x0 = linear_root(d);
+    x0 = clamp(x0, xa_xb.x, xa_xb.y);
 
     // compute the quadratic extrema value at the critical point
-    float f_extrema;
-    poly_horner(coeffs, t_critical, f_extrema);
+    float y0;
+    poly_horner(c, x0, y0);
 
     // combine function values into a single vector
-    vec3 f_values = vec3(f_interval.x, f_extrema, f_interval.y);
+    vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
     // compute sign changes for intermediate value theorem
-    bvec2 is_crossing = lessThanEqual(f_values.xy * f_values.yz, vec2(0.0));
+    bvec2 sa0_s0b = lessThanEqual(ya_y0_yb.xy * ya_y0_yb.yz, vec2(0.0));
 
     // return result
-    return any(is_crossing);
+    return any(sa0_s0b);
 }
 
 #endif

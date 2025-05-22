@@ -45,6 +45,7 @@ export default class ISOViewer extends EventEmitter
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         await this.processor.generateIntensityMap()
+        // await this.processor.generateLaplaceIntensityMap()
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(31)
