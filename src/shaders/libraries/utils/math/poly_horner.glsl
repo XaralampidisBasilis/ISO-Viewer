@@ -378,97 +378,89 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float f
 {    
     f = c[POLY_HORNER_MAX_DEGREE];
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec2 t, out vec2 f) 
 {    
     f = vec2(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec3 t, out vec3 f) 
 {    
     f = vec3(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec4 t, out vec4 f) 
 {    
     f = vec4(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float f, out float f1)
 {
     f1 = 0.0;
     f = c[POLY_HORNER_MAX_DEGREE];
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f1 = f1 * t + f;
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec2 t, out vec2 f, out vec2 f1)
 {
     f1 = vec2(0.0);
     f = vec2(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec3 t, out vec3 f, out vec3 f1)
 {
     f1 = vec3(0.0);
     f = vec3(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec4 t, out vec4 f, out vec4 f1)
 {
     f1 = vec4(0.0);
     f = vec4(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float f, out float f1, out float f2)
 {
@@ -476,14 +468,13 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float f
     f1 = 0.0;
     f = c[POLY_HORNER_MAX_DEGREE];
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f2 = f2 * t + 2.0 * f1;
         f1 = f1 * t + f;
         f = f * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec2 t, out vec2 f, out vec2 f1, out vec2 f2)
 {
@@ -491,14 +482,13 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec2 t, out vec2 f, 
     f1 = vec2(0.0);
     f  = vec2(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f2 = f2 * t + 2.0 * f1;
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec3 t, out vec3 f, out vec3 f1, out vec3 f2)
 {
@@ -506,14 +496,13 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec3 t, out vec3 f, 
     f1 = vec3(0.0);
     f  = vec3(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f2 = f2 * t + 2.0 * f1;
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec4 t, out vec4 f, out vec4 f1, out vec4 f2)
 {
@@ -521,14 +510,13 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in vec4 t, out vec4 f, 
     f1 = vec4(0.0);
     f  = vec4(c[POLY_HORNER_MAX_DEGREE]);
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         f2 = f2 * t + 2.0 * f1;
         f1 = f1 * t + f;
         f  = f  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float D[POLY_HORNER_MAX_DERIVATIVE + 1])  // D[0] = f, D[1] = f1, ..., D[d] = fd
 {
@@ -538,7 +526,7 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float D
     }
     D[0] = c[POLY_HORNER_MAX_DEGREE];
 
-    #pragma unroll_loop_start
+    #pragma unroll
     for (int i = 0; i < POLY_HORNER_MAX_DEGREE; i++) 
     {
         for (int d = POLY_HORNER_MAX_DERIVATIVE; d >= 1; --d) 
@@ -547,7 +535,6 @@ void poly_horner(in float c[POLY_HORNER_MAX_DEGREE + 1], in float t, out float D
         }
         D[0] = D[0]  * t + c[POLY_HORNER_MAX_DEGREE - 1 - i];
     }
-    #pragma unroll_loop_end
 }
 
 #endif

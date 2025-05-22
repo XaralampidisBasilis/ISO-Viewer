@@ -17,8 +17,8 @@ cell.terminated = cell.exit_distance > ray.end_distance;
 // compute next coordinates
 cell.coords += cell.axes * ray.signs;
 
-// compute cell polynomial interpolation
-#include "./update_poly"
+// compute cell quartic polynomial interpolation
+#include "./update_quartic"
 
 // update stats
 #if STATS_ENABLED == 1
