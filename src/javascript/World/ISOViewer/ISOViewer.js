@@ -45,7 +45,7 @@ export default class ISOViewer extends EventEmitter
         const uRendering = this.material.uniforms.u_rendering.value
         const uDistanceMap = this.material.uniforms.u_distance_map.value
         await this.processor.generateIntensityMap()
-        // await this.processor.generateLaplaceIntensityMap()
+        await this.processor.generateLaplaceIntensityMap()
         await this.processor.generateOccupancyMap(uRendering.intensity, uDistanceMap.stride)
         await this.processor.generateBoundingBox()
         await this.processor.generateDistanceMap(31)
@@ -83,14 +83,13 @@ export default class ISOViewer extends EventEmitter
         this.textures.colorMaps.needsUpdate = true 
         
         // intensity map
-        const data = new Uint16Array(this.processor.volume.data.length)
-        for (let i = 0; i < this.processor.volume.data.length; i++)
-        {
-            data[i] = toHalfFloat(this.processor.volume.data[i])
+        const intensityMapUint16 = new Uint16Array(this.processor.volume.data.length)
+        for (let i = 0; i < this.processor.volume.data.length; i++) {
+            intensityMapUint16[i] = toHalfFloat(this.processor.volume.data[i])
         }
-        
+
         this.textures.intensityMap = new THREE.Data3DTexture(
-            data, 
+            intensityMapUint16, 
             ...this.processor.volume.parameters.dimensions
         )
         this.textures.intensityMap.format = THREE.RedFormat
@@ -101,10 +100,35 @@ export default class ISOViewer extends EventEmitter
         this.textures.intensityMap.needsUpdate = true
         delete this.processor.volume.data
         delete this.resources.items.intensityMap.data
+        
+        // // laplace intensity map
+        // const laplaceIntensityMapFloat32 = this.processor.computes.laplaceIntensityMap.tensor.dataSync()
+        // tf.dispose(this.processor.computes.laplaceIntensityMap.tensor)
+        // tf.dispose(this.processor.computes.intensityMap.tensor)
+
+        // const laplaceIntensityUint16 = new Uint16Array(laplaceIntensityMapFloat32.length)
+        // for (let i = 0; i < laplaceIntensityMapFloat32.length; i++)
+        // {
+        //     laplaceIntensityUint16[i] = toHalfFloat(laplaceIntensityMapFloat32[i])
+        // }
+        
+        // this.textures.intensityMap = new THREE.Data3DTexture(
+        //     laplaceIntensityUint16, 
+        //     ...this.processor.computes.laplaceIntensityMap.parameters.dimensions
+        // )
+        // this.textures.intensityMap.format = THREE.RGBAFormat
+        // this.textures.intensityMap.type = THREE.HalfFloatType
+        // this.textures.intensityMap.minFilter = THREE.LinearFilter
+        // this.textures.intensityMap.magFilter = THREE.LinearFilter
+        // this.textures.intensityMap.generateMipmaps = false
+        // this.textures.intensityMap.needsUpdate = true
 
         // distance map
+        const distanceMapUint8 = new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync())
+        tf.dispose(this.processor.computes.distanceMap.tensor)
+
         this.textures.distanceMap = new THREE.Data3DTexture(
-            new Uint8Array(this.processor.computes.distanceMap.tensor.dataSync()), 
+            distanceMapUint8, 
             ...this.processor.computes.distanceMap.parameters.dimensions
         )
         this.textures.distanceMap.format = THREE.RedIntegerFormat
@@ -113,11 +137,14 @@ export default class ISOViewer extends EventEmitter
         this.textures.distanceMap.magFilter = THREE.NearestFilter
         this.textures.distanceMap.generateMipmaps = false
         this.textures.distanceMap.needsUpdate = true
-        tf.dispose(this.processor.computes.distanceMap.tensor)
+
 
         // anisotropic distance map
+        const anisotropicDistanceMapUint8 = new Uint8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync())
+        tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
+
         this.textures.anisotropicDistanceMap = new THREE.Data3DTexture(
-            new Uint8Array(this.processor.computes.anisotropicDistanceMap.tensor.dataSync()), 
+            anisotropicDistanceMapUint8, 
             ...this.processor.computes.anisotropicDistanceMap.parameters.dimensions
         )
         this.textures.anisotropicDistanceMap.format = THREE.RedIntegerFormat
@@ -126,11 +153,14 @@ export default class ISOViewer extends EventEmitter
         this.textures.anisotropicDistanceMap.magFilter = THREE.NearestFilter
         this.textures.anisotropicDistanceMap.generateMipmaps = false
         this.textures.anisotropicDistanceMap.needsUpdate = true
-        tf.dispose(this.processor.computes.anisotropicDistanceMap.tensor)
+
 
         // extended anisotropic distance map
+        const extendedAnisotropicDistanceMapUint5551 = new Uint16Array(this.processor.computes.extendedAnisotropicDistanceMap.tensor.dataSync())
+        tf.dispose(this.processor.computes.extendedAnisotropicDistanceMap.tensor)
+
         this.textures.extendedAnisotropicDistanceMap = new THREE.Data3DTexture(
-            new Uint16Array(this.processor.computes.extendedAnisotropicDistanceMap.tensor.dataSync()), 
+            extendedAnisotropicDistanceMapUint5551, 
             ...this.processor.computes.extendedAnisotropicDistanceMap.parameters.dimensions
         )
         this.textures.extendedAnisotropicDistanceMap.format = THREE.RedIntegerFormat
@@ -139,7 +169,6 @@ export default class ISOViewer extends EventEmitter
         this.textures.extendedAnisotropicDistanceMap.magFilter = THREE.NearestFilter
         this.textures.extendedAnisotropicDistanceMap.generateMipmaps = false
         this.textures.extendedAnisotropicDistanceMap.needsUpdate = true
-        tf.dispose(this.processor.computes.extendedAnisotropicDistanceMap.tensor)
 
     }
   

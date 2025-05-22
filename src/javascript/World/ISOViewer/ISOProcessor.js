@@ -105,7 +105,7 @@ export default class ISOProcessor extends EventEmitter
     async generateLaplaceIntensityMap()
     {
         console.time('generateLaplaceIntensityMap') 
-        this.computes.laplaceIntensityMap.tensor = this.computeLaplaceIntensityMap(this.computes.intensityMap.tensor)          
+        this.computes.laplaceIntensityMap.tensor = await this.computeLaplaceIntensityMap(this.computes.intensityMap.tensor)          
         this.computes.laplaceIntensityMap.parameters = {...this.computes.intensityMap.parameters}
         console.timeEnd('generateLaplaceIntensityMap') 
         // console.log(this.computes.laplaceIntensityMap.parameters)

@@ -7,6 +7,8 @@
 #include "./cubic_solver"
 #include "./quartic_roots"
 #include "./quartic_solver"
+#include "./bisection_root"
+#include "./neubauer_root"
 #include "./is_quadratic_solvable"
 #include "./is_cubic_solvable"
 #include "./is_quartic_solvable"

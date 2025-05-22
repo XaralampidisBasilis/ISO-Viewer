@@ -6,6 +6,7 @@ set_cell();
 set_block();
 set_frag();
 set_poly();
+set_quintic();
 set_surface();
 
 #if DEBUG_ENABLED == 1
