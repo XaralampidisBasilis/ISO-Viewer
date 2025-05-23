@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import * as TENSOR from '../../Utils/TensorUtils'
+import * as TF from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
+import { toHalfFloat } from 'three/src/extras/DataUtils.js'
 
 export default class ISOComputes extends EventEmitter
 {
@@ -13,6 +14,9 @@ export default class ISOComputes extends EventEmitter
         this.viewer = new ISOViewer()
         this.renderer = this.viewer.renderer
         this.resources = this.viewer.resources
+        this.uniforms = this.viewer.mesh.material.uniforms
+        this.stride = this.uniforms.u_distance_map.value.stride
+        this.threshold = this.uniforms.u_rendering.value.intensity
 
         // Wait for resources
         this.resources.on('ready', async () =>
@@ -26,104 +30,216 @@ export default class ISOComputes extends EventEmitter
     async setTensorflow()
     {
         tf.enableProdMode()
+
         await tf.ready()
         await tf.setBackend('webgl')
     }
 
     async setComputes()
     {
-        const uniforms = this.viewer.mesh.material.uniforms
-        const threshold = uniforms.u_rendering.value.intensity
-        const stride = uniforms.u_distance_map.value.stride
-
         await this.computeIntensityMap()
-        await this.computeOccupancyMap(threshold, stride)
+        await this.computeLaplaciansIntensityMap()
+        await this.computeBlockExtremaMap()
+        this.intensityMap.tensor.dispose()
+
+        await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
+        await this.computeAnisotropicDistanceMap()
+        await this.computeExtendedAnisotropicDistanceMap()
+        this.occupancyMap.tensor.dispose()    
     }
 
-    async update()
+    async onThresholdChange()
     {
-        const uniforms = this.viewer.mesh.material.uniforms
-        const threshold = uniforms.u_rendering.value.intensity
-        const stride = uniforms.u_distance_map.value.stride
-
-        tf.dispose(this.occupancyMap.tensor)
-        tf.dispose(this.distanceMap.tensor)
+        this.threshold = this.uniforms.u_rendering.value.intensity
         
-        await this.computeOccupancyMap(threshold, stride)
+        await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
+        await this.computeAnisotropicDistanceMap()
+        await this.computeExtendedAnisotropicDistanceMap()
+        this.occupancyMap.tensor.dispose()   
+    }
+
+    async onStrideChange()
+    {
+        this.stride = this.uniforms.u_distance_map.value.stride
+        
+        await this.computeIntensityMap()
+        await this.computeBlockExtremaMap()
+        this.intensityMap.tensor.dispose()
+
+        await this.computeOccupancyMap()
+        await this.computeBoundingBox()
+        await this.computeDistanceMap()
+        await this.computeAnisotropicDistanceMap()
+        await this.computeExtendedAnisotropicDistanceMap()
+        this.occupancyMap.tensor.dispose()    
     }
 
     async computeIntensityMap()
     {
         console.time('computeIntensityMap') 
-        const source = this.resources.items.intensityMap
-        const parameters = 
+
+        const intensityMap = this.resources.items.intensityMap
+
+        // Compute intensity map parameters
+        this.intensityMap = {}
+        this.intensityMap.dimensions    = new THREE.Vector3().fromArray(intensityMap.dimensions)
+        this.intensityMap.spacing       = new THREE.Vector3().fromArray(intensityMap.spacing)
+        this.intensityMap.size          = new THREE.Vector3().fromArray(intensityMap.size)
+
+        this.intensityMap.invDimensions = new THREE.Vector3().fromArray(this.intensityMap.dimensions.map(x => 1/x))
+        this.intensityMap.invSpacing    = new THREE.Vector3().fromArray(this.intensityMap.spacing.map(x => 1/x))
+        this.intensityMap.invSize       = new THREE.Vector3().fromArray(this.intensityMap.size.map(x => 1/x))
+
+        this.intensityMap.spacingLength = new THREE.Vector3().fromArray(this.intensityMap.spacing).length()
+        this.intensityMap.sizeLength    = new THREE.Vector3().fromArray(this.intensityMap.size).length()
+
+        this.intensityMap.numVoxels     = this.intensityMap.dimensions.reduce((voxels, dimension) => voxels * dimension, 1)
+        this.intensityMap.maxVoxels     = this.intensityMap.dimensions.reduce((voxels, dimension) => voxels + dimension, -2)
+        this.intensityMap.shape         = this.intensityMap.dimensions.toReversed().concat(1)
+    
+        // compute normalized intensity map tensor
+        this.intensityMap.tensor = tf.tidy(() => 
         {
-            dimensions       : new THREE.Vector3().fromArray(source.dimensions),
-            spacing          : new THREE.Vector3().fromArray(source.spacing),
-            size             : new THREE.Vector3().fromArray(source.size),
-            invDimensions    : new THREE.Vector3().fromArray(source.dimensions.map(x => 1/x)),
-            invSpacing       : new THREE.Vector3().fromArray(source.spacing.map(x => 1/x)),
-            invSize          : new THREE.Vector3().fromArray(source.size.map(x => 1/x)),
-            spacingLength    : new THREE.Vector3().fromArray(source.spacing).length(),
-            sizeLength       : new THREE.Vector3().fromArray(source.size).length(),
-            numVoxels        : source.dimensions.reduce((voxels, dimension) => voxels * dimension, 1),
-            maxVoxels        : source.dimensions.reduce((voxels, dimension) => voxels + dimension, -2),
-            shape            : source.dimensions.toReversed().concat(1),
+            const data = new Float32Array(intensityMap.data)
+            const tensor = tf.tensor4d(data, this.intensityMap.shape)
+
+            return TF.map(intensityMap.min, intensityMap.max, tensor)
+        })
+
+        // compute intensity map data as uint16 encoding for HalfFloatType encoding
+        this.intensityMap.array = new Uint16Array(this.intensityMap.tensor.size)
+        const array = await this.intensityMap.tensor.data()
+
+        for (let i = 0; i < this.intensityMap.array.length; ++i) 
+        {
+            this.intensityMap.array[i] = toHalfFloat(array[i])
         }
 
-        const data = new Float32Array(source.data)
-        const tensor = tf.tidy(() => TENSOR.map(source.min, source.max, tf.tensor4d(data, parameters.shape,'float32')))
-
-        this.intensityMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeIntensityMap') 
     }
 
-    async computeOccupancyMap(threshold, stride)
+    async computeLaplaciansIntensityMap()
+    {
+        console.time('computeLaplaciansIntensityMap') 
+
+        this.laplaciansIntensityMap = {}
+        this.laplaciansIntensityMap.array = new Uint16Array(this.intensityMap.size * 4)
+
+        // incrementally compute laplacian maps and transfer to cpu to not overload memory
+        for (let c = 0; c < 3; ++c)
+        {
+            const tensor = await TF.computeLaplacianMap(this.intensityMap.tensor, 3 - c)
+            const data = await tensor.data()
+
+            for (let i = 0; i < data.length; ++i) 
+            {
+                let i4 = i * 4
+                this.laplaciansIntensityMap.array[i4 + c] = toHalfFloat(data[i])
+            }
+
+            tensor.dispose()
+        }
+
+        // compute intensity data to alpha channel
+        for (let i = 0; i < this.intensityMap.size; ++i)
+        {
+            let i4 = i * 4
+            this.laplaciansIntensityMap.array[i4 + 3] = this.intensityMap.array[i]
+        }
+
+        // copy parameters from intensity map
+        this.laplaciansIntensityMap.dimensions    = this.intensityMap.dimensions   
+        this.laplaciansIntensityMap.spacing       = this.intensityMap.spacing      
+        this.laplaciansIntensityMap.size          = this.intensityMap.size         
+        this.laplaciansIntensityMap.invDimensions = this.intensityMap.invDimensions
+        this.laplaciansIntensityMap.invSpacing    = this.intensityMap.invSpacing   
+        this.laplaciansIntensityMap.invSize       = this.intensityMap.invSize      
+        this.laplaciansIntensityMap.spacingLength = this.intensityMap.spacingLength
+        this.laplaciansIntensityMap.sizeLength    = this.intensityMap.sizeLength   
+        this.laplaciansIntensityMap.numVoxels     = this.intensityMap.numVoxels    
+        this.laplaciansIntensityMap.maxVoxels     = this.intensityMap.maxVoxels    
+
+        console.timeEnd('computeLaplaciansIntensityMap') 
+    }
+
+    async computeBlockExtremaMap()
+    {
+        console.time('computeBlockExtremaMap') 
+
+        this.blockExtremaMap = {}
+        this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
+        
+        // const data = await this.blockExtremaMap.tensor.data()
+        // this.blockExtremaMap.array = new Uint16Array(data.length)
+        // for (let i = 0; i < data.length; ++i) {
+        //     this.blockExtremaMap.array[i] = toHalfFloat(data[i])
+        // }
+
+        this.blockExtremaMap.stride        = this.stride
+        this.blockExtremaMap.shape         = this.blockExtremaMap.tensor.shape
+        this.blockExtremaMap.dimensions    = new THREE.Vector3().fromArray(this.blockExtremaMap.shape.slice(0, 3).toReversed())
+        this.blockExtremaMap.spacing       = new THREE.Vector3().copy(this.intensityMap.spacing).multiplyScalar(this.blockExtremaMap.stride)
+        this.blockExtremaMap.size          = new THREE.Vector3().copy(this.blockExtremaMap.dimensions).multiply(this.blockExtremaMap.spacing)
+
+        this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride
+        this.blockExtremaMap.invDimensions = new THREE.Vector3().fromArray(this.blockExtremaMap.dimensions.toArray().map(x => 1 / x))
+        this.blockExtremaMap.invSpacing    = new THREE.Vector3().fromArray(this.blockExtremaMap.spacing.toArray().map(x => 1 / x))
+        this.blockExtremaMap.invSize       = new THREE.Vector3().fromArray(this.blockExtremaMap.size.toArray().map(x => 1 / x))
+
+        console.timeEnd('computeBlockExtremaMap') 
+    }
+
+    async computeOccupancyMap()
     {
         console.time('computeOccupancyMap') 
-        const tensor = await TENSOR.computeOccupancyMap(this.intensityMap.tensor, threshold, stride)
-       
-        const parameters = {}
-        parameters.shape = tensor.shape
-        parameters.threshold = threshold
-        parameters.stride = stride
-        parameters.invStride = 1/stride
-        parameters.dimensions = new THREE.Vector3().fromArray(tensor.shape.slice(0, 3).toReversed())
-        parameters.spacing = new THREE.Vector3().copy(this.volume.parameters.spacing).multiplyScalar(stride)
-        parameters.size = new THREE.Vector3().copy(parameters.dimensions).multiply(parameters.spacing)
-        parameters.numBlocks = parameters.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
-        parameters.invDimensions = new THREE.Vector3().fromArray(parameters.dimensions.toArray().map(x => 1/x))
-        parameters.invSpacing = new THREE.Vector3().fromArray(parameters.spacing.toArray().map(x => 1/x))
-        parameters.invSize = new THREE.Vector3().fromArray(parameters.size.toArray().map(x => 1/x))
 
-        this.occupancyMap = { tensor : tensor, parameters : parameters }
+        this.occupancyMap = {}
+        this.occupancyMap.tensor = await TF.computeOccupancyMap(this.blockExtremaMap.tensor, this.threshold)
+        // this.occupancyMap.array = new Uint8Array(await this.occupancyMap.tensor.data())
+       
+        this.occupancyMap.threshold     = this.threshold
+        this.occupancyMap.stride        = this.blockExtremaMap.stride
+        this.occupancyMap.shape         = this.blockExtremaMap.shape
+        this.occupancyMap.dimensions    = this.blockExtremaMap.dimensions
+        this.occupancyMap.spacing       = this.blockExtremaMap.spacing
+        this.occupancyMap.size          = this.blockExtremaMap.size
+        this.occupancyMap.invStride     = this.blockExtremaMap.invStride
+        this.occupancyMap.invDimensions = this.blockExtremaMap.invDimensions
+        this.occupancyMap.invSpacing    = this.blockExtremaMap.invSpacing
+        this.occupancyMap.invSize       = this.blockExtremaMap.invSize
+        this.occupancyMap.numBlocks     = this.blockExtremaMap.dimensions.toArray().reduce((numBlocks, dimension) => numBlocks * dimension, 1)
+
         console.timeEnd('computeOccupancyMap') 
     }
 
     async computeBoundingBox()
     {
         console.time('computeBoundingBox') 
-        const boundingBox = await TENSOR.computeBoundingBox(this.binaryMap.tensor)
 
-        const parameters = {}
+        this.boundingBox = await TF.computeBoundingBox(this.occupancyMap.tensor)
+
         const stride = this.occupancyMap.parameters.stride
-        parameters.minBlockCoords = new THREE.Vector3().fromArray(boundingBox.minCoords)
-        parameters.maxBlockCoords = new THREE.Vector3().fromArray(boundingBox.maxCoords)
-        parameters.minCellCoords = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride)
-        parameters.maxCellCoords = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(1)     
-        parameters.minPosition = parameters.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
-        parameters.maxPosition = parameters.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
-        parameters.blockDimensions = new THREE.Vector3().subVectors(parameters.maxBlockCoords, parameters.minBlockCoords).addScalar(1)
-        parameters.cellDimensions = new THREE.Vector3().subVectors(parameters.maxCellCoords, parameters.minCellCoords).addScalar(1)
-        parameters.maxCells = parameters.cellDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
-        parameters.maxBlocks = parameters.blockDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
-        parameters.maxCellsPerBlock = stride * 3 - 2
 
-        this.boundingBox = { parameters : parameters }
+        this.boundingBox.minBlockCoords = new THREE.Vector3().fromArray(this.boundingBox.minCoords)
+        this.boundingBox.maxBlockCoords = new THREE.Vector3().fromArray(this.boundingBox.maxCoords)
+
+        this.boundingBox.minCellCoords = this.boundingBox.minBlockCoords.clone().addScalar(0).multiplyScalar(stride)
+        this.boundingBox.maxCellCoords = this.boundingBox.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(1)   
+
+        this.boundingBox.minPosition = this.boundingBox.minBlockCoords.clone().addScalar(0).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
+        this.boundingBox.maxPosition = this.boundingBox.maxBlockCoords.clone().addScalar(1).multiplyScalar(stride).subScalar(0.5) // voxel grid coords
+
+        this.boundingBox.blockDimensions = new THREE.Vector3().subVectors(this.boundingBox.maxBlockCoords, this.boundingBox.minBlockCoords).addScalar(1)
+        this.boundingBox.cellDimensions = new THREE.Vector3().subVectors(this.boundingBox.maxCellCoords, this.boundingBox.minCellCoords).addScalar(1)
+
+        this.boundingBox.maxCells = this.boundingBox.cellDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
+        this.boundingBox.maxBlocks = this.boundingBox.blockDimensions.toArray().reduce((count, dimension) => count + dimension, -2)
+        this.boundingBox.maxCellsPerBlock = stride * 3 - 2
+
         console.timeEnd('computeBoundingBox') 
     }
 
@@ -131,58 +247,146 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('computeDistanceMap') 
 
-        const minBlockCoords = this.boundingBox.parameters.minBlockCoords.toArray()
-        const blockDimensions = this.boundingBox.parameters.blockDimensions.toArray()
-        const begin = minBlockCoords.toReversed().concat(0)
-        const sliceSize = blockDimensions.toReversed().concat(1)
-        const maxIterations = Math.min(Math.max(...sliceSize), 255)
+        this.distanceMap = {}
+        this.distanceMap.tensor = await TF.computeDistanceMap(this.occupancyMap.tensor, 255)
+        this.distanceMap.array = new Uint8Array(await this.distanceMap.tensor.data())
+        this.distanceMap.tensor.dispose()
 
-        const tensor = await TENSOR.computeDistanceMapFromSlice(this.occupancyMap.tensor, begin, sliceSize, maxIterations)
+        this.distanceMap.threshold     = this.occupancyMap.threshold    
+        this.distanceMap.stride        = this.occupancyMap.stride       
+        this.distanceMap.shape         = this.occupancyMap.shape        
+        this.distanceMap.dimensions    = this.occupancyMap.dimensions   
+        this.distanceMap.spacing       = this.occupancyMap.spacing      
+        this.distanceMap.size          = this.occupancyMap.size         
+        this.distanceMap.invStride     = this.occupancyMap.invStride    
+        this.distanceMap.invDimensions = this.occupancyMap.invDimensions
+        this.distanceMap.invSpacing    = this.occupancyMap.invSpacing   
+        this.distanceMap.invSize       = this.occupancyMap.invSize      
+        this.distanceMap.numBlocks     = this.occupancyMap.numBlocks    
 
-        const parameters = {...this.occupancyMap.parameters}
-        parameters.maxDistance = tf.tidy(() => tensor.max().arraySync())  
+        // this.distanceMap.maxDistance = tf.tidy(() => this.distanceMap.tensor.max().arraySync())
+        // this.distanceMap.meanDistance = tf.tidy(() => this.distanceMap.tensor.mean().arraySync())
         
-        this.distanceMap = { tensor : tensor, parameters : parameters }
         console.timeEnd('computeDistanceMap') 
+    }
+
+    async computeAnisotropicDistanceMap()
+    {
+        console.time('computeAnisotropicDistanceMap') 
+
+        this.anisotropicDistanceMap = {}
+        this.anisotropicDistanceMap.tensor = await TF.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        this.anisotropicDistanceMap.array = new Uint8Array(await this.anisotropicDistanceMap.tensor.data())
+        this.anisotropicDistanceMap.tensor.dispose()
+
+        this.anisotropicDistanceMap.threshold     = this.occupancyMap.threshold    
+        this.anisotropicDistanceMap.stride        = this.occupancyMap.stride       
+        this.anisotropicDistanceMap.shape         = this.occupancyMap.shape        
+        this.anisotropicDistanceMap.dimensions    = this.occupancyMap.dimensions   
+        this.anisotropicDistanceMap.spacing       = this.occupancyMap.spacing      
+        this.anisotropicDistanceMap.size          = this.occupancyMap.size         
+        this.anisotropicDistanceMap.invStride     = this.occupancyMap.invStride    
+        this.anisotropicDistanceMap.invDimensions = this.occupancyMap.invDimensions
+        this.anisotropicDistanceMap.invSpacing    = this.occupancyMap.invSpacing   
+        this.anisotropicDistanceMap.invSize       = this.occupancyMap.invSize      
+        this.anisotropicDistanceMap.numBlocks     = this.occupancyMap.numBlocks    
+
+        // this.anisotropicDistanceMap.maxDistance = tf.tidy(() => this.anisotropicDistanceMap.tensor.max().arraySync())
+        // this.anisotropicDistanceMap.meanDistance = tf.tidy(() => this.anisotropicDistanceMap.tensor.mean().arraySync())
+        
+        console.timeEnd('computeAnisotropicDistanceMap') 
+    }
+
+    async computeExtendedAnisotropicDistanceMap()
+    {
+        console.time('computeExtendedAnisotropicDistanceMap') 
+
+        this.extendedAnisotropicDistanceMap = {}
+        this.extendedAnisotropicDistanceMap.tensor = await TF.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
+        this.extendedAnisotropicDistanceMap.array = new Uint8Array(await this.extendedAnisotropicDistanceMap.tensor.data())
+        this.extendedAnisotropicDistanceMap.tensor.dispose()
+
+        this.extendedAnisotropicDistanceMap.threshold     = this.occupancyMap.threshold    
+        this.extendedAnisotropicDistanceMap.stride        = this.occupancyMap.stride       
+        this.extendedAnisotropicDistanceMap.shape         = this.occupancyMap.shape        
+        this.extendedAnisotropicDistanceMap.dimensions    = this.occupancyMap.dimensions   
+        this.extendedAnisotropicDistanceMap.spacing       = this.occupancyMap.spacing      
+        this.extendedAnisotropicDistanceMap.size          = this.occupancyMap.size         
+        this.extendedAnisotropicDistanceMap.invStride     = this.occupancyMap.invStride    
+        this.extendedAnisotropicDistanceMap.invDimensions = this.occupancyMap.invDimensions
+        this.extendedAnisotropicDistanceMap.invSpacing    = this.occupancyMap.invSpacing   
+        this.extendedAnisotropicDistanceMap.invSize       = this.occupancyMap.invSize      
+        this.extendedAnisotropicDistanceMap.numBlocks     = this.occupancyMap.numBlocks    
+
+        console.timeEnd('computeExtendedAnisotropicDistanceMap') 
     }
 
     destroy() 
     {
         if (this.intensityMap) 
         {
-            tf.dispose(this.intensityMap.tensor)
+            this.intensityMap.tensor.dispose()
             this.intensityMap.tensor = null
-            this.intensityMap.parameters = null
+            this.intensityMap.array = null
             this.intensityMap = null
+        }
 
+        if (this.laplaciansIntensityMap)
+        {
+            this.laplaciansIntensityMap.array = null
+            this.laplaciansIntensityMap = null
+        }
+
+        if (this.blockExtremaMap) 
+        {
+            this.blockExtremaMap.tensor.dispose()
+            this.blockExtremaMap.tensor = null
+            this.blockExtremaMap.array = null
+            this.blockExtremaMap = null
         }
 
         if (this.occupancyMap) 
         {
-            tf.dispose(this.occupancyMap.tensor)
+            this.occupancyMap.tensor.dispose()
             this.occupancyMap.tensor = null
-            this.occupancyMap.parameters = null
+            this.occupancyMap.array = null
             this.occupancyMap = null
-        }
-
-        if (this.distanceMap) 
-        {
-            tf.dispose(this.distanceMap.tensor)
-            this.distanceMap.tensor = null
-            this.distanceMap.parameters = null
-            this.distanceMap = null
         }
 
         if (this.boundingBox) 
         {
-            this.boundingBox.parameters = null
             this.boundingBox = null
         }
 
-        this.viewer =  null
+        if (this.distanceMap) 
+        {
+            this.distanceMap.tensor.dispose()
+            this.distanceMap.tensor = null
+            this.distanceMap.array = null
+            this.distanceMap = null
+        }
+
+        if (this.anisotropicDistanceMap) 
+        {
+            this.anisotropicDistanceMap.tensor.dispose()
+            this.anisotropicDistanceMap.tensor = null
+            this.anisotropicDistanceMap.array = null
+            this.anisotropicDistanceMap = null
+        }
+
+        if (this.extendedAnisotropicDistanceMap) 
+        {
+            this.extendedAnisotropicDistanceMap.tensor.dispose()
+            this.extendedAnisotropicDistanceMap.tensor = null
+            this.extendedAnisotropicDistanceMap.array = null
+            this.extendedAnisotropicDistanceMap = null
+        }
+
+        this.viewer = null
         this.renderer = null
         this.resources = null
+        this.uniforms = null
 
-        console.log('Computes destroyed.')
+        console.log('ISOComputes destroyed.')
     }
 }

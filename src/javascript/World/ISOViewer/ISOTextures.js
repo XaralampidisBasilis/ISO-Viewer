@@ -24,60 +24,138 @@ export default class Textures extends EventEmitter
 
     async setTextures()
     {
-        this.setColorMaps()
-        this.setIntensityMap()
-        this.setDistanceMap()
+        this.textureColorMaps()
+        this.textureIntensityMap()
+        this.textureLaplaciansIntensityMap()
+        
+        this.textureOccupancyMap()
+        this.textureDistanceMap()
+        this.textureAnisotropicDistanceMap()
+        this.textureExtendedAnisotropicDistanceMap()
     }
 
-    async update()
+    async onThresholdChange()
     {
+        this.occupancyMap.dispose()
+        this.textureOccupancyMap()
+
         this.distanceMap.dispose()
-        this.setDistanceMap()
+        this.textureDistanceMap()
+
+        this.anisotropicDistanceMap.dispose()
+        this.textureAnisotropicDistanceMap()
+
+        this.extendedAnisotropicDistanceMap.dispose()
+        this.textureExtendedAnisotropicDistanceMap()
     }
 
-    setColorMaps()
+    textureColorMaps()
     {
-        this.colorMaps = this.resources.items.colorMaps
-
-        this.colorMaps.colorSpace = THREE.SRGBColorSpace
-        this.colorMaps.minFilter = THREE.LinearFilter
-        this.colorMaps.magFilter = THREE.LinearFilter
-        this.colorMaps.generateMipmaps = false
-        this.colorMaps.needsUpdate = true
+        if (this.resources.items.colorMaps)
+        {
+            this.colorMaps = this.resources.items.colorMaps
+            this.colorMaps.colorSpace = THREE.SRGBColorSpace
+            this.colorMaps.minFilter = THREE.LinearFilter
+            this.colorMaps.magFilter = THREE.LinearFilter
+            this.colorMaps.generateMipmaps = false
+            this.colorMaps.needsUpdate = true
+        }
     }
 
-    setIntensityMap()
+    textureIntensityMap()
     {
-        const source = this.computes.intensityMap
-        const dimensions = source.parameters.dimensions
-        const data = new Float32Array(source.tensor.dataSync())
-
-        this.intensityMap = new THREE.Data3DTexture(data, ...dimensions)
-        this.intensityMap.format = THREE.RedFormat
-        this.intensityMap.type = THREE.FloatType
-        this.intensityMap.minFilter = THREE.LinearFilter
-        this.intensityMap.magFilter = THREE.LinearFilter
-        this.intensityMap.computeMipmaps = false
-        this.intensityMap.needsUpdate = true
-
-        tf.dispose(source.tensor)
+        if (this.computes.intensityMap)
+        {
+            const array = this.computes.intensityMap.array
+            const dimension = this.computes.intensityMap.dimensions
+            this.intensityMap = new THREE.Data3DTexture(array, ...dimension)
+            this.intensityMap.format = THREE.RedFormat
+            this.intensityMap.type = THREE.HalfFloatType
+            this.intensityMap.minFilter = THREE.LinearFilter
+            this.intensityMap.magFilter = THREE.LinearFilter
+            this.intensityMap.generateMipmaps = false
+            this.intensityMap.needsUpdate = true
+        }
     }
 
-    setDistanceMap()
+    textureLaplaciansIntensityMap()
     {
-        const source = this.computes.distanceMap
-        const dimensions = source.parameters.dimensions
-        const data = new Int8Array(source.tensor.dataSync())
+        if (this.computes.laplaciansIntensityMap)
+        {
+            const array = this.computes.laplaciansIntensityMap.array
+            const dimension = this.computes.laplaciansIntensityMap.dimensions
+            this.laplaciansIntensityMap = new THREE.Data3DTexture(array, ...dimension)
+            this.laplaciansIntensityMap.format = THREE.RGBAFormat
+            this.laplaciansIntensityMap.type = THREE.HalfFloatType
+            this.laplaciansIntensityMap.minFilter = THREE.LinearFilter
+            this.laplaciansIntensityMap.magFilter = THREE.LinearFilter
+            this.laplaciansIntensityMap.generateMipmaps = false
+            this.laplaciansIntensityMap.needsUpdate = true
+        }
+    }
 
-        this.distanceMap = new THREE.Data3DTexture(data, ...dimensions)
-        this.distanceMap.format = THREE.RedIntegerFormat
-        this.distanceMap.type = THREE.ByteType
-        this.distanceMap.minFilter = THREE.NearestFilter
-        this.distanceMap.magFilter = THREE.NearestFilter
-        this.distanceMap.computeMipmaps = false
-        this.distanceMap.needsUpdate = true
+    textureOccupancyMap()
+    {
+        if (this.computes.occupancyMap)
+        {
+            const array = this.computes.occupancyMap.array
+            const dimension = this.computes.occupancyMap.dimensions
+            this.occupancyMap = new THREE.Data3DTexture(array, ...dimension)
+            this.occupancyMap.format = THREE.RedIntegerFormat
+            this.occupancyMap.type = THREE.UnsignedByteType
+            this.occupancyMap.minFilter = THREE.NearestFilter
+            this.occupancyMap.magFilter = THREE.NearestFilter
+            this.occupancyMap.generateMipmaps = false
+            this.occupancyMap.needsUpdate = true
+        }
+    }
 
-        tf.dispose(source.tensor)
+    textureDistanceMap()
+    {
+        if (this.computes.distanceMap)
+        {
+            const array = this.computes.distanceMap.array
+            const dimension = this.computes.distanceMap.dimensions
+            this.distanceMap = new THREE.Data3DTexture(array, ...dimension)
+            this.distanceMap.format = THREE.RedIntegerFormat
+            this.distanceMap.type = THREE.UnsignedByteType
+            this.distanceMap.minFilter = THREE.NearestFilter
+            this.distanceMap.magFilter = THREE.NearestFilter
+            this.distanceMap.generateMipmaps = false
+            this.distanceMap.needsUpdate = true
+        }
+    }
+
+    textureAnisotropicDistanceMap()
+    {
+        if (this.computes.anisotropicDistanceMap)
+        {
+            const array = this.computes.anisotropicDistanceMap.array
+            const dimension = this.computes.anisotropicDistanceMap.dimensions
+            this.anisotropicDistanceMap = new THREE.Data3DTexture(array, ...dimension)
+            this.anisotropicDistanceMap.format = THREE.RedIntegerFormat
+            this.anisotropicDistanceMap.type = THREE.UnsignedByteType
+            this.anisotropicDistanceMap.minFilter = THREE.NearestFilter
+            this.anisotropicDistanceMap.magFilter = THREE.NearestFilter
+            this.anisotropicDistanceMap.generateMipmaps = false
+            this.anisotropicDistanceMap.needsUpdate = true
+        }
+    }
+
+    textureExtendedAnisotropicDistanceMap()
+    {
+        if (this.computes.extendedAnisotropicDistanceMap)
+        {
+            const array = this.computes.extendedAnisotropicDistanceMap.array
+            const dimension = this.computes.extendedAnisotropicDistanceMap.dimensions
+            this.extendedAnisotropicDistanceMap = new THREE.Data3DTexture(array, ...dimension)
+            this.extendedAnisotropicDistanceMap.format = THREE.RedIntegerFormat
+            this.extendedAnisotropicDistanceMap.type = THREE.UnsignedShortType
+            this.extendedAnisotropicDistanceMap.minFilter = THREE.NearestFilter
+            this.extendedAnisotropicDistanceMap.magFilter = THREE.NearestFilter
+            this.extendedAnisotropicDistanceMap.generateMipmaps = false
+            this.extendedAnisotropicDistanceMap.needsUpdate = true
+        }
     }
 
     destroy() 
@@ -94,17 +172,41 @@ export default class Textures extends EventEmitter
             this.intensityMap = null
         }
 
+        if (this.laplaciansIntensityMap)
+        {
+            this.laplaciansIntensityMap.dispose()
+            this.laplaciansIntensityMap = null
+        }
+
+        if (this.occupancyMap)
+        {
+            this.occupancyMap.dispose()
+            this.occupancyMap = null
+        }
+
         if (this.distanceMap)
         {
             this.distanceMap.dispose()
             this.distanceMap = null
         }
 
+        if (this.anisotropicDistanceMap)
+        {
+            this.anisotropicDistanceMap.dispose()
+            this.anisotropicDistanceMap = null
+        }
+
+        if (this.extendedAnisotropicDistanceMap)
+        {
+            this.extendedAnisotropicDistanceMap.dispose()
+            this.extendedAnisotropicDistanceMap = null
+        }
+
         this.viewer = null
         this.resources = null
         this.computes = null
 
-        console.log('Textures destroyed.')
+        console.log('ISOTextures destroyed.')
     }
 
 }

@@ -1,5 +1,48 @@
 import * as tf from '@tensorflow/tfjs'
 
+export async function computeLaplacianMap(intensityMap, axis)
+{
+    return tf.tidy(() => 
+    {            
+        // Compute shape based on axis
+        const shape = [1, 1, 1, 1, 1]
+        shape[axis] = 3
+
+        // Laplacian filter
+        const filter = tf.tensor([0.5, -1, 0.5], shape, 'float32')
+
+        // Concatenate laplacian map
+        return tf.conv3d(intensityMap, filter, 1, 'same')
+    })
+}
+
+export async function computeBlockExtremaMap(intensityMap, blockSize) 
+{
+    return tf.tidy(() =>
+    {
+        // Prepare strides and size for pooling operations
+        const shape = intensityMap.shape
+        const strides = [blockSize, blockSize, blockSize]
+        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+
+        // Compute shape in order to be appropriate for valid pool operations
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+
+        // Calculate necessary padding for valid subdivisions and boundary handling
+        const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
+        padding[3] = [0, 0]
+        const padded = tf.pad(intensityMap, padding) 
+
+        // Compute block extrema
+        const blockMax = tf.maxPool3d(padded, filterSize, strides, 'valid')
+        const blockMin = minPool3d(padded, filterSize, strides, 'valid') 
+
+        // Return concatenated result
+        return tf.concat([blockMin, blockMax], -1)
+    })
+}
+
 /**
  * Computes an occupancy map by identifying blocks in a 3D intensity map
  * where the specified threshold value lies within the local minimum and 
@@ -9,21 +52,30 @@ import * as tf from '@tensorflow/tfjs'
  * @param {tf.Tensor4D} intensityMap - A 4D tensor representing the volumetric intensity data 
  *                                     with shape [depth, height, width, channels].
  * @param {number} threshold - A float value used to determine occupancy based on local intensity.
- * @param {number} blockStride - Determines the number of cells a block will have in each dimension
+ * @param {number} blockSize - Determines the number of cells a block will have in each dimension
  * @returns {Promise<tf.Tensor>} - A 3D boolean tensor where `true` values represent occupied cell blocks.
  */
-export async function computeOccupancyMap(intensityMap, threshold, blockStride) 
+export async function computeOccupancyMap(extremaMap, threshold) 
 {
     return tf.tidy(() =>
     {
-        // Prepare strides and size for pooling operations
+        // compute min <= t && t <= Max as (min - t)(Max - t) <= 0
+        return extremaMap.sub(threshold).prod(-1).lessEqual(0)
+    })
+}
+
+export async function computeOccupancyMap2(intensityMap, threshold, blockSize) 
+{
+    return tf.tidy(() =>
+    {
+         // Prepare strides and size for pooling operations
         const shape = intensityMap.shape
-        const strides = [blockStride, blockStride, blockStride]
-        const filterSize = strides.map((x) => x + 1)
+        const strides = [blockSize, blockSize, blockSize]
+        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
 
         // Compute shape in order to be appropriate for valid pool operations
-        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockStride))
-        const newShape = numBlocks.map((blockCount) => blockCount * blockStride + 1)
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
 
         // Calculate necessary padding for valid subdivisions and boundary handling
         const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
@@ -39,8 +91,38 @@ export async function computeOccupancyMap(intensityMap, threshold, blockStride)
         const hasBellow = tf.maxPool3d(isBellow, filterSize, strides, 'valid')
 
         // Compute cell occupation if above and bellow values from threshold
-        const occupancyMap = tf.logicalAnd(hasAbove, hasBellow)
-        return occupancyMap
+        return tf.logicalAnd(hasAbove, hasBellow)
+    })
+}
+
+export async function computeOccupancyMap3(intensityMap, threshold, blockSize) 
+{
+    return tf.tidy(() =>
+    {
+        // Prepare strides and size for pooling operations
+        const shape = intensityMap.shape
+        const strides = [blockSize, blockSize, blockSize]
+        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+
+        // Compute shape in order to be appropriate for valid pool operations
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+
+        // Calculate necessary padding for valid subdivisions and boundary handling
+        const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
+        padding[3] = [0, 0]
+        const padded = tf.pad(intensityMap, padding) 
+
+        // Compute if cell has values above/bellow threshold
+        const max = tf.maxPool3d(padded, filterSize, strides, 'valid')
+        const negMin = tf.maxPool3d(padded.neg(), filterSize, strides, 'valid')
+
+        // Compute if voxel values is above/bellow  threshold
+        const isAbove = tf.lessEqual(-threshold, negMin)
+        const isBellow = tf.lessEqual(threshold, max)    
+
+        // Compute cell occupation if above and bellow values from threshold
+        return tf.logicalAnd(isAbove, isBellow)
     })
 }
 
@@ -60,27 +142,73 @@ export async function computeBoundingBox(occupancyMap)
 {
     return tf.tidy(() => 
     {
-        // Helper to find first and last index where the value is truthy
-        const bounds = (array) => [array.findIndex(Boolean), array.findLastIndex(Boolean)]
-
         // Collapse occupancy map across axes to identify active voxels
         // For each axis, reduce all other axes and get a 1D boolean array
-        const collapsedX = occupancyMap.any([1, 2, 3]).arraySync().flat() 
-        const collapsedY = occupancyMap.any([0, 2, 3]).arraySync().flat() 
-        const collapsedZ = occupancyMap.any([0, 1, 3]).arraySync().flat() 
-
-        // Get bounds (min and max index) for each axis
-        const [xMin, xMax] = bounds(collapsedX)
-        const [yMin, yMax] = bounds(collapsedY)
-        const [zMin, zMax] = bounds(collapsedZ)
+        const xOccupancy = occupancyMap.any([0, 1, 3]).arraySync().flat() 
+        const yOccupancy = occupancyMap.any([0, 2, 3]).arraySync().flat() 
+        const zOccupancy = occupancyMap.any([1, 2, 3]).arraySync().flat() 
 
         // Compute mix/max bounding box coords
-        const minCoords = [zMin, yMin, xMin]
-        const maxCoords = [zMax, yMax, xMax]
-        
+        const minCoords = [xOccupancy.findIndex(Boolean), yOccupancy.findIndex(Boolean), zOccupancy.findIndex(Boolean)]
+        const maxCoords = [xOccupancy.findLastIndex(Boolean), yOccupancy.findLastIndex(Boolean), zOccupancy.findLastIndex(Boolean)]
+
         return { minCoords, maxCoords }
     })
 }
+
+export async function computeBoundingBox2(occupancyMap) 
+{
+    return tf.tidy(() => 
+    {
+        // Collapse occupancy map across axes to identify active voxels
+        // For each axis, reduce all other axes and get a 1D boolean array
+        const xMin = occupancyMap.argMax(0).min().arraySync()
+        const yMin = occupancyMap.argMax(1).min().arraySync()
+        const zMin = occupancyMap.argMax(2).min().arraySync()
+
+
+        const xMax = occupancyMap.shape[2] - 1 - occupancyMap.reverse(0).argMax(0).min().arraySync()
+        const yMax = occupancyMap.shape[1] - 1 - occupancyMap.reverse(1).argMax(1).min().arraySync()
+        const zMax = occupancyMap.shape[0] - 1 - occupancyMap.reverse(2).argMax(2).min().arraySync()
+
+        // Compute mix/max bounding box coords
+        const iMin = [xMin, yMin, zMin]
+        const iMax = [xMax, yMax, zMax]
+
+        return { minCoords: iMin, maxCoords: iMax }
+    })
+}
+
+export async function computeBoundingBox3(occupancyMap) 
+{
+    return tf.tidy(() => 
+    {    
+        // Collapse occupancy map across axes to identify active voxels
+        // For each axis, reduce all other axes and get a 1D boolean array
+        const xOccupancy = occupancyMap.any([1, 2, 3])
+        const yOccupancy = occupancyMap.any([0, 2, 3])
+        const zOccupancy = occupancyMap.any([0, 1, 3])
+
+        // Get argmin 
+        const xMin = xOccupancy.argMax().arraySync()
+        const yMin = yOccupancy.argMax().arraySync()
+        const zMin = zOccupancy.argMax().arraySync()
+        
+        // Get argmax
+        const xMax = occupancyMap.shape[2] - 1 - zOccupancy.argMax().arraySync()
+        const yMax = occupancyMap.shape[1] - 1 - yOccupancy.argMax().arraySync()
+        const zMax = occupancyMap.shape[0] - 1 - xOccupancy.argMax().arraySync()
+
+        // Compute mix/max bounding box coords
+        const iMin = [xMin, yMin, zMin]
+        const iMax = [xMax, yMax, zMax]
+
+        console.log({minCoords: iMin, maxCoords: iMax})
+
+        return { minCoords: iMin, maxCoords: iMax }
+    })
+}
+
 
 /**
  * Computes a Chebyshev distance map from a 3D binary occupancy map.
@@ -105,16 +233,16 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
         let distances = tf.where(occupancyMap, 0, maxDistance)
         let frontier  = tf.cast(occupancyMap, 'bool')
         
-        for (let distance = 1; distance < maxDistance; distance++) 
+        for (let d = 1; d < maxDistance; d++) 
         {   
             // Compute the new frontier by expanding frontier regions
-            const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], [1, 1, 1], 'same')
+            const newFrontier = tf.maxPool3d(frontier, [3, 3, 3], 1, 'same')
                             
             // Identify the newly occupied voxel wavefront
             const wavefront = tf.notEqual(newFrontier, frontier)
 
             // Compute and add distances for the newly occupied voxels at this step
-            const newDistances = tf.where(wavefront, distance, distances)
+            const newDistances = tf.where(wavefront, d, distances)
 
             // Dispose old tensors 
             tf.dispose([distances, frontier, wavefront])
@@ -128,7 +256,7 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
-export async function computeDistanceMap(occupancyMap, maxDistance) 
+export async function computeDistanceMap2(occupancyMap, maxDistance) 
 {
     return tf.tidy(() => 
     {
@@ -159,7 +287,7 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
-export async function computeDistanceMap(occupancyMap, maxDistance) 
+export async function computeDistanceMap3(occupancyMap, maxDistance) 
 {
     return tf.tidy(() => 
     {
@@ -194,42 +322,7 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     })
 }
 
-export async function computeDirectional6DistanceMap(occupancyMap, maxDistance, axis) 
-{
-    return tf.tidy(() => 
-    {
-        // Compute an positive x-axis aligned kernel cone
-        let filter = tf.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 1, 1], 'float32')
-        
-        // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, maxDistance)
-        let frontier  = tf.cast(occupancyMap, 'bool')
-
-        for (let distance = 1; distance < maxDistance; distance++) 
-        {   
-            // Expand frontier with a positive x-axis aligned kernel cone
-            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
-            const newFrontier = expansion.cast('bool')
-
-            // Identify the non visited backline cells
-            const wavefront = tf.notEqual(newFrontier, frontier)
-
-            // Update all backline cells with current distance
-            const newDistances = tf.where(wavefront, distance, distances)
-
-            // Dispose old tensors 
-            tf.dispose([distances, frontier, expansion, wavefront])
-
-            // Update new tensors for the next iteration
-            distances = newDistances
-            frontier = newFrontier
-        }
-
-        return distances
-    })
-}
-
-export async function computeDirectional8DistanceMap(occupancyMap, maxDistance, axes) 
+export async function computeDirectional8DistanceMap(occupancyMap, maxDistance = 255, axes) 
 {
     return tf.tidy(() => 
     {            
@@ -242,7 +335,7 @@ export async function computeDirectional8DistanceMap(occupancyMap, maxDistance, 
         for (let distance = 1; distance < maxDistance; distance++) 
         {   
             // Compute the new frontier by expanding frontier regions
-            const newFrontier = tf.maxPool3d(frontier, [2, 2, 2], [1, 1, 1], 'same')
+            const newFrontier = tf.maxPool3d(frontier, [2, 2, 2], 1, 'same')
                             
             // Identify the newly occupied voxel wavefront
             const wavefront = tf.notEqual(newFrontier, frontier)
@@ -262,18 +355,18 @@ export async function computeDirectional8DistanceMap(occupancyMap, maxDistance, 
     })
 }
 
-export async function computeDirectional24DistanceMap(occupancyMap, maxDistance, axes, index) 
+export async function computeDirectional24DistanceMap(occupancyMap, maxDistance = 31, axes, index) 
 {
     return tf.tidy(() => 
     {            
-        // compute correct order for transpose
+        // swap order based on index
         const order = [0, 1, 2, 3, 4];
         [order[0], order[index]] = [order[index], order[0]]
 
         // Compute a x-axis octant prismal kernel
         let filter = tf.tensor([1, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 1, 1], 'float32').transpose(order)
         
-        // Initialize the frontier  and the distance tensor
+        // Initialize the frontier and the distance tensor
         let source = tf.reverse(occupancyMap, axes)
         let distances = tf.where(source, 0, maxDistance)
         let frontier = tf.cast(source, 'bool')
@@ -281,7 +374,7 @@ export async function computeDirectional24DistanceMap(occupancyMap, maxDistance,
         for (let distance = 1; distance < maxDistance; distance++) 
         {   
             // Expand frontier with kernel
-            const expansion = tf.conv3d(frontier, filter, [1, 1, 1], 'same')
+            const expansion = tf.conv3d(frontier, filter, 1, 'same')
             const newFrontier = expansion.cast('bool')
                                 
             // Identify the newly occupied voxel wavefront
@@ -302,7 +395,7 @@ export async function computeDirectional24DistanceMap(occupancyMap, maxDistance,
     })
 }
 
-export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance = 255) 
+export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance) 
 {  
     // compute octant distance maps with binary code order
     let distances = [
@@ -323,95 +416,49 @@ export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance = 
     return distanceMap
 }
 
-export async function computeExtendedAnisotropicDistanceMap(occupancyMap, maxDistance = 31) 
-{  
-    // let notOccupancy = tf.logicalNot(occupancyMap).cast('float32')
-    
-    // compute distance maps with binary code order
-    const distances = [
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 0),
-        
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
-        await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 0),
-    ]
-
-    // compute anisotropic distance map by concatenating directional distance maps in depth dimensions
-    let distanceMap = tf.concat(distances, 0)
-    tf.dispose(distances)
-
-    return distanceMap
-}
-
-export async function computePackedExtendedAnisotropicDistanceMap(occupancyMap, maxDistance = 31) 
+export async function computeExtendedAnisotropicDistanceMap(occupancyMap) 
 {  
     // compute distance maps with binary code order
     const distances = [
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1, 0], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1, 0], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 0], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [0], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2, 1], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [1], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [2], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, maxDistance, [], 0),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 2),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 1),
+            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 0),
         ],
     ]
 
@@ -425,7 +472,7 @@ export async function computePackedExtendedAnisotropicDistanceMap(occupancyMap, 
         const zDistances = distance[2]
 
         // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint 
-        packedDistances.push( tf.tidy(() => occupancyMap.add(zDistances.mul(2)).add(yDistances.mul(32)).add(xDistances.mul(2048))) ) // (r << 11) | (g << 6) | (b << 1) | (a & 0x1)
+        packedDistances.push( tf.tidy(() => this.uint5551(xDistances, yDistances, zDistances, occupancyMap)) ) 
         tf.dispose([xDistances, yDistances, zDistances])
     }
 
@@ -435,6 +482,7 @@ export async function computePackedExtendedAnisotropicDistanceMap(occupancyMap, 
 
     return distanceMap
 }
+
 
 /**
  * Computes a distance map for a specific subregion of a 4D occupancy map tensor,
@@ -460,7 +508,6 @@ export async function computeDistanceMapFromSlice(occupancyMap, maxDistance, beg
     const distanceMap = tf.pad4d(distanceMapSlice, paddings, 1)
 
     tf.dispose([distanceMapSlice, occupancyMapSlice])
-    await tf.nextFrame()
 
     return distanceMap
 }
@@ -541,5 +588,25 @@ export function map(min, max, x)
     {
         const range = max - min        
         return x.sub(min).div(range)
+    })
+}
+
+export function uint5551(r, g, b, a) 
+{
+    return tf.tidy(() => 
+    {
+        // Clamp and floor all channels to fit their bit-widths
+        const r5 = r.clipByValue(0, 31) // R & 0x1F
+        const g5 = g.clipByValue(0, 31) // G & 0x1F
+        const b5 = b.clipByValue(0, 31) // B & 0x1F
+        const a1 = a.clipByValue(0, 1)  // A & 0x1
+
+        // Shift each channel to correct bit position
+        const r11 = r5.mul(2048) // R << 11
+        const g6  = g5.mul(64)   // G << 6
+        const b1  = b5.mul(2)    // B << 1
+
+        // Combine all into one 16-bit packed value
+        return a1.add(b1).add(g6).add(r11)
     })
 }
