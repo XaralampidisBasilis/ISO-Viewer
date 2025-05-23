@@ -13,15 +13,13 @@ export default class World extends EventEmitter
         this.scene = this.experience.scene
         this.resources = this.experience.resources
         this.camera = this.experience.camera
+        this.viewer = new ISOViewer()
 
-        // Wait for resources
-        this.resources.on('ready', () =>
+        // Wait for viewer
+        this.viewer.on('ready', () =>
         {
-            this.viewer = new ISOViewer().on('ready', () => 
-            {
-                this.camera.instance.position.copy(this.viewer.parameters.volume.size)
-                this.trigger('ready')
-            })
+            this.camera.instance.position.copy(this.viewer.computes.intensityMap.size)
+            this.trigger('ready')
         })
     }
 
@@ -48,6 +46,12 @@ export default class World extends EventEmitter
                 }
             }
         })
+
+        if (this.viewer)
+        {
+            this.viewer.destroy()
+            this.viewer = null
+        }
 
         this.scene = null
         this.camera = null

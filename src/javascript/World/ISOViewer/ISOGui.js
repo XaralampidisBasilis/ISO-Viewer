@@ -88,7 +88,7 @@ export default class ISOGui
     
         this.controllers.rendering = 
         {
-            isoIntensity       : folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { this.viewer.updateIsosurface(value) }),
+            isoIntensity       : folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { this.viewer.onThresholdChange(value) }),
             maxGroups          : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),

@@ -11,6 +11,8 @@ export default function()
         ({
             color_maps    : null,
             intensity_map : null,
+            laplacians_intensity_map : null,
+            occupancy_map : null,
             distance_map  : null,
             anisotropic_distance_map : null,
             extended_anisotropic_distance_map : null,

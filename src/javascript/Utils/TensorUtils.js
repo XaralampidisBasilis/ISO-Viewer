@@ -60,7 +60,7 @@ export async function computeOccupancyMap(extremaMap, threshold)
     return tf.tidy(() =>
     {
         // compute min <= t && t <= Max as (min - t)(Max - t) <= 0
-        return extremaMap.sub(threshold).prod(-1).lessEqual(0)
+        return extremaMap.sub(threshold).prod(-1).expandDims(-1).lessEqual(0)
     })
 }
 
