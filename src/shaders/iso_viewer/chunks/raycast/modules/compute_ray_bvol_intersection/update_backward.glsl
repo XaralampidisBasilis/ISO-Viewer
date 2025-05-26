@@ -4,7 +4,7 @@ block.coords = ivec3(floor(block.entry_position + 0.5)) / u_distance_map.stride;
 block.coords = clamp(block.coords, ivec3(0), u_distance_map.dimensions -1);
 
 // compute radius
-block.radius = sample_distance_map(block.coords);
+block.radius = sample_isotropic_distance(block.coords);
 block.occupied = block.radius == 0;
 
 // compute box min/max coords

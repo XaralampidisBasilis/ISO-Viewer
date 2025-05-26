@@ -1,6 +1,6 @@
 
 // compute radius
-block.radius = sample_anisotropic_distance_map(block.coords, ray.group8);
+block.radius = sample_anisotropic_distance(block.coords, ray.group8);
 block.occupied = block.radius == 0;
 block.radius = max(block.radius, 1);
 

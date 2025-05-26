@@ -1,5 +1,5 @@
 
-float sample_intensity_map(in vec3 position)
+float sample_intensity(in vec3 position)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;

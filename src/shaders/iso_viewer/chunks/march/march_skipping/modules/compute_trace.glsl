@@ -11,5 +11,5 @@ trace.position = mix(cell.entry_position, cell.exit_position, root);
 trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.distance);
 
 // compute error
-trace.intensity = sample_intensity_map(trace.position);
+trace.intensity = sample_intensity(trace.position);
 trace.error = trace.intensity - u_rendering.intensity;

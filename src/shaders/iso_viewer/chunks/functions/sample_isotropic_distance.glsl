@@ -1,6 +1,6 @@
 
 
-int sample_distance_map(in ivec3 coords)
+int sample_isotropic_distance(in ivec3 coords)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;

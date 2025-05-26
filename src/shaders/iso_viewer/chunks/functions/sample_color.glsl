@@ -1,5 +1,5 @@
 
-vec3 sample_color_maps(in float x)
+vec3 sample_color(in float x)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;

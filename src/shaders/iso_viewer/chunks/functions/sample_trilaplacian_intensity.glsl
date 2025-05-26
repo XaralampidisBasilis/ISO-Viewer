@@ -3,7 +3,7 @@ Beyond Trilinear Interpolation: Higher Quality for Free
 (https://dl.acm.org/doi/10.1145/3306346.3323032)
 */
 
-vec4 sample_trilaplacian_intensity_map(in vec3 position)
+vec4 sample_trilaplacian_intensity(in vec3 position)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;

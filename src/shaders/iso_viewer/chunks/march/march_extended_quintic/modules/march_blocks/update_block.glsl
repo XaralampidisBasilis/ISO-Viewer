@@ -1,6 +1,6 @@
 
 // compute radii
-block.radii = sample_extended_anisotropic_distance_map(block.coords, ray.group8, block.occupied);
+block.radii = sample_extended_distance(block.coords, ray.group8, block.occupied);
 block.radii = max(block.radii, 1);
 
 // compute min/max coords

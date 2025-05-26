@@ -1,6 +1,6 @@
 
 // compute radius
-block.radius = sample_distance_map(block.coords);
+block.radius = sample_isotropic_distance(block.coords);
 block.occupied = block.radius == 0;
 block.radius = max(block.radius, 1);
 

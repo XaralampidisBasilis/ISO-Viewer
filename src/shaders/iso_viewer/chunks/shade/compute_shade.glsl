@@ -17,7 +17,7 @@ frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle)
 frag.gradient_factor = softstep_hill(0.0, 0.3, length(surface.gradient), 0.9);
 
 // Material
-frag.material_color = sample_color_maps(trace.intensity);
+frag.material_color = sample_color(trace.intensity);
 
 // Ambient 
 frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);

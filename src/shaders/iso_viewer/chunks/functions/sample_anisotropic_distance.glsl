@@ -1,5 +1,5 @@
 
-int sample_anisotropic_distance_map(in ivec3 coords, in int group8)
+int sample_anisotropic_distance(in ivec3 coords, in int group8)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;

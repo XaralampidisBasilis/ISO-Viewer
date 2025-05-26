@@ -5,9 +5,9 @@ poly.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, poly.weights.
 
 // compute the intensity samples inside the cell from the intensity map texture
 poly.intensities.x = poly.intensities.w;
-poly.intensities.y = sample_intensity_map(camera.position + ray.direction * poly.distances.y);
-poly.intensities.z = sample_intensity_map(camera.position + ray.direction * poly.distances.z);
-poly.intensities.w = sample_intensity_map(camera.position + ray.direction * poly.distances.w);
+poly.intensities.y = sample_intensity(camera.position + ray.direction * poly.distances.y);
+poly.intensities.z = sample_intensity(camera.position + ray.direction * poly.distances.z);
+poly.intensities.w = sample_intensity(camera.position + ray.direction * poly.distances.w);
 
 // compute intensity errors based on iso value
 poly.errors.x = poly.errors.w;

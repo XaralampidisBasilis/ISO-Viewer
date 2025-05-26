@@ -6,5 +6,5 @@ cell.coords = ivec3(round(cell.exit_position));
 
 // start poly
 poly.distances.w = cell.exit_distance;
-poly.intensities.w = sample_intensity_map(cell.exit_position);
+poly.intensities.w = sample_intensity(cell.exit_position);
 poly.errors.w = poly.intensities.w - u_rendering.intensity;
