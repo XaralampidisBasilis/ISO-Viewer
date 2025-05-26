@@ -14,7 +14,7 @@ trace.position = mix(cell.entry_position, cell.exit_position, root);
 trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.distance);
 
 // compute error
-trace.intensity = sample_laplacians_intensity_map(trace.position).a;
+trace.intensity = sample_trilaplacian_intensity_map(trace.position).a;
 trace.error = trace.intensity - u_rendering.intensity;
 
 debug.variable0 = to_color(quintic.roots[0]);

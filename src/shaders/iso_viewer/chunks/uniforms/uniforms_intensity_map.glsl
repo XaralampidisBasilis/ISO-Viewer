@@ -3,7 +3,7 @@
 
 struct IntensityMap 
 {
-    ivec3  dimensions;    
+    ivec3 dimensions;    
     vec3  spacing;           
     vec3  size;         
     float spacing_length;                

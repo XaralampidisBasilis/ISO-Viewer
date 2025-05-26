@@ -27,7 +27,7 @@ export default class Textures extends EventEmitter
     {
         this.textureColorMaps()
         this.textureIntensityMap()
-        this.textureLaplaciansIntensityMap()
+        this.textureTrilaplacianIntensityMap()
         this.textureOccupancyMap()
         this.textureDistanceMap()
         this.textureAnisotropicDistanceMap()
@@ -92,25 +92,25 @@ export default class Textures extends EventEmitter
         }
     }
 
-    textureLaplaciansIntensityMap() 
+    textureTrilaplacianIntensityMap() 
     {
-        if (this.computes.laplaciansIntensityMap) 
+        if (this.computes.trilaplacianIntensityMap) 
         {
-            console.time('textureLaplaciansIntensityMap')
+            console.time('textureTrilaplacianIntensityMap')
 
-            this.laplaciansIntensityMap = this.createTexture(
-                this.computes.laplaciansIntensityMap.array,
-                this.computes.laplaciansIntensityMap.dimensions,
+            this.trilaplacianIntensityMap = this.createTexture(
+                this.computes.trilaplacianIntensityMap.array,
+                this.computes.trilaplacianIntensityMap.dimensions,
                 THREE.RGBAFormat,
                 THREE.HalfFloatType,
                 THREE.LinearFilter,
                 THREE.LinearFilter
             )
 
-            this.laplaciansIntensityMap.internalFormat = 'RGBA16F'
-            this.laplaciansIntensityMap.unpackAlignment = 4
+            this.trilaplacianIntensityMap.internalFormat = 'RGBA16F'
+            this.trilaplacianIntensityMap.unpackAlignment = 4
 
-            console.timeEnd('textureLaplaciansIntensityMap')
+            console.timeEnd('textureTrilaplacianIntensityMap')
         }
     }
 
@@ -238,10 +238,10 @@ export default class Textures extends EventEmitter
             this.intensityMap = null
         }
 
-        if (this.laplaciansIntensityMap)
+        if (this.trilaplacianIntensityMap)
         {
-            this.laplaciansIntensityMap.dispose()
-            this.laplaciansIntensityMap = null
+            this.trilaplacianIntensityMap.dispose()
+            this.trilaplacianIntensityMap = null
         }
 
         if (this.occupancyMap)

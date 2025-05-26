@@ -121,6 +121,7 @@
         "timeit",
         "topk",
         "tricubic",
+        "trilaplacian",
         "trilinearly",
         "triquadratic",
         "tsvu",

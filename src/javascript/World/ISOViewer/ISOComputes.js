@@ -44,7 +44,7 @@ export default class ISOComputes extends EventEmitter
         console.time('setComputes') 
 
         await this.computeIntensityMap()
-        await this.computeLaplaciansIntensityMap()
+        await this.computeTrilaplacianIntensityMap()
         await this.computeBlockExtremaMap()
         tf.dispose(this.intensityMap.tensor)
 
@@ -131,18 +131,18 @@ export default class ISOComputes extends EventEmitter
         console.timeEnd('computeIntensityMap') 
     }
 
-    async computeLaplaciansIntensityMap()
+    async computeTrilaplacianIntensityMap()
     {
-        console.time('computeLaplaciansIntensityMap') 
+        console.time('computeTrilaplacianIntensityMap') 
 
-        this.laplaciansIntensityMap = {}
-        this.laplaciansIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
+        this.trilaplacianIntensityMap = {}
+        this.trilaplacianIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
 
         // copy intensity data to alpha channel
         for (let i = 0; i < this.intensityMap.array.length; ++i)
         {
             let i4 = i * 4
-            this.laplaciansIntensityMap.array[i4 + 3] = this.intensityMap.array[i]
+            this.trilaplacianIntensityMap.array[i4 + 3] = this.intensityMap.array[i]
         }
 
         // compute laplacians in rgb channels
@@ -155,23 +155,23 @@ export default class ISOComputes extends EventEmitter
             for (let i = 0; i < array.length; ++i) 
             {
                 let i4 = i * 4
-                this.laplaciansIntensityMap.array[i4 + c] = toHalfFloat(array[i])
+                this.trilaplacianIntensityMap.array[i4 + c] = toHalfFloat(array[i])
             }
         }
 
         // copy parameters from intensity map
-        this.laplaciansIntensityMap.dimensions    = this.intensityMap.dimensions   
-        this.laplaciansIntensityMap.spacing       = this.intensityMap.spacing      
-        this.laplaciansIntensityMap.size          = this.intensityMap.size         
-        this.laplaciansIntensityMap.invDimensions = this.intensityMap.invDimensions
-        this.laplaciansIntensityMap.invSpacing    = this.intensityMap.invSpacing   
-        this.laplaciansIntensityMap.invSize       = this.intensityMap.invSize      
-        this.laplaciansIntensityMap.spacingLength = this.intensityMap.spacingLength
-        this.laplaciansIntensityMap.sizeLength    = this.intensityMap.sizeLength   
-        this.laplaciansIntensityMap.numVoxels     = this.intensityMap.numVoxels    
-        this.laplaciansIntensityMap.maxVoxels     = this.intensityMap.maxVoxels    
+        this.trilaplacianIntensityMap.dimensions    = this.intensityMap.dimensions   
+        this.trilaplacianIntensityMap.spacing       = this.intensityMap.spacing      
+        this.trilaplacianIntensityMap.size          = this.intensityMap.size         
+        this.trilaplacianIntensityMap.invDimensions = this.intensityMap.invDimensions
+        this.trilaplacianIntensityMap.invSpacing    = this.intensityMap.invSpacing   
+        this.trilaplacianIntensityMap.invSize       = this.intensityMap.invSize      
+        this.trilaplacianIntensityMap.spacingLength = this.intensityMap.spacingLength
+        this.trilaplacianIntensityMap.sizeLength    = this.intensityMap.sizeLength   
+        this.trilaplacianIntensityMap.numVoxels     = this.intensityMap.numVoxels    
+        this.trilaplacianIntensityMap.maxVoxels     = this.intensityMap.maxVoxels    
 
-        console.timeEnd('computeLaplaciansIntensityMap') 
+        console.timeEnd('computeTrilaplacianIntensityMap') 
     }
 
     async computeBlockExtremaMap()
@@ -340,10 +340,10 @@ export default class ISOComputes extends EventEmitter
             this.intensityMap = null
         }
 
-        if (this.laplaciansIntensityMap)
+        if (this.trilaplacianIntensityMap)
         {
-            this.laplaciansIntensityMap.array = null
-            this.laplaciansIntensityMap = null
+            this.trilaplacianIntensityMap.array = null
+            this.trilaplacianIntensityMap = null
         }
 
         if (this.blockExtremaMap) 

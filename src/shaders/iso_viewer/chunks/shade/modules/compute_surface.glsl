@@ -1,7 +1,7 @@
 
 // Compute gradient and hessian via triquadratic reconstruction
-// trilinear_sobel_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
-triquadratic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
+trilinear_sobel_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
+// triquadratic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
 // tricubic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
 
 

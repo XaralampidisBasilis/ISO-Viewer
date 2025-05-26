@@ -5,7 +5,7 @@ struct Textures
 {
     sampler2D color_maps;      
     sampler3D intensity_map;
-    sampler3D laplacians_intensity_map;
+    sampler3D trilaplacian_intensity_map;
     usampler3D occupancy_map;
     usampler3D distance_map;
     usampler3D anisotropic_distance_map;
