@@ -7,7 +7,8 @@ struct Quintic
     float intensities[6];    
     float errors[6];
     float distances[6];
-    float coefficients[6];    
+    float coefficients[6];  
+    float roots[6];  
     float weights[6];
     mat3 inv_vander[4]; 
 };
@@ -21,6 +22,7 @@ void set_quintic()
     quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.coefficients = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.weights = float[6](
         0.0/5.0, 
         1.0/5.0, 

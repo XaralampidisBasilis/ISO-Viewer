@@ -1,27 +1,12 @@
 
-// Detect the root intervals based on critical points
-bool ra0_r01_r12_r23_r3b[5];
-float xa_x0_x1_x2_x3_xb[6], ya_y0_y1_y2_y3_yb[6];
-vec2 y0_y5 = vec2(quintic.errors[0], quintic.errors[5]);
+poly_roots(quintic.roots, quintic.coefficients, poly.interval.x, poly.interval.y);
 
-is_quintic_solvable(quintic.coefficients, 0.0, quintic.interval, y0_y5,
-    xa_x0_x1_x2_x3_xb, ya_y0_y1_y2_y3_yb, ra0_r01_r12_r23_r3b
-);
-
-// Detect the first root interval
-vec2 xa_xb, ya_yb;
-for (int i = 0; i < 5; ++i) {
-
-    if (ra0_r01_r12_r23_r3b[i]) 
-    {
-        xa_xb = vec2(xa_x0_x1_x2_x3_xb[i], xa_x0_x1_x2_x3_xb[i+1]);
-        ya_yb = vec2(ya_y0_y1_y2_y3_yb[i], ya_y0_y1_y2_y3_yb[i+1]);
-        break;
-    }
-}
-
-// Perform Neubauer's method to detect root inside interval
-float root = neubauer_root(quintic.coefficients, xa_xb, ya_yb);
+float root = quintic.roots[5];
+root = min(root, quintic.roots[0]);
+root = min(root, quintic.roots[1]);
+root = min(root, quintic.roots[2]);
+root = min(root, quintic.roots[3]);
+root = min(root, quintic.roots[4]);
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, root);
@@ -31,3 +16,10 @@ trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.di
 // compute error
 trace.intensity = sample_laplacians_intensity_map(trace.position).a;
 trace.error = trace.intensity - u_rendering.intensity;
+
+debug.variable0 = to_color(quintic.roots[0]);
+debug.variable1 = to_color(quintic.roots[1]);
+debug.variable2 = to_color(quintic.roots[2]);
+debug.variable3 = to_color(quintic.roots[3]);
+debug.variable4 = to_color(quintic.roots[4]);
+debug.variable5 = to_color(quintic.roots[5]);

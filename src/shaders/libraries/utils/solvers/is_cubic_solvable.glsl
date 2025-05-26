@@ -10,11 +10,8 @@
 
 // compute if cubic polynomial c0 + c1x + c2x^2 + c3x^3 = y is solvable for x in [xa, xb]
 
-bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb)
+bool is_cubic_solvable(in vec4 c, in vec2 xa_xb)
 {
-    // normalize equation c0 + c1x + c2x^2 + c3x^3 = y
-    c.x -= y;
-
     // compute cubic derivative coefficients
     vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
@@ -33,19 +30,18 @@ bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb)
     // combine function values
     vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
+    // compute signs for numerical stability
+    vec4 sa_s0_s1_sb = sign(ya_y0_y1_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec3 sa0_s01_s1b = lessThanEqual(ya_y0_y1_yb.xyz * ya_y0_y1_yb.yzw, vec3(0.0));
+    bvec3 ra0_r01_r1b = lessThanEqual(sa_s0_s1_sb.xyz * sa_s0_s1_sb.yzw, vec3(0.0));
 
     // return result
-    return any(sa0_s01_s1b);
+    return any(ra0_r01_r1b);
 }
 
-bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
-{
-    // normalize equation c0 + c1x + c2x^2 + c3x^3 = y
-    c.x -= y;
-    ya_yb -= y;
-
+bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
+{ 
     // compute cubic derivative coefficients
     vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
@@ -60,11 +56,14 @@ bool is_cubic_solvable(in vec4 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
     // combine function values
     vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
+    // compute signs for numerical stability
+    vec4 sa_s0_s1_sb = sign(ya_y0_y1_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec3 sa0_s01_s1b = lessThanEqual(ya_y0_y1_yb.xyz * ya_y0_y1_yb.yzw, vec3(0.0));
+    bvec3 ra0_r01_r1b = lessThanEqual(sa_s0_s1_sb.xyz * sa_s0_s1_sb.yzw, vec3(0.0));
 
     // return result
-    return any(sa0_s01_s1b);
+    return any(ra0_r01_r1b);
 }
 
 #endif

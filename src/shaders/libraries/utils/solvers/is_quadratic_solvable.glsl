@@ -10,11 +10,8 @@
 
 // compute if quadratic polynomial c0 + c1x + c2x^2 = y is solvable for x in [xa, xb]
 
-bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb)
+bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb)
 {
-    // normalize equation c0 + c1x + c2x^2 = y
-    c.x -= y;
-
     // compute quadratic derivative coefficients
     vec2 d = vec2(c.y, c.z * 2.0);
 
@@ -33,19 +30,18 @@ bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb)
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
+    // compute signs for numerical stability
+    vec3 sa_s0_sb = sign(ya_y0_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec2 sa0_s0b = lessThanEqual(ya_y0_yb.xy * ya_y0_yb.yz, vec2(0.0));
+    bvec2 ra0_r0b = lessThanEqual(sa_s0_sb.xy * sa_s0_sb.yz, vec2(0.0));
 
     // return result
-    return any(sa0_s0b);
+    return any(ra0_r0b);
 }
 
-bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
+bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb, in vec2 ya_yb)
 {
-    // normalize equation c0 + c1x + c2x^2 = y
-    c.x -= y;
-    ya_yb -= y;
-
     // compute quadratic derivative coefficients
     vec2 d = vec2(c.y, c.z * 2.0);
 
@@ -60,11 +56,14 @@ bool is_quadratic_solvable(in vec3 c, in float y, in vec2 xa_xb, in vec2 ya_yb)
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
+    // compute signs for numerical stability
+    vec3 sa_s0_sb = sign(ya_y0_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec2 sa0_s0b = lessThanEqual(ya_y0_yb.xy * ya_y0_yb.yz, vec2(0.0));
+    bvec2 ra0_r0b = lessThanEqual(sa_s0_sb.xy * sa_s0_sb.yz, vec2(0.0));
 
     // return result
-    return any(sa0_s0b);
+    return any(ra0_r0b);
 }
 
 #endif

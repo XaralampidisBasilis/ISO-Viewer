@@ -9,14 +9,14 @@ poly.intensities.y = sample_intensity_map(camera.position + ray.direction * poly
 poly.intensities.z = sample_intensity_map(camera.position + ray.direction * poly.distances.z);
 poly.intensities.w = sample_intensity_map(camera.position + ray.direction * poly.distances.w);
 
+// compute intensity errors based on iso value
+poly.errors.x = poly.errors.w;
+poly.errors.yzw = poly.intensities.yzw - u_rendering.intensity;
+
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-poly.errors = poly.intensities - u_rendering.intensity;
-poly.coefficients = poly.inv_vander * poly.intensities;
+poly.coefficients = poly.inv_vander * poly.errors;
 
 // check if there are sign crossings between samples
-cell.intersected = any(lessThanEqual(poly.errors.xyz * poly.errors.yzw, vec3(0.0)));
-
 // given the polynomial we can compute if we intersect the isosurface inside the cell
-cell.intersected = cell.intersected || is_cubic_solvable(poly.coefficients, u_rendering.intensity, poly.interval, poly.intensities.xw);
-
-
+cell.intersected = any(lessThanEqual(poly.errors.xyz * poly.errors.yzw, vec3(0.0)));
+cell.intersected = cell.intersected || is_cubic_solvable(poly.coefficients, poly.interval, poly.errors.xw);

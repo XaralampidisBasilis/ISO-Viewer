@@ -4,9 +4,6 @@
 #ifndef QUARTIC_ROOTS
 #include "./quartic_roots"
 #endif
-#ifndef QUARTIC_SOLVER
-#include "./quartic_solver"
-#endif
 #ifndef IS_QUARTIC_SOLVABLE
 #include "./is_quadratic_solvable"
 #endif
@@ -70,7 +67,7 @@ bool test_quartic4_residue(out bvec4 test[8])
 
     // Case 1: (x - 2)*(x - 4)*(x - 6)*(x - 8)
     // = x^4 - 20x^3 + 140^2 - 440x + 384
-    c = float[5](384.0, -440.0, 140.0, -20.0, 1.0);
+    c = float[5](384.0, -400.0, 140.0, -20.0, 1.0);
     test[1] = test_quartic_residue(c, 0.0);
 
     // Case 2: (x + 1)*(x + 2)*(x + 3)*(x + 4)
@@ -99,7 +96,6 @@ bool test_quartic4_residue(out bvec4 test[8])
     test[6] = test_quartic_residue(c, 0.0);
 
     // Case 7: (x - 1)*(x - 1.00001)*(x - 2)*(x - 2.00001)
-    // Approximate coefficients via MATLAB or symbolic expansion
     c = float[5](4.0000600002, -12.0001300003, 13.0000900001, -6.00002, 1.0);
     test[7] = test_quartic_residue(c, 0.0);
 
@@ -117,7 +113,7 @@ bool test_quartic4_roots(out bvec4 test[8])
 
     // Case 1: (x - 2)*(x - 4)*(x - 6)*(x - 8)
     r = vec4(2.0, 4.0, 6.0, 8.0);
-    c = float[5](384.0, -440.0, 140.0, -20.0, 1.0);
+    c = float[5](384.0, -400.0, 140.0, -20.0, 1.0);
     test[1] = test_quartic_roots(c, 0.0, r);
 
     // Case 2: (x + 1)*(x + 2)*(x + 3)*(x + 4)

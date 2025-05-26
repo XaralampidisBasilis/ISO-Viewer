@@ -4,9 +4,6 @@
 #ifndef CUBIC_ROOTS
 #include "./cubic_roots"
 #endif
-#ifndef CUBIC_SOLVER
-#include "./cubic_solver"
-#endif
 #ifndef IS_CUBIC_SOLVABLE
 #include "./is_cubic_solvable"
 #endif

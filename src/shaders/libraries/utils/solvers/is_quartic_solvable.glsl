@@ -10,11 +10,8 @@
 
 // compute if quartic polynomial c0 + c1x + c2x^2 + c3x^3 + c4x^4 = y is solvable for x in [xa, xb]
 
-bool is_quartic_solvable(in float c[5], in float y, in vec2 xa_xb)
+bool is_quartic_solvable(in float c[5], in vec2 xa_xb)
 {
-    // normalize equation c0 + c1x + c2x^2 + c3x^3 + c4x^4 = y
-    c[0] -= y;
-
     // compute quartic derivative coefficients
     vec4 d = vec4(
         c[1], 
@@ -39,19 +36,19 @@ bool is_quartic_solvable(in float c[5], in float y, in vec2 xa_xb)
     vec4 ya_y0_y1_y2 = vec4(ya_yb.x, y0_y1_y2);
     vec4 y0_y1_y2_yb = vec4(y0_y1_y2, ya_yb.y);
 
+    // compute signs for better numerical stability
+    vec4 sa_s0_s1_s2 = sign(ya_y0_y1_y2);
+    vec4 s0_s1_s2_sb = sign(y0_y1_y2_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec4 sa0_s01_s12_s2b = lessThanEqual(ya_y0_y1_y2 * y0_y1_y2_yb, vec4(0.0));
+    bvec4 ra0_r01_r12_r2b = lessThanEqual(sa_s0_s1_s2 * s0_s1_s2_sb, vec4(0.0));
 
     // return result
-    return any(sa0_s01_s12_s2b);
+    return any(ra0_r01_r12_r2b);
 }
 
-bool is_quartic_solvable(in float c[5], in float y, in vec2 xa_xb, in vec2 ya_yb)
+bool is_quartic_solvable(in float c[5], in vec2 xa_xb, in vec2 ya_yb)
 {
-    // normalize equation c0 + c1x + c2x^2 + c3x^3 + c4x^4 = y
-    c[0] -= y;
-    ya_yb -= y;
-
     // compute quartic derivative coefficients
     vec4 d = vec4(
         c[1], 
@@ -72,11 +69,15 @@ bool is_quartic_solvable(in float c[5], in float y, in vec2 xa_xb, in vec2 ya_yb
     vec4 ya_y0_y1_y2 = vec4(ya_yb.x, y0_y1_y2);
     vec4 y0_y1_y2_yb = vec4(y0_y1_y2, ya_yb.y);
 
+    // compute signs for better numerical stability
+    vec4 sa_s0_s1_s2 = sign(ya_y0_y1_y2);
+    vec4 s0_s1_s2_sb = sign(y0_y1_y2_yb);
+
     // compute sign changes for intermediate value theorem
-    bvec4 sa0_s01_s12_s2b = lessThanEqual(ya_y0_y1_y2 * y0_y1_y2_yb, vec4(0.0));
+    bvec4 ra0_r01_r12_r2b = lessThanEqual(sa_s0_s1_s2 * s0_s1_s2_sb, vec4(0.0));
 
     // return result
-    return any(sa0_s01_s12_s2b);
+    return any(ra0_r01_r12_r2b);
 }
 
 #endif
