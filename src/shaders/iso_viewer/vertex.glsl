@@ -5,7 +5,7 @@ out vec3 v_camera_direction;
 out vec3 v_ray_direction;
 out mat4 v_clip_space_matrix;
 
-#include "./chunks/uniforms/uniforms"
+#include "./chunks/uniforms/uniforms_intensity_map"
 
 void main() 
 {				    

@@ -6,9 +6,9 @@ triquadratic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, 
 
 
 // Scale derivatives to physical space
-vec3 scaling = normalize(u_intensity_map.spacing);
-surface.hessian /= outerProduct(scaling, scaling);
-surface.gradient /= scaling;
+vec3 spacing = normalize(u_intensity_map.spacing);
+surface.hessian /= outerProduct(spacing, spacing);
+surface.gradient /= spacing;
 
 // Compute laplacian from the hessian matrix
 surface.laplacian = surface.hessian[0][0] + surface.hessian[1][1] + surface.hessian[2][2];

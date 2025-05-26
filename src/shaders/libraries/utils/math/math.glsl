@@ -19,6 +19,7 @@
 #include "./pown" 
 #include "./prod" 
 #include "./ssign" 
+#include "./sort" 
 #include "./sum"
 #include "./pick"
 #include "./poly_horner"

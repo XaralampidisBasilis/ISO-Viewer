@@ -37,5 +37,5 @@ for (int i = 0; i < 5; ++i) {
 }
 
 vec2 y0_y5 = vec2(quintic.errors[0], quintic.errors[5]);
-cell.intersected = cell.intersected || is_strict_quintic_solvable(quintic.coefficients, 0.0, quintic.interval, y0_y5);
+cell.intersected = cell.intersected || is_quintic_solvable(quintic.coefficients, 0.0, quintic.interval, y0_y5);
 

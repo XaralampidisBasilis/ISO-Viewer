@@ -19,7 +19,7 @@
 #define MICRO_TOLERANCE 1e-6
 #endif
 
-// Solve quartic equation c[0] + c1x^1 + c2x^2 + c3x^3 + c4x^4 = y
+// Solve general quartic equation c[0] + c1x^1 + c2x^2 + c3x^3 + c4x^4 = y
 // x0 is the fallback root
 
 // vec3 quartic_solver(in float c[5], in float y, in float x0)

@@ -7,6 +7,7 @@ export default class Renderer
     {
         this.experience = new Experience()
         this.canvas = this.experience.canvas
+        this.context = this.experience.context
         this.sizes = this.experience.sizes
         this.scene = this.experience.scene
         this.camera = this.experience.camera
@@ -18,6 +19,7 @@ export default class Renderer
     {
         this.instance = new THREE.WebGLRenderer({
             canvas: this.canvas,
+            context: this.context,
             antialias: false,
             depth: true,
             alpha: true,

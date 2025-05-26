@@ -14,7 +14,7 @@ let instance = null
 
 export default class Experience
 {
-    constructor(_canvas)
+    constructor(_canvas, _context)
     {
         // Singleton
         if(instance)
@@ -28,6 +28,7 @@ export default class Experience
 
         // Options
         this.canvas = _canvas
+        this.context = _context
 
         // Setup
         this.debug = new Debug()
@@ -69,16 +70,8 @@ export default class Experience
     update()
     {
         this.camera.update()
-
-        if (this.renderer.instance.xr.isPresenting)
-        {
-
-        }
-        else
-        {
-            this.stats.update()    
-            this.renderer.update()
-        }
+        this.stats.update()    
+        this.renderer.update()
     }
 
     destroy()

@@ -29,36 +29,46 @@ export default class ISOComputes extends EventEmitter
 
     async setTensorflow()
     {
+        console.time('setTensorflow') 
+
         tf.enableProdMode()
 
         await tf.ready()
         await tf.setBackend('webgl')
+
+        console.timeEnd('setTensorflow') 
     }
 
     async setComputes()
     {
+        console.time('setComputes') 
+
         await this.computeIntensityMap()
-        // await this.computeLaplaciansIntensityMap()
+        await this.computeLaplaciansIntensityMap()
         await this.computeBlockExtremaMap()
         tf.dispose(this.intensityMap.tensor)
 
-        await tf.nextFrame()
         await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
+
+        // tf.engine().reset()
+        // await this.setTensorflow()
+        console.timeEnd('setComputes') 
     }
 
     async onThresholdChange()
     {
         this.threshold = this.uniforms.u_rendering.value.intensity
         
+        await this.setTensorflow()
         await this.computeOccupancyMap()
         await this.computeBoundingBox()
-        // await this.computeDistanceMap()
-        // await this.computeAnisotropicDistanceMap()
+        await this.computeDistanceMap()
+        await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
     }
@@ -128,27 +138,25 @@ export default class ISOComputes extends EventEmitter
         this.laplaciansIntensityMap = {}
         this.laplaciansIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
 
-        // incrementally compute laplacian maps and transfer to cpu to not overload memory
-        for (let c = 0; c < 3; ++c)
-        {
-            const tensor = await TF.computeLaplacianMap(this.intensityMap.tensor, 2 - c)
-            const data = tensor.dataSync()
-            tf.dispose(tensor)
-
-            for (let i = 0; i < data.length; ++i) 
-            {
-                let i4 = i * 4
-                this.laplaciansIntensityMap.array[i4 + c] = toHalfFloat(data[i])
-            }
-
-            // await tf.nextFrame() // let gpu memory breathe
-        }
-
-        // compute intensity data to alpha channel
-        for (let i = 0; i < this.intensityMap.size; ++i)
+        // copy intensity data to alpha channel
+        for (let i = 0; i < this.intensityMap.array.length; ++i)
         {
             let i4 = i * 4
             this.laplaciansIntensityMap.array[i4 + 3] = this.intensityMap.array[i]
+        }
+
+        // compute laplacians in rgb channels
+        for (let c = 0; c < 3; ++c)
+        {
+            const laplacian = await TF.computeLaplacianMap(this.intensityMap.tensor, 2 - c)
+            const array = laplacian.dataSync()
+            tf.dispose(laplacian)
+
+            for (let i = 0; i < array.length; ++i) 
+            {
+                let i4 = i * 4
+                this.laplaciansIntensityMap.array[i4 + c] = toHalfFloat(array[i])
+            }
         }
 
         // copy parameters from intensity map
@@ -172,19 +180,19 @@ export default class ISOComputes extends EventEmitter
 
         this.blockExtremaMap = {}
         this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
-        
-        // const data = this.blockExtremaMap.tensor.dataSync()
-        // this.blockExtremaMap.array = new Uint16Array(data.length)
-        // for (let i = 0; i < data.length; ++i) {
-        //     this.blockExtremaMap.array[i] = toHalfFloat(data[i])
-        // }
+        this.blockExtremaMap.array = new Uint16Array(this.blockExtremaMap.tensor.size)
+        const array = this.blockExtremaMap.tensor.dataSync()
+
+        for (let i = 0; i < this.blockExtremaMap.array.length; ++i) {
+            this.blockExtremaMap.array[i] = toHalfFloat(array[i])
+        }
 
         this.blockExtremaMap.stride        = this.stride
+        this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride
         this.blockExtremaMap.shape         = this.blockExtremaMap.tensor.shape
         this.blockExtremaMap.dimensions    = new THREE.Vector3().fromArray(this.blockExtremaMap.shape.slice(0, 3).toReversed())
         this.blockExtremaMap.spacing       = new THREE.Vector3().copy(this.intensityMap.spacing).multiplyScalar(this.blockExtremaMap.stride)
         this.blockExtremaMap.size          = new THREE.Vector3().copy(this.blockExtremaMap.dimensions).multiply(this.blockExtremaMap.spacing)
-        this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride
         this.blockExtremaMap.invDimensions = new THREE.Vector3().fromArray(this.blockExtremaMap.dimensions.toArray().map(x => 1 / x))
         this.blockExtremaMap.invSpacing    = new THREE.Vector3().fromArray(this.blockExtremaMap.spacing.toArray().map(x => 1 / x))
         this.blockExtremaMap.invSize       = new THREE.Vector3().fromArray(this.blockExtremaMap.size.toArray().map(x => 1 / x))

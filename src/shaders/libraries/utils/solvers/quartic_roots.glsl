@@ -117,7 +117,7 @@ vec4 quartic_roots(in float c[5], in float x0)
     // Solve for the smallest cubic term, this produces the least wild behavior.
     bool flip = abs(c[3] * c[0]) > abs(c[1] * c[4]);
     vec4 coeff = (flip) ? 
-        vec4(c[4], c[3], c[2], c[1]) / c[0] : // Solve for reciprocal
+        vec4(c[4], c[3], c[2], c[1]) / c[0] :
         vec4(c[0], c[1], c[2], c[3]) / c[4];
 
     // To simplify depressed quartic computations
@@ -173,5 +173,6 @@ vec4 quartic_roots(in float c[5], in float x0)
     // Return solutions
     return x;
 }
+
 
 #endif

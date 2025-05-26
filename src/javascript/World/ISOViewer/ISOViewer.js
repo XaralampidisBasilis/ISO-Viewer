@@ -62,11 +62,11 @@ export default class ISOViewer extends EventEmitter
 
         uniforms.u_textures.value.color_maps = this.textures.colorMaps   
         uniforms.u_textures.value.intensity_map = this.textures.intensityMap
-        // uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
+        uniforms.u_textures.value.laplacians_intensity_map = this.textures.laplaciansIntensityMap
+        uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
         uniforms.u_textures.value.distance_map = this.textures.distanceMap
         uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
         uniforms.u_textures.value.extended_anisotropic_distance_map = this.textures.extendedAnisotropicDistanceMap
-        // uniforms.u_textures.value.laplacians_intensity_map = this.textures.laplaciansIntensityMap
 
         uniforms.u_intensity_map.value.dimensions.copy(intensityMap.dimensions)
         uniforms.u_intensity_map.value.spacing.copy(intensityMap.spacing)

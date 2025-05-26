@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 import { toHalfFloat } from 'three/src/extras/DataUtils.js'
@@ -26,9 +27,8 @@ export default class Textures extends EventEmitter
     {
         this.textureColorMaps()
         this.textureIntensityMap()
-        // this.textureLaplaciansIntensityMap()
-        
-        // this.textureOccupancyMap()
+        this.textureLaplaciansIntensityMap()
+        this.textureOccupancyMap()
         this.textureDistanceMap()
         this.textureAnisotropicDistanceMap()
         this.textureExtendedAnisotropicDistanceMap()
@@ -36,17 +36,17 @@ export default class Textures extends EventEmitter
 
     async onThresholdChange()
     {
-        // if (this.distanceMap)
-        // {
-        //     this.distanceMap.image.data.set(this.computes.distanceMap.array)
-        //     this.distanceMap.needsUpdate = true
-        // }
+        if (this.distanceMap)
+        {
+            this.distanceMap.image.data.set(this.computes.distanceMap.array)
+            this.distanceMap.needsUpdate = true
+        }
 
-        // if (this.anisotropicDistanceMap)
-        // {
-        //     this.anisotropicDistanceMap.image.data.set(this.computes.anisotropicDistanceMap.array)
-        //     this.anisotropicDistanceMap.needsUpdate = true
-        // }
+        if (this.anisotropicDistanceMap)
+        {
+            this.anisotropicDistanceMap.image.data.set(this.computes.anisotropicDistanceMap.array)
+            this.anisotropicDistanceMap.needsUpdate = true
+        }
 
         if (this.extendedAnisotropicDistanceMap)
         {
@@ -65,7 +65,7 @@ export default class Textures extends EventEmitter
             this.colorMaps.minFilter = THREE.LinearFilter
             this.colorMaps.magFilter = THREE.LinearFilter
             this.colorMaps.generateMipmaps = false
-            this.colorMaps.needsUpdate = true
+            this.colorMaps.needsUpdate = true   
             console.timeEnd('textureColorMaps')
         }
     }
@@ -84,6 +84,9 @@ export default class Textures extends EventEmitter
                 THREE.LinearFilter,
                 THREE.LinearFilter
             )
+
+            this.intensityMap.internalFormat = 'R16F'
+            this.intensityMap.unpackAlignment = 1
 
             console.timeEnd('textureIntensityMap')
         }
@@ -104,6 +107,9 @@ export default class Textures extends EventEmitter
                 THREE.LinearFilter
             )
 
+            this.laplaciansIntensityMap.internalFormat = 'RGBA16F'
+            this.laplaciansIntensityMap.unpackAlignment = 4
+
             console.timeEnd('textureLaplaciansIntensityMap')
         }
     }
@@ -117,11 +123,14 @@ export default class Textures extends EventEmitter
             this.extremaMap = this.createTexture(
                 this.computes.extremaMap.array,
                 this.computes.extremaMap.dimensions,
-                THREE.RedIntegerFormat,
-                THREE.UnsignedByteType,
+                THREE.RGFormat,
+                THREE.HalfFloatType,
                 THREE.NearestFilter,
                 THREE.NearestFilter
             )
+
+            this.extremaMap.internalFormat = 'RG16F'
+            this.extremaMap.unpackAlignment = 2
 
             console.timeEnd('textureExtremaMap')
         }
@@ -142,6 +151,9 @@ export default class Textures extends EventEmitter
                 THREE.NearestFilter
             )
 
+            this.occupancyMap.internalFormat = 'R8UI'
+            this.occupancyMap.unpackAlignment = 1
+
             console.timeEnd('textureOccupancyMap')
         }
     }
@@ -160,6 +172,9 @@ export default class Textures extends EventEmitter
                 THREE.NearestFilter,
                 THREE.NearestFilter
             )
+
+            this.distanceMap.internalFormat = 'R8UI'
+            this.distanceMap.unpackAlignment = 1
 
             console.timeEnd('textureDistanceMap')
         }
@@ -180,6 +195,9 @@ export default class Textures extends EventEmitter
                 THREE.NearestFilter
             )
 
+            this.anisotropicDistanceMap.internalFormat = 'R8UI'
+            this.anisotropicDistanceMap.unpackAlignment = 1
+
             console.timeEnd('textureAnisotropicDistanceMap')
         }
     }
@@ -198,6 +216,9 @@ export default class Textures extends EventEmitter
                 THREE.NearestFilter,
                 THREE.NearestFilter
             )
+
+            this.extendedAnisotropicDistanceMap.internalFormat = 'R16UI'
+            this.extendedAnisotropicDistanceMap.unpackAlignment = 1
 
             console.timeEnd('textureExtendedAnisotropicDistanceMap')
         }
@@ -263,8 +284,19 @@ export default class Textures extends EventEmitter
         texture.magFilter = magFilter
         texture.generateMipmaps = false
         texture.needsUpdate = true
+        texture.bytes = this.sizeTexture(texture)
 
         return texture
+    }
+
+    sizeTexture(texture)
+    {
+        const bytes = 
+            texture.type == THREE.FloatType         ? 4 :
+            texture.type == THREE.HalfFloatType     ? 2 :
+            texture.type == THREE.UnsignedShortType ? 2 : 1
+
+        return texture.image.data.length * bytes 
     }
 
 }
