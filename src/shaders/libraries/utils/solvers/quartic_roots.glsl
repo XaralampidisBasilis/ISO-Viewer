@@ -174,5 +174,4 @@ vec4 quartic_roots(in float c[5], in float x0)
     return x;
 }
 
-
 #endif

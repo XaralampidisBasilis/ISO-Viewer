@@ -6,13 +6,15 @@ quintic.errors[0] = quintic.errors[5];
 
 // Compute sampling distances inside the cell
 #pragma unroll
-for (int i = 1; i < 6; ++i) {
+for (int i = 1; i < 6; ++i) 
+{
     quintic.distances[i] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[i]);
 }
 
 // Sample triquadratic corrected intensities at each distance
 #pragma unroll
-for (int i = 1; i < 6; ++i) {
+for (int i = 1; i < 6; ++i) 
+{
     quintic.intensities[i] = sample_laplacians_intensity_map(camera.position + ray.direction * quintic.distances[i]).a;
     quintic.errors[i] = quintic.intensities[i] - u_rendering.intensity;
 }
@@ -32,7 +34,8 @@ quintic.coefficients = float[6](
 // Detect sign changes between samples. If none, compute analytic intersection with the triquadratic isosurface.
 cell.intersected = false;
 #pragma unroll
-for (int i = 0; i < 5; ++i) {
+for (int i = 0; i < 5; ++i) 
+{
     cell.intersected = cell.intersected || (quintic.errors[i] * quintic.errors[i + 1] <= 0.0);
 }
 

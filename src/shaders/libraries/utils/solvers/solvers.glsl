@@ -13,4 +13,5 @@
 #include "./is_cubic_solvable"
 #include "./is_quartic_solvable"
 #include "./is_quintic_solvable"
-// #include "./linsolve"
+#include "./test_cubic"
+#include "./test_quartic"
