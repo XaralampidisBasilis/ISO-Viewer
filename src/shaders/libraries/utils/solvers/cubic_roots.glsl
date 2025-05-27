@@ -9,8 +9,8 @@ Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
 #ifndef CUBIC_ROOTS
 #define CUBIC_ROOTS
 
-#ifndef POLY_HORNER
-#include "../math/poly_horner"
+#ifndef EVAL_POLY
+#include "../math/eval_poly"
 #endif
 #ifndef CBRT
 #include "../math/cbrt"
@@ -75,9 +75,9 @@ vec3 cubic_roots(in vec4 c, in float x0)
     // Improve numerical stability of roots with Newton–Raphson correction
     vec4 x3_x1 = vec4( x3, x1);
     vec4 f, f1;
-    poly_horner(c, x3_x1, f, f1);
+    eval_poly(c, x3_x1, f, f1);
     x3_x1 -= f / f1; 
-    poly_horner(c, x3_x1, f, f1);
+    eval_poly(c, x3_x1, f, f1);
     x3_x1 -= f / f1; 
 
     // choose cubic roots based on discriminant sign 

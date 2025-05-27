@@ -86,9 +86,9 @@ float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
 
     // Improve numerical stability of max root with Newton–Raphson correction
     float f, f1;
-    poly_horner(c, U_max, f, f1);
+    eval_poly(c, U_max, f, f1);
     U_max -= f / f1; 
-    poly_horner(c, U_max, f, f1);
+    eval_poly(c, U_max, f, f1);
     U_max -= f / f1; 
 
     return U_max;

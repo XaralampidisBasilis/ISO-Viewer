@@ -9,8 +9,8 @@ Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
 #ifndef CUBIC_ROOTS
 #define CUBIC_ROOTS
 
-#ifndef POLY_HORNER
-#include "../math/poly_horner"
+#ifndef EVAL_POLY
+#include "../math/eval_poly"
 #endif
 #ifndef CBRT
 #include "../math/cbrt"
@@ -37,7 +37,7 @@ float cubic_roots(in vec4 coef, in float x0)
     // solve for the critical points of the cubic polynomial
     vec2 x0_x1, y0_y1, d0_d1;
     x0_x1 = quadratic_roots_2(c, 0.0);
-    poly_horner(c, x0_x1, y0_y1, d0_d1);
+    eval_poly(c, x0_x1, y0_y1, d0_d1);
 
     // perform newtons bisection method to find root between critical points
     float m, x, y, d;
@@ -53,7 +53,7 @@ float cubic_roots(in vec4 coef, in float x0)
 
         // chose newton if inside, bisection otherwise and compute polynomial
         x = (x0_x1.x < x && x < x0_x1.y) ? x : m;
-        poly_horner(coef, x, y, d);
+        eval_poly(coef, x, y, d);
 
         // detect sign change
         bool b = (y0_y1.x < 0) != (y < 0);

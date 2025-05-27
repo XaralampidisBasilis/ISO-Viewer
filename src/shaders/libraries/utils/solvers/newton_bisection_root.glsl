@@ -3,17 +3,17 @@
 #define NEWTON_BISECTION_ROOT
 
 #ifndef NEWTON_BISECTION_ITERATIONS
-#define NEWTON_BISECTION_ITERATIONS 10
+#define NEWTON_BISECTION_ITERATIONS 20
 #endif
 
-#ifndef POLY_HORNER
-#include "../math/poly_horner"
+#ifndef EVAL_POLY
+#include "../math/eval_poly"
 #endif
 
 float newton_bisection_root(in vec4 c, in vec2 x0_x1)
 {
     vec2 y0_y1, d0_d1;
-    poly_horner(c, x0_x1, y0_y1, d0_d1);
+    eval_poly(c, x0_x1, y0_y1, d0_d1);
 
     float m, x, y, d;
     #pragma unroll
@@ -29,10 +29,10 @@ float newton_bisection_root(in vec4 c, in vec2 x0_x1)
         x = (x0_x1.x < x && x < x0_x1.y) ? x : m;
 
         // compute polynomial
-        poly_horner(c, x, y, d);
+        eval_poly(c, x, y, d);
 
         // compute sign change
-        bool b = (y0_y1.x < 0) != (y < 0);
+        bool b = (y < 0.0) == (y0_y1.y < 0.0);
 
         // update bracket
         x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);
@@ -47,7 +47,7 @@ float newton_bisection_root(in vec4 c, in vec2 x0_x1)
 float newton_bisection_root(in float c[5], in vec2 x0_x1)
 {
     vec2 y0_y1, d0_d1;
-    poly_horner(c, x0_x1, y0_y1, d0_d1);
+    eval_poly(c, x0_x1, y0_y1, d0_d1);
 
     float m, x, y, d;
     #pragma unroll
@@ -63,10 +63,10 @@ float newton_bisection_root(in float c[5], in vec2 x0_x1)
         x = (x0_x1.x < x && x < x0_x1.y) ? x : m;
 
         // compute polynomial
-        poly_horner(c, x, y, d);
+        eval_poly(c, x, y, d);
 
         // compute sign change
-        bool b = (y0_y1.x < 0) != (y < 0);
+        bool b = (y < 0.0) == (y0_y1.y < 0.0);
 
         // update bracket
         x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);
@@ -81,7 +81,7 @@ float newton_bisection_root(in float c[5], in vec2 x0_x1)
 float newton_bisection_root(in float c[6], in vec2 x0_x1)
 {
     vec2 y0_y1, d0_d1;
-    poly_horner(c, x0_x1, y0_y1, d0_d1);
+    eval_poly(c, x0_x1, y0_y1, d0_d1);
 
     float m, x, y, d;
     #pragma unroll
@@ -97,10 +97,10 @@ float newton_bisection_root(in float c[6], in vec2 x0_x1)
         x = (x0_x1.x < x && x < x0_x1.y) ? x : m;
 
         // compute polynomial
-        poly_horner(c, x, y, d);
+        eval_poly(c, x, y, d);
 
         // compute sign change
-        bool b = (y0_y1.x < 0) != (y < 0);
+        bool b = (y < 0.0) == (y0_y1.y < 0.0);
 
         // update bracket
         x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);

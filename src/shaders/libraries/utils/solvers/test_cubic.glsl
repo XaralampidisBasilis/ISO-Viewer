@@ -28,7 +28,7 @@ bvec3 test_cubic_residue(in vec4 c, in float x0)
 
     // Evaluate the original polynomial at each root
     vec3 y0_y1_y2;
-    poly_horner(c, x0_x1_x2, y0_y1_y2);
+    eval_poly(c, x0_x1_x2, y0_y1_y2);
 
     // Check if values are near zero
     bvec3 b0_b1_b2 = lessThan(abs(y0_y1_y2), vec3(MILLI_TOLERANCE));

@@ -22,4 +22,4 @@
 #include "./sort" 
 #include "./sum"
 #include "./pick"
-#include "./poly_horner"
+#include "./eval_poly"

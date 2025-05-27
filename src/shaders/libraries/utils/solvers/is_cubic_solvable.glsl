@@ -9,8 +9,8 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef QUADRATIC_ROOTS
 #include "./quadratic_roots"
 #endif
-#ifndef POLY_HORNER
-#include "../math/poly_horner"
+#ifndef EVAL_POLY
+#include "../math/eval_poly"
 #endif
 #ifndef SSIGN
 #include "../math/ssign"
@@ -29,20 +29,20 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb)
 
     // compute the cubic extrema values at the critical points
     vec2 y0_y1;
-    poly_horner(c, x0_x1, y0_y1);
+    eval_poly(c, x0_x1, y0_y1);
 
   // compute the cubic at the boundaries
     vec2 ya_yb;
-    poly_horner(c, xa_xb, ya_yb);
+    eval_poly(c, xa_xb, ya_yb);
 
     // combine function values
     vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
     // compute signs for numerical stability
-    vec4 sa_s0_s1_sb = sign(ya_y0_y1_yb);
+    bvec4 sa_s0_s1_sb = lessThan(ya_y0_y1_yb, vec4(0.0));
 
     // compute sign changes for intermediate value theorem
-    bvec3 ra0_r01_r1b = lessThanEqual(sa_s0_s1_sb.xyz * sa_s0_s1_sb.yzw, vec3(0.0));
+    bvec3 ra0_r01_r1b = notEqual(sa_s0_s1_sb.xyz, sa_s0_s1_sb.yzw);
 
     // return result
     return any(ra0_r01_r1b);
@@ -59,16 +59,16 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
 
     // compute the cubic extrema values at the critical points
     vec2 y0_y1;
-    poly_horner(c, x0_x1, y0_y1);
+    eval_poly(c, x0_x1, y0_y1);
 
     // combine function values
     vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);
 
     // compute signs for numerical stability
-    vec4 sa_s0_s1_sb = sign(ya_y0_y1_yb);
+    bvec4 sa_s0_s1_sb = lessThan(ya_y0_y1_yb, vec4(0.0));
 
     // compute sign changes for intermediate value theorem
-    bvec3 ra0_r01_r1b = lessThanEqual(sa_s0_s1_sb.xyz * sa_s0_s1_sb.yzw, vec3(0.0));
+    bvec3 ra0_r01_r1b = notEqual(sa_s0_s1_sb.xyz, sa_s0_s1_sb.yzw);
 
     // return result
     return any(ra0_r01_r1b);

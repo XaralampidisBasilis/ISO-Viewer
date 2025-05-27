@@ -4,8 +4,8 @@
 #ifndef LINEAR_ROOTS
 #include "./linear_root"
 #endif
-#ifndef POLY_HORNER
-#include "../math/poly_horner"
+#ifndef EVAL_POLY
+#include "../math/eval_poly"
 #endif
 
 // compute if quadratic polynomial c0 + c1x + c2x^2 = y is solvable for x in [xa, xb]
@@ -21,20 +21,20 @@ bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb)
 
     // compute the quadratic extrema value at the critical point
     float y0;
-    poly_horner(c, x0, y0);
+    eval_poly(c, x0, y0);
 
     // compute the quadratic at the boundaries
     vec2 ya_yb;
-    poly_horner(c, xa_xb, ya_yb);
+    eval_poly(c, xa_xb, ya_yb);
 
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
     // compute signs for numerical stability
-    vec3 sa_s0_sb = sign(ya_y0_yb);
+    bvec3 sa_s0_sb = lessThan(ya_y0_yb, vec3(0.0));
 
     // compute sign changes for intermediate value theorem
-    bvec2 ra0_r0b = lessThanEqual(sa_s0_sb.xy * sa_s0_sb.yz, vec2(0.0));
+    bvec2 ra0_r0b = notEqual(sa_s0_sb.xy, sa_s0_sb.yz);
 
     // return result
     return any(ra0_r0b);
@@ -51,16 +51,16 @@ bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb, in vec2 ya_yb)
 
     // compute the quadratic extrema value at the critical point
     float y0;
-    poly_horner(c, x0, y0);
+    eval_poly(c, x0, y0);
 
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
     // compute signs for numerical stability
-    vec3 sa_s0_sb = sign(ya_y0_yb);
+    bvec3 sa_s0_sb = lessThan(ya_y0_yb, vec3(0.0));
 
     // compute sign changes for intermediate value theorem
-    bvec2 ra0_r0b = lessThanEqual(sa_s0_sb.xy * sa_s0_sb.yz, vec2(0.0));
+    bvec2 ra0_r0b = notEqual(sa_s0_sb.xy, sa_s0_sb.yz);
 
     // return result
     return any(ra0_r0b);
