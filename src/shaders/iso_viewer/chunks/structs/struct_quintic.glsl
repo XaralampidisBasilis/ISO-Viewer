@@ -9,6 +9,7 @@ struct Quintic
     float distances[6];
     float coefficients[6];  
     float roots[6];  
+    float nroots;
     float weights[6];
     mat3 inv_vander[4]; 
 };
@@ -17,6 +18,7 @@ Quintic quintic; // Global mutable struct
 
 void set_quintic()
 {
+    quintic.nroots = 0.0;
     quintic.interval = vec2(0.0, 1.0);
     quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

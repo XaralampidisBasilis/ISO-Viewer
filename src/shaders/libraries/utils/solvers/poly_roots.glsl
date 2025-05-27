@@ -3,6 +3,8 @@
 Finding Real Polynomial Roots on GPUs (https://momentsingraphics.de/GPUPolynomialRoots.html),
 Shadertoy Spherical harmonics glyphs (https://www.shadertoy.com/view/dlGSDV),
 Ray Tracing Spherical Harmonics Glyphs (https://momentsingraphics.de/VMV2023.html),
+High-Performance Polynomial Solver Cem Yuksel (https://www.cemyuksel.com/research/polynomials/),
+cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPolynomial.h),
 */
 
 #ifndef POLY_ROOTS

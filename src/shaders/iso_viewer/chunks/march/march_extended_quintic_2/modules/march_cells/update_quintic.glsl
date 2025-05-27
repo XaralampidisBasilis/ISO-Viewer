@@ -55,5 +55,5 @@ quintic.coefficients = float[6](
     c3_c4_c5[2]
 );
 
-// Compute analytic intersection.
+// Detect sign changes between samples. If none, compute analytic intersection with the triquadratic isosurface.
 cell.intersected = is_quintic_solvable(quintic.coefficients, quintic.interval, y0_y5);

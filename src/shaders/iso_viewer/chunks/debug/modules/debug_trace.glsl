@@ -27,15 +27,6 @@ vec4 debug_trace_error = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-
 // abs error
 vec4 debug_trace_abs_error = to_color(mmix(COLOR.BLACK, COLOR.RED, abs(trace.error / MILLI_TOLERANCE)));
 
-// gradient
-vec4 debug_trace_gradient = to_color(trace.gradient * 0.5 + 0.5);
-
-// gradient length
-vec4 debug_trace_gradient_length = to_color(map(0.0, 1.0, length(trace.gradient)));
-
-// curvature
-vec4 debug_trace_curvature = to_color(mmix(COLOR.CYAN, COLOR.BLACK, COLOR.MAGENTA, map(-1.0, 1.0, trace.curvature)));
-
 // PRINT DEBUG
 
 switch (u_debugging.option - 200)
@@ -49,7 +40,4 @@ switch (u_debugging.option - 200)
     case  7: fragColor = debug_trace_intensity;       break;
     case  8: fragColor = debug_trace_error;           break;
     case  9: fragColor = debug_trace_abs_error;       break;
-    case 10: fragColor = debug_trace_gradient;        break;
-    case 11: fragColor = debug_trace_gradient_length; break;
-    case 12: fragColor = debug_trace_curvature;       break;
 }

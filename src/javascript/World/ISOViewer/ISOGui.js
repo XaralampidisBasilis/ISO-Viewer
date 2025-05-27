@@ -182,9 +182,6 @@ export default class ISOGui
                 trace_intensity         : 207,
                 trace_error             : 208,
                 trace_abs_error         : 209,
-                trace_gradient          : 210,
-                trace_gradient_length   : 211,
-                trace_curvature         : 212,
                 
                 cell_intersected        : 301,
                 cell_terminated         : 302,
@@ -252,9 +249,16 @@ export default class ISOGui
                 camera_position         : 701,
                 camera_direction        : 702,
 
-                poly_distances          : 801,
-                poly_intensities        : 802,
-                poly_coefficients       : 803,
+                cubic_distances         : 801,
+                cubic_intensities       : 802,
+                cubic_coefficients      : 803,
+
+                quintic_intensities_0    : 851,
+                quintic_intensities_1    : 852,
+                quintic_coefficients_0   : 853,
+                quintic_coefficients_1   : 854,
+                quintic_roots_0          : 855,
+                quintic_roots_1          : 856,
 
                 stats_num_fetches       : 901,
                 stats_num_cells         : 902,

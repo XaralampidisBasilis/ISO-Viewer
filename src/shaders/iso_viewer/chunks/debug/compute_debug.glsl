@@ -6,7 +6,8 @@
 #include "./modules/debug_frag"               
 #include "./modules/debug_box"   
 #include "./modules/debug_camera"          
-#include "./modules/debug_poly"          
+#include "./modules/debug_cubic"          
+#include "./modules/debug_quintic"          
 #include "./modules/debug_variables"               
 
 #if STATS_ENABLED == 1
