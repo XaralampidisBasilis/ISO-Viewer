@@ -137,6 +137,42 @@ vec3 cubic_roots_2(in vec4 c, in float x0)
     return x;
 }
 
+vec3 cubic_roots_3(in vec4 c, in float x0)
+{
+    // normalize coefficients
+    vec3 n = c.xyz / c.w;
+    n.yz /= 3.0;
+
+    // compute hessian coefficients eq(0.4)
+    vec3 h = vec3(
+        n.y - n.z * n.z,                          // δ1 = c.w * c.y - c.z^2
+        n.x - n.y * n.z,                          // δ2 = c.w * c.x - c.y * c.z
+        dot(vec2(n.z, -n.y), n.xy)    // δ3 = c.z * c.x - c.y^2
+    );
+
+    // compute cubic discriminant eq(0.7)
+    float d = dot(vec2(h.x * 4.0, -h.y), h.zy); // Δ = δ1 * δ3 - δ2^2
+    float sqrt_d = sqrt(abs(d));
+
+    // compute depressed cubic eq(0.16), r[0] + r[1] * x + x^3 eq(0.11) eq(0.16)
+    vec2 r = vec2(h.y - n.z * h.x * 2.0, h.x);
+
+    // compute cubic roots using complex number formula eq(0.14)  
+    // compute three roots via rotation, applying complex root formula eq(0.14)
+    float theta = atan(sqrt_d, -r.x) / 3.0;
+    vec2 x2 = vec2(cos(theta), sin(theta));
+    vec3 x3 = vec3(
+        dot(x2, vec2(-0.5, -0.5 * SQRT_3)),   // Smallest root (rotated by 120 degrees)
+        dot(x2, vec2(-0.5,  0.5 * SQRT_3)),   // Middle root (rotated by -120 degrees)
+        x2.x                                  // Largest root 
+    );
+
+    // revert transformation eq(0.2) and eq(0.16)
+    x3 = x3 * sqrt(abs(-r.y)) * 2.0 - n.z; 
+
+    // return result
+    return x3;
+}
 
 #endif
 

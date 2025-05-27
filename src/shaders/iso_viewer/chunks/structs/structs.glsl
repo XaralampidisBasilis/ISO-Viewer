@@ -5,7 +5,7 @@
 #include "./struct_trace"
 #include "./struct_cell"
 #include "./struct_block"
-#include "./struct_poly"
+#include "./struct_cubic"
 #include "./struct_quintic"
 #include "./struct_surface"
 

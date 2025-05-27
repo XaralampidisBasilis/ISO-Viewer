@@ -1,3 +1,8 @@
+/* Sources
+High-Performance Polynomial Solver Cem Yuksel (https://www.cemyuksel.com/research/polynomials/)
+cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPolynomial.h)
+*/
+
 #ifndef IS_CUBIC_SOLVABLE
 #define IS_CUBIC_SOLVABLE
 
@@ -6,6 +11,9 @@
 #endif
 #ifndef POLY_HORNER
 #include "../math/poly_horner"
+#endif
+#ifndef SSIGN
+#include "../math/ssign"
 #endif
 
 // compute if cubic polynomial c0 + c1x + c2x^2 + c3x^3 = y is solvable for x in [xa, xb]
@@ -16,7 +24,7 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb)
     vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 x0_x1 = quadratic_roots(d, xa_xb.x);
+    vec2 x0_x1 = quadratic_roots_3(d, xa_xb.x);
     x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
@@ -46,7 +54,7 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
     vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
 
     // solve for the critical points of the cubic polynomial
-    vec2 x0_x1 = quadratic_roots(d, xa_xb.x);
+    vec2 x0_x1 = quadratic_roots_3(d, xa_xb.x);
     x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
@@ -67,3 +75,4 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
 }
 
 #endif
+

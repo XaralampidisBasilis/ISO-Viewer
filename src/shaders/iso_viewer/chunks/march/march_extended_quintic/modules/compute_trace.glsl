@@ -1,7 +1,7 @@
 
-poly_roots(quintic.roots, quintic.coefficients, poly.interval.x, poly.interval.y);
+poly_roots(quintic.roots, quintic.coefficients, cubic.interval.x, cubic.interval.y);
 
-float root = quintic.roots[5];
+float root = cubic.interval.y;
 root = min(root, quintic.roots[0]);
 root = min(root, quintic.roots[1]);
 root = min(root, quintic.roots[2]);
@@ -16,10 +16,3 @@ trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.di
 // compute error
 trace.intensity = sample_trilaplacian_intensity(trace.position).a;
 trace.error = trace.intensity - u_rendering.intensity;
-
-debug.variable0 = to_color(quintic.roots[0]);
-debug.variable1 = to_color(quintic.roots[1]);
-debug.variable2 = to_color(quintic.roots[2]);
-debug.variable3 = to_color(quintic.roots[3]);
-debug.variable4 = to_color(quintic.roots[4]);
-debug.variable5 = to_color(quintic.roots[5]);

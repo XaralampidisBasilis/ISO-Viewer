@@ -1,7 +1,7 @@
-#ifndef STRUCT_POLY
-#define STRUCT_POLY
+#ifndef STRUCT_CUBIC
+#define STRUCT_CUBIC
 
-struct Poly 
+struct Cubic 
 {
     vec2 interval;
     vec3 roots;
@@ -14,25 +14,25 @@ struct Poly
     mat4 inv_vander; // inverse vandermonde matrix
 };
 
-Poly poly; // Global mutable struct
+Cubic cubic; // Global mutable struct
 
-void set_poly()
+void set_cubic()
 {
-    poly.interval = vec2(0.0, 1.0);
-    poly.roots = vec3(0.0);
-    poly.intensities = vec4(0.0);
-    poly.errors = vec4(0.0);
-    poly.distances = vec4(0.0);
-    poly.coefficients = vec4(0.0);
-    poly.weights = vec4(0.0, 1.0, 2.0, 3.0) / 3.0;
-    poly.vander = mat4
+    cubic.interval = vec2(0.0, 1.0);
+    cubic.roots = vec3(0.0);
+    cubic.intensities = vec4(0.0);
+    cubic.errors = vec4(0.0);
+    cubic.distances = vec4(0.0);
+    cubic.coefficients = vec4(0.0);
+    cubic.weights = vec4(0.0, 1.0, 2.0, 3.0) / 3.0;
+    cubic.vander = mat4
     (
         27.0, 27.0,  27.0,  27.0,
          0.0,  9.0,  18.0,  27.0,
          0.0,  3.0, 12.0, 27.0,
         0.0, 1.0,  8.0, 27.0 
     ) / 27.0;
-    poly.inv_vander = mat4
+    cubic.inv_vander = mat4
     (
         1.0,  -5.5,   9.0,   -4.5,
          0.0,  9.0, -22.5,   13.5,

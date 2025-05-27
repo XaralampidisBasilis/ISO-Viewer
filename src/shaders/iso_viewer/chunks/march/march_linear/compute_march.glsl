@@ -1,7 +1,7 @@
 
 #include "./modules/start_cell"
 
-for (int i = 0; i < u_rendering.max_cells; i++) 
+for (int i = 0; i < MAX_CELLS; i++) 
 {
     #include "./modules/update_cell"
 

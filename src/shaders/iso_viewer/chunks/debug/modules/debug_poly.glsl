@@ -2,13 +2,13 @@
 // COMPUTE DEBUG
 
 // distances
-vec4 debug_poly_distances = to_color(map(cell.entry_distance, cell.exit_distance, poly.distances.xyz)); 
+vec4 debug_poly_distances = to_color(map(cell.entry_distance, cell.exit_distance, cubic.distances.xyz)); 
 
 // intensities
-vec4 debug_poly_intensities = to_color(poly.intensities.xyz);
+vec4 debug_poly_intensities = to_color(cubic.intensities.xyz);
 
 // coefficients
-vec4 debug_poly_coefficients = to_color(poly.coefficients.xyz / poly.coefficients.w); 
+vec4 debug_poly_coefficients = to_color(cubic.coefficients.xyz / cubic.coefficients.w); 
 
 // PRINT DEBUG
 

@@ -1,6 +1,7 @@
 
 // compute minimum intersection inside the cell
 cubic.roots = degenerate_roots(cubic.coefficients, cubic.interval.y);
+
 bvec3 is_inside = inside_closed(cubic.interval.x, cubic.interval.y, cubic.roots);
 cubic.roots = pick(is_inside, cubic.roots, cubic.interval.y);
 float root = mmin(cubic.roots);

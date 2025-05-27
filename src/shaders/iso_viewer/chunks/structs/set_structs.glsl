@@ -5,7 +5,7 @@ set_trace();
 set_cell();
 set_block();
 set_frag();
-set_poly();
+set_cubic();
 set_quintic();
 set_surface();
 

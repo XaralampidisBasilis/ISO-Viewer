@@ -3,7 +3,7 @@ roots = [1.00001, 0.99999, 1];
 
 % Display the polynomial coefficients
 disp('Polynomial coefficients (ascending powers):');
-%disp(flip(poly(roots)));
+%disp(flip(cubic(roots)));
         
 syms x
 expr = expand( (x - 1)*(x - 1.00001)*(x - 2)*(x - 2.00001));                % Expand symbolic expression

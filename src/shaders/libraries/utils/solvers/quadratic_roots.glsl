@@ -54,6 +54,21 @@ vec2 quadratic_roots_2(in vec3 c, in float x0)
     return x;
 }
 
+vec2 quadratic_roots_3(in vec3 c, in float x0)
+{
+    // adjust quadratic coefficients 
+    vec2 n = c.xy / c.z;
+    n.y /= -2.0;
+
+    // compute quadratic discriminant
+    float d = n.y * n.y - n.x;
+    float sqrt_d = sqrt(abs(d));
+    float q = n.y + sqrt_d * ssign(n.y);
+
+    // compute quadratic roots via stable formula
+    return vec2(q, n.x / q);
+}
+
 #endif
 
 
