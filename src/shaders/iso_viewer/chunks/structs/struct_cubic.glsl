@@ -8,7 +8,7 @@ struct Cubic
     vec4 intensities;    
     vec4 errors;
     vec4 distances;
-    vec4 coefficients;    
+    vec4 coeffs;    
     vec4 weights;
     mat4 vander;
     mat4 inv_vander; // inverse vandermonde matrix
@@ -23,7 +23,7 @@ void set_cubic()
     cubic.intensities = vec4(0.0);
     cubic.errors = vec4(0.0);
     cubic.distances = vec4(0.0);
-    cubic.coefficients = vec4(0.0);
+    cubic.coeffs = vec4(0.0);
     cubic.weights = vec4(0.0, 1.0, 2.0, 3.0) / 3.0;
     cubic.vander = mat4
     (

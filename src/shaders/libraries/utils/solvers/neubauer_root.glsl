@@ -5,12 +5,14 @@
 #ifndef NEUBAUER_ITERATIONS
 #define NEUBAUER_ITERATIONS 10
 #endif
+#ifndef MICRO_TOLERANCE
+#define MICRO_TOLERANCE 1e-6
+#endif
 #ifndef EVAL_POLY
 #include "../math/eval_poly"
 #endif
 
 // Find a root of the polynomial c0 + c1x^1 + ... + cnx^n = 0 for x in [x0, x1]
-
 
 float neubauer_root(in vec4 c, in vec2 x0_x1)
 {

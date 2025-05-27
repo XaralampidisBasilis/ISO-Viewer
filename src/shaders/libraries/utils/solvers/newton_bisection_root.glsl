@@ -3,9 +3,11 @@
 #define NEWTON_BISECTION_ROOT
 
 #ifndef NEWTON_BISECTION_ITERATIONS
-#define NEWTON_BISECTION_ITERATIONS 20
+#define NEWTON_BISECTION_ITERATIONS 10
 #endif
-
+#ifndef MICRO_TOLERANCE
+#define MICRO_TOLERANCE 1e-6
+#endif
 #ifndef EVAL_POLY
 #include "../math/eval_poly"
 #endif

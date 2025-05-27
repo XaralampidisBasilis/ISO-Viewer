@@ -1,13 +1,12 @@
 
-poly_roots(quintic.roots, quintic.coefficients, cubic.interval.x, cubic.interval.y);
+poly5_roots(quintic.roots, quintic.coefficients, cubic.interval.x, cubic.interval.y);
 
-float root = cubic.interval.y;
+float root = quintic.roots[5];
 root = min(root, quintic.roots[0]);
 root = min(root, quintic.roots[1]);
 root = min(root, quintic.roots[2]);
 root = min(root, quintic.roots[3]);
 root = min(root, quintic.roots[4]);
-root = clamp(root, cubic.interval.x, cubic.interval.y);
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, root);

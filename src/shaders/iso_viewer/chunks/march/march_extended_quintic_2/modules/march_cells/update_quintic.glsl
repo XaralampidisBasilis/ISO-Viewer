@@ -56,4 +56,4 @@ quintic.coefficients = float[6](
 );
 
 // Compute analytic intersection.
-cell.intersected = is_quintic_solvable(quintic.coefficients, quintic.interval, y0_y5);
+cell.intersected = poly5_has_root(quintic.coefficients, quintic.interval.x, quintic.interval.y);

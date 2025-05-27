@@ -1,9 +1,15 @@
 
-// compute minimum intersection inside the cell
-cubic.roots = degenerate_roots(cubic.coefficients, cubic.interval.y);
-bvec3 is_inside = inside_closed(cubic.interval.x, cubic.interval.y, cubic.roots);
-cubic.roots = pick(is_inside, cubic.roots, cubic.interval.y);
-float root = mmin(cubic.roots);
+
+float roots[4];
+float coeffs[4] = float[4](cubic.coeffs.x, cubic.coeffs.y, cubic.coeffs.z, cubic.coeffs.w);
+
+poly3_roots(roots, coeffs, cubic.interval.x, cubic.interval.y);
+cubic.roots = vec3(roots[0], roots[1], roots[2]);
+
+float root = roots[3];
+root = min(root, roots[0]);
+root = min(root, roots[1]);
+root = min(root, roots[2]);
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, root);

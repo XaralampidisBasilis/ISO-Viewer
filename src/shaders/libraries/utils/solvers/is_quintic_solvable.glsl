@@ -41,8 +41,8 @@ bool is_quintic_solvable(in float c[6], in vec2 xa_xb)
     vec3 y2_y3_yb = vec3(y0_y1_y2_y3.zw, ya_yb.y);
 
     // extract only signs for numerical stability
-    bvec4 sa_s0_s1_s2 = lessThan(ya_y0_y1_y2, vec4(0.0));
-    bvec3 s2_s3_sb = lessThan(y2_y3_yb, vec3(0.0));
+    bvec4 sa_s0_s1_s2 = lessThanEqual(ya_y0_y1_y2, vec4(0.0));
+    bvec3 s2_s3_sb = lessThanEqual(y2_y3_yb, vec3(0.0));
 
     // compute sign changes with intermediate value theorem to detect roots
     bvec3 ra0_r01_r12 = notEqual(sa_s0_s1_s2.xyz, sa_s0_s1_s2.yzw);
@@ -81,8 +81,8 @@ bool is_quintic_solvable(in float c[6], in vec2 xa_xb, in vec2 ya_yb)
     vec3 y2_y3_yb = vec3(y0_y1_y2_y3.zw, ya_yb.y);
 
     // extract only signs for numerical stability
-    bvec4 sa_s0_s1_s2 = lessThan(ya_y0_y1_y2, vec4(0.0));
-    bvec3 s2_s3_sb = lessThan(y2_y3_yb, vec3(0.0));
+    bvec4 sa_s0_s1_s2 = lessThanEqual(ya_y0_y1_y2, vec4(0.0));
+    bvec3 s2_s3_sb = lessThanEqual(y2_y3_yb, vec3(0.0));
 
     // compute sign changes with intermediate value theorem to detect roots
     bvec3 ra0_r01_r12 = notEqual(sa_s0_s1_s2.xyz, sa_s0_s1_s2.yzw);

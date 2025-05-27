@@ -5,6 +5,9 @@
 #ifndef NEWTON_NEUBAUER_ITERATIONS
 #define NEWTON_NEUBAUER_ITERATIONS 20
 #endif
+#ifndef MICRO_TOLERANCE
+#define MICRO_TOLERANCE 1e-6
+#endif
 #ifndef EVAL_POLY
 #include "../math/eval_poly"
 #endif

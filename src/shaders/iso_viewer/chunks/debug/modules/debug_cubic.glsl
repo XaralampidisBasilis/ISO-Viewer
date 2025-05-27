@@ -8,7 +8,7 @@ vec4 debug_cubic_distances = to_color(map(cell.entry_distance, cell.exit_distanc
 vec4 debug_cubic_intensities = to_color(cubic.intensities.xyz);
 
 // coefficients
-vec4 debug_cubic_coefficients = to_color(cubic.coefficients.xyz / cubic.coefficients.w); 
+vec4 debug_cubic_coefficients = to_color(cubic.coeffs.xyz / cubic.coeffs.w); 
 
 // PRINT DEBUG
 

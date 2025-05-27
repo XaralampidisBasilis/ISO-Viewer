@@ -14,9 +14,9 @@ cubic.errors.x = cubic.errors.w;
 cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-cubic.coefficients = cubic.inv_vander * cubic.errors;
+cubic.coeffs = cubic.inv_vander * cubic.errors;
 
 // check if there are sign crossings between samples
 // given the polynomial we can compute if we intersect the isosurface inside the cell
 cell.intersected = any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
-cell.intersected = cell.intersected || is_cubic_solvable(cubic.coefficients, cubic.interval, cubic.errors.xw);
+cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
