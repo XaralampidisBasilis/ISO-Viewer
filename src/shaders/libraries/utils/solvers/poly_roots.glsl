@@ -30,7 +30,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 //        bigger.
 // \return true if a root was found, false if no root exists.
 
-bool newton_bisection(
+bool poly_newton_bisection(
     out float out_root, 
     out float out_end_value,
     float poly[POLY_MAX_DEGREE + 1], 
@@ -210,7 +210,7 @@ void poly_roots(
 
             // Try to find a root
             float root;
-            if (newton_bisection(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance))
+            if (poly_newton_bisection(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance))
             {
                 out_roots[i] = root;
             }

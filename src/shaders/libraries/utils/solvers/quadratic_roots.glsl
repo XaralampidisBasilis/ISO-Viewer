@@ -36,26 +36,6 @@ vec2 quadratic_roots(in vec3 c, in float x0)
 
 vec2 quadratic_roots_2(in vec3 c, in float x0)
 {
-    // normalize coefficients 
-    c.xy /= c.z;
-    c.y /= -2.0;
-
-    // compute quadratic discriminant
-    float d = c.y * c.y - c.x;
-    float sqrt_d = sqrt(abs(d));
-
-    // compute quadratic roots via stable formula
-    vec2 x = c.y + sqrt_d * vec2(-1.0, 1.0);
-
-    // select roots based on determinant
-    x = (d >= 0.0) ? x : vec2(x0);
-
-    // quadratic solutions
-    return x;
-}
-
-vec2 quadratic_roots_3(in vec3 c, in float x0)
-{
     // adjust quadratic coefficients 
     vec2 n = c.xy / c.z;
     n.y /= -2.0;
