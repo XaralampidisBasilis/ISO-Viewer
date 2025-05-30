@@ -12,29 +12,9 @@ Numerical Recipes in C: The Art of Scientific Computing, 2nd Edition Section: Ch
 
 // Solves the quadratic equation: c[0] + c[1]*x^1 + c[2]*x^2 = 0
 // We assume non zero quadratic coefficient
-// x0 is the fallback root
+// xd is the fallback root
 
-vec2 quadratic_roots(in vec3 c, in float x0)
-{
-    // adjust quadratic coefficients 
-    c.y /= -2.0;
-
-    // compute quadratic discriminant
-    float d = c.y * c.y - c.z * c.x;
-    float sqrt_d = sqrt(abs(d));
-    float q = c.y + sqrt_d * ssign(c.y);
-
-    // compute quadratic roots via stable formula
-    vec2 x = vec2(c.x / q, q / c.z);
-
-    // select roots based on determinant
-    x = (d >= 0.0) ? x : vec2(x0);
-
-    // quadratic solutions
-    return x;
-}
-
-vec2 quadratic_roots_2(in vec3 c, in float x0)
+vec2 quadratic_roots(in vec3 c)
 {
     // adjust quadratic coefficients 
     vec2 n = c.xy / c.z;
@@ -42,12 +22,32 @@ vec2 quadratic_roots_2(in vec3 c, in float x0)
 
     // compute quadratic discriminant
     float d = n.y * n.y - n.x;
-    float sqrt_d = sqrt(abs(d));
-    float q = n.y + sqrt_d * ssign(n.y);
+    float sqrt_d = sqrt(max(0.0, d));
+    float xq = n.y + sqrt_d * ssign(n.y);
 
     // compute quadratic roots via stable formula
-    return vec2(q, n.x / q);
+    return vec2(xq, n.x / xq);
 }
+
+vec2 quadratic_roots(in vec3 c, in float xd)
+{
+    // adjust quadratic coefficients 
+    vec2 n = c.xy / c.z;
+    n.y /= -2.0;
+
+    // compute quadratic discriminant
+    float d = n.y * n.y - n.x;
+    float sqrt_d = sqrt(max(0.0, d));
+    float xq = n.y + sqrt_d * ssign(n.y);
+
+    // compute quadratic roots via stable formula
+    vec2 x = vec2(xq, n.x / xq);
+
+    // select roots based on determinant
+    return (d >= 0.0) ? x : vec2(xd);
+}
+
+
 
 #endif
 

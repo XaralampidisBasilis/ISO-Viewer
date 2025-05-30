@@ -1,6 +1,12 @@
 
+poly5_roots(quintic.roots, quintic.coefficients, cubic.interval.x, cubic.interval.y);
 
-float root = newton_bisection_root(quintic.coefficients, cubic.interval);
+float root = quintic.roots[5];
+root = min(root, quintic.roots[0]);
+root = min(root, quintic.roots[1]);
+root = min(root, quintic.roots[2]);
+root = min(root, quintic.roots[3]);
+root = min(root, quintic.roots[4]);
 
 // update trace 
 trace.distance = mix(cell.entry_distance, cell.exit_distance, root);

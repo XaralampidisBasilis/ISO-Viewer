@@ -21,10 +21,10 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 bool is_cubic_solvable(in vec4 c, in vec2 xa_xb)
 {
     // compute cubic derivative coefficients
-    vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
+    vec3 d = vec3(c.y, c.z * 2.0, c.w * 3.0);;
 
     // solve for the critical points of the cubic polynomial
-    vec2 x0_x1 = quadratic_roots_2(d, xa_xb.x);
+    vec2 x0_x1 = quadratic_roots(d);
     x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
@@ -51,10 +51,10 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb)
 bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
 { 
     // compute cubic derivative coefficients
-    vec3 d = c.yzw * vec3(1.0, 2.0, 3.0);
+    vec3 d = vec3(c.y, c.z * 2.0, c.w * 3.0);;
 
     // solve for the critical points of the cubic polynomial
-    vec2 x0_x1 = quadratic_roots_2(d, xa_xb.x);
+    vec2 x0_x1 = quadratic_roots(d);
     x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points

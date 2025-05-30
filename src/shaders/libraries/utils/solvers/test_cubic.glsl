@@ -24,7 +24,7 @@
 bvec3 test_cubic_residue(in vec4 c, in float x0)
 {
     // Get roots from your solver
-    vec3 x0_x1_x2 = cubic_roots(c, x0);
+    vec3 x0_x1_x2 = cubic_roots(c);
 
     // Evaluate the original polynomial at each root
     vec3 y0_y1_y2;
@@ -40,7 +40,7 @@ bvec3 test_cubic_residue(in vec4 c, in float x0)
 bvec3 test_cubic_roots(in vec4 c, in float x0, in vec3 r0_r1_r2)
 {
     // Get roots from your solver
-    vec3 x0_x1_x2 = cubic_roots(c, x0);
+    vec3 x0_x1_x2 = cubic_roots(c);
 
     // Sort roots in ascending form
     sort(x0_x1_x2);

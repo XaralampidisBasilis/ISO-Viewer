@@ -21,7 +21,7 @@ bool is_quartic_solvable(in float c[5], in vec2 xa_xb)
     );
 
     // solve for the critical points of the quartic polynomial
-    vec3 x0_x1_x2 = cubic_roots(d, xa_xb.x);
+    vec3 x0_x1_x2 = cubic_roots(d);
     x0_x1_x2 = clamp(x0_x1_x2, xa_xb.x, xa_xb.y);
 
     // compute the quartic extrema values at the critical points
@@ -58,7 +58,7 @@ bool is_quartic_solvable(in float c[5], in vec2 xa_xb, in vec2 ya_yb)
     );
 
     // solve for the critical points of the quartic polynomial
-    vec3 x0_x1_x2 = cubic_roots(d, xa_xb.x);
+    vec3 x0_x1_x2 = cubic_roots(d);
     x0_x1_x2 = clamp(x0_x1_x2, xa_xb.x, xa_xb.y);
 
     // compute the quartic extrema values at the critical points

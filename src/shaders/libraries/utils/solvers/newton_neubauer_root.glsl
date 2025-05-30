@@ -3,7 +3,7 @@
 #define NEWTON_NEUBAUER_ROOT
 
 #ifndef NEWTON_NEUBAUER_ITERATIONS
-#define NEWTON_NEUBAUER_ITERATIONS 20
+#define NEWTON_NEUBAUER_ITERATIONS 3
 #endif
 #ifndef MICRO_TOLERANCE
 #define MICRO_TOLERANCE 1e-6
@@ -14,119 +14,132 @@
 
 float newton_neubauer_root(in vec4 c, in vec2 x0_x1)
 {
-    vec2 y0_y1, d0_d1;
-    eval_poly(c, x0_x1, y0_y1, d0_d1);
+    vec2 y0_y1;
+    eval_poly(c, x0_x1, y0_y1);
 
-    float x, y, z, d, dx, dy;
+    // initialize neubauer
+    float dx = x0_x1.y - x0_x1.x;
+    float dy = y0_y1.y - y0_y1.x;
+    float dydx, y, x = x0_x1.x - (y0_y1.x * dx) / dy;
+
     #pragma unroll
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
-        // newtons
-        x = x0_x1.x - y0_y1.x / d0_d1.y;
-
-        // neubauer
-        dx = x0_x1.y - x0_x1.x;
-        dy = d0_d1.y - d0_d1.x;
-        z = x0_x1.x - (y0_y1.x * dx) / dy;
-
-        // chose newton if inside, bisection otherwise
-        x = (x0_x1.x < x && x < x0_x1.y) ? x : z;
-
         // compute polynomial
-        eval_poly(c, x, y, d);
+        eval_poly(c, x, y, dydx);
 
-        // compute sign change
-        bool b = (y < 0.0) == (y0_y1.y < 0.0);
+        // update bracket based on value signs
+        if ((y < 0.0) != (y0_y1.y < 0.0)) 
+        {
+            x0_x1.x = x;
+            y0_y1.x = y;
+        } 
+        else 
+        {
+            x0_x1.y = x;
+            y0_y1.y = y;
+        }
 
-        // update bracket
-        x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);
-        y0_y1 = b ? vec2(y0_y1.x, y) : vec2(y, y0_y1.y);
-        d0_d1 = b ? vec2(d0_d1.x, d) : vec2(d, d0_d1.y);
+        // newtons
+        x -= y / dydx;
+
+        // neubauer fallback
+        if (x < x0_x1.x || x0_x1.y > x)
+        { 
+            dx = x0_x1.y - x0_x1.x;
+            dy = y0_y1.y - y0_y1.x + MICRO_TOLERANCE;
+            x = x0_x1.x - (y0_y1.x * dx) / dy;
+        }
     }
-
-    // final neubauer
-    dx = x0_x1.y - x0_x1.x;
-    dy = y0_y1.y - y0_y1.x;
     
-    return x0_x1.x - (y0_y1.x * dx) / dy;
+    return x;
 }
 
 float newton_neubauer_root(in float c[5], in vec2 x0_x1)
 {
-    vec2 y0_y1, d0_d1;
-    eval_poly(c, x0_x1, y0_y1, d0_d1);
+    vec2 y0_y1;
+    eval_poly(c, x0_x1, y0_y1);
 
-    float x, y, z, d, dx, dy;
+    // neubauer
+    float dx = x0_x1.y - x0_x1.x;
+    float dy = y0_y1.y - y0_y1.x;
+    float dydx, y, x = x0_x1.x - (y0_y1.x * dx) / dy;
+
     #pragma unroll
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
-        // newtons
-        x = x0_x1.x - y0_y1.x / d0_d1.y;
-
-        // neubauer
-        dx = x0_x1.y - x0_x1.x;
-        dy = d0_d1.y - d0_d1.x;
-        z = x0_x1.x - (y0_y1.x * dx) / dy;
-
-        // chose newton if inside, bisection otherwise
-        x = (x0_x1.x < x && x < x0_x1.y) ? x : z;
-
         // compute polynomial
-        eval_poly(c, x, y, d);
+        eval_poly(c, x, y, dydx);
 
-        // compute sign change
-        bool b = (y < 0.0) == (y0_y1.y < 0.0);
+        // update bracket based on value signs
+        if ((y < 0.0) != (y0_y1.y < 0.0)) 
+        {
+            x0_x1.x = x;
+            y0_y1.x = y;
+        } 
+        else 
+        {
+            x0_x1.y = x;
+            y0_y1.y = y;
+        }
 
-        // update bracket
-        x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);
-        y0_y1 = b ? vec2(y0_y1.x, y) : vec2(y, y0_y1.y);
-        d0_d1 = b ? vec2(d0_d1.x, d) : vec2(d, d0_d1.y);
+        // newtons
+        x -= y / dydx;
+
+        // neubauer fallback
+        if (x < x0_x1.x || x0_x1.y > x)
+        { 
+            dx = x0_x1.y - x0_x1.x;
+            dy = y0_y1.y - y0_y1.x + MICRO_TOLERANCE;
+            x = x0_x1.x - (y0_y1.x * dx) / dy;
+        }
     }
-
-    // final neubauer
-    dx = x0_x1.y - x0_x1.x;
-    dy = y0_y1.y - y0_y1.x;
     
-    return x0_x1.x - (y0_y1.x * dx) / dy;
+    return x;
 }
 
 float newton_neubauer_root(in float c[6], in vec2 x0_x1)
 {
-    vec2 y0_y1, d0_d1;
-    eval_poly(c, x0_x1, y0_y1, d0_d1);
+    vec2 y0_y1;
+    eval_poly(c, x0_x1, y0_y1);
 
-    float x, y, z, d, dx, dy;
+    // neubauer
+    float dx = x0_x1.y - x0_x1.x;
+    float dy = y0_y1.y - y0_y1.x;
+    float dydx, y, x = x0_x1.x - (y0_y1.x * dx) / dy;
+
     #pragma unroll
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
-        // newtons
-        x = x0_x1.x - y0_y1.x / d0_d1.y;
-
-        // neubauer
-        dx = x0_x1.y - x0_x1.x;
-        dy = d0_d1.y - d0_d1.x;
-        z = x0_x1.x - (y0_y1.x * dx) / dy;
-
-        // chose newton if inside, bisection otherwise
-        x = (x0_x1.x < x && x < x0_x1.y) ? x : z;
-
         // compute polynomial
-        eval_poly(c, x, y, d);
+        eval_poly(c, x, y, dydx);
 
-        // compute sign change
-        bool b = (y < 0.0) == (y0_y1.y < 0.0);
+        // update bracket based on value signs
+        if ((y < 0.0) != (y0_y1.y < 0.0)) 
+        {
+            x0_x1.x = x;
+            y0_y1.x = y;
+        } 
+        else 
+        {
+            x0_x1.y = x;
+            y0_y1.y = y;
+        }
 
-        // update bracket
-        x0_x1 = b ? vec2(x0_x1.x, x) : vec2(x, x0_x1.y);
-        y0_y1 = b ? vec2(y0_y1.x, y) : vec2(y, y0_y1.y);
-        d0_d1 = b ? vec2(d0_d1.x, d) : vec2(d, d0_d1.y);
+        // newtons
+        x -= y / dydx;
+
+        // neubauer fallback
+        if (x < x0_x1.x || x0_x1.y > x)
+        { 
+            dx = x0_x1.y - x0_x1.x;
+            dy = y0_y1.y - y0_y1.x + MICRO_TOLERANCE;
+            x = x0_x1.x - (y0_y1.x * dx) / dy;
+        }
     }
-
-    // final neubauer
-    dx = x0_x1.y - x0_x1.x;
-    dy = y0_y1.y - y0_y1.x;
     
-    return x0_x1.x - (y0_y1.x * dx) / dy;
+    return x;
 }
+
 
 #endif
