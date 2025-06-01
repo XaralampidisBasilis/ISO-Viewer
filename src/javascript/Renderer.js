@@ -21,15 +21,11 @@ export default class Renderer
             canvas: this.canvas,
             context: this.context,
             antialias: false,
-            depth: true,
-            alpha: true,
-            powerPreference: 'high-performance',
-            preserveDrawingBuffer: false,  // Save memory by not preserving the frame buffer
+            depth: false,
         })       
         this.instance.setClearColor('#211d20', 1)
         this.instance.setSize(this.sizes.width, this.sizes.height)
         this.instance.setPixelRatio(this.sizes.pixelRatio)
-        this.instance.xr.enabled = true;
         this.instance.shadowMap.enabled = false
     }
 
@@ -49,7 +45,7 @@ export default class Renderer
         if (this.instance) 
         {
             this.instance.dispose()
-            this.instance = null // Allow garbage collection
+            this.instance = null
         }
 
         this.experience = null

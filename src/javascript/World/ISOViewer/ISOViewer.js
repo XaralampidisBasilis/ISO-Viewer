@@ -42,6 +42,7 @@ export default class ISOViewer extends EventEmitter
 
             this.gui = new ISOGui()
             this.trigger('ready')
+            console.log('ISOViewer', this)
         })
     }
   
@@ -111,7 +112,6 @@ export default class ISOViewer extends EventEmitter
         this.mesh.position.copy(size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
     }
-
 
     async onThresholdChange(threshold)
     {
