@@ -56,7 +56,8 @@ quintic.coefficients = float[6](
 );
 
 // Compute analytic intersection.
-cell.intersected = is_quintic_solvable_2(quintic.coefficients, quintic.interval, y0_y5);
+// cell.intersected = is_quintic_solvable_2(quintic.coefficients, quintic.interval, y0_y5);
+cell.intersected = false;
 
 // Compute sign changes for degenerate cases
 cell.intersected = cell.intersected || 
