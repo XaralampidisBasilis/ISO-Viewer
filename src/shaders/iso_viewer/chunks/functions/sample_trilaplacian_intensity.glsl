@@ -1,6 +1,5 @@
 /* Source
-Beyond Trilinear Interpolation: Higher Quality for Free
-(https://dl.acm.org/doi/10.1145/3306346.3323032)
+Beyond Trilinear Interpolation: Higher Quality for Free (https://dl.acm.org/doi/10.1145/3306346.3323032)
 */
 
 vec4 sample_trilaplacian_intensity(in vec3 coords)
@@ -12,7 +11,7 @@ vec4 sample_trilaplacian_intensity(in vec3 coords)
     // sample trilinearly interpolated laplace vector and intensity values
     vec3 uvw = coords * u_intensity_map.inv_dimensions;
     vec4 trilaplacian_intensity = texture(u_textures.trilaplacian_intensity_map, uvw);
-
+    
     // compute the correction vector
     vec3 x = coords - 0.5;
     vec3 frac = x - floor(x);

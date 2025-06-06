@@ -27,4 +27,7 @@ NR00 = NR(1:3, 1:3);
 NR01 = NR(1:3, 4:6);
 NR10 = NR(4:6, 1:3);
 NR11 = NR(4:6, 4:6);
- [NR00, NR01; NR10, NR11]
+disp([NR00, NR01; NR10, NR11])
+
+% Step 5: show equality
+disp(IV - NR ./ cd)

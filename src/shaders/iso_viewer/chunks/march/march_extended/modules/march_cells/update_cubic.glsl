@@ -16,8 +16,8 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
 cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-// check polynomial intersection
-cell.intersected = poly3_has_root(cubic.coeffs, cubic.interval.x, cubic.interval.y);
-
 // check if there are sign crossings between samples for degenerate cases
-cell.intersected = cell.intersected || any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+cell.intersected = any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+
+// check polynomial intersection
+cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);

@@ -26,12 +26,12 @@ void set_quintic()
     quintic.coefficients = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.weights = float[6](
-        0.0/5.0, 
-        1.0/5.0, 
-        2.0/5.0, 
-        3.0/5.0, 
-        4.0/5.0, 
-        5.0/5.0
+        0.0 / 5.0, 
+        1.0 / 5.0, 
+        2.0 / 5.0, 
+        3.0 / 5.0, 
+        4.0 / 5.0, 
+        5.0 / 5.0
     );
     quintic.inv_vander = mat3[4]
     (

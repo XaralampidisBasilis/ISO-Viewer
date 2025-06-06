@@ -8,12 +8,33 @@ export async function computeLaplacianMap(intensityMap, axis)
         const shape = [1, 1, 1, 1, 1]
         shape[axis] = 3
 
+        // Compute paddings
+        const padding = intensityMap.shape.map(() => [0, 0])
+        padding[axis] = [1, 1]
+
         // Laplacian filter
-        const filter = tf.tensor([0.5, -1, 0.5], shape, 'float32')
+        const filter = tf.tensor([.5, -1, .5], shape, 'float32')
+
+        // Expand boarders
+        const padded = intensityMap.mirrorPad(padding, 'symmetric')
 
         // Concatenate laplacian map
-        return tf.conv3d(intensityMap, filter, 1, 'same')
+        return tf.conv3d(padded, filter, 1, 'valid')
     })
+}
+
+export async function computeTrilaplacianIntensityMap(intensityMap)
+{
+    const laplacians = [
+        await computeLaplacianMap(intensityMap, 2),
+        await computeLaplacianMap(intensityMap, 1),
+        await computeLaplacianMap(intensityMap, 0),
+    ]
+
+    const tensor = tf.concat([...laplacians, intensityMap], 3)
+    tf.dispose(laplacians)
+
+    return tensor
 }
 
 export async function computeBlockExtremaMap(intensityMap, blockSize) 
@@ -21,6 +42,7 @@ export async function computeBlockExtremaMap(intensityMap, blockSize)
     return tf.tidy(() =>
     {
         // Prepare strides and size for pooling operations
+        // Filter size is bigger to have overlapping voxels between cells
         const shape = intensityMap.shape
         const strides = [blockSize, blockSize, blockSize]
         const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
@@ -32,9 +54,37 @@ export async function computeBlockExtremaMap(intensityMap, blockSize)
         // Calculate necessary padding for valid subdivisions and boundary handling
         const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
         padding[3] = [0, 0]
-        const padded = tf.pad(intensityMap, padding) 
 
         // Compute block extrema
+        const padded = tf.pad(intensityMap, padding) 
+        const blockMax = tf.maxPool3d(padded, filterSize, strides, 'valid')
+        const blockMin = minPool3d(padded, filterSize, strides, 'valid') 
+
+        // Return concatenated result
+        return tf.concat([blockMin, blockMax], -1)
+    })
+}
+
+export async function computeBlockExtremaMap(trilaplacianIntensityMap, blockSize) 
+{
+    return tf.tidy(() =>
+    {
+        // Prepare strides and size for pooling operations
+        // Filter size is bigger to have overlapping voxels between cells
+        const shape = trilaplacianIntensityMap.shape
+        const strides = [blockSize, blockSize, blockSize]
+        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+
+        // Compute shape in order to be appropriate for valid pool operations
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
+        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+
+        // Calculate necessary padding for valid subdivisions and boundary handling
+        const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
+        padding[3] = [0, 0]
+
+        // Compute block extrema
+        const padded = tf.pad(trilaplacianIntensityMap, padding) 
         const blockMax = tf.maxPool3d(padded, filterSize, strides, 'valid')
         const blockMin = minPool3d(padded, filterSize, strides, 'valid') 
 
@@ -208,7 +258,6 @@ export async function computeBoundingBox3(occupancyMap)
         return { minCoords: iMin, maxCoords: iMax }
     })
 }
-
 
 /**
  * Computes a Chebyshev distance map from a 3D binary occupancy map.
@@ -483,7 +532,6 @@ export async function computeExtendedAnisotropicDistanceMap(occupancyMap)
     return distanceMap
 }
 
-
 /**
  * Computes a distance map for a specific subregion of a 4D occupancy map tensor,
  * then pads the result back to match the original tensor's shape.
@@ -512,25 +560,25 @@ export async function computeDistanceMapFromSlice(occupancyMap, maxDistance, beg
     return distanceMap
 }
 
-export async function downscaleLinear(intensityMap, scale)
+export async function downscaleLinear(tensor, scale)
 {
-    const newShape = intensityMap.shape.map((size) => Math.ceil(size / scale))
-
-    const resized0 = await resizeLinear(intensityMap, 0, newShape[0])
-    await tf.nextFrame()
-
+    const newShape = tensor.shape.map((size) => Math.ceil(size / scale))
+    
+    const resized0 = await resizeLinear(tensor,   0, newShape[0])
     const resized1 = await resizeLinear(resized0, 1, newShape[1])
-    tf.dispose(resized0)
-    await tf.nextFrame()
-
     const resized2 = await resizeLinear(resized1, 2, newShape[2])
-    tf.dispose(resized1)
-    await tf.nextFrame()
-
     const resized3 = await resizeLinear(resized2, 3, newShape[3])
-    tf.dispose(resized2)
-    await tf.nextFrame()
+    return resized3
+}
 
+export async function downscaleNearest(tensor, scale)
+{
+    const newShape = tensor.shape.map((size) => Math.ceil(size / scale))
+
+    const resized0 = await resizeNearest(tensor,   0, newShape[0])
+    const resized1 = await resizeNearest(resized0, 1, newShape[1])
+    const resized2 = await resizeNearest(resized1, 2, newShape[2])
+    const resized3 = await resizeNearest(resized2, 3, newShape[3])
     return resized3
 }
 
@@ -562,6 +610,29 @@ export async function resizeLinear(tensor, axis, newSize)
         // Perform linear interpolation
         const interpolated = mix(expandedFloor, expandedCeil, expandedWeights)
         return interpolated
+    })
+}
+
+export async function resizeNearest(tensor, axis, newSize) 
+{
+    return tf.tidy(() => 
+    {
+        // Compute new indices in normalized space
+        const delta = 1 / newSize
+        const indices = tf.linspace(0, newSize - 1, newSize)
+        const percents = indices.add(0.5).mul(delta) // normalized indices
+
+        // Map to the original tensor index space
+        const size = tensor.shape[axis]
+        const samples = percents.mul(size).sub(0.5)
+
+        // Use nearest neighbor rounding (instead of linear interpolation)
+        const nearestIndices = tf.round(samples).toInt() // Round to nearest index
+        const nearestClipped = tf.clipByValue(nearestIndices, 0, size - 1) // Ensure valid indices
+
+        // Gather values from the original tensor
+        const resized = tf.gather(tensor, nearestClipped, axis)
+        return resized
     })
 }
 

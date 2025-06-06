@@ -14,14 +14,14 @@ float specular = pow(clamp(frag.halfway_angle, 0.0, 1.0), u_shading.shininess);
 frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle));
 
 // Gradient
-frag.gradient_factor = softstep_hill(0.0, 0.3, length(surface.gradient), 0.9);
+frag.gradient_factor = softstep_hill(0.0, 0.3, surface.steepness, 0.9);
 
 // Material
 frag.material_color = sample_color(trace.intensity);
 
 // Ambient 
 frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);
-// frag.ambient_color *= smoothstep(-2.0, 0.0, surface.max_curvature); 
+frag.ambient_color *= smoothstep(-2.0, 0.0, surface.mean_curvature); 
 
 // Diffuse
 frag.diffuse_color = frag.material_color * (u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian);
@@ -31,7 +31,7 @@ frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shad
 
 // Directional
 frag.direct_color = mix(frag.diffuse_color, frag.specular_color, specular);
-// frag.direct_color *= mmin(frag.edge_factor, frag.gradient_factor);
+frag.direct_color *= mmin(frag.edge_factor, frag.gradient_factor);
 frag.direct_color *= frag.edge_factor;
 
 // Compose colors

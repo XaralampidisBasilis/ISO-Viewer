@@ -44,6 +44,7 @@ export default class ISOComputes extends EventEmitter
         console.time('setComputes') 
 
         await this.computeIntensityMap()
+        await this.downscaleIntensityMap()
         await this.computeTrilaplacianIntensityMap()
         await this.computeBlockExtremaMap()
         tf.dispose(this.intensityMap.tensor)
@@ -57,6 +58,7 @@ export default class ISOComputes extends EventEmitter
 
         // tf.engine().reset()
         // await this.setTensorflow()
+
         console.timeEnd('setComputes') 
     }
 
@@ -106,8 +108,8 @@ export default class ISOComputes extends EventEmitter
         this.intensityMap.invSize       = new THREE.Vector3().fromArray(intensityMap.size.map(x => 1/x))
         this.intensityMap.spacingLength = new THREE.Vector3().fromArray(intensityMap.spacing).length()
         this.intensityMap.sizeLength    = new THREE.Vector3().fromArray(intensityMap.size).length()
-        this.intensityMap.numVoxels     = intensityMap.dimensions.reduce((voxels, dimension) => voxels * dimension, 1)
-        this.intensityMap.maxVoxels     = intensityMap.dimensions.reduce((voxels, dimension) => voxels + dimension, -2)
+        this.intensityMap.numVoxels     = intensityMap.dimensions.reduce((voxels, dims) => voxels * dims, 1)
+        this.intensityMap.maxVoxels     = intensityMap.dimensions.reduce((voxels, dims) => voxels + dims, -2)
         this.intensityMap.shape         = intensityMap.dimensions.toReversed().concat(1)
     
         // compute normalized intensity map tensor
@@ -123,12 +125,44 @@ export default class ISOComputes extends EventEmitter
         this.intensityMap.array = new Uint16Array(this.intensityMap.tensor.size)
         const array = this.intensityMap.tensor.dataSync()
 
+        for (let i = 0; i < this.intensityMap.array.length; ++i) {
+            this.intensityMap.array[i] = toHalfFloat(array[i])
+        }
+
+        console.timeEnd('computeIntensityMap') 
+    }
+
+    async downscaleIntensityMap()
+    {
+        console.time('downscaleIntensityMap') 
+
+        const intensityMap = await TF.downscaleLinear(this.intensityMap.tensor, 2)  
+        tf.dispose(this.intensityMap.tensor)
+
+        // Compute new intensity map
+        this.intensityMap.tensor = intensityMap
+        this.intensityMap.dimensions = new THREE.Vector3().fromArray(this.intensityMap.tensor.shape.slice(0, 3).toReversed())
+        this.intensityMap.size = new THREE.Vector3().copy(this.intensityMap.size)
+        this.intensityMap.spacing = new THREE.Vector3().copy(this.intensityMap.size).divide(this.intensityMap.dimensions)
+        this.intensityMap.invDimensions = new THREE.Vector3().fromArray(this.intensityMap.dimensions.toArray().map(x => 1/x))
+        this.intensityMap.invSpacing = new THREE.Vector3().fromArray(this.intensityMap.spacing.toArray().map(x => 1/x))
+        this.intensityMap.invSize = new THREE.Vector3().fromArray(this.intensityMap.size.toArray().map(x => 1/x))
+        this.intensityMap.spacingLength = this.intensityMap.spacing.length()
+        this.intensityMap.sizeLength = this.intensityMap.size.length()
+        this.intensityMap.numVoxels = this.intensityMap.dimensions.toArray().reduce((voxels, dims) => voxels * dims, 1)
+        this.intensityMap.maxVoxels = this.intensityMap.dimensions.toArray().reduce((voxels, dims) => voxels + dims, -2)
+        this.intensityMap.shape = this.intensityMap.tensor.shape
+
+        // compute intensity map data as uint16 encoding for HalfFloatType encoding
+        this.intensityMap.array = null
+        this.intensityMap.array = new Uint16Array(this.intensityMap.tensor.size)
+        const array = this.intensityMap.tensor.dataSync()
         for (let i = 0; i < this.intensityMap.array.length; ++i) 
         {
             this.intensityMap.array[i] = toHalfFloat(array[i])
         }
 
-        console.timeEnd('computeIntensityMap') 
+        console.timeEnd('downscaleIntensityMap') 
     }
 
     async computeTrilaplacianIntensityMap()
@@ -136,27 +170,15 @@ export default class ISOComputes extends EventEmitter
         console.time('computeTrilaplacianIntensityMap') 
 
         this.trilaplacianIntensityMap = {}
+
+        this.trilaplacianIntensityMap.tensor = await TF.computeTrilaplacianIntensityMap(this.intensityMap.tensor)
         this.trilaplacianIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
 
-        // copy intensity data to alpha channel
-        for (let i = 0; i < this.intensityMap.array.length; ++i)
-        {
-            let i4 = i * 4
-            this.trilaplacianIntensityMap.array[i4 + 3] = this.intensityMap.array[i]
-        }
+        // convert data to half float type
+        const array = this.trilaplacianIntensityMap.tensor.dataSync()
 
-        // compute laplacians in rgb channels
-        for (let c = 0; c < 3; ++c)
-        {
-            const laplacian = await TF.computeLaplacianMap(this.intensityMap.tensor, 2 - c)
-            const array = laplacian.dataSync()
-            tf.dispose(laplacian)
-
-            for (let i = 0; i < array.length; ++i) 
-            {
-                let i4 = i * 4
-                this.trilaplacianIntensityMap.array[i4 + c] = toHalfFloat(array[i])
-            }
+        for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) {
+            this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
         }
 
         // copy parameters from intensity map
@@ -180,12 +202,14 @@ export default class ISOComputes extends EventEmitter
 
         this.blockExtremaMap = {}
         this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
-        this.blockExtremaMap.array = new Uint16Array(this.blockExtremaMap.tensor.size)
-        const array = this.blockExtremaMap.tensor.dataSync()
+        this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
 
-        for (let i = 0; i < this.blockExtremaMap.array.length; ++i) {
-            this.blockExtremaMap.array[i] = toHalfFloat(array[i])
-        }
+        // this.blockExtremaMap.array = new Uint16Array(this.blockExtremaMap.tensor.size)
+        // const array = this.blockExtremaMap.tensor.dataSync()
+
+        // for (let i = 0; i < this.blockExtremaMap.array.length; ++i) {
+        //     this.blockExtremaMap.array[i] = toHalfFloat(array[i])
+        // }
 
         this.blockExtremaMap.stride        = this.stride
         this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride

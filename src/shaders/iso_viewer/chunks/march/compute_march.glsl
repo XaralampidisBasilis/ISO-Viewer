@@ -1,4 +1,10 @@
 
+// #if SKIPPING_ENABLED == 1
+// #include "./march_extended/compute_march"
+// #else
+// #include "./march_extended_2/compute_march"
+// #endif
+
 #if SKIPPING_ENABLED == 1
 #include "./march_extended/compute_march"
 #else
