@@ -37,56 +37,27 @@ export async function computeTrilaplacianIntensityMap(intensityMap)
     return tensor
 }
 
-export async function computeBlockExtremaMap(intensityMap, blockSize) 
+export async function computeBlockExtremaMap(intensityMap, stride) 
 {
     return tf.tidy(() =>
     {
         // Prepare strides and size for pooling operations
         // Filter size is bigger to have overlapping voxels between cells
         const shape = intensityMap.shape
-        const strides = [blockSize, blockSize, blockSize]
-        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
+        const filterSize = stride + 1
 
         // Compute shape in order to be appropriate for valid pool operations
-        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
-        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
+        const numBlocks = shape.map((dimension) => Math.ceil((dimension + 1) / stride))
+        const newShape = numBlocks.map((count) => count * stride + 1)
 
         // Calculate necessary padding for valid subdivisions and boundary handling
         const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
         padding[3] = [0, 0]
 
         // Compute block extrema
-        const padded = tf.pad(intensityMap, padding) 
-        const blockMax = tf.maxPool3d(padded, filterSize, strides, 'valid')
-        const blockMin = minPool3d(padded, filterSize, strides, 'valid') 
-
-        // Return concatenated result
-        return tf.concat([blockMin, blockMax], -1)
-    })
-}
-
-export async function computeBlockExtremaMap(trilaplacianIntensityMap, blockSize) 
-{
-    return tf.tidy(() =>
-    {
-        // Prepare strides and size for pooling operations
-        // Filter size is bigger to have overlapping voxels between cells
-        const shape = trilaplacianIntensityMap.shape
-        const strides = [blockSize, blockSize, blockSize]
-        const filterSize = [blockSize + 1, blockSize + 1, blockSize + 1]
-
-        // Compute shape in order to be appropriate for valid pool operations
-        const numBlocks = shape.map((dimension) => Math.ceil((dimension - 1) / blockSize))
-        const newShape = numBlocks.map((blockCount) => blockCount * blockSize + 1)
-
-        // Calculate necessary padding for valid subdivisions and boundary handling
-        const padding = shape.map((dimension, i) => [1, newShape[i] - dimension - 1])
-        padding[3] = [0, 0]
-
-        // Compute block extrema
-        const padded = tf.pad(trilaplacianIntensityMap, padding) 
-        const blockMax = tf.maxPool3d(padded, filterSize, strides, 'valid')
-        const blockMin = minPool3d(padded, filterSize, strides, 'valid') 
+        const padded = tf.mirrorPad(intensityMap, padding, 'symmetric') 
+        const blockMax = tf.maxPool3d(padded, filterSize, stride, 'valid')
+        const blockMin = minPool3d(padded, filterSize, stride, 'valid') 
 
         // Return concatenated result
         return tf.concat([blockMin, blockMax], -1)

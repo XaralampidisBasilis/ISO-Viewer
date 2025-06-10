@@ -4,7 +4,8 @@ import * as TF from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 import { toHalfFloat } from 'three/src/extras/DataUtils.js'
-
+import { computeBersteinExtrema } from './BersteinExtremaProgram'
+import { computeBlockBersteinExtrema } from './BlockBersteinExtremaProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -35,6 +36,7 @@ export default class ISOComputes extends EventEmitter
 
         await tf.ready()
         await tf.setBackend('webgl')
+        // console.log('tf', tf)
 
         console.timeEnd('setTensorflow') 
     }
@@ -170,7 +172,6 @@ export default class ISOComputes extends EventEmitter
         console.time('computeTrilaplacianIntensityMap') 
 
         this.trilaplacianIntensityMap = {}
-
         this.trilaplacianIntensityMap.tensor = await TF.computeTrilaplacianIntensityMap(this.intensityMap.tensor)
         this.trilaplacianIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
 
@@ -201,7 +202,8 @@ export default class ISOComputes extends EventEmitter
         console.time('computeBlockExtremaMap') 
 
         this.blockExtremaMap = {}
-        this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
+        // this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
+        this.blockExtremaMap.tensor = await computeBlockBersteinExtrema(this.trilaplacianIntensityMap.tensor, this.stride)
         this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
 
         // this.blockExtremaMap.array = new Uint16Array(this.blockExtremaMap.tensor.size)
