@@ -13,7 +13,7 @@ export async function computeLaplacianMap(intensityMap, axis)
         padding[axis] = [1, 1]
 
         // Laplacian filter
-        const filter = tf.tensor([.5, -1, .5], shape, 'float32')
+        const filter = tf.tensor([1, -2, 1], shape, 'float32')
 
         // Expand boarders
         const padded = intensityMap.mirrorPad(padding, 'symmetric')
@@ -538,8 +538,7 @@ export async function downscaleLinear(tensor, scale)
     const resized0 = await resizeLinear(tensor,   0, newShape[0])
     const resized1 = await resizeLinear(resized0, 1, newShape[1])
     const resized2 = await resizeLinear(resized1, 2, newShape[2])
-    const resized3 = await resizeLinear(resized2, 3, newShape[3])
-    return resized3
+    return resized2
 }
 
 export async function downscaleNearest(tensor, scale)
@@ -549,8 +548,7 @@ export async function downscaleNearest(tensor, scale)
     const resized0 = await resizeNearest(tensor,   0, newShape[0])
     const resized1 = await resizeNearest(resized0, 1, newShape[1])
     const resized2 = await resizeNearest(resized1, 2, newShape[2])
-    const resized3 = await resizeNearest(resized2, 3, newShape[3])
-    return resized3
+    return resized2
 }
 
 export async function resizeLinear(tensor, axis, newSize) 

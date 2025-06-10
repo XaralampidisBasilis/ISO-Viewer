@@ -18,7 +18,7 @@ class BersteinExtremaProgram implements GPGPUProgram
         this.packedOutput = false
         this.userCode = `
 
-            const mat4x2 W = mat4x2(
+           const mat4x2 W = mat4x2(
                 1.0, 0.0,         
                 2.0/3.0, 1.0/3.0, 
                 1.0/3.0, 2.0/3.0, 
@@ -107,6 +107,6 @@ export async function computeBersteinExtrema(inputTensor: tf.Tensor)
 {
     const program = new BersteinExtremaProgram(inputTensor.shape)
     const backend = tf.backend() as MathBackendWebGL
-    const result = await backend.compileAndRun(program, [inputTensor])
+    const result = backend.compileAndRun(program, [inputTensor])
     return tf.engine().makeTensorFromTensorInfo(result)
 }

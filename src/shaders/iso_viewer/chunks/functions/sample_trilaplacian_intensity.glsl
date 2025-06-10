@@ -15,7 +15,7 @@ vec4 sample_trilaplacian_intensity(in vec3 coords)
     // compute the correction vector
     vec3 x = coords - 0.5;
     vec3 frac = x - floor(x);
-    vec4 correction = vec4(frac * (frac - 1.0), 1.0);
+    vec4 correction = vec4(frac * (frac - 1.0) / 2.0, 1.0);
     float intensity = dot(trilaplacian_intensity, correction);
 
     // return the improved intensity value based on laplacian information

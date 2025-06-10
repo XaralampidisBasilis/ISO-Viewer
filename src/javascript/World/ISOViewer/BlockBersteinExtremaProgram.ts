@@ -16,6 +16,7 @@ class BlockBersteinExtremaProgram implements GPGPUProgram
         this.outputShape[3] = 2        
         this.userCode = `
 
+            // Elevation matrix from berstein order 1 to order 3 in 1d
             const mat4x2 W = mat4x2(
                 1.0, 0.0,         
                 2.0/3.0, 1.0/3.0, 
@@ -23,12 +24,18 @@ class BlockBersteinExtremaProgram implements GPGPUProgram
                 0.0, 1.0          
             );
 
+            // Multiplication matrix for mixed order berstein
             const mat4x2 M = mat4x2(
                 0.0, 0.0,     
                 -1.0/6.0, 0.0,
                 0.0, -1.0/6.0,
                 0.0, 0.0      
             );
+
+            // given voxel indices compute the berstein extrema of the 
+            // tricubic interpolation function inside the cell [x, x+1][y, y+1][z, z+1]
+            // The specific tricubic interpolation function is defined in the paper 
+            // "Beyond Trilinear Interpolation: Higher Quality for Free"
 
             vec2 bersteinExtrema(int x, int y, int z)
             {
@@ -87,43 +94,56 @@ class BlockBersteinExtremaProgram implements GPGPUProgram
                 return vec2(minVal, maxVal);
             }
 
+            // given the block indices compute the berstein extrema of every cell
+            // inside the block and take their total min and max
+
+            vec2 blockExtrema(int X, int Y, int Z)
+            {
+                // compute the min voxel indices from block indices
+                int xm = clamp(X * ${inputStride} - 1, 0, ${inputShape[0] - 1});
+                int ym = clamp(Y * ${inputStride} - 1, 0, ${inputShape[1] - 1});
+                int zm = clamp(Z * ${inputStride} - 1, 0, ${inputShape[2] - 1});
+
+                // compute the excluded max voxel indices
+                int xM = clamp(xm + ${inputStride}, 0, ${inputShape[0] - 1});
+                int yM = clamp(ym + ${inputStride}, 0, ${inputShape[1] - 1});
+                int zM = clamp(zm + ${inputStride}, 0, ${inputShape[2] - 1});
+
+                float minTotal = 1.0;
+                float maxTotal = 0.0;
+
+                for (int z = zm; z < zM; ++z) 
+                for (int y = ym; y < yM; ++y)
+                for (int x = xm; x < xM; ++x)
+                {
+                    vec2 minMaxVal = bersteinExtrema(x, y, z);
+            
+                    minTotal = min(minTotal, minMaxVal.x);
+                    maxTotal = max(maxTotal, minMaxVal.y);
+                }
+
+                minTotal = clamp(minTotal, 0.0, 1.0);
+                maxTotal = clamp(maxTotal, 0.0, 1.0);
+
+                return vec2(minTotal, maxTotal);
+            }
+
             void main() 
             {
                 ivec4 coords = getOutputCoords();
-                int x = coords[0] * ${inputStride} - 1;
-                int y = coords[1] * ${inputStride} - 1;
-                int z = coords[2] * ${inputStride} - 1;
 
-                float minVal = 1.0;
-                float maxVal = 0.0;
+                // get block indices
+                int X = coords[0];
+                int Y = coords[1];
+                int Z = coords[2];
 
-                for (int k = 0; k < ${inputStride}; ++k) 
-                {
-                    int zk = z + k;
-
-                    for (int j = 0; j < ${inputStride}; ++j)
-                    {
-                        int yj = y + j;
-
-                        for (int i = 0; i < ${inputStride}; ++i)
-                        {
-                            int xi = x + i;
-
-                            vec2 minMaxVal = bersteinExtrema(xi, yj, zk);
-                    
-                            minVal = min(minVal, minMaxVal.x);
-                            maxVal = max(maxVal, minMaxVal.y);
-                        }
-                    }
-                }
-
-                minVal = clamp(minVal, 0.0, 1.0);
-                maxVal = clamp(maxVal, 0.0, 1.0);
+                // compute block berstein extrema
+                vec2 minMaxTotal = blockExtrema(X, Y, Z);
 
                 if (coords[3] == 0) 
-                    setOutput(minVal);
+                    setOutput(minMaxTotal.x);
                 else 
-                    setOutput(maxVal);
+                    setOutput(minMaxTotal.y);
             }
         `
     }
@@ -133,6 +153,6 @@ export async function computeBlockBersteinExtrema(inputTensor: tf.Tensor, inputS
 {
     const program = new BlockBersteinExtremaProgram(inputTensor.shape, inputStride)
     const backend = tf.backend() as MathBackendWebGL
-    const result = await backend.compileAndRun(program, [inputTensor])
+    const result = backend.compileAndRun(program, [inputTensor])
     return tf.engine().makeTensorFromTensorInfo(result)
 }

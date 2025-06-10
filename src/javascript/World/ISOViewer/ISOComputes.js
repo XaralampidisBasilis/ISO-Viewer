@@ -206,13 +206,6 @@ export default class ISOComputes extends EventEmitter
         this.blockExtremaMap.tensor = await computeBlockBersteinExtrema(this.trilaplacianIntensityMap.tensor, this.stride)
         this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
 
-        // this.blockExtremaMap.array = new Uint16Array(this.blockExtremaMap.tensor.size)
-        // const array = this.blockExtremaMap.tensor.dataSync()
-
-        // for (let i = 0; i < this.blockExtremaMap.array.length; ++i) {
-        //     this.blockExtremaMap.array[i] = toHalfFloat(array[i])
-        // }
-
         this.blockExtremaMap.stride        = this.stride
         this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride
         this.blockExtremaMap.shape         = this.blockExtremaMap.tensor.shape
