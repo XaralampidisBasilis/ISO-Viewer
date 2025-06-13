@@ -27,26 +27,23 @@ void sample_trilaplacian_gradient_hessian(in vec3 coords, out vec3 gradient, out
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = coords - 0.5;
-    vec3 i0 = floor(x);
-    vec3 i1 = i0 + 1.0;
-    
-    vec3 a = x - i0;
+    vec3 i = floor(x);
+    vec3 a = x - i;
     vec3 aa = a * (a - 1.0) / 2.0;
     vec3 da = a - 0.5;
-
-    i0 = clamp(i0, vec3(0.0), vec3(u_intensity_map.dimensions - 1));
-    i1 = clamp(i1, vec3(0.0), vec3(u_intensity_map.dimensions - 1));
+    vec3 p0 = (i + 0.5) * u_intensity_map.inv_dimensions;
+    vec3 p1 = (i + 1.5) * u_intensity_map.inv_dimensions;
 
     // Take cube samples
-    vec4 fxx_fyy_fzz_f_x0y0z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i0.y, i0.z), 0);
-    vec4 fxx_fyy_fzz_f_x0y1z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i1.y, i0.z), 0);
-    vec4 fxx_fyy_fzz_f_x0y0z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i0.y, i1.z), 0);
-    vec4 fxx_fyy_fzz_f_x0y1z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i1.y, i1.z), 0);
+    vec4 fxx_fyy_fzz_f_x0y0z0 = texture(u_textures.trilaplacian_intensity_map, vec3(p0.x, p0.y, p0.z));
+    vec4 fxx_fyy_fzz_f_x0y1z0 = texture(u_textures.trilaplacian_intensity_map, vec3(p0.x, p1.y, p0.z));
+    vec4 fxx_fyy_fzz_f_x0y0z1 = texture(u_textures.trilaplacian_intensity_map, vec3(p0.x, p0.y, p1.z));
+    vec4 fxx_fyy_fzz_f_x0y1z1 = texture(u_textures.trilaplacian_intensity_map, vec3(p0.x, p1.y, p1.z));
 
-    vec4 fxx_fyy_fzz_f_x1y0z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i0.y, i0.z), 0);
-    vec4 fxx_fyy_fzz_f_x1y1z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i1.y, i0.z), 0);
-    vec4 fxx_fyy_fzz_f_x1y0z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i0.y, i1.z), 0);
-    vec4 fxx_fyy_fzz_f_x1y1z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i1.y, i1.z), 0);
+    vec4 fxx_fyy_fzz_f_x1y0z0 = texture(u_textures.trilaplacian_intensity_map, vec3(p1.x, p0.y, p0.z));
+    vec4 fxx_fyy_fzz_f_x1y1z0 = texture(u_textures.trilaplacian_intensity_map, vec3(p1.x, p1.y, p0.z));
+    vec4 fxx_fyy_fzz_f_x1y0z1 = texture(u_textures.trilaplacian_intensity_map, vec3(p1.x, p0.y, p1.z));
+    vec4 fxx_fyy_fzz_f_x1y1z1 = texture(u_textures.trilaplacian_intensity_map, vec3(p1.x, p1.y, p1.z));
 
     // Interpolate along x
     vec4 fxx_fyy_fzz_f_xy0z0 = mix(fxx_fyy_fzz_f_x0y0z0, fxx_fyy_fzz_f_x1y0z0, a.x);
