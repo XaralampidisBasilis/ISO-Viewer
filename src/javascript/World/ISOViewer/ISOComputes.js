@@ -4,7 +4,6 @@ import * as TF from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 import { toHalfFloat } from 'three/src/extras/DataUtils.js'
-import { computeBersteinExtrema } from './BersteinExtremaProgram'
 import { computeBlockBersteinExtrema } from './BlockBersteinExtremaProgram'
 export default class ISOComputes extends EventEmitter
 {
@@ -138,7 +137,7 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('downscaleIntensityMap') 
 
-        const intensityMap = await TF.downscaleLinear(this.intensityMap.tensor, 2)  
+        const intensityMap = await TF.downscaleLinear(this.intensityMap.tensor, 2.0)  
         tf.dispose(this.intensityMap.tensor)
 
         // Compute new intensity map

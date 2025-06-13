@@ -15,13 +15,14 @@ frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle)
 
 // Gradient
 frag.gradient_factor = softstep_hill(0.0, 0.3, surface.steepness, 0.9);
+frag.gradient_factor = 1.0;
 
 // Material
 frag.material_color = sample_color(trace.intensity);
 
 // Ambient 
 frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);
-frag.ambient_color *= smoothstep(-2.0, 0.0, surface.mean_curvature); 
+// frag.ambient_color *= smoothstep(-2.0, 0.0, surface.mean_curvature); 
 
 // Diffuse
 frag.diffuse_color = frag.material_color * (u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian);

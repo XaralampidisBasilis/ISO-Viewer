@@ -14,81 +14,109 @@ vec4 sample_trilaplacian_intensity(in vec3 coords)
     
     // compute the correction vector
     vec3 x = coords - 0.5;
-    vec3 frac = x - floor(x);
-    vec4 correction = vec4(frac * (frac - 1.0) / 2.0, 1.0);
+    vec3 a = x - floor(x);
+    vec4 correction = vec4(a * (a - 1.0) / 2.0, 1.0);
     float intensity = dot(trilaplacian_intensity, correction);
 
     // return the improved intensity value based on laplacian information
     return vec4(trilaplacian_intensity.xyz, intensity);
 }
 
+// Analytic reconstruction of the gradient and hessian from the interpolation field 
 void sample_trilaplacian_gradient_hessian(in vec3 coords, out vec3 gradient, out mat3 hessian)
 {
-    // 1D B-spline filter normalized positions for each axis
-    vec3 p0 = coords - 0.5;
-    vec3 p1 = coords + 0.5;
+    // Convert to voxel-space and compute local coordinates
+    vec3 x = coords - 0.5;
+    vec3 i0 = floor(x);
+    vec3 i1 = i0 + 1.0;
+    
+    vec3 a = x - i0;
+    vec3 aa = a * (a - 1.0) / 2.0;
+    vec3 da = a - 0.5;
 
-    // Cube samples
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        sample_trilaplacian_intensity(vec3(p0.x, p0.y, p0.z)).a, // x0y0z0
-        sample_trilaplacian_intensity(vec3(p0.x, p1.y, p0.z)).a, // x0y1z0
-        sample_trilaplacian_intensity(vec3(p0.x, p0.y, p1.z)).a, // x0y0z1
-        sample_trilaplacian_intensity(vec3(p0.x, p1.y, p1.z)).a  // x0y1z1
-    );
+    i0 = clamp(i0, vec3(0.0), vec3(u_intensity_map.dimensions - 1));
+    i1 = clamp(i1, vec3(0.0), vec3(u_intensity_map.dimensions - 1));
 
-    vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        sample_trilaplacian_intensity(vec3(p1.x, p0.y, p0.z)).a, // x1y0z0
-        sample_trilaplacian_intensity(vec3(p1.x, p1.y, p0.z)).a, // x1y1z0
-        sample_trilaplacian_intensity(vec3(p1.x, p0.y, p1.z)).a, // x1y0z1
-        sample_trilaplacian_intensity(vec3(p1.x, p1.y, p1.z)).a  // x1y1z1
-    );
+    // Take cube samples
+    vec4 fxx_fyy_fzz_f_x0y0z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i0.y, i0.z), 0);
+    vec4 fxx_fyy_fzz_f_x0y1z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i1.y, i0.z), 0);
+    vec4 fxx_fyy_fzz_f_x0y0z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i0.y, i1.z), 0);
+    vec4 fxx_fyy_fzz_f_x0y1z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i0.x, i1.y, i1.z), 0);
+
+    vec4 fxx_fyy_fzz_f_x1y0z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i0.y, i0.z), 0);
+    vec4 fxx_fyy_fzz_f_x1y1z0 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i1.y, i0.z), 0);
+    vec4 fxx_fyy_fzz_f_x1y0z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i0.y, i1.z), 0);
+    vec4 fxx_fyy_fzz_f_x1y1z1 = texelFetch(u_textures.trilaplacian_intensity_map, ivec3(i1.x, i1.y, i1.z), 0);
 
     // Interpolate along x
-    vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
-        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
-        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    0.5);
+    vec4 fxx_fyy_fzz_f_xy0z0 = mix(fxx_fyy_fzz_f_x0y0z0, fxx_fyy_fzz_f_x1y0z0, a.x);
+    vec4 fxx_fyy_fzz_f_xy1z0 = mix(fxx_fyy_fzz_f_x0y1z0, fxx_fyy_fzz_f_x1y1z0, a.x);
+    vec4 fxx_fyy_fzz_f_xy0z1 = mix(fxx_fyy_fzz_f_x0y0z1, fxx_fyy_fzz_f_x1y0z1, a.x);
+    vec4 fxx_fyy_fzz_f_xy1z1 = mix(fxx_fyy_fzz_f_x0y1z1, fxx_fyy_fzz_f_x1y1z1, a.x);
 
     // Differentiate across x
-    vec4 s_dxy0z0_dxy1z0_dxy0z1_dxy1z1 = (
-        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 - 
-        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1
-    );
+    vec4 fxx_fyy_fzz_f_dxy0z0 = fxx_fyy_fzz_f_x1y0z0 - fxx_fyy_fzz_f_x0y0z0;
+    vec4 fxx_fyy_fzz_f_dxy1z0 = fxx_fyy_fzz_f_x1y1z0 - fxx_fyy_fzz_f_x0y1z0;
+    vec4 fxx_fyy_fzz_f_dxy0z1 = fxx_fyy_fzz_f_x1y0z1 - fxx_fyy_fzz_f_x0y0z1;
+    vec4 fxx_fyy_fzz_f_dxy1z1 = fxx_fyy_fzz_f_x1y1z1 - fxx_fyy_fzz_f_x0y1z1;
 
     // Interpolate along y
-    vec4 s_xyz0_xyz1_dxyz0_dxyz1 = mix(
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw),
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz),
-    0.5);
+    vec4 fxx_fyy_fzz_f_xyz0  = mix(fxx_fyy_fzz_f_xy0z0,  fxx_fyy_fzz_f_xy1z0,  a.y);
+    vec4 fxx_fyy_fzz_f_xyz1  = mix(fxx_fyy_fzz_f_xy0z1,  fxx_fyy_fzz_f_xy1z1,  a.y);
+    vec4 fxx_fyy_fzz_f_dxyz0 = mix(fxx_fyy_fzz_f_dxy0z0, fxx_fyy_fzz_f_dxy1z0, a.y);
+    vec4 fxx_fyy_fzz_f_dxyz1 = mix(fxx_fyy_fzz_f_dxy0z1, fxx_fyy_fzz_f_dxy1z1, a.y);
 
     // Differentiate across y
-    vec4 s_xdyz0_xdyz1_dxdyz0_dxdyz1 = (
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.yw, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.yw) -
-        vec4(s_xy0z0_xy1z0_xy0z1_xy1z1.xz, s_dxy0z0_dxy1z0_dxy0z1_dxy1z1.xz)
-    );
+    vec4 fxx_fyy_fzz_f_xdyz0  = fxx_fyy_fzz_f_xy1z0  - fxx_fyy_fzz_f_xy0z0;
+    vec4 fxx_fyy_fzz_f_xdyz1  = fxx_fyy_fzz_f_xy1z1  - fxx_fyy_fzz_f_xy0z1;
+    vec4 fxx_fyy_fzz_f_dxdyz0 = fxx_fyy_fzz_f_dxy1z0 - fxx_fyy_fzz_f_dxy0z0;
+    vec4 fxx_fyy_fzz_f_dxdyz1 = fxx_fyy_fzz_f_dxy1z1 - fxx_fyy_fzz_f_dxy0z1;
 
     // Interpolate along z
-    vec3 s_dxyz_xdyz_dxdyz = mix(
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.w, s_xdyz0_xdyz1_dxdyz0_dxdyz1.yw),
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.z, s_xdyz0_xdyz1_dxdyz0_dxdyz1.xz), 
-    0.5);
+    vec4 fxx_fyy_fzz_f_xyz   = mix(fxx_fyy_fzz_f_xyz0,   fxx_fyy_fzz_f_xyz1,   a.z);
+    vec4 fxx_fyy_fzz_f_dxyz  = mix(fxx_fyy_fzz_f_dxyz0,  fxx_fyy_fzz_f_dxyz1,  a.z);
+    vec4 fxx_fyy_fzz_f_xdyz  = mix(fxx_fyy_fzz_f_xdyz0,  fxx_fyy_fzz_f_xdyz1,  a.z);
+    vec4 fxx_fyy_fzz_f_dxdyz = mix(fxx_fyy_fzz_f_dxdyz0, fxx_fyy_fzz_f_dxdyz1, a.z);
 
     // Differentiate across z
-    vec3 s_xydz_dxydz_xdydz = (
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.yw, s_xdyz0_xdyz1_dxdyz0_dxdyz1.y) -
-        vec3(s_xyz0_xyz1_dxyz0_dxyz1.xz, s_xdyz0_xdyz1_dxdyz0_dxdyz1.x)
-    );
-  
-    // Pure second derivatives
-    vec3 s_d2x_d2y_d2z = sample_trilaplacian_intensity(coords).xyz * 2.0;
+    vec4 fxx_fyy_fzz_f_xydz  = fxx_fyy_fzz_f_xyz1  - fxx_fyy_fzz_f_xyz0;
+    vec4 fxx_fyy_fzz_f_dxydz = fxx_fyy_fzz_f_dxyz1 - fxx_fyy_fzz_f_dxyz0;
+    vec4 fxx_fyy_fzz_f_xdydz = fxx_fyy_fzz_f_xdyz1 - fxx_fyy_fzz_f_xdyz0;
+
+    // First partial derivatives
+    float sx_xyz = dot(fxx_fyy_fzz_f_dxyz, vec4(aa, 1.0));
+    float sy_xyz = dot(fxx_fyy_fzz_f_xdyz, vec4(aa, 1.0));
+    float sz_xyz = dot(fxx_fyy_fzz_f_xydz, vec4(aa, 1.0));
+
+    sx_xyz += fxx_fyy_fzz_f_xyz.x * da.x;
+    sy_xyz += fxx_fyy_fzz_f_xyz.y * da.y;
+    sz_xyz += fxx_fyy_fzz_f_xyz.z * da.z;
+
+    // Second mixed derivatives
+    float sxy_xyz = dot(fxx_fyy_fzz_f_dxdyz, vec4(aa, 1.0));
+    float syz_xyz = dot(fxx_fyy_fzz_f_xdydz, vec4(aa, 1.0));
+    float sxz_xyz = dot(fxx_fyy_fzz_f_dxydz, vec4(aa, 1.0));
+
+    sxy_xyz += dot(vec2(fxx_fyy_fzz_f_xdyz.x, fxx_fyy_fzz_f_dxyz.y), da.xy);
+    syz_xyz += dot(vec2(fxx_fyy_fzz_f_xydz.y, fxx_fyy_fzz_f_xdyz.z), da.yz);
+    sxz_xyz += dot(vec2(fxx_fyy_fzz_f_dxyz.z, fxx_fyy_fzz_f_xydz.x), da.zx);
+
+    // Second pure derivatives
+    float sxx_xyz = fxx_fyy_fzz_f_xyz.x;
+    float syy_xyz = fxx_fyy_fzz_f_xyz.y;
+    float szz_xyz = fxx_fyy_fzz_f_xyz.z;
+
+    sxx_xyz += fxx_fyy_fzz_f_dxyz.x * da.x * 2.0;
+    syy_xyz += fxx_fyy_fzz_f_xdyz.y * da.y * 2.0;
+    szz_xyz += fxx_fyy_fzz_f_xydz.z * da.z * 2.0;
 
     // Gradient
-    gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
+    gradient = vec3(sx_xyz, sy_xyz, sz_xyz);
 
     // Hessian
     hessian = mat3(
-       s_d2x_d2y_d2z.x, s_dxyz_xdyz_dxdyz.z, s_xydz_dxydz_xdydz.y,  
-       s_dxyz_xdyz_dxdyz.z, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
-       s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
+       sxx_xyz, sxy_xyz, sxz_xyz,  
+       sxy_xyz, syy_xyz, syz_xyz,  
+       sxz_xyz, syz_xyz, szz_xyz     
    );
 }
