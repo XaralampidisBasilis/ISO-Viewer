@@ -103,7 +103,7 @@ class BersteinExtremaProgram implements GPGPUProgram
     }
 }
 
-export async function computeBersteinExtrema(inputTensor: tf.Tensor) 
+export async function bersteinExtrema(inputTensor: tf.Tensor) 
 {
     const program = new BersteinExtremaProgram(inputTensor.shape)
     const backend = tf.backend() as MathBackendWebGL

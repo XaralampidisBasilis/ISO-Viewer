@@ -80,21 +80,43 @@ export default class ISOGui
         const uDistanceMap = this.viewer.material.uniforms.u_distance_map.value
         const objects = 
         { 
-            intensity               : uRendering.intensity,
-            INTERSECT_BBOX_ENABLED  : Boolean(defines.INTERSECT_BBOX_ENABLED),
-            INTERSECT_BVOL_ENABLED  : Boolean(defines.INTERSECT_BVOL_ENABLED),
-            SKIPPING_ENABLED        : Boolean(defines.SKIPPING_ENABLED),
+            intensity             : uRendering.intensity,
+            stride                : uDistanceMap.stride,
+            INTERSECT_BBOX_ENABLED: Boolean(defines.INTERSECT_BBOX_ENABLED),
+            INTERSECT_BVOL_ENABLED: Boolean(defines.INTERSECT_BVOL_ENABLED),
+            SKIPPING_ENABLED      : Boolean(defines.SKIPPING_ENABLED),
+            INTERPOLATION_METHOD  : Number(defines.INTERPOLATION_METHOD),
+            SKIPPING_METHOD       : Number(defines.SKIPPING_METHOD),
         }
     
         this.controllers.rendering = 
         {
-            isoIntensity       : folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((value) => { this.viewer.onThresholdChange(value) }),
+            isoIntensity: folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((threshold) => 
+            { 
+                this.viewer.onThresholdChange(threshold) 
+            }),
+            
+            stride : folder.add(objects, 'stride').min(2).max(8).step(1).onFinishChange((stride) => 
+            { 
+                this.viewer.onStrideChange(stride) 
+            }),
+
             maxGroups          : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
             enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+
+            interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1 }).onFinishChange((option) => 
+            { 
+                this.viewer.onInterpolationChange(option) 
+            }),
+
+            skippingMethod: folder.add(objects, 'SKIPPING_METHOD').name('skipping').options({ none: 0, occupancy : 1, isotropic : 2, anisotropic : 3, extended : 4 }).onFinishChange((option) => 
+            { 
+                defines.SKIPPING_METHOD = Number(option)
+                material.needsUpdate = true 
+            }),
         }
     }
 

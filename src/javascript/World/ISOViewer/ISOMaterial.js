@@ -44,11 +44,11 @@ export default function()
         ({
             max_distance    : 0,
             max_iterations  : 31,
-            stride          : 3,
+            stride          : 4,
             dimensions      : new THREE.Vector3(),
             spacing         : new THREE.Vector3(),
             size            : new THREE.Vector3(),
-            inv_stride      : 1/3,
+            inv_stride      : 1/4,
             inv_dimensions  : new THREE.Vector3(),
             inv_spacing     : new THREE.Vector3(),
             inv_size        : new THREE.Vector3(),
@@ -65,7 +65,7 @@ export default function()
         
         u_rendering: new THREE.Uniform
         ({
-            intensity : 0.6,
+            intensity : 0.69,
             max_groups : 0,
             max_cells : 0,
             max_blocks: 0,
@@ -106,6 +106,9 @@ export default function()
         INTERSECT_BBOX_ENABLED : 1,
         INTERSECT_BVOL_ENABLED : 0,
         SKIPPING_ENABLED       : 1,
+
+        INTERPOLATION_METHOD : 0,
+        SKIPPING_METHOD : 1,
 
         STATS_ENABLED          : 1,
         DEBUG_ENABLED          : 1,

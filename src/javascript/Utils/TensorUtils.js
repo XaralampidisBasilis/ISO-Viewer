@@ -163,11 +163,13 @@ export async function computeBoundingBox(occupancyMap)
 {
     return tf.tidy(() => 
     {
+        const occupancy = tf.cast(occupancyMap, 'bool')
+
         // Collapse occupancy map across axes to identify active voxels
         // For each axis, reduce all other axes and get a 1D boolean array
-        const xOccupancy = occupancyMap.any([0, 1, 3]).arraySync().flat() 
-        const yOccupancy = occupancyMap.any([0, 2, 3]).arraySync().flat() 
-        const zOccupancy = occupancyMap.any([1, 2, 3]).arraySync().flat() 
+        const xOccupancy = occupancy.any([0, 1, 3]).arraySync().flat() 
+        const yOccupancy = occupancy.any([0, 2, 3]).arraySync().flat() 
+        const zOccupancy = occupancy.any([1, 2, 3]).arraySync().flat() 
 
         // Compute mix/max bounding box coords
         const minCoords = [xOccupancy.findIndex(Boolean), yOccupancy.findIndex(Boolean), zOccupancy.findIndex(Boolean)]
@@ -250,8 +252,8 @@ export async function computeDistanceMap(occupancyMap, maxDistance)
     return tf.tidy(() => 
     {
         // Initialize the frontier (occupied voxels) and the distance tensor
-        let distances = tf.where(occupancyMap, 0, maxDistance)
         let frontier  = tf.cast(occupancyMap, 'bool')
+        let distances = tf.where(frontier, 0, maxDistance)
         
         for (let d = 1; d < maxDistance; d++) 
         {   
@@ -281,8 +283,8 @@ export async function computeDistanceMap2(occupancyMap, maxDistance)
     return tf.tidy(() => 
     {
         // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, 1)
         let frontier  = tf.cast(occupancyMap, 'bool')
+        let distances = tf.where(frontier, 0, 1)
         
         for (let distance = 2; distance <= maxDistance; distance++) 
         {   
@@ -315,8 +317,8 @@ export async function computeDistanceMap3(occupancyMap, maxDistance)
         let filter = tf.ones([3, 3, 3, 1, 1], 'float32')
         
         // Initialize the frontier and  distance tensors
-        let distances = tf.where(occupancyMap, 0, 1)
         let frontier  = tf.cast(occupancyMap, 'bool')
+        let distances = tf.where(frontier, 0, 1)
 
         for (let distance = 1; distance <= maxDistance; distance++) 
         {   
@@ -348,8 +350,8 @@ export async function computeDirectional8DistanceMap(occupancyMap, maxDistance =
     {            
         // Initialize the frontier  and the distance tensor
         let source = tf.reverse(occupancyMap, axes)
-        let distances = tf.where(source, 0, maxDistance)
         let frontier = tf.cast(source, 'bool')
+        let distances = tf.where(frontier, 0, maxDistance)
         tf.dispose(source)
 
         for (let distance = 1; distance < maxDistance; distance++) 
@@ -388,8 +390,8 @@ export async function computeDirectional24DistanceMap(occupancyMap, maxDistance 
         
         // Initialize the frontier and the distance tensor
         let source = tf.reverse(occupancyMap, axes)
-        let distances = tf.where(source, 0, maxDistance)
         let frontier = tf.cast(source, 'bool')
+        let distances = tf.where(frontier, 0, maxDistance)
 
         for (let distance = 1; distance < maxDistance; distance++) 
         {   

@@ -117,7 +117,6 @@ export default class ISOViewer extends EventEmitter
     {
         const uniforms = this.material.uniforms
         uniforms.u_rendering.value.intensity = threshold
-
         await this.computes.onThresholdChange()
         await this.textures.onThresholdChange()
         
@@ -128,6 +127,64 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
         uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
         uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
+    }
+
+    async onStrideChange(stride)
+    {
+        const uniforms = this.material.uniforms
+        uniforms.u_distance_map.value.stride = stride
+        await this.computes.onStrideChange()
+        await this.textures.onStrideChange()
+        
+        // Update 
+        uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
+        uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
+        uniforms.u_textures.value.extended_anisotropic_distance_map = this.textures.extendedAnisotropicDistanceMap
+
+        uniforms.u_distance_map.value.stride = this.computes.distanceMap.stride
+        uniforms.u_distance_map.value.dimensions.copy(this.computes.distanceMap.dimensions)
+        uniforms.u_distance_map.value.spacing.copy(this.computes.distanceMap.spacing)
+        uniforms.u_distance_map.value.size.copy(this.computes.distanceMap.size)
+        uniforms.u_distance_map.value.inv_stride = this.computes.distanceMap.invStride
+        uniforms.u_distance_map.value.inv_dimensions.copy(this.computes.distanceMap.invDimensions)
+        uniforms.u_distance_map.value.inv_spacing.copy(this.computes.distanceMap.invSpacing)
+        uniforms.u_distance_map.value.inv_size.copy(this.computes.distanceMap.invSize)
+
+        uniforms.u_bbox.value.min_block_coords.copy(this.computes.boundingBox.minCellCoords)
+        uniforms.u_bbox.value.max_block_coords.copy(this.computes.boundingBox.maxCellCoords)
+        uniforms.u_bbox.value.min_cell_coords.copy(this.computes.boundingBox.minCellCoords)
+        uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
+        uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
+        uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
+
+        // Defines
+        const defines = this.material.defines
+        defines.MAX_CELLS = this.computes.intensityMap.dimensions.toArray().reduce((s, x) => s + x, -2)
+        defines.MAX_BLOCKS = this.computes.distanceMap.dimensions.toArray().reduce((s, x) => s + x, -2)
+        defines.MAX_CELLS_PER_BLOCK = this.computes.distanceMap.stride * 3
+        defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
+        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
+
+        this.material.needsUpdate = true
+    }
+
+    async onInterpolationChange(interpolationMethod)
+    {
+        this.material.defines.INTERPOLATION_METHOD = interpolationMethod
+        await this.computes.onInterpolationChange()
+        await this.textures.onInterpolationChange()
+        
+        // Update 
+        const uniforms = this.material.uniforms
+        uniforms.u_bbox.value.min_block_coords.copy(this.computes.boundingBox.minCellCoords)
+        uniforms.u_bbox.value.max_block_coords.copy(this.computes.boundingBox.maxCellCoords)
+        uniforms.u_bbox.value.min_cell_coords.copy(this.computes.boundingBox.minCellCoords)
+        uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
+        uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
+        uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
+
+        this.material.needsUpdate = true
     }
 
     destroy() 

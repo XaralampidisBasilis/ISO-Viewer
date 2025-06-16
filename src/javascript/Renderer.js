@@ -23,7 +23,8 @@ export default class Renderer
             antialias: false,
             depth: false,
         })       
-        this.instance.setClearColor('#211d20', 1)
+        // this.instance.setClearColor('#211d20', 1)
+        this.instance.setClearColor('#000000', 1)
         this.instance.setSize(this.sizes.width, this.sizes.height)
         this.instance.setPixelRatio(this.sizes.pixelRatio)
         this.instance.shadowMap.enabled = false

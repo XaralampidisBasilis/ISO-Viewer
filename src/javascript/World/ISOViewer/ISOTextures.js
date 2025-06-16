@@ -27,6 +27,7 @@ export default class Textures extends EventEmitter
         this.textureColorMaps()
         this.textureIntensityMap()
         this.textureTrilaplacianIntensityMap()
+        
         this.textureOccupancyMap()
         this.textureDistanceMap()
         this.textureAnisotropicDistanceMap()
@@ -35,6 +36,60 @@ export default class Textures extends EventEmitter
 
     async onThresholdChange()
     {
+        if (this.occupancyMap)
+        {
+            this.occupancyMap.image.data.set(this.computes.occupancyMap.array)
+            this.occupancyMap.needsUpdate = true
+        }
+
+        if (this.distanceMap)
+        {
+            this.distanceMap.image.data.set(this.computes.distanceMap.array)
+            this.distanceMap.needsUpdate = true
+        }
+
+        if (this.anisotropicDistanceMap)
+        {
+            this.anisotropicDistanceMap.image.data.set(this.computes.anisotropicDistanceMap.array)
+            this.anisotropicDistanceMap.needsUpdate = true
+        }
+
+        if (this.extendedAnisotropicDistanceMap)
+        {
+            this.extendedAnisotropicDistanceMap.image.data.set(this.computes.extendedAnisotropicDistanceMap.array)
+            this.extendedAnisotropicDistanceMap.needsUpdate = true
+        }
+    }
+
+    async onStrideChange()
+    {
+        if (this.occupancyMap)
+            this.occupancyMap.dispose()
+
+        if (this.distanceMap)
+            this.distanceMap.dispose()
+
+        if (this.anisotropicDistanceMap)
+            this.anisotropicDistanceMap.dispose()
+        
+
+        if (this.extendedAnisotropicDistanceMap)
+            this.extendedAnisotropicDistanceMap.dispose()
+        
+        this.textureOccupancyMap()
+        this.textureDistanceMap()
+        this.textureAnisotropicDistanceMap()
+        this.textureExtendedAnisotropicDistanceMap()
+    }
+
+    async onInterpolationChange()
+    {
+        if (this.occupancyMap)
+        {
+            this.occupancyMap.image.data.set(this.computes.occupancyMap.array)
+            this.occupancyMap.needsUpdate = true
+        }
+
         if (this.distanceMap)
         {
             this.distanceMap.image.data.set(this.computes.distanceMap.array)

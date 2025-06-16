@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class ResizeTrilinearProgram implements GPGPUProgram 
+export class ResizeProgram implements GPGPUProgram 
 {
     variableNames = ['A'];
     outputShape: number[];
@@ -81,17 +81,17 @@ export class ResizeTrilinearProgram implements GPGPUProgram
 }
 
 
-export function resizeTrilinear(
+export function resizeProgram(
   input: tf.Tensor4D,
   newDepth: number,
   newHeight: number,
   newWidth: number,
-  alignCorners = true,
+  alignCorners = false,
   halfPixelCenters = false
 ): tf.Tensor4D 
 {
   const backend = tf.backend() as MathBackendWebGL;
-  const program = new ResizeTrilinearProgram(
+  const program = new ResizeProgram(
     input.shape as [number, number, number, number],
     newDepth,
     newHeight,

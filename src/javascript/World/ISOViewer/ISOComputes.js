@@ -3,8 +3,11 @@ import * as tf from '@tensorflow/tfjs'
 import * as TF from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
-import { toHalfFloat } from 'three/src/extras/DataUtils.js'
-import { computeBlockBersteinExtrema } from './BlockBersteinExtremaProgram'
+import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
+import { blockExtremaProgram } from './BlockExtremaProgram'
+import { resizeProgram } from './ResizeProgram'
+import { trilaplacianProgram } from './TrilaplacianProgram'
+import { occupancyProgram } from './OccupancyProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -15,8 +18,11 @@ export default class ISOComputes extends EventEmitter
         this.renderer = this.viewer.renderer
         this.resources = this.viewer.resources
         this.uniforms = this.viewer.material.uniforms
+        this.defines = this.viewer.material.defines
         this.stride = this.uniforms.u_distance_map.value.stride
         this.threshold = this.uniforms.u_rendering.value.intensity
+        this.interpolationMethod = this.defines.INTERPOLATION_METHOD
+        this.skippingMethod = this.defines.SKIPPING_METHOD
 
         // Wait for resources
         this.resources.on('ready', async () =>
@@ -32,7 +38,6 @@ export default class ISOComputes extends EventEmitter
         console.time('setTensorflow') 
 
         tf.enableProdMode()
-
         await tf.ready()
         await tf.setBackend('webgl')
         // console.log('tf', tf)
@@ -47,9 +52,9 @@ export default class ISOComputes extends EventEmitter
         await this.computeIntensityMap()
         await this.downscaleIntensityMap()
         await this.computeTrilaplacianIntensityMap()
-        await this.computeBlockExtremaMap()
         tf.dispose(this.intensityMap.tensor)
-
+        await this.computeBlockExtremaMap()
+        tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
@@ -65,32 +70,56 @@ export default class ISOComputes extends EventEmitter
 
     async onThresholdChange()
     {
+        console.time('onThresholdChange') 
+
         this.threshold = this.uniforms.u_rendering.value.intensity
         
-        await this.setTensorflow()
         await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
+
+        console.timeEnd('onThresholdChange') 
     }
 
     async onStrideChange()
     {
-        this.stride = this.uniforms.u_distance_map.value.stride
-        
-        await this.computeIntensityMap()
-        await this.computeBlockExtremaMap()
-        tf.dispose(this.intensityMap.tensor)
+        console.time('onStrideChange') 
 
-        await tf.nextFrame()
+        this.stride = this.uniforms.u_distance_map.value.stride
+
+        await this.uploadTrilaplacianIntensityMap()
+        await this.computeBlockExtremaMap()
+        tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
         await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
+
+        console.timeEnd('onStrideChange') 
+    }
+
+    async onInterpolationChange()
+    {
+        console.time('onInterpolationChange') 
+
+        this.interpolationMethod = this.defines.INTERPOLATION_METHOD
+
+        await this.uploadTrilaplacianIntensityMap()
+        await this.computeBlockExtremaMap()
+        tf.dispose(this.trilaplacianIntensityMap.tensor)
+        await this.computeOccupancyMap()
+        await this.computeBoundingBox()
+        await this.computeDistanceMap()
+        await this.computeAnisotropicDistanceMap()
+        await this.computeExtendedAnisotropicDistanceMap()
+        tf.dispose(this.occupancyMap.tensor)
+
+        console.timeEnd('onInterpolationChange') 
     }
 
     async computeIntensityMap()
@@ -137,7 +166,8 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('downscaleIntensityMap') 
 
-        const intensityMap = await TF.downscaleLinear(this.intensityMap.tensor, 2.0)  
+        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.5))
+        const intensityMap = resizeProgram(this.intensityMap.tensor, newShape[0], newShape[1], newShape[2], false, true)  
         tf.dispose(this.intensityMap.tensor)
 
         // Compute new intensity map
@@ -171,27 +201,28 @@ export default class ISOComputes extends EventEmitter
         console.time('computeTrilaplacianIntensityMap') 
 
         this.trilaplacianIntensityMap = {}
-        this.trilaplacianIntensityMap.tensor = await TF.computeTrilaplacianIntensityMap(this.intensityMap.tensor)
-        this.trilaplacianIntensityMap.array = new Uint16Array(this.intensityMap.tensor.size * 4)
+        this.trilaplacianIntensityMap.tensor = trilaplacianProgram(this.intensityMap.tensor)
+        this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
 
         // convert data to half float type
         const array = this.trilaplacianIntensityMap.tensor.dataSync()
-
-        for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) {
+        for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
+        {
             this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
         }
 
         // copy parameters from intensity map
-        this.trilaplacianIntensityMap.dimensions    = this.intensityMap.dimensions   
-        this.trilaplacianIntensityMap.spacing       = this.intensityMap.spacing      
-        this.trilaplacianIntensityMap.size          = this.intensityMap.size         
+        this.trilaplacianIntensityMap.shape         = this.trilaplacianIntensityMap.tensor.shape
+        this.trilaplacianIntensityMap.dimensions    = this.intensityMap.dimensions
+        this.trilaplacianIntensityMap.spacing       = this.intensityMap.spacing
+        this.trilaplacianIntensityMap.size          = this.intensityMap.size
         this.trilaplacianIntensityMap.invDimensions = this.intensityMap.invDimensions
-        this.trilaplacianIntensityMap.invSpacing    = this.intensityMap.invSpacing   
-        this.trilaplacianIntensityMap.invSize       = this.intensityMap.invSize      
+        this.trilaplacianIntensityMap.invSpacing    = this.intensityMap.invSpacing
+        this.trilaplacianIntensityMap.invSize       = this.intensityMap.invSize
         this.trilaplacianIntensityMap.spacingLength = this.intensityMap.spacingLength
-        this.trilaplacianIntensityMap.sizeLength    = this.intensityMap.sizeLength   
-        this.trilaplacianIntensityMap.numVoxels     = this.intensityMap.numVoxels    
-        this.trilaplacianIntensityMap.maxVoxels     = this.intensityMap.maxVoxels    
+        this.trilaplacianIntensityMap.sizeLength    = this.intensityMap.sizeLength
+        this.trilaplacianIntensityMap.numVoxels     = this.intensityMap.numVoxels
+        this.trilaplacianIntensityMap.maxVoxels     = this.intensityMap.maxVoxels
 
         console.timeEnd('computeTrilaplacianIntensityMap') 
     }
@@ -202,7 +233,7 @@ export default class ISOComputes extends EventEmitter
 
         this.blockExtremaMap = {}
         // this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
-        this.blockExtremaMap.tensor = await computeBlockBersteinExtrema(this.trilaplacianIntensityMap.tensor, this.stride)
+        this.blockExtremaMap.tensor = blockExtremaProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
         this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
 
         this.blockExtremaMap.stride        = this.stride
@@ -223,7 +254,8 @@ export default class ISOComputes extends EventEmitter
         console.time('computeOccupancyMap') 
 
         this.occupancyMap = {}
-        this.occupancyMap.tensor = await TF.computeOccupancyMap(this.blockExtremaMap.tensor, this.threshold)
+        // this.occupancyMap.tensor = await TF.computeOccupancyMap(this.blockExtremaMap.tensor, this.threshold)
+        this.occupancyMap.tensor = occupancyProgram(this.blockExtremaMap.tensor, this.threshold)
         this.occupancyMap.array = new Uint8Array(this.occupancyMap.tensor.dataSync())
        
         this.occupancyMap.threshold     = this.threshold
@@ -346,6 +378,50 @@ export default class ISOComputes extends EventEmitter
         this.extendedAnisotropicDistanceMap.numBlocks     = this.occupancyMap.numBlocks    
 
         console.timeEnd('computeExtendedAnisotropicDistanceMap') 
+    }
+
+    async uploadIntensityMap()
+    {
+        if (this.intensityMap.array)
+        {
+            console.time('uploadIntensityMap') 
+
+            const array = new Float32Array(this.intensityMap.array.length)
+            for (let i = 0; i < this.intensityMap.array.length; ++i) 
+            {
+                array[i] = fromHalfFloat(this.intensityMap.array[i])
+            }
+
+            this.intensityMap.tensor = tf.tensor4d(array, this.intensityMap.shape)
+
+            console.timeEnd('uploadIntensityMap') 
+        }
+        else
+        {
+            await this.computeIntensityMap()
+        }
+    }
+
+    async uploadTrilaplacianIntensityMap()
+    {
+        if (this.trilaplacianIntensityMap.array)
+        {
+            console.time('uploadTrilaplacianIntensityMap') 
+
+            const array = new Float32Array(this.trilaplacianIntensityMap.array.length)
+            for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
+            {
+                array[i] = fromHalfFloat(this.trilaplacianIntensityMap.array[i])
+            }
+
+            this.trilaplacianIntensityMap.tensor = tf.tensor4d(array, this.trilaplacianIntensityMap.shape)
+
+            console.timeEnd('uploadTrilaplacianIntensityMap') 
+        }
+        else
+        {
+            await this.computeTrilaplacianIntensityMap()
+        }
     }
 
     destroy() 
