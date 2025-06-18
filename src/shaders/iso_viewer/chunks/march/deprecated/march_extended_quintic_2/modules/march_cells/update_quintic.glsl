@@ -9,11 +9,11 @@ quintic.distances[5] = mix(cell.entry_distance, cell.exit_distance, quintic.weig
 
 // Sample triquadratic corrected intensities at each distance
 quintic.intensities[0] = quintic.intensities[5];
-quintic.intensities[1] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[1]).a;
-quintic.intensities[2] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[2]).a;
-quintic.intensities[3] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[3]).a;
-quintic.intensities[4] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[4]).a;
-quintic.intensities[5] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[5]).a;
+quintic.intensities[1] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[1]);
+quintic.intensities[2] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[2]);
+quintic.intensities[3] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[3]);
+quintic.intensities[4] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[4]);
+quintic.intensities[5] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[5]);
 
 // errors
 quintic.errors[0] = quintic.errors[5];

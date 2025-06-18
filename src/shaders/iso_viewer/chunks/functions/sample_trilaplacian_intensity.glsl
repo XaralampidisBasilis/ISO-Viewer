@@ -1,25 +1,50 @@
 /* Source
 Beyond Trilinear Interpolation: Higher Quality for Free (https://dl.acm.org/doi/10.1145/3306346.3323032)
 */
-
-vec4 sample_trilaplacian_intensity(in vec3 coords)
+float sample_trilaplacian_intensity(in vec3 coords)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;
     #endif
-    
-    // sample trilinearly interpolated laplace vector and intensity values
+
+    // sample the augmented volume    
     vec3 uvw = coords * u_intensity_map.inv_dimensions;
-    vec4 trilaplacian_intensity = texture(u_textures.trilaplacian_intensity_map, uvw);
+    vec4 fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
-    // compute the correction vector
+    // compute correction terms
     vec3 x = coords - 0.5;
     vec3 a = x - floor(x);
-    vec4 correction = vec4(a * (a - 1.0) / 2.0, 1.0);
-    float intensity = dot(trilaplacian_intensity, correction);
+    vec3 aa = a * (a - 1.0) / 2.0;
 
-    // return the improved intensity value based on laplacian information
-    return vec4(trilaplacian_intensity.xyz, intensity);
+    // compute correction
+    float c = dot(fxx_fyy_fzz_f.xyz, aa);
+    float fc = fxx_fyy_fzz_f.a + c;
+
+    // return the improved intensity value
+    return fc;
+}
+
+float sample_trilaplacian_intensity(in vec3 coords, out float c)
+{
+    #if STATS_ENABLED == 1
+    stats.num_fetches += 1;
+    #endif
+
+    // sample the augmented volume    
+    vec3 uvw = coords * u_intensity_map.inv_dimensions;
+    vec4 fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
+    
+    // compute correction terms
+    vec3 x = coords - 0.5;
+    vec3 a = x - floor(x);
+    vec3 aa = a * (a - 1.0) / 2.0;
+
+    // compute correction
+    c = dot(fxx_fyy_fzz_f.xyz, aa);
+    float fc = fxx_fyy_fzz_f.a + c;
+
+    // return the improved intensity value
+    return fc;
 }
 
 // Analytic reconstruction of the gradient and hessian from the interpolation field 

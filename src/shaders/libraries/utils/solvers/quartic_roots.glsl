@@ -228,13 +228,13 @@ vec4 quartic_roots(in float c[5], in float x0)
     // to r + qy + py^2 + y^4 by substituting x = y - b
     float w2 = n.w * n.w;
     float p = n.z - w2 * 6.0;
-    float q = n.y - n.z * n.w * 2.0 + n.w * w2 * 8.0;
-    float r = n.x - n.y * n.w + w2 * n.z - w2 * w2 * 3.0;
+    float q = n.y - n.w * (n.z - w2 * 4.0) * 2.0;
+    float r = n.x - n.w * (n.y - n.w * (n.z - w2 * 3.0));
 
     // Solve for a root to (u^2)^3 + 2p(u^2)^2 + (p^2 - 4r)(u^2) - q^2 which resolves the
     // system of equations relating the product of two quadratics to the depressed quartic
-    float ra =  2.0 * p;
-    float rb =  p * p - 4.0 * r;
+    float ra =  p * 2.0;
+    float rb =  p * p - r * 4.0;
     float rc = -q * q;
 
     // Solve resolvent cubic rc + rbU + raU^2 + U^3 
@@ -279,8 +279,8 @@ vec4 quartic_roots_2(in float c[5], in float x0)
     // to r + qy + py^2 + y^4 by substituting x = y - b
     float w2 = n.w * n.w;
     float p = n.z - w2 * 6.0;
-    float q = n.y - n.z * n.w * 2.0 + n.w * w2 * 8.0;
-    float r = n.x - n.y * n.w + w2 * n.z - w2 * w2 * 3.0;
+    float q = n.y - n.w * (n.z - w2 * 4.0) * 2.0;
+    float r = n.x - n.w * (n.y - n.w * (n.z - w2 * 3.0));
 
     // Solve for a root to (u^2)^3 + 2p(u^2)^2 + (p^2 - 4r)(u^2) - q^2 which resolves the
     // system of equations relating the product of two quadratics to the depressed quartic
@@ -330,8 +330,8 @@ vec4 quartic_roots_3(in float c[5])
     // to r + qy + py^2 + y^4 by substituting x = y - b
     float w2 = n.w * n.w;
     float p = n.z - w2 * 6.0;
-    float q = n.y - n.z * n.w * 2.0 + n.w * w2 * 8.0;
-    float r = n.x - n.y * n.w + w2 * n.z - w2 * w2 * 3.0;
+    float q = n.y - n.w * (n.z - w2 * 4.0) * 2.0;
+    float r = n.x - n.w * (n.y - n.w * (n.z - w2 * 3.0));
 
     // Solve for a root to (u^2)^3 + 2p(u^2)^2 + (p^2 - 4r)(u^2) - q^2 which resolves the
     // system of equations relating the product of two quadratics to the depressed quartic
@@ -342,10 +342,10 @@ vec4 quartic_roots_3(in float c[5])
     // Solve resolvent cubic rc + rbU + raU^2 + U^3 
     // for the max root U, where U = u^2
     float U_max = resolvent_cubic_max_root_2(rc, rb, ra);
-
+    float u = sqrt(max(0.0, U_max));
+    
     // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)
-    float u = sqrt(max(0.0, U_max)); // can produce Nan
     float qu = q / u;
     float t = (p + qu + u * u) * 0.5;
     float v = t - qu;
@@ -357,6 +357,13 @@ vec4 quartic_roots_3(in float c[5])
 
     // Return the transformation y = x + b
     vec4 x = y - n.w;
+
+    // Improve numerical stability of roots with Newton–Raphson corrections
+    vec4 f, dfdx; 
+    eval_poly(c, x, f, dfdx);
+    x -= f / dfdx; 
+    eval_poly(c, x, f, dfdx);
+    x -= f / dfdx; 
 
     // Return solutions
     return x;
@@ -373,22 +380,22 @@ vec4 quartic_roots_4(in float c[5])
     // to r + qy + py^2 + y^4 by substituting x = y - b
     float w2 = n.w * n.w;
     float p = n.z - w2 * 6.0;
-    float q = n.y - n.z * n.w * 2.0 + n.w * w2 * 8.0;
-    float r = n.x - n.y * n.w + w2 * n.z - w2 * w2 * 3.0;
+    float q = n.y - n.w * (n.z - w2 * 4.0) * 2.0;
+    float r = n.x - n.w * (n.y - n.w * (n.z - w2 * 3.0));
 
     // Solve for a root to (u^2)^3 + 2p(u^2)^2 + (p^2 - 4r)(u^2) - q^2 which resolves the
     // system of equations relating the product of two quadratics to the depressed quartic
-    float ra =  2.0 * p;
-    float rb =  p * p - 4.0 * r;
+    float ra =  p * 2.0;
+    float rb =  p * p - r * 4.0;
     float rc = -q * q;
 
     // Solve resolvent cubic rc + rbU + raU^2 + U^3 
     // for the max root U, where U = u^2
-    float U_max = resolvent_cubic_max_root_3(rc, rb, ra);
-
+    float U_max = resolvent_cubic_max_root_2(rc, rb, ra);
+    float u = sqrt(max(0.0, U_max));
+    
     // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)
-    float u = sqrt(max(0.0, U_max));
     float qu = q / u;
     float t = (p + qu + u * u) * 0.5;
     float v = t - qu;
@@ -404,5 +411,6 @@ vec4 quartic_roots_4(in float c[5])
     // Return solutions
     return x;
 }
+
 
 #endif

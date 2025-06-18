@@ -28,3 +28,25 @@ cell.coords += cell.axes * ray.signs;
 #if STATS_ENABLED == 1
 stats.num_cells += 1;
 #endif
+
+
+// vec3 entry = map(cell.min_position, cell.max_position, cell.entry_position);
+// vec3 exit = map(cell.min_position, cell.max_position, cell.exit_position);
+
+// if (abs(quintic.coefficients[5]) < u_debugging.variable3)
+// {
+//     debug.variable3.xyz += 1.0 / 50.0;
+// }
+// if (length(exit - entry) < u_debugging.variable4)
+// {
+//     debug.variable4.xyz += 1.0 / 50.0;
+// }
+
+// if (length(exit - entry) < u_debugging.variable4)
+// {
+//     if (abs(quintic.coefficients[5]) < u_debugging.variable3)
+//     {
+//         debug.variable5.xyz += 1.0 / 50.0;
+//     }
+// }
+

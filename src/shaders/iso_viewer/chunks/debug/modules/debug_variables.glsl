@@ -1,6 +1,14 @@
 
 // PRINT DEBUG
 
+debug.variable9 = to_color(mmix2(
+    COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA,
+    COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,
+    COLOR.MAGENTA,   COLOR.ORANGE,    COLOR.GOLD,  
+    map(box.min_position.xy, box.max_position.xy, ray.start_position.xy)
+));
+
+
 switch (u_debugging.option - 1000)
 { 
     case 0  : fragColor = debug.variable0; break;
