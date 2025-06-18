@@ -25,6 +25,15 @@ int mmin(in int a,in int b, in int c, in int d) { return min(min(a,b), min(c, d)
 float mmin(vec2 v) { return min(v.x, v.y); }
 float mmin(vec3 v) { return mmin(v.x, v.y, v.z); }
 float mmin(vec4 v) { return mmin(v.x, v.y, v.z, v.w); }
+float mmin(float v[6]) 
+{
+    float r = v[0];
+    for (int i = 1; i < 6; ++i) 
+    {
+        r = min(r, v[i]);
+    }
+    return r;
+}
 
 int mmin(ivec2 v) { return min(v.x, v.y); }
 int mmin(ivec3 v) { return mmin(v.x, v.y, v.z); }

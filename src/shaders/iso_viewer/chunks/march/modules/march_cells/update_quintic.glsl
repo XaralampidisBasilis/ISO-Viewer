@@ -46,7 +46,7 @@ vec3 c0_c1_c2 = quintic.inv_vander[0] * y0_y1_y2 + quintic.inv_vander[2] * y3_y4
 vec3 c3_c4_c5 = quintic.inv_vander[1] * y0_y1_y2 + quintic.inv_vander[3] * y3_y4_y5;
 
 // Compute resulted quintic interpolation polynomial coefficients
-quintic.coefficients = float[6](
+quintic.coeffs = float[6](
     c0_c1_c2[0], 
     c0_c1_c2[1], 
     c0_c1_c2[2], 
@@ -64,5 +64,25 @@ cell.intersected =
     (quintic.errors[4] * quintic.errors[5] <= 0.0);
 
 // Compute analytic intersection.
-cell.intersected = cell.intersected || is_quintic_solvable(quintic.coefficients, quintic.interval, y0_y5);
+cell.intersected = cell.intersected || is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
 
+// // Compute berstein coefficients and check if no roots
+
+// // Perform broken 6 x 6 matrix multiplication
+// vec3 b0_b1_b2 = quintic.bernstein[0] * c0_c1_c2 + quintic.bernstein[1] * c3_c4_c5;
+// vec3 b3_b4_b5 = quintic.bernstein[2] * c3_c4_c5;
+
+// // Compute resulted quintic bernstein polynomial coefficients
+// quintic.bcoeffs = float[6](
+//     b0_b1_b2[0], 
+//     b0_b1_b2[1], 
+//     b0_b1_b2[2], 
+//     b3_b4_b5[0], 
+//     b3_b4_b5[1], 
+//     b3_b4_b5[2]
+// );
+
+// if ((mmin(quintic.bcoeffs) < 0.0) == (mmax(quintic.bcoeffs) < 0.0))
+// {
+//     debug.variable3.xyz += 1.0 / 1.0;
+// }

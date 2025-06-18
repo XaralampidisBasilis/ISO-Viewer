@@ -17,7 +17,17 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
 cubic.coeffs = cubic.inv_vander * cubic.errors;
 
 // given the polynomial we can compute if we intersect the isosurface inside the cell
-cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+cell.intersected = any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
 
 // check if there are sign crossings between samples for degenerate cases
-cell.intersected = cell.intersected || any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+
+
+// // Compute berstein coefficients and check if no roots
+
+// cubic.bcoeffs = cubic.bernstein * cubic.coeffs;
+
+// if ((mmin(cubic.bcoeffs) < 0.0) == (mmax(cubic.bcoeffs) < 0.0))
+// {
+//     debug.variable3.xyz += 1.0 / 1.0;
+// }

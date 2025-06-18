@@ -46,7 +46,7 @@ vec3 c0_c1_c2 = quintic.inv_vander[0] * y0_y1_y2 + quintic.inv_vander[2] * y3_y4
 vec3 c3_c4_c5 = quintic.inv_vander[1] * y0_y1_y2 + quintic.inv_vander[3] * y3_y4_y5;
 
 // Compute resulted quintic interpolation polynomial coefficients
-quintic.coefficients = float[6](
+quintic.coeffs = float[6](
     c0_c1_c2[0], 
     c0_c1_c2[1], 
     c0_c1_c2[2], 
@@ -64,5 +64,5 @@ cell.intersected =
     (quintic.errors[4] * quintic.errors[5] <= 0.0);
 
 // Compute analytic intersection.
-cell.intersected = cell.intersected || is_quintic_solvable(quintic.coefficients, quintic.interval, y0_y5);
+cell.intersected = cell.intersected || is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
 

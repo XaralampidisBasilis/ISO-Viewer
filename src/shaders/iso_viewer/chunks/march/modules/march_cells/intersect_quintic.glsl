@@ -1,5 +1,5 @@
 
-poly5_roots(quintic.roots, quintic.coefficients, cubic.interval.x, cubic.interval.y);
+poly5_roots(quintic.roots, quintic.coeffs, cubic.interval.x, cubic.interval.y);
 
 float hit_distance = quintic.roots[5];
 hit_distance = min(hit_distance, quintic.roots[0]);

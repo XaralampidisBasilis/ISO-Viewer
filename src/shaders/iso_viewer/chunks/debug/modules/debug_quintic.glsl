@@ -6,8 +6,8 @@ vec4 debug_quintic_intensities_0 = to_color(vec3(quintic.intensities[0], quintic
 vec4 debug_quintic_intensities_1 = to_color(vec3(quintic.intensities[3], quintic.intensities[4], quintic.intensities[5])); 
 
 // coefficients
-vec4 debug_quintic_coefficients_0 = to_color(vec3(quintic.coefficients[0], quintic.coefficients[1], quintic.coefficients[2])); 
-vec4 debug_quintic_coefficients_1 = to_color(vec3(quintic.coefficients[3], quintic.coefficients[4], quintic.coefficients[5])); 
+vec4 debug_quintic_coefficients_0 = to_color(vec3(quintic.coeffs[0], quintic.coeffs[1], quintic.coeffs[2])); 
+vec4 debug_quintic_coefficients_1 = to_color(vec3(quintic.coeffs[3], quintic.coeffs[4], quintic.coeffs[5])); 
 
 // roots
 vec4 debug_quintic_roots_0 = to_color(vec3(quintic.roots[0], quintic.roots[1], quintic.roots[2])); 

@@ -7,11 +7,13 @@ struct Quintic
     float intensities[6];    
     float errors[6];
     float distances[6];
-    float coefficients[6];  
+    float coeffs[6];  
+    float bcoeffs[6];  
     float roots[6];  
     float nroots;
     float weights[6];
     mat3 inv_vander[4]; 
+    mat3 bernstein[3]; 
 };
 
 Quintic quintic; // Global mutable struct
@@ -23,7 +25,8 @@ void set_quintic()
     quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.coefficients = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.weights = float[6](
         0.0 / 5.0, 
@@ -37,31 +40,54 @@ void set_quintic()
     (
         // inv vander 00
         mat3(
-            24.0, -274.0,  1125.0,
-            0.0,  600.0, -3850.0,
-            0.0, -600.0,  5350.0
+            24, -274,  1125,
+            0,  600, -3850,
+            0, -600,  5350
         ) / 24.0,
 
         // inv vander 01
         mat3(
-            -2125.0,  1875.0,  -625.0,
-            8875.0, -8750.0,  3125.0,
-            -14750.0, 16250.0, -6250.0
+            -2125,  1875,  -625,
+            8875, -8750,  3125,
+            -14750, 16250, -6250
         ) / 24.0,
 
         // inv vander 10
         mat3(
-            0.0,  400.0, -3900.0,
-            0.0, -150.0,  1525.0,
-            0.0,   24.0,  -250.0
+            0,  400, -3900,
+            0, -150,  1525,
+            0,   24,  -250
         ) / 24.0,
 
         // inv vander 11
         mat3(
-            12250.0, -15000.0,  6250.0,
-            -5125.0,   6875.0, -3125.0,
-            875.0,  -1250.0,   625.0
+            12250, -15000,  6250,
+            -5125,   6875, -3125,
+            875,  -1250,   625
         ) / 24.0
+    );
+    quintic.bernstein = mat3[3]
+    (
+        // bernstein 00
+        mat3(
+            1, 0, 0,
+            -5, 5, 0,
+            10, -20, 10
+        ),
+
+        // bernstein 10
+        mat3(
+            -10, 30, -30,
+            5, -20, 30,
+            -1, 5, -10
+        ),
+
+        // bernstein 11
+        mat3(
+            10, 0, 0,
+            -20, 5, 0,
+            10, -5, 1
+        )
     );
 }
 #endif 

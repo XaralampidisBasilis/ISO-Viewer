@@ -1,8 +1,8 @@
 
 // #if INTERPOLATION_METHOD == 0
-// #include "./march_extended_quintic/compute_march"
+// #include "./deprecated/march_extended/compute_march"
 // #else
-// #include "./march_extended_quintic_2/compute_march"
+// #include "./deprecated/march_extended_2/compute_march"
 // #endif
 
 
