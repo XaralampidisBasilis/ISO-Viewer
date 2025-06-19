@@ -36,9 +36,57 @@ vec3 cubic_roots(in vec4 c)
 {
     // Flip to minimize instability
     bool flip = abs(c.z * c.x) >= abs(c.y * c.w);
-    c = flip ? c.wzyx : c;
+    vec3 n = flip ? c.wzy / c.x : c.xyz / c.w;
+    n.yz /= 3.0;
 
-    // normalize coefficients
+    // compute hessian coefficients eq(0.4)
+    vec3 h = vec3(
+        n.y - n.z * n.z,                          // δ1 = c.w * c.y - c.z^2
+        n.x - n.y * n.z,                          // δ2 = c.w * c.x - c.y * c.z
+        dot(vec2(n.z, -n.y), n.xy)    // δ3 = c.z * c.x - c.y^2
+    );
+    h.y /= 2.0;
+
+    // compute cubic discriminant eq(0.7)
+    float d = dot(vec2(h.x, -h.y), h.zy); // Δ = δ1 * δ3 - δ2^2
+    float sqrt_d = sqrt(abs(d));
+
+    // compute depressed cubic eq(0.16), r[0] + r[1] * x + x^3 eq(0.11) eq(0.16)
+    vec2 r = vec2(h.y - h.x * n.z, h.x);
+    
+    // compute real root using cubic root formula for one real and two complex roots eq(0.15)
+    vec3 x1 = vec3(cbrt(-r.x + sqrt_d) + cbrt(-r.x - sqrt_d));
+
+    // compute cubic roots using complex number formula eq(0.14)  
+    float t = atan(sqrt_d, -r.x) / 3.0;
+    mat2 proj = mat2(-1.0, -SQRT_3, -1.0, SQRT_3);
+
+    // compute three roots via rotation, applying complex root formula eq(0.14)
+    vec2 x2 = vec2(cos(t), sin(t));
+    vec3 x3 = vec3(x2 * proj, x2.x * 2.0);
+
+    // revert transformation eq(0.2) and eq(0.16)
+    x3 *= sqrt(max(0.0, -r.y)); 
+
+    // choose cubic roots based on discriminant sign 
+    vec3 x = (d > 0.0) ? x3 : x1;
+    x = x - n.z;
+    x = flip ? 1.0 / x : x;
+
+    // Improve numerical stability of roots with Newton–Raphson correction
+    vec3 y, dydx;
+    eval_poly(c, x, y, dydx);
+    x -= y / dydx; 
+    eval_poly(c, x, y, dydx);
+    x -= y / dydx; 
+
+    // return result
+    return x;
+}
+
+vec3 cubic_roots_2(in vec4 c)
+{
+    // Normalize
     vec3 n = c.xyz / c.w;
     n.yz /= 3.0;
 
@@ -72,155 +120,11 @@ vec3 cubic_roots(in vec4 c)
     x3 *= sqrt(max(0.0, -r.y)); 
 
     // choose cubic roots based on discriminant sign 
-    // vec3 x = mix(x12, x3, step(0.0, d)) - n.z;
-    vec3 x = (d > 0.0 ? x3 : x1) - n.z;
-
-    // Improve numerical stability of roots with Newton–Raphson correction
-    vec3 y, dy;
-    eval_poly(c, x, y, dy);
-    x -= y / dy; 
-    eval_poly(c, x, y, dy);
-    x -= y / dy; 
-
-    // flip back roots
-    x = flip ? 1.0 / x : x;
+    vec3 x = (d > 0.0) ? x3 : x1;
+    x = x - n.z;
 
     // return result
     return x;
-}
-
-vec3 cubic_roots_2(in vec4 c)
-{
-    // normalize coefficients
-    vec3 n = c.xyz / c.w;
-    n.yz /= 3.0;
-
-    // compute hessian coefficients eq(0.4)
-    vec3 h = vec3(
-        n.y - n.z * n.z,                          // δ1 = c.w * c.y - c.z^2
-        n.x - n.y * n.z,                          // δ2 = c.w * c.x - c.y * c.z
-        dot(vec2(n.z, -n.y), n.xy)    // δ3 = c.z * c.x - c.y^2
-    );
-    h.y /= 2.0;
-
-    // compute cubic discriminant eq(0.7)
-    float d = dot(vec2(h.x, -h.y), h.zy); // Δ = δ1 * δ3 - δ2^2
-    float sqrt_d = sqrt(abs(d));
-
-    // compute depressed cubic eq(0.16), r[0] + r[1] * x + x^3 eq(0.11) eq(0.16)
-    vec2 r = vec2(h.y - h.x * n.z, h.x);
-    
-    // compute real root using cubic root formula for one real and two complex roots eq(0.15)
-    vec3 x1 = vec3(cbrt(-r.x + sqrt_d) + cbrt(-r.x - sqrt_d));
-
-    // compute cubic roots using complex number formula eq(0.14)  
-    float t = atan(sqrt_d, -r.x) / 3.0;
-    mat2 mat = mat2(-1.0, -SQRT_3, -1.0, SQRT_3);
-
-    // compute three roots via rotation, applying complex root formula eq(0.14)
-    vec2 x2 = vec2(cos(t), sin(t));
-    vec3 x3 = vec3(x2 * mat, x2.x * 2.0);
-
-    // revert transformation eq(0.2) and eq(0.16)
-    x3 *= sqrt(max(0.0, -r.y)); 
-
-    // choose cubic roots based on discriminant sign 
-    // vec3 x = mix(x1, x3, step(0.0, d)) - n.z;
-    vec3 x = (d > 0.0 ? x3 : x1) - n.z;
-
-    // return result
-    return x;
-}
-
-vec3 cubic_roots_3(in vec4 c)
-{
-    // normalize coefficients
-    vec3 n = c.xyz / c.w;
-    n.yz /= 3.0;
-
-    // compute hessian coefficients eq(0.4)
-    vec3 h = vec3(
-        n.y - n.z * n.z,                          // δ1 = c.w * c.y - c.z^2
-        n.x - n.y * n.z,                          // δ2 = c.w * c.x - c.y * c.z
-        dot(vec2(n.z, -n.y), n.xy)    // δ3 = c.z * c.x - c.y^2
-    );
-    h.y /= 2.0;
-
-    // compute cubic discriminant eq(0.7)
-    float d = dot(vec2(h.x, -h.y), h.zy); // Δ = δ1 * δ3 - δ2^2
-    float sqrt_d = sqrt(abs(d));
-
-    // compute depressed cubic eq(0.16), r[0] + r[1] * x + x^3 eq(0.11) eq(0.16)
-    vec2 r = vec2(h.y - h.x * n.z, h.x);
-    
-    // compute cubic roots using complex number formula eq(0.14)  
-    float t = atan(sqrt_d, -r.x) / 3.0;
-    mat2 mat = mat2(-1.0, -SQRT_3, -1.0, SQRT_3);
-
-    // compute three roots via rotation, applying complex root formula eq(0.14)
-    vec2 x2 = vec2(cos(t), sin(t));
-    vec3 x = vec3(x2 * mat, x2.x * 2.0);
-
-    // revert transformation eq(0.2) and eq(0.16)
-    x = sqrt(max(0.0, -r.y)) * x - n.z; 
-
-    // return result
-    return x;
-}
-
-vec3 cubic_roots_4(in vec4 c)
-{
-    // compute cubic derivative coefficients
-    vec3 dc = vec3(c.y, c.z * 2.0, c.w * 3.0);
-
-    // compute critical points 
-    vec2 ya_yb;
-    vec2 xa_xb = quadratic_roots(dc);
-    eval_poly(c, xa_xb, ya_yb);
-
-    // perform newton-bisections method
-    float y, dydx; 
-    float x = (xa_xb.x + xa_xb.y) * 0.5;
-
-    #pragma unroll
-    for (int i = 0; i < 4; ++i)
-    {
-        // evaluate cubic at new point
-        eval_poly(c, x, y, dydx);
-
-        // update bracket based on sign change
-        if ((y < 0.0) != (ya_yb.y < 0.0))
-        {
-            xa_xb.x = x;
-            ya_yb.x = y;
-        }
-        else
-        {
-            xa_xb.y = x;
-            ya_yb.y = y;
-        }
-
-        // newton step 
-        x -= y / dydx;
-
-        // bisection fallback
-        if (x < xa_xb.x || xa_xb.y > x)
-        { 
-            x = (xa_xb.x + xa_xb.y) * 0.5;
-        }
-    }
-
-    // deflate the cubic
-    vec3 a;
-    a.z = c.w;
-    a.y = c.z + x * a.z;
-    a.x = c.y + x * a.y;
-
-    // compute rest of roots via deflated quadratic
-    vec2 x1_x2 = quadratic_roots(a);
-    
-    // return roots
-    return vec3(x, x1_x2);
 }
 
 #endif

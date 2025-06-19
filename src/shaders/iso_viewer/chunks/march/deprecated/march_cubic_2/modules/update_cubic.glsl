@@ -14,10 +14,17 @@ cubic.errors.x = cubic.errors.w;
 cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-cubic.coeffs = cubic.inv_vander * cubic.errors;
+cubic.bcoeffs = cubic.A * cubic.errors;
 
-// check if there are sign crossings between samples for degenerate cases
-cell.intersected = any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+// If bernstein bounds allow for a root
+if ((mmin(cubic.bcoeffs) < 0.0) != (mmax(cubic.bcoeffs) < 0.0))
+{
+    // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
+    cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-// check polynomial intersection
-cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+    // check if there are sign crossings between samples for degenerate cases
+    cell.intersected = any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+
+    // check polynomial intersection
+    cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+}

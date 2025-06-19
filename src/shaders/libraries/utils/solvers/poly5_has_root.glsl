@@ -54,19 +54,20 @@ bool poly5_has_root_newton_bisection
     // bounded iteration count)
     float current = 0.5 * (begin + end);
 
-    #pragma unroll
-    for (int i = 0; i != 5; ++i) 
+    #pragma no_unroll
+    for (int i = 0; i != 20; ++i) 
     {
         // Evaluate the polynomial and its derivative
-        float value = poly5[5] * current + poly5[4];
         float derivative = poly5[5];
-
-        #pragma unroll
-        for (int j = 3; j != -1; --j) 
-        {
-            derivative = derivative * current + value;
-            value = value * current + poly5[j];
-        }
+        float value = derivative * current + poly5[4];
+        derivative = derivative * current + value;
+        value = value * current + poly5[3];
+        derivative = derivative * current + value;
+        value = value * current + poly5[2];
+        derivative = derivative * current + value;
+        value = value * current + poly5[1];
+        derivative = derivative * current + value;
+        value = value * current + poly5[0];
 
         // Shorten the interval
         bool right = begin_value * value > 0.0;
@@ -121,7 +122,10 @@ bool poly5_has_root_sign_change
     out_end_value = out_end_value * end + poly5[0];
 
     // If the values at both ends have the same non-zero sign, there is no root
-    if (begin_value * out_end_value > 0.0) return false;
+    if ((begin_value < 0.0) == (out_end_value < 0.0)) 
+    {
+        return false;
+    }
 
     return true;
 }
@@ -133,10 +137,10 @@ bool poly5_has_root
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1.0e-4;
+    float tolerance = (end - begin) * 1.0e-6;
 
     // The last entry in the root array is set to end to make it easier to
-    // iterate over relevant intervals, all untouched roots are set to begin
+    // iterate over relevant intervals, all untouched critical roots are set to begin
     float critical_roots[6];
     critical_roots[0] = begin;
     critical_roots[1] = begin;
@@ -251,11 +255,14 @@ bool poly5_has_root
     begin_value = begin_value * begin + derivative[0];
 
     // Iterate over the intervals where roots may be found
-    #pragma no_unroll
+    #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
+        float current_begin = critical_roots[i];
+        float current_end = critical_roots[i + 1];
+
         // Try to find a root
-        if (poly5_has_root_sign_change(begin_value, derivative, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, derivative, current_begin, current_end, begin_value))
         {
             return true;
         }

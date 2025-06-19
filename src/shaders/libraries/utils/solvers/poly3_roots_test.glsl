@@ -7,8 +7,8 @@ High-Performance Polynomial Solver Cem Yuksel (https://www.cemyuksel.com/researc
 cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPolynomial.h),
 */
 
-#ifndef POLY3_ROOTS
-#define POLY3_ROOTS
+#ifndef POLY3_ROOTS_TEST
+#define POLY3_ROOTS_TEST
 
 // When there are fewer intersections/roots than theoretically possible, some
 // array entries are set to this value
@@ -27,7 +27,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 //        bigger.
 // \return true if a root was found, false if no root exists.
 
-bool poly3_roots_newton_bisection
+bool poly3_roots_newton_bisection_test
 (
     out float out_root, 
     out float out_end_value,
@@ -35,7 +35,8 @@ bool poly3_roots_newton_bisection
     float begin, 
     float end,
     float begin_value, 
-    float error_tolerance
+    float error_tolerance,
+    int _iterations
 ){
     if (begin == end) 
     {
@@ -57,7 +58,7 @@ bool poly3_roots_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 10; ++i) 
+    for (int i = 0; i != _iterations; ++i) 
     {
         // Evaluate the polynomial and its derivative
         float derivative = poly3[3];
@@ -95,14 +96,16 @@ bool poly3_roots_newton_bisection
 // Finds all roots of the given polynomial in the interval [begin, end] and
 // writes them to out_roots. Some entries will be POLY3_NO_INTERSECTION but other 
 // than that the array is sorted. The last entry is always POLY3_NO_INTERSECTION.
-void poly3_roots
+void poly3_roots_test
 (
     out float out_roots[4], 
     float poly3[4], 
     float begin, 
-    float end
+    float end,
+    float _tolerance,
+    int _iterations
 ){
-    float tolerance = (end - begin) * 1.0e-9;
+    float tolerance = (end - begin) * _tolerance;
 
     // Construct the quadratic derivative of the polynomial. We divide each
     // derivative by the factorial of its order, such that the constant
@@ -172,7 +175,7 @@ void poly3_roots
 
         // Try to find a root
         float root;
-        if (poly3_roots_newton_bisection(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance))
+        if (poly3_roots_newton_bisection_test(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance, _iterations))
         {
             out_roots[i] = root;
         }

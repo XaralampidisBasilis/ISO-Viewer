@@ -7,12 +7,12 @@ High-Performance Polynomial Solver Cem Yuksel (https://www.cemyuksel.com/researc
 cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPolynomial.h),
 */
 
-#ifndef POLY3_ROOTS
-#define POLY3_ROOTS
+#ifndef POLY5_ROOTS_TEST
+#define POLY5_ROOTS_TEST
 
 // When there are fewer intersections/roots than theoretically possible, some
 // array entries are set to this value
-#define POLY3_NO_INTERSECTION 3.4e38
+#define POLY5_NO_INTERSECTION 3.4e38
 
 // Searches a single root of a polynomial within a given interval.
 // \param out_root The location of the found root.
@@ -27,15 +27,16 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 //        bigger.
 // \return true if a root was found, false if no root exists.
 
-bool poly3_roots_newton_bisection
+bool poly5_roots_newton_bisection_test
 (
     out float out_root, 
     out float out_end_value,
-    float poly3[4], 
+    float poly5[6], 
     float begin, 
     float end,
     float begin_value, 
-    float error_tolerance
+    float error_tolerance, 
+    int _iterations
 ){
     if (begin == end) 
     {
@@ -44,10 +45,12 @@ bool poly3_roots_newton_bisection
     }
 
     // Evaluate the polynomial at the end of the interval
-    out_end_value = poly3[3];
-    out_end_value = out_end_value * end + poly3[2];
-    out_end_value = out_end_value * end + poly3[1];
-    out_end_value = out_end_value * end + poly3[0];
+    out_end_value = poly5[5];
+    out_end_value = out_end_value * end + poly5[4];
+    out_end_value = out_end_value * end + poly5[3];
+    out_end_value = out_end_value * end + poly5[2];
+    out_end_value = out_end_value * end + poly5[1];
+    out_end_value = out_end_value * end + poly5[0];
 
     // If the values at both ends have the same non-zero sign, there is no root
     if (begin_value * out_end_value > 0.0) return false;
@@ -57,18 +60,19 @@ bool poly3_roots_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 10; ++i) 
+    for (int i = 0; i != _iterations; ++i) 
     {
         // Evaluate the polynomial and its derivative
-        float derivative = poly3[3];
-        float value = poly3[3] * current + poly3[2];
+        float value = poly5[5] * current + poly5[4];
+        float derivative = poly5[5];
+
         #pragma unroll
-        for (int j = 1; j != -1; --j) 
+        for (int j = 3; j != -1; --j) 
         {
             derivative = derivative * current + value;
-            value = value * current + poly3[j];
+            value = value * current + poly5[j];
         }
-    
+
         // Shorten the interval
         bool right = begin_value * value > 0.0;
         begin = right ? current : begin;
@@ -93,27 +97,31 @@ bool poly3_roots_newton_bisection
 
 
 // Finds all roots of the given polynomial in the interval [begin, end] and
-// writes them to out_roots. Some entries will be POLY3_NO_INTERSECTION but other 
-// than that the array is sorted. The last entry is always POLY3_NO_INTERSECTION.
-void poly3_roots
+// writes them to out_roots. Some entries will be POLY5_NO_INTERSECTION but other 
+// than that the array is sorted. The last entry is always POLY5_NO_INTERSECTION.
+void poly5_roots_test
 (
-    out float out_roots[4], 
-    float poly3[4], 
+    out float out_roots[6], 
+    float poly5[6], 
     float begin, 
-    float end
+    float end,
+    float _tolerance,
+    int _iterations
 ){
-    float tolerance = (end - begin) * 1.0e-9;
+    float tolerance = (end - begin) * _tolerance;
 
     // Construct the quadratic derivative of the polynomial. We divide each
     // derivative by the factorial of its order, such that the constant
     // coefficient can be copied directly from poly. That is a safeguard
     // against overflow and makes it easier to avoid spilling below. The
     // factors happen to be binomial coefficients then.
-    float derivative[4];
-    derivative[0] = poly3[1];
-    derivative[1] = poly3[2] * 2.0;
-    derivative[2] = poly3[3] * 3.0;
+    float derivative[6];
+    derivative[0] = poly5[3];
+    derivative[1] = poly5[4] * 4.0;
+    derivative[2] = poly5[5] * 10.0;
     derivative[3] = 0.0;
+    derivative[4] = 0.0;
+    derivative[5] = 0.0;
 
     // Compute its two roots using the quadratic formula
     float discriminant = derivative[1] * derivative[1] - 4.0 * derivative[0] * derivative[2];
@@ -124,66 +132,86 @@ void poly3_roots
         float scaled_root = derivative[1] + ((derivative[1] > 0.0) ? sqrt_discriminant : (-sqrt_discriminant));
         float root_0 = clamp(-2.0 * derivative[0] / scaled_root, begin, end);
         float root_1 = clamp(-0.5 * scaled_root / derivative[2], begin, end);
-        out_roots[1] = min(root_0, root_1);
-        out_roots[2] = max(root_0, root_1);
+        out_roots[3] = min(root_0, root_1);
+        out_roots[4] = max(root_0, root_1);
     }
     else 
     {
         // Indicate that the cubic derivative has a single root
-        out_roots[1] = begin;
-        out_roots[2] = begin;
+        out_roots[3] = begin;
+        out_roots[4] = begin;
     }
 
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched roots are set to begin
     out_roots[0] = begin;
-    out_roots[3] = end;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[5] = end;
 
     // Work your way up to derivatives of higher degree until you reach the
     // polynomial itself. This implementation may seem peculiar: It always
-    // treats the derivative as though it had degree 3 and it
+    // treats the derivative as though it had degree 5 and it
     // constructs the derivatives in a contrived way. Changing that would
     // reduce the number of arithmetic instructions roughly by a factor of two.
     // However, it would also cause register spilling, which has a far more
     // negative impact on the overall run time. Profiling indicates that the
     // current implementation has no spilling whatsoever.
-
-    // Take the integral of the previous derivative (scaled such that the
-    // constant coefficient can still be copied directly from poly)
-    // Copy the constant coefficient without causing spilling. This part
-    // would be harder if the derivative were not scaled the way it is.
-    derivative[3] = derivative[2] / 3.0;
-    derivative[2] = derivative[1] / 2.0;
-    derivative[1] = derivative[0];
-    derivative[0] = poly3[0];
-
-    // Determine the value of this derivative at begin
-    float begin_value = derivative[3];
-    begin_value = begin_value * begin + derivative[2];
-    begin_value = begin_value * begin + derivative[1];
-    begin_value = begin_value * begin + derivative[0];
-
-    // Iterate over the intervals where roots may be found
-    #pragma unroll
-    for (int i = 0; i != 3; ++i) 
+    #pragma no_unroll
+    for (int degree = 3; degree != 6; ++degree) 
     {
-        float current_begin = out_roots[i];
-        float current_end = out_roots[i + 1];
+        // Take the integral of the previous derivative (scaled such that the
+        // constant coefficient can still be copied directly from poly)
+        float prev_derivative_order = float(6 - degree);
+        derivative[5] = derivative[4] * (prev_derivative_order * (1.0 / 5.0));
+        derivative[4] = derivative[3] * (prev_derivative_order * (1.0 / 4.0));
+        derivative[3] = derivative[2] * (prev_derivative_order * (1.0 / 3.0));
+        derivative[2] = derivative[1] * (prev_derivative_order * (1.0 / 2.0));
+        derivative[1] = derivative[0] * (prev_derivative_order * (1.0 / 1.0));
+     
+        // Copy the constant coefficient without causing spilling. This part
+        // would be harder if the derivative were not scaled the way it is.
+        derivative[0] = (degree == 5) ? poly5[0] : derivative[0];
+        derivative[0] = (degree == 4) ? poly5[1] : derivative[0];
+        derivative[0] = (degree == 3) ? poly5[2] : derivative[0];
 
-        // Try to find a root
-        float root;
-        if (poly3_roots_newton_bisection(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance))
+        // Determine the value of this derivative at begin
+        float begin_value = derivative[5];
+        begin_value = begin_value * begin + derivative[4];
+        begin_value = begin_value * begin + derivative[3];
+        begin_value = begin_value * begin + derivative[2];
+        begin_value = begin_value * begin + derivative[1];
+        begin_value = begin_value * begin + derivative[0];
+
+        // Iterate over the intervals where roots may be found
+        #pragma unroll
+        for (int i = 0; i != 5; ++i) 
         {
-            out_roots[i] = root;
-        }
-        else
-        {
-            out_roots[i] = POLY3_NO_INTERSECTION;
+            if (i < 5 - degree) continue;
+
+            float current_begin = out_roots[i];
+            float current_end = out_roots[i + 1];
+
+            // Try to find a root
+            float root;
+            if (poly5_roots_newton_bisection_test(root, begin_value, derivative, current_begin, current_end, begin_value, tolerance, _iterations))
+            {
+                out_roots[i] = root;
+            }
+            else if (degree < 5)
+            {
+                // Create an empty interval for the next iteration
+                out_roots[i] = out_roots[i - 1];
+            }
+            else
+            {
+                out_roots[i] = POLY5_NO_INTERSECTION;
+            }
         }
     }
- 
+
     // We no longer need this array entry
-    out_roots[3] = POLY3_NO_INTERSECTION;
+    out_roots[5] = POLY5_NO_INTERSECTION;
 }
 
 #endif

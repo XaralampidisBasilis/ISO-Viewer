@@ -25,7 +25,7 @@ bool is_quintic_solvable(in float c[6], in vec2 xa_xb)
     );
 
     // solve for the critical points of the quintic polynomial
-    vec4 x0_x1_x2_x3 = quartic_roots_3(d);
+    vec4 x0_x1_x2_x3 = quartic_roots(d);
     x0_x1_x2_x3 = clamp(x0_x1_x2_x3, xa_xb.x, xa_xb.y);
 
     // compute the quintic extrema values at the critical points
@@ -64,7 +64,7 @@ bool is_quintic_solvable(in float c[6], in vec2 xa_xb, in vec2 ya_yb)
     );
 
     // solve for the critical points of the quintic polynomial
-    vec4 x0_x1_x2_x3 = quartic_roots_3(d);
+    vec4 x0_x1_x2_x3 = quartic_roots(d);
     x0_x1_x2_x3 = clamp(x0_x1_x2_x3, xa_xb.x, xa_xb.y);
 
     // compute the quintic extrema values at the critical points

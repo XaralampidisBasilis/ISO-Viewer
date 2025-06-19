@@ -55,14 +55,33 @@ quintic.coeffs = float[6](
     c3_c4_c5[2]
 );
 
-// Compute sign changes for degenerate cases
-cell.intersected = 
-    (quintic.errors[0] * quintic.errors[1] <= 0.0) ||
-    (quintic.errors[1] * quintic.errors[2] <= 0.0) ||
-    (quintic.errors[2] * quintic.errors[3] <= 0.0) ||
-    (quintic.errors[3] * quintic.errors[4] <= 0.0) ||
-    (quintic.errors[4] * quintic.errors[5] <= 0.0);
 
-// Compute analytic intersection.
-cell.intersected = cell.intersected || is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
+// Compute berstein coefficients and check if no roots
+vec3 b0_b1_b2 = quintic.pow_bernstein[0] * c0_c1_c2 + quintic.pow_bernstein[1] * c3_c4_c5;
+vec3 b3_b4_b5 = quintic.pow_bernstein[2] * c3_c4_c5;    
+
+// Compute resulted quintic bernstein polynomial coefficients
+quintic.bcoeffs = float[6](
+    b0_b1_b2[0], 
+    b0_b1_b2[1], 
+    b0_b1_b2[2], 
+    b3_b4_b5[0], 
+    b3_b4_b5[1], 
+    b3_b4_b5[2]
+);
+
+// If bernstein bounds allow for a root
+if ((mmin(quintic.bcoeffs) < 0.0) != (mmax(quintic.bcoeffs) < 0.0))
+{
+    // Compute sign changes for degenerate cases
+    cell.intersected = 
+        (quintic.errors[0] * quintic.errors[1] <= 0.0) ||
+        (quintic.errors[1] * quintic.errors[2] <= 0.0) ||
+        (quintic.errors[2] * quintic.errors[3] <= 0.0) ||
+        (quintic.errors[3] * quintic.errors[4] <= 0.0) ||
+        (quintic.errors[4] * quintic.errors[5] <= 0.0);
+
+    // Compute analytic intersection.
+    cell.intersected = cell.intersected || is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
+}
 

@@ -105,7 +105,7 @@ void poly5_roots
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1.0e-4;
+    float tolerance = (end - begin) * 1.0e-9;
 
     // Construct the quadratic derivative of the polynomial. We divide each
     // derivative by the factorial of its order, such that the constant

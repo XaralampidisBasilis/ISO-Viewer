@@ -26,14 +26,16 @@ for v = 0:n
     end
 end
 
-% transpose to follow glsl format
-M = M.';
-disp(M)
+M = sym(M);
+IM = inv(M);
+disp(IM);
 
-% Break the bernstein matrix
-%M00 = M(1:3, 1:3);
-%M01 = M(1:3, 4:6);
-%M10 = M(4:6, 1:3);
-%M11 = M(4:6, 4:6);
-%disp([M00, M01; M10, M11])
+% Create the symbolic Vandermonde inverse 
+x = sym(linspace(0, 1, n+1));
+V = fliplr(vander(x));
+IV = inv(V);  % symbolic matrix with exact fractions
+disp(IV)
 
+% samples to bernstein
+A = IM' * IV;
+disp(A)

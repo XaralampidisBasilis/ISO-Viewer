@@ -1,6 +1,8 @@
 
 // PRINT DEBUG
 
+// debug.variable1 = to_color(surface.steepness <  u_debugging.variable2);
+
 debug.variable9 = to_color(mmix2(
     COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA,
     COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,

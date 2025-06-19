@@ -84,6 +84,7 @@ export default class ISOGui
             stride                : uDistanceMap.stride,
             INTERSECT_BBOX_ENABLED: Boolean(defines.INTERSECT_BBOX_ENABLED),
             INTERSECT_BVOL_ENABLED: Boolean(defines.INTERSECT_BVOL_ENABLED),
+            BERNSTEIN_SKIP_ENABLED: Boolean(defines.BERNSTEIN_SKIP_ENABLED),
             SKIPPING_ENABLED      : Boolean(defines.SKIPPING_ENABLED),
             INTERPOLATION_METHOD  : Number(defines.INTERPOLATION_METHOD),
             SKIPPING_METHOD       : Number(defines.SKIPPING_METHOD),
@@ -106,6 +107,7 @@ export default class ISOGui
             maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
             enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
+            enableBernsteinSkip: folder.add(objects, 'BERNSTEIN_SKIP_ENABLED').name('bernstein_skip').onFinishChange((value) => { defines.BERNSTEIN_SKIP_ENABLED = Number(value), material.needsUpdate = true }),
 
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1 }).onFinishChange((option) => 
             { 
