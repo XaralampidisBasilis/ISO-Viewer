@@ -1,7 +1,7 @@
-#ifndef STRUCT_QUINTIC
-#define STRUCT_QUINTIC
+#ifndef STRUCT_CUBIC_QUINTIC
+#define STRUCT_CUBIC_QUINTIC
 
-struct Quintic 
+struct CubicQuintic 
 {
     vec2 interval;
     float intensities[6];    
@@ -14,25 +14,23 @@ struct Quintic
     float nroots;
     float weights[6];
     mat3 inv_vander[4]; 
-    mat3 pow_bernstein[3];  // power to berstein basis matrix
-    mat3 bernstein_pow[3];  // berstein to power basis matrix
     mat3 sample_bernstein[4]; // samples to berstein coefficients
 };
 
-Quintic quintic; // Global mutable struct
+CubicQuintic cubic_quintic; // Global mutable struct
 
-void set_quintic()
+void set_cubic_quintic()
 {
-    quintic.nroots = 0.0;
-    quintic.interval = vec2(0.0, 1.0);
-    quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.corrections = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.weights = float[6](
+    cubic_quintic.nroots = 0.0;
+    cubic_quintic.interval = vec2(0.0, 1.0);
+    cubic_quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.corrections = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    cubic_quintic.weights = float[6](
         0.0 / 5.0, 
         1.0 / 5.0, 
         2.0 / 5.0, 
@@ -40,7 +38,7 @@ void set_quintic()
         4.0 / 5.0, 
         5.0 / 5.0
     );
-    quintic.inv_vander = mat3[4]
+    cubic_quintic.inv_vander = mat3[4]
     (
         // inv vander 00
         mat3(
@@ -70,53 +68,7 @@ void set_quintic()
             875,  -1250,   625
         ) / 24.0
     );
-    quintic.pow_bernstein = mat3[3]
-    (
-        // 00
-        mat3(
-            10, 0, 0,
-            10, 2, 0,
-            10, 4, 1
-        ) / 10.0,
-
-        // 10
-        mat3(
-            10, 6, 3,
-            10, 8, 6,
-            10, 10, 10
-        ) / 10.0,
-
-        // 11
-        mat3(
-            1, 0, 0,
-            4, 2, 0,
-            10, 10, 10
-        ) / 10.0
-    );
-    quintic.bernstein_pow = mat3[3]
-    (
-        // 00
-        mat3(
-            1, 0, 0,
-            -5, 5, 0,
-            10, -20, 10
-        ),
-
-        // 10
-        mat3(
-            -10, 30, -30,
-            5, -20, 30,
-            -1, 5, -10
-        ),
-
-        // 11
-        mat3(
-            10, 0, 0,
-            -20, 5, 0,
-            10, -5, 1
-        )
-    );
-    quintic.sample_bernstein = mat3[4]
+    cubic_quintic.sample_bernstein = mat3[4]
     (
         // inv vander 00
         mat3(

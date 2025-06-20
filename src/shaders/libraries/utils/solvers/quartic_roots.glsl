@@ -131,7 +131,7 @@ vec4 quartic_roots(in float c[5])
     // Solve resolvent cubic rc + rbU + raU^2 + U^3 
     // for the max root U, where U = u^2
     float U_max = resolvent_cubic_max_root(rc, rb, ra);
-    float u = sqrt(max(U_max, 0.0));
+    float u = sqrt(abs(U_max));
     
     // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)
@@ -182,7 +182,7 @@ vec4 quartic_roots_2(in float c[5])
     // Solve resolvent cubic rc + rbU + raU^2 + U^3 
     // for the max root U, where U = u^2
     float U_max = resolvent_cubic_max_root(rc, rb, ra);
-    float u = sqrt(max(U_max, 0.0));
+    float u = sqrt(abs(U_max));
     
     // Compute factored quadratics resulting from cubic solution
     // r + qy + py^2 + y^4 = (t + sy + y^2)(v + uy + y^2)

@@ -87,6 +87,8 @@ export default class ISOGui
             BERNSTEIN_SKIP_ENABLED: Boolean(defines.BERNSTEIN_SKIP_ENABLED),
             SKIPPING_ENABLED      : Boolean(defines.SKIPPING_ENABLED),
             INTERPOLATION_METHOD  : Number(defines.INTERPOLATION_METHOD),
+            INTERSECTION_METHOD   : Number(defines.INTERSECTION_METHOD),
+            HYBRID_METHOD         : Number(defines.HYBRID_METHOD),
             SKIPPING_METHOD       : Number(defines.SKIPPING_METHOD),
         }
     
@@ -112,6 +114,17 @@ export default class ISOGui
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1 }).onFinishChange((option) => 
             { 
                 this.viewer.onInterpolationChange(option) 
+            }),
+
+            // intersectionMethod: folder.add(objects, 'INTERSECTION_METHOD').name('intersection').options({ cubic : 0, quintic : 1 }).onFinishChange(() => 
+            // { 
+            //     material.needsUpdate = true 
+            // }),
+
+            hybridMethod: folder.add(objects, 'HYBRID_METHOD').name('hybrid').options({ none : 0, method1 : 1 }).onFinishChange((option) => 
+            { 
+                defines.HYBRID_METHOD = Number(option)
+                material.needsUpdate = true 
             }),
 
             skippingMethod: folder.add(objects, 'SKIPPING_METHOD').name('skipping').options({ none: 0, occupancy : 1, isotropic : 2, anisotropic : 3, extended : 4 }).onFinishChange((option) => 

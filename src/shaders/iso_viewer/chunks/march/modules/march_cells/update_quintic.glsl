@@ -24,65 +24,61 @@ quintic.errors[4] = quintic.intensities[4] - u_rendering.intensity;
 quintic.errors[5] = quintic.intensities[5] - u_rendering.intensity;
 
 // Compute resulted quintic interpolation polynomial coefficients
-vec3 y0_y1_y2 = vec3(
+vec3 r0_r1_r2 = vec3(
     quintic.errors[0], 
     quintic.errors[1], 
     quintic.errors[2]
 );
 
-vec3 y3_y4_y5 = vec3(
+vec3 r3_r4_r5 = vec3(
     quintic.errors[3], 
     quintic.errors[4], 
     quintic.errors[5]
 );
 
+vec2 r0_r5 = vec2(
+    quintic.errors[0], 
+    quintic.errors[5]
+);
+
 #if BERNSTEIN_SKIP_ENABLED == 0
 
-    vec2 y0_y5 = vec2(
-        quintic.errors[0], 
-        quintic.errors[5]
-    );
-
     // Perform broken 6 x 6 matrix multiplication
-    vec3 c0_c1_c2 = quintic.inv_vander[0] * y0_y1_y2 + quintic.inv_vander[2] * y3_y4_y5;
-    vec3 c3_c4_c5 = quintic.inv_vander[1] * y0_y1_y2 + quintic.inv_vander[3] * y3_y4_y5;
+    vec3 c0_c1_c2 = quintic.inv_vander[0] * r0_r1_r2 + quintic.inv_vander[2] * r3_r4_r5;
+    vec3 c3_c4_c5 = quintic.inv_vander[1] * r0_r1_r2 + quintic.inv_vander[3] * r3_r4_r5;
 
     // Compute resulted quintic interpolation polynomial coefficients
-    quintic.coeffs = float[6](
-        c0_c1_c2[0], 
-        c0_c1_c2[1], 
-        c0_c1_c2[2], 
-        c3_c4_c5[0], 
-        c3_c4_c5[1], 
-        c3_c4_c5[2]
-    );
+    quintic.coeffs[0] = c0_c1_c2[0];
+    quintic.coeffs[1] = c0_c1_c2[1];
+    quintic.coeffs[2] = c0_c1_c2[2];
+    quintic.coeffs[3] = c3_c4_c5[0];
+    quintic.coeffs[4] = c3_c4_c5[1];
+    quintic.coeffs[5] = c3_c4_c5[2];
 
     // Compute analytic intersection.
-    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
+    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5);
 
     // Compute sign changes for degenerate cases
     cell.intersected = cell.intersected  ||
-    (quintic.errors[0] * quintic.errors[1] <= 0.0) ||
-    (quintic.errors[1] * quintic.errors[2] <= 0.0) ||
-    (quintic.errors[2] * quintic.errors[3] <= 0.0) ||
-    (quintic.errors[3] * quintic.errors[4] <= 0.0) ||
-    (quintic.errors[4] * quintic.errors[5] <= 0.0);
+    (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0) ||
+    (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0) ||
+    (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0) ||
+    (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0) ||
+    (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
 
 #else
 
     // Compute berstein coefficients and check if no roots
-    vec3 b0_b1_b2 = quintic.sample_bernstein[0] * y0_y1_y2 + quintic.sample_bernstein[2] * y3_y4_y5;
-    vec3 b3_b4_b5 = quintic.sample_bernstein[1] * y0_y1_y2 + quintic.sample_bernstein[3] * y3_y4_y5;
+    vec3 b0_b1_b2 = quintic.sample_bernstein[0] * r0_r1_r2 + quintic.sample_bernstein[2] * r3_r4_r5;
+    vec3 b3_b4_b5 = quintic.sample_bernstein[1] * r0_r1_r2 + quintic.sample_bernstein[3] * r3_r4_r5;
 
     // Compute resulted quintic bernstein polynomial coefficients
-    quintic.bcoeffs = float[6](
-        b0_b1_b2[0], 
-        b0_b1_b2[1], 
-        b0_b1_b2[2], 
-        b3_b4_b5[0], 
-        b3_b4_b5[1], 
-        b3_b4_b5[2]
-    );
+    quintic.bcoeffs[0] = b0_b1_b2[0];
+    quintic.bcoeffs[1] = b0_b1_b2[1];
+    quintic.bcoeffs[2] = b0_b1_b2[2];
+    quintic.bcoeffs[3] = b3_b4_b5[0];
+    quintic.bcoeffs[4] = b3_b4_b5[1];
+    quintic.bcoeffs[5] = b3_b4_b5[2];
 
     // Compute berstein coefficients signs check to detect no intersection
     cell.intersected = (mmin(quintic.bcoeffs) < 0.0) != (mmax(quintic.bcoeffs) < 0.0);
@@ -90,36 +86,28 @@ vec3 y3_y4_y5 = vec3(
     // If bernstein check allows roots, check analytically
     if (cell.intersected)
     {
-        vec2 y0_y5 = vec2(
-            quintic.errors[0], 
-            quintic.errors[5]
-        );
-
         // Perform broken 6 x 6 matrix multiplication
-        vec3 c0_c1_c2 = quintic.inv_vander[0] * y0_y1_y2 + quintic.inv_vander[2] * y3_y4_y5;
-        vec3 c3_c4_c5 = quintic.inv_vander[1] * y0_y1_y2 + quintic.inv_vander[3] * y3_y4_y5;
+        vec3 c0_c1_c2 = quintic.inv_vander[0] * r0_r1_r2 + quintic.inv_vander[2] * r3_r4_r5;
+        vec3 c3_c4_c5 = quintic.inv_vander[1] * r0_r1_r2 + quintic.inv_vander[3] * r3_r4_r5;
 
         // Compute resulted quintic interpolation polynomial coefficients
-        quintic.coeffs = float[6](
-            c0_c1_c2[0], 
-            c0_c1_c2[1], 
-            c0_c1_c2[2], 
-            c3_c4_c5[0], 
-            c3_c4_c5[1], 
-            c3_c4_c5[2]
-        );
+        quintic.coeffs[0] = c0_c1_c2[0];
+        quintic.coeffs[1] = c0_c1_c2[1];
+        quintic.coeffs[2] = c0_c1_c2[2];
+        quintic.coeffs[3] = c3_c4_c5[0];
+        quintic.coeffs[4] = c3_c4_c5[1];
+        quintic.coeffs[5] = c3_c4_c5[2];
 
         // Compute analytic intersection.
-        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, y0_y5);
-        // cell.intersected = poly5_has_root(quintic.coeffs, quintic.interval.x, quintic.interval.y);
+        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5);
 
         // Compute sign changes for degenerate cases
         cell.intersected = cell.intersected  ||
-        (quintic.errors[0] * quintic.errors[1] <= 0.0) ||
-        (quintic.errors[1] * quintic.errors[2] <= 0.0) ||
-        (quintic.errors[2] * quintic.errors[3] <= 0.0) ||
-        (quintic.errors[3] * quintic.errors[4] <= 0.0) ||
-        (quintic.errors[4] * quintic.errors[5] <= 0.0);
+        (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0) ||
+        (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0) ||
+        (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0) ||
+        (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0) ||
+        (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
     }   
 
 #endif

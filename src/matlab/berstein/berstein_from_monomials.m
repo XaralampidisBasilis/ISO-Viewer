@@ -17,7 +17,7 @@ clc, clear
 % polynomial B_v^n(t) expressed in the monomial basis:
 %     B_v^n(t) = sum_k M(v+1, l+1) * t^l
 
-n = 5;
+n = 3;
 M = zeros(n+1);  % Preallocate (n+1)x(n+1)
 
 for v = 0:n
@@ -28,13 +28,15 @@ end
 
 M = sym(M);
 IM = inv(M);
-disp(IM);
+%disp(IM);
 
 % Create the symbolic Vandermonde inverse 
-x = sym(linspace(0, 1, n+1));
+%x = sym(linspace(0, 1, n+1));
+x = sym([0, 2/5, 3/5, 1]);
+
 V = fliplr(vander(x));
 IV = inv(V);  % symbolic matrix with exact fractions
-disp(IV)
+%disp(IV)
 
 % samples to bernstein
 A = IM' * IV;

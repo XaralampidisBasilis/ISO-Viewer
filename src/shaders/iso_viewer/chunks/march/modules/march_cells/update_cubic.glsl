@@ -13,7 +13,6 @@ cubic.intensities.w = sample_intensity(camera.position + ray.direction * cubic.d
 cubic.errors.x = cubic.errors.w;
 cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
 
-
 #if BERNSTEIN_SKIP_ENABLED == 0
 
     // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
@@ -23,7 +22,10 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
     cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
 
     // check if there are sign crossings between samples for degenerate cases
-    cell.intersected = cell.intersected || any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+    cell.intersected = cell.intersected || 
+    (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0) ||
+    (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0) ||
+    (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
 
 #else
 
@@ -43,7 +45,10 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
         cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
 
         // check if there are sign crossings between samples for degenerate cases
-        cell.intersected = cell.intersected || any(lessThanEqual(cubic.errors.xyz * cubic.errors.yzw, vec3(0.0)));
+        cell.intersected = cell.intersected || 
+        (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0) ||
+        (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0) ||
+        (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
     }
 
 #endif
