@@ -18,14 +18,11 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
     // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
     cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-    // check polynomial intersection
-    cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
-
-    // check if there are sign crossings between samples for degenerate cases
-    cell.intersected = cell.intersected || 
-    (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0) ||
-    (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0) ||
-    (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
+    // check cubic intersection and sign crossings for degenerate cases
+    cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw)
+    || (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0)
+    || (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0)
+    || (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
 
 #else
 
@@ -41,14 +38,11 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
         // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
         cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-        // check polynomial intersection
-        cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
-
-        // check if there are sign crossings between samples for degenerate cases
-        cell.intersected = cell.intersected || 
-        (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0) ||
-        (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0) ||
-        (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
+        // check cubic intersection and sign crossings for degenerate cases
+        cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw)
+        || (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0)
+        || (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0)
+        || (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
     }
 
 #endif

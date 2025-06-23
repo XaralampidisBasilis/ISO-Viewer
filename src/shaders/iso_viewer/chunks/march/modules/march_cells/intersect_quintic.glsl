@@ -1,4 +1,4 @@
-#if HYBRID_METHOD == 1
+#if HYBRID_METHOD != 0
 
     quintic.distances[1] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[1]);
     quintic.distances[4] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[4]);

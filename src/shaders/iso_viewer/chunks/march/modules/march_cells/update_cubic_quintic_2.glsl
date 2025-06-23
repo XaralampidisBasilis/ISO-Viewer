@@ -32,27 +32,19 @@ quintic.errors[2] = quintic.intensities[2] - u_rendering.intensity;
 quintic.errors[3] = quintic.intensities[3] - u_rendering.intensity;
 quintic.errors[5] = quintic.intensities[5] - u_rendering.intensity;
 
-// compute tricubic correction term bound
-vec3 h0_h2_h3 = vec3(
+// Compute a Berstein bound of the correction quintic inside the interval
+vec4 h0_h2_h3_h5 = vec4(
     quintic.corrections[0],
-    (quintic.corrections[0] + quintic.corrections[1]) / 2.0,
-    quintic.corrections[2]
-);
-
-vec3 h4_h5_h6 = vec3(
+    quintic.corrections[2],
     quintic.corrections[3],
-    (quintic.corrections[3] + quintic.corrections[5]) / 2.0,
     quintic.corrections[5]
 );
 
-// Compute berstein corrections coefficients
-vec3 a0_a1_a2 = abs(quintic.sample_bernstein[0] * h0_h2_h3 + quintic.sample_bernstein[2] * h4_h5_h6);
-vec3 a3_a4_a5 = abs(quintic.sample_bernstein[1] * h0_h2_h3 + quintic.sample_bernstein[3] * h4_h5_h6);
-float max_abs_a = max(mmax(a0_a1_a2), mmax(a3_a4_a5));
+vec2 a0_a5 = abs(h0_h2_h3_h5.xw);
+vec4 a1_a2_a3_a4 = abs(quintic_sample_sub_bernstein * h0_h2_h3_h5);
+float max_abs_a = max(mmax(a0_a5), mmax(a1_a2_a3_a4));
 
-debug.variable3 = to_color(max_abs_a < mix(0.0, 2.0, u_debugging.variable3));
-
-
+// If this bound is small then switch to cubic reconstruction
 if (max_abs_a < 0.1)
 {
     cubic.errors.x = quintic.errors[0];

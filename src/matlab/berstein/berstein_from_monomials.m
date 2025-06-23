@@ -31,8 +31,9 @@ IM = inv(M);
 %disp(IM);
 
 % Create the symbolic Vandermonde inverse 
-%x = sym(linspace(0, 1, n+1));
-x = sym([0, 2/5, 3/5, 1]);
+x = sym(linspace(0, 1, n+1));
+%x = sym([0, 2/5, 3/5, 1]);
+%x = sym([1/3, 2/3, 1]);
 
 V = fliplr(vander(x));
 IV = inv(V);  % symbolic matrix with exact fractions

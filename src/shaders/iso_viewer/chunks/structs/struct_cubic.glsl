@@ -7,6 +7,7 @@ struct Cubic
     vec3 roots;
     vec4 intensities;    
     vec4 errors;
+    vec2 extrema;
     vec4 distances;
     vec4 coeffs;    
     vec4 bcoeffs; // berstein coefficients
@@ -26,6 +27,7 @@ void set_cubic()
     cubic.roots = vec3(0);
     cubic.intensities = vec4(0);
     cubic.errors = vec4(0);
+    cubic.extrema = vec2(0);
     cubic.distances = vec4(0);
     cubic.coeffs = vec4(0);
     cubic.bcoeffs = vec4(0);

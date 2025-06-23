@@ -13,13 +13,26 @@ const mat4 cubic_sample_bernstein = mat4(
     0, 6, -13, 18
 ) / 18.0;
 
-// #if INTERPOLATION_METHOD == 0
+const mat4 quintic_sample_sub_bernstein = mat4(
+    -308,   269,  -154,    48,
+    -1200,  2950, -2300,   800,
+    800, -2300,  2950, -1200,
+    48,  -154,   269,  -308
+) / 240.0;
+
+const mat4x2 quintic_sample_sub_bernstein_2 = mat4x2(
+    240, 290, 185,  60,
+    60, 185, 290, 240
+) / 48.0;
+
+
+// #if VARIATION_ENABLED == 0
 // #include "./deprecated/march_cubic/compute_march"
 // #else
 // #include "./deprecated/march_cubic_2/compute_march"
 // #endif
 
-// #if INTERPOLATION_METHOD == 0
+// #if VARIATION_ENABLED == 0
 // #include "./deprecated/march_quintic/compute_march"
 // #else
 // #include "./deprecated/march_quintic_2/compute_march"

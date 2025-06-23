@@ -103,12 +103,14 @@ export default function()
 
     const defines = 
     {           
-        INTERSECT_BBOX_ENABLED : 0,
-        INTERSECT_BVOL_ENABLED : 0,
-        BERNSTEIN_SKIP_ENABLED : 1,
-        SKIPPING_ENABLED       : 1,
+        INTERSECT_BBOX_ENABLED: 0,
+        INTERSECT_BVOL_ENABLED: 0,
+        BERNSTEIN_SKIP_ENABLED: 1,
+        SKIPPING_ENABLED      : 1,
+        VARIATION_ENABLED     : 0,
 
-        INTERPOLATION_METHOD : 1,
+
+        INTERPOLATION_METHOD : 2,
         INTERSECTION_METHOD : 1,
         HYBRID_METHOD : 0,
         SKIPPING_METHOD : 3,

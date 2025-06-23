@@ -19,14 +19,24 @@ cell.coords += cell.axes * ray.signs;
 
 // compute cell polynomial interpolation
 #if INTERPOLATION_METHOD == 0
-#include "./update_cubic"
-#else
+
+    #include "./update_cubic"
+
+#elif INTERPOLATION_METHOD == 1
 
     #if HYBRID_METHOD == 1
     #include "./update_cubic_quintic"
+    #elif HYBRID_METHOD == 2
+    #include "./update_cubic_quintic_2"
+    #elif HYBRID_METHOD == 3
+    #include "./update_cubic_quintic_3"
     #else
     #include "./update_quintic"
     #endif
+
+#elif INTERPOLATION_METHOD == 2
+
+    #include "./update_poly"
 
 #endif
 

@@ -82,6 +82,7 @@ export default class ISOGui
         { 
             intensity             : uRendering.intensity,
             stride                : uDistanceMap.stride,
+            VARIATION_ENABLED     : Boolean(defines.VARIATION_ENABLED),
             INTERSECT_BBOX_ENABLED: Boolean(defines.INTERSECT_BBOX_ENABLED),
             INTERSECT_BVOL_ENABLED: Boolean(defines.INTERSECT_BVOL_ENABLED),
             BERNSTEIN_SKIP_ENABLED: Boolean(defines.BERNSTEIN_SKIP_ENABLED),
@@ -107,21 +108,19 @@ export default class ISOGui
             maxGroups          : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
             maxCellCount       : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
             maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
+            enableVariation: folder.add(objects, 'VARIATION_ENABLED').name('variation').onFinishChange((value) => { defines.VARIATION_ENABLED = Number(value), material.needsUpdate = true }),
+            enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
             enableBernsteinSkip: folder.add(objects, 'BERNSTEIN_SKIP_ENABLED').name('bernstein_skip').onFinishChange((value) => { defines.BERNSTEIN_SKIP_ENABLED = Number(value), material.needsUpdate = true }),
 
-            interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1 }).onFinishChange((option) => 
+            interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1, tricubic2 : 2 }).onFinishChange((option) => 
             { 
                 this.viewer.onInterpolationChange(option) 
             }),
 
-            // intersectionMethod: folder.add(objects, 'INTERSECTION_METHOD').name('intersection').options({ cubic : 0, quintic : 1 }).onFinishChange(() => 
-            // { 
-            //     material.needsUpdate = true 
-            // }),
 
-            hybridMethod: folder.add(objects, 'HYBRID_METHOD').name('hybrid').options({ none : 0, method1 : 1 }).onFinishChange((option) => 
+            hybridMethod: folder.add(objects, 'HYBRID_METHOD').name('hybrid').options({ none : 0, method1 : 1, method2 : 2, method3 : 3}).onFinishChange((option) => 
             { 
                 defines.HYBRID_METHOD = Number(option)
                 material.needsUpdate = true 

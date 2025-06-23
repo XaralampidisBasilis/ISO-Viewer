@@ -55,16 +55,13 @@ vec2 r0_r5 = vec2(
     quintic.coeffs[4] = c3_c4_c5[1];
     quintic.coeffs[5] = c3_c4_c5[2];
 
-    // Compute analytic intersection.
-    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5);
-
-    // Compute sign changes for degenerate cases
-    cell.intersected = cell.intersected  ||
-    (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0) ||
-    (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0) ||
-    (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0) ||
-    (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0) ||
-    (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
+    // Compute analytic intersection, and sign crossings for degenerate cases
+    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5)
+    || (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0) 
+    || (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0) 
+    || (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0) 
+    || (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0) 
+    || (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
 
 #else
 
@@ -98,16 +95,13 @@ vec2 r0_r5 = vec2(
         quintic.coeffs[4] = c3_c4_c5[1];
         quintic.coeffs[5] = c3_c4_c5[2];
 
-        // Compute analytic intersection.
-        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5);
-
-        // Compute sign changes for degenerate cases
-        cell.intersected = cell.intersected  ||
-        (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0) ||
-        (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0) ||
-        (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0) ||
-        (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0) ||
-        (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
+        // Compute analytic intersection, and sign crossings for degenerate cases
+        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5)
+        || (quintic.errors[0] < 0.0) != (quintic.errors[1] < 0.0)
+        || (quintic.errors[1] < 0.0) != (quintic.errors[2] < 0.0)
+        || (quintic.errors[2] < 0.0) != (quintic.errors[3] < 0.0)
+        || (quintic.errors[3] < 0.0) != (quintic.errors[4] < 0.0)
+        || (quintic.errors[4] < 0.0) != (quintic.errors[5] < 0.0);
     }   
 
 #endif

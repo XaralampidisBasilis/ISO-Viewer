@@ -15,8 +15,10 @@
 
 // Compute sampling distances inside the cell
 quintic.distances[0] = quintic.distances[5];
+quintic.distances[1] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[1]);
 quintic.distances[2] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[2]);
 quintic.distances[3] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[3]);
+quintic.distances[4] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[4]);
 quintic.distances[5] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[5]);
 
 // Sample triquadratic corrected intensities at each distance
@@ -32,27 +34,34 @@ quintic.errors[2] = quintic.intensities[2] - u_rendering.intensity;
 quintic.errors[3] = quintic.intensities[3] - u_rendering.intensity;
 quintic.errors[5] = quintic.intensities[5] - u_rendering.intensity;
 
-// compute tricubic correction term bound
-vec3 h0_h2_h3 = vec3(
+// Compute a Berstein bound of the correction quintic inside the interval
+vec4 h0_h2_h3_h5 = vec4(
     quintic.corrections[0],
-    (quintic.corrections[0] + quintic.corrections[1]) / 2.0,
-    quintic.corrections[2]
-);
-
-vec3 h4_h5_h6 = vec3(
+    quintic.corrections[2],
     quintic.corrections[3],
-    (quintic.corrections[3] + quintic.corrections[5]) / 2.0,
     quintic.corrections[5]
 );
 
-// Compute berstein corrections coefficients
-vec3 a0_a1_a2 = abs(quintic.sample_bernstein[0] * h0_h2_h3 + quintic.sample_bernstein[2] * h4_h5_h6);
-vec3 a3_a4_a5 = abs(quintic.sample_bernstein[1] * h0_h2_h3 + quintic.sample_bernstein[3] * h4_h5_h6);
-float max_abs_a = max(mmax(a0_a1_a2), mmax(a3_a4_a5));
+vec2 a0_a5 = abs(h0_h2_h3_h5.xw);
+vec4 a1_a2_a3_a4 = abs(quintic_sample_sub_bernstein * h0_h2_h3_h5);
 
-debug.variable3 = to_color(max_abs_a < mix(0.0, 2.0, u_debugging.variable3));
+// Reconstruct a max bound the remaining samples
+vec3 p1 = camera.position + ray.direction * quintic.distances[1];
+vec3 p4 = camera.position + ray.direction * quintic.distances[4];
+p1 -= 0.5;
+p4 -= 0.5;
 
+vec3 frac1 = p1 - floor(p1);
+vec3 frac4 = p4 - floor(p4);
+vec2 h1_h4 = vec2(
+    dot(frac1 * (1.0 - frac1), vec3(1.0)),
+    dot(frac4 * (1.0 - frac4), vec3(1.0))
+);
 
+a1_a2_a3_a4 += h1_h4 * quintic_sample_sub_bernstein_2;
+float max_abs_a = max(mmax(a0_a5), mmax(a1_a2_a3_a4));
+
+// If this bound is small then switch to cubic reconstruction
 if (max_abs_a < 0.1)
 {
     cubic.errors.x = quintic.errors[0];
@@ -90,9 +99,6 @@ if (max_abs_a < 0.1)
 }
 else
 {
-    quintic.distances[1] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[1]);
-    quintic.distances[4] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[4]);
-
     quintic.intensities[1] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[1], quintic.corrections[1]);
     quintic.intensities[4] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[4], quintic.corrections[4]);
 

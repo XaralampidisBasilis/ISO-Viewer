@@ -12,8 +12,7 @@ float sample_trilaplacian_intensity(in vec3 coords)
     vec4 fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
     // compute correction terms
-    vec3 x = coords - 0.5;
-    vec3 a = x - floor(x);
+    vec3 a = fract(coords - 0.5);
     vec3 aa = a * (a - 1.0) / 2.0;
 
     // compute correction
@@ -35,12 +34,33 @@ float sample_trilaplacian_intensity(in vec3 coords, out float c)
     vec4 fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
     // compute correction terms
-    vec3 x = coords - 0.5;
-    vec3 a = x - floor(x);
+    vec3 a = fract(coords - 0.5);
     vec3 aa = a * (a - 1.0) / 2.0;
 
     // compute correction
     c = dot(fxx_fyy_fzz_f.xyz, aa);
+    float fc = fxx_fyy_fzz_f.a + c;
+
+    // return the improved intensity value
+    return fc;
+}
+
+float sample_trilaplacian_intensity(in vec3 coords, out vec4 fxx_fyy_fzz_f, out vec3 aa)
+{
+    #if STATS_ENABLED == 1
+    stats.num_fetches += 1;
+    #endif
+
+    // sample the augmented volume    
+    vec3 uvw = coords * u_intensity_map.inv_dimensions;
+    fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
+    
+    // compute correction terms
+    vec3 a = fract(coords - 0.5);
+    aa = a * (a - 1.0) / 2.0;
+
+    // compute correction
+    float c = dot(fxx_fyy_fzz_f.xyz, aa);
     float fc = fxx_fyy_fzz_f.a + c;
 
     // return the improved intensity value
