@@ -3,14 +3,15 @@
 
 struct Poly 
 {
-    vec4 t0_t1_t2_t3;
-    vec4 f0_f1_f2_f3;
-    mat4 fxx_fyy_fzz_f;
-    mat3x4 gxx_gyy_gzz_g;
-
+    vec4 points;
+    vec4 values;
+    vec4 errors;
     float coeffs[6];  
     float bcoeffs[6];  
     float roots[6];  
+
+    mat4 fxx_fyy_fzz_f;
+    mat4x3 gxx_gyy_gzz_g;
 
     mat3 inv_vander3;
     mat4 inv_vander4;
@@ -24,14 +25,15 @@ Poly poly;
 
 void set_poly()
 {
-    poly.t0_t1_t2_t3 = vec4(0, 1, 2, 3) / 3.0;
-    poly.f0_f1_f2_f3 = vec4(0);
-    poly.fxx_fyy_fzz_f = mat4(0);
-    poly.gxx_gyy_gzz_g = mat3x4(0);
-
+    poly.points = vec4(0, 1, 2, 3) / 3.0;
+    poly.values = vec4(0);
+    poly.errors = vec4(0);
     poly.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     poly.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     poly.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+
+    poly.fxx_fyy_fzz_f = mat4(0);
+    poly.gxx_gyy_gzz_g = mat4x3(1);
 
     poly.inv_vander3 = mat3(
         6, -15, 9,

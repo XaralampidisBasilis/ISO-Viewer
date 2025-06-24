@@ -1,6 +1,6 @@
 
 float cubic_roots[4];
-poly3_roots(cubic_roots, cubic.coeffs, cubic.interval.x, cubic.interval.y);
+poly3_roots(cubic_roots, cubic.coeffs, 0.0, 1.0);
 
 float hit_distance = cubic_roots[3];
 hit_distance = min(hit_distance, cubic_roots[0]);

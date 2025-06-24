@@ -1,6 +1,5 @@
 
-vec4 t = poly.t0_t1_t2_t3;
-poly5_roots(poly.roots, poly.coeffs, t.x, t.w);
+poly5_roots(poly.roots, poly.coeffs, 0.0, 1.0);
 
 float hit_distance = poly.roots[5];
 hit_distance = min(hit_distance, poly.roots[0]);
