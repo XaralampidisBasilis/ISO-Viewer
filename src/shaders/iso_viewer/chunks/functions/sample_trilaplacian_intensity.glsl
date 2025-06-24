@@ -45,7 +45,7 @@ float sample_trilaplacian_intensity(in vec3 coords, out float c)
     return fc;
 }
 
-float sample_trilaplacian_intensity(in vec3 coords, out vec4 fxx_fyy_fzz_f, out vec3 aa)
+float sample_trilaplacian_intensity(in vec3 coords, out vec4 fxx_fyy_fzz_f, out vec4 gxx_gyy_gzz_g)
 {
     #if STATS_ENABLED == 1
     stats.num_fetches += 1;
@@ -56,12 +56,11 @@ float sample_trilaplacian_intensity(in vec3 coords, out vec4 fxx_fyy_fzz_f, out 
     fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
     // compute correction terms
-    vec3 a = fract(coords - 0.5);
-    aa = a * (a - 1.0) / 2.0;
+    vec3 g = fract(coords - 0.5);
+    gxx_gyy_gzz_g = vec4(g * (g - 1.0) / 2.0, 1.0);
 
     // compute correction
-    float c = dot(fxx_fyy_fzz_f.xyz, aa);
-    float fc = fxx_fyy_fzz_f.a + c;
+    float fc = dot(fxx_fyy_fzz_f, gxx_gyy_gzz_g);
 
     // return the improved intensity value
     return fc;
