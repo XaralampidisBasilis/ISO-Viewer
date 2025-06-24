@@ -98,7 +98,7 @@ bool poly3_roots_newton_bisection
 void poly3_roots
 (
     out float out_roots[4], 
-    float poly3[4], 
+    vec4 poly3, 
     float begin, 
     float end
 ){

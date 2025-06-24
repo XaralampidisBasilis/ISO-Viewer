@@ -110,7 +110,7 @@ export default function()
         VARIATION_ENABLED     : 0,
 
 
-        INTERPOLATION_METHOD : 2,
+        INTERPOLATION_METHOD : 1,
         INTERSECTION_METHOD : 1,
         HYBRID_METHOD : 0,
         SKIPPING_METHOD : 3,

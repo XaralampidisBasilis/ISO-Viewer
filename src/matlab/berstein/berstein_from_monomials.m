@@ -17,7 +17,7 @@ clc, clear
 % polynomial B_v^n(t) expressed in the monomial basis:
 %     B_v^n(t) = sum_k M(v+1, l+1) * t^l
 
-n = 3;
+n = 2;
 M = zeros(n+1);  % Preallocate (n+1)x(n+1)
 
 for v = 0:n
@@ -31,9 +31,9 @@ IM = inv(M);
 %disp(IM);
 
 % Create the symbolic Vandermonde inverse 
-x = sym(linspace(0, 1, n+1));
+%x = sym(linspace(0, 1, n+1));
 %x = sym([0, 2/5, 3/5, 1]);
-%x = sym([1/3, 2/3, 1]);
+x = sym([1/3, 2/3, 1]);
 
 V = fliplr(vander(x));
 IV = inv(V);  % symbolic matrix with exact fractions
@@ -42,3 +42,17 @@ IV = inv(V);  % symbolic matrix with exact fractions
 % samples to bernstein
 A = IM' * IV;
 disp(A)
+
+C = zeros(3, 4); % 3 rows (i = 0 to 2), 4 columns (j = 0 to 3)
+
+for i = 0:2
+    for j = 0:3
+        k = i + j; % total degree
+        numerator = nchoosek(2, i) * nchoosek(3, j);
+        denominator = nchoosek(5, k);
+        C(i+1, j+1) = numerator / denominator;
+    end
+end
+
+disp('Coefficient matrix C (each entry = B_i^2 * B_j^3 as Bernstein^5):');
+disp(C);
