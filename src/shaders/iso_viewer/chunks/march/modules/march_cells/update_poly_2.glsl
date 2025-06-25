@@ -35,20 +35,17 @@ poly.errors[3] = Errors[3][2];
 // Compute coefficients
 #if BERNSTEIN_SKIP_ENABLED == 0
 
-    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+    vec4 c = poly.errors * poly.inv_vander4;
 
-    // Combine all the coefficients to reconstruct the quintic
-    // Start from the trilinear interpolation coefficients
-    poly.coeffs[0] = C[0][0];
-    poly.coeffs[1] = C[1][0] + C[0][1];
-    poly.coeffs[2] = C[2][0] + C[1][1] + C[0][2];
-    poly.coeffs[3] = C[3][0] + C[2][1] + C[1][2];
-    poly.coeffs[4] = C[3][1] + C[2][2];
-    poly.coeffs[5] = C[3][2];
+    poly.coeffs[0] = c[0];
+    poly.coeffs[1] = c[1];
+    poly.coeffs[2] = c[2];
+    poly.coeffs[3] = c[3];
+    poly.coeffs[4] = 0.0;
+    poly.coeffs[5] = 0.0;
 
-    // compute quintic intersection
-    // compute sign crossings for degenerate cases
-    cell.intersected = is_quintic_solvable(poly.coeffs, poly.points.xw, poly.errors.xw)
+    // compute quintic intersection and sign crossings for degenerate cases
+    cell.intersected = is_cubic_solvable(c, poly.points.xw, poly.errors.xw);
     || (poly.errors[0] < 0.0) != (poly.errors[1] < 0.0)
     || (poly.errors[1] < 0.0) != (poly.errors[2] < 0.0)
     || (poly.errors[2] < 0.0) != (poly.errors[3] < 0.0);
@@ -72,18 +69,17 @@ poly.errors[3] = Errors[3][2];
     // If bernstein check allows roots, check analytically
     if (cell.intersected)
     {
-        mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+        vec4 c = poly.errors * poly.inv_vander4;
 
-        // Combine all the coefficients to reconstruct the quintic
-        poly.coeffs[0] = C[0][0];
-        poly.coeffs[1] = C[1][0] + C[0][1];
-        poly.coeffs[2] = C[2][0] + C[1][1] + C[0][2];
-        poly.coeffs[3] = C[3][0] + C[2][1] + C[1][2];
-        poly.coeffs[4] = C[3][1] + C[2][2];
-        poly.coeffs[5] = C[3][2];
+        poly.coeffs[0] = c[0];
+        poly.coeffs[1] = c[1];
+        poly.coeffs[2] = c[2];
+        poly.coeffs[3] = c[3];
+        poly.coeffs[4] = 0.0;
+        poly.coeffs[5] = 0.0;
 
-        // compute quintic intersection
-        cell.intersected = is_quintic_solvable(poly.coeffs, poly.points.xw, poly.errors.xw)
+        // compute quintic intersection and sign crossings for degenerate cases
+        cell.intersected = is_cubic_solvable(c, poly.points.xw, poly.errors.xw)
         || (poly.errors[0] < 0.0) != (poly.errors[1] < 0.0)
         || (poly.errors[1] < 0.0) != (poly.errors[2] < 0.0)
         || (poly.errors[2] < 0.0) != (poly.errors[3] < 0.0);
@@ -94,3 +90,5 @@ poly.errors[3] = Errors[3][2];
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
 #endif
+
+

@@ -8,6 +8,7 @@ in mat4 v_clip_space_matrix;
 out vec4 fragColor;
 
 #include "./chunks/utils"
+#include "./chunks/consts/consts"
 #include "./chunks/uniforms/uniforms"
 #include "./chunks/structs/structs"
 #include "./chunks/functions/functions"
