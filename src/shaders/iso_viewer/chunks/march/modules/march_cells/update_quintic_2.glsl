@@ -56,7 +56,26 @@ vec2 r0_r5 = vec2(
     quintic.coeffs[5] = c3_c4_c5[2];
 
     // Compute analytic intersection, and sign crossings for degenerate cases
-    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5) || sign_change(quintic.errors);
+    vec4 y;
+    cell.intersected = sign_change(quintic.errors);
+
+    y = eval_poly(quintic.coeffs, vec4(0.0, 1.0, 2.0, 3.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
+
+    y = eval_poly(quintic.coeffs, vec4(3.0, 4.0, 5.0, 6.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
+
+    y = eval_poly(quintic.coeffs, vec4(6.0, 7.0, 8.0, 9.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
+
+    y = eval_poly(quintic.coeffs, vec4(9.0, 10.0, 11.0, 12.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
+
+    y = eval_poly(quintic.coeffs, vec4(12.0, 13.0, 14.0, 15.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
+
+    y = eval_poly(quintic.coeffs, vec4(15.0, 16.0, 17.0, 18.0) / 18.0);
+    cell.intersected = cell.intersected || sign_change(y);
 
 #else
 
@@ -88,7 +107,27 @@ vec2 r0_r5 = vec2(
         quintic.coeffs[5] = c3_c4_c5[2];
 
         // Compute analytic intersection, and sign crossings for degenerate cases
-        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5) || sign_change(quintic.errors);
+        vec4 y;
+        cell.intersected = sign_change(quintic.errors);
+
+        y = eval_poly(quintic.coeffs, vec4(0.0, 1.0, 2.0, 3.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
+
+        y = eval_poly(quintic.coeffs, vec4(3.0, 4.0, 5.0, 6.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
+
+        y = eval_poly(quintic.coeffs, vec4(6.0, 7.0, 8.0, 9.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
+
+        y = eval_poly(quintic.coeffs, vec4(9.0, 10.0, 11.0, 12.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
+
+        y = eval_poly(quintic.coeffs, vec4(12.0, 13.0, 14.0, 15.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
+
+        y = eval_poly(quintic.coeffs, vec4(15.0, 16.0, 17.0, 18.0) / 18.0);
+        cell.intersected = cell.intersected || sign_change(y);
     }   
 
 #endif
+

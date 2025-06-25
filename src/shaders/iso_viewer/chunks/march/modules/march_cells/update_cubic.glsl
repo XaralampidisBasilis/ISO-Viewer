@@ -1,17 +1,17 @@
 
 // given the start and exit compute the sampling distances inside the cell
 cubic.distances.x = cubic.distances.w;
-cubic.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, cubic.weights.yzw);
+cubic.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, cubic.points.yzw);
 
 // compute the intensity samples inside the cell from the intensity map texture
-cubic.intensities.x = cubic.intensities.w;
-cubic.intensities.y = sample_intensity(camera.position + ray.direction * cubic.distances.y);
-cubic.intensities.z = sample_intensity(camera.position + ray.direction * cubic.distances.z);
-cubic.intensities.w = sample_intensity(camera.position + ray.direction * cubic.distances.w);
+cubic.values.x = cubic.values.w;
+cubic.values.y = sample_intensity(camera.position + ray.direction * cubic.distances.y);
+cubic.values.z = sample_intensity(camera.position + ray.direction * cubic.distances.z);
+cubic.values.w = sample_intensity(camera.position + ray.direction * cubic.distances.w);
 
 // compute intensity errors based on iso value
 cubic.errors.x = cubic.errors.w;
-cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
+cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
 
 #if BERNSTEIN_SKIP_ENABLED == 0
 
@@ -19,10 +19,7 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
     cubic.coeffs = cubic.inv_vander * cubic.errors;
 
     // check cubic intersection and sign crossings for degenerate cases
-    cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw)
-    || (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0)
-    || (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0)
-    || (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
+    cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw) || sign_change(cubic.errors);
 
 #else
 
@@ -39,10 +36,7 @@ cubic.errors.yzw = cubic.intensities.yzw - u_rendering.intensity;
         cubic.coeffs = cubic.inv_vander * cubic.errors;
 
         // check cubic intersection and sign crossings for degenerate cases
-        cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw)
-        || (cubic.errors.x < 0.0) != (cubic.errors.y < 0.0)
-        || (cubic.errors.y < 0.0) != (cubic.errors.z < 0.0)
-        || (cubic.errors.z < 0.0) != (cubic.errors.w < 0.0);
+        cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw) || sign_change(cubic.errors);
     }
 
 #endif

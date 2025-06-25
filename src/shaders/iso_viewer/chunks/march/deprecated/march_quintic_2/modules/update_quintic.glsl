@@ -1,26 +1,26 @@
 // Compute sampling distances inside the cell
 quintic.distances[0] = quintic.distances[5];
-quintic.distances[1] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[1]);
-quintic.distances[2] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[2]);
-quintic.distances[3] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[3]);
-quintic.distances[4] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[4]);
-quintic.distances[5] = mix(cell.entry_distance, cell.exit_distance, quintic.weights[5]);
+quintic.distances[1] = mix(cell.entry_distance, cell.exit_distance, quintic.points[1]);
+quintic.distances[2] = mix(cell.entry_distance, cell.exit_distance, quintic.points[2]);
+quintic.distances[3] = mix(cell.entry_distance, cell.exit_distance, quintic.points[3]);
+quintic.distances[4] = mix(cell.entry_distance, cell.exit_distance, quintic.points[4]);
+quintic.distances[5] = mix(cell.entry_distance, cell.exit_distance, quintic.points[5]);
 
 // Sample triquadratic corrected intensities at each distance
-quintic.intensities[0] = quintic.intensities[5];
-quintic.intensities[1] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[1]);
-quintic.intensities[2] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[2]);
-quintic.intensities[3] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[3]);
-quintic.intensities[4] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[4]);
-quintic.intensities[5] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[5]);
+quintic.values[0] = quintic.values[5];
+quintic.values[1] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[1]);
+quintic.values[2] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[2]);
+quintic.values[3] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[3]);
+quintic.values[4] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[4]);
+quintic.values[5] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[5]);
 
 // errors
 quintic.errors[0] = quintic.errors[5];
-quintic.errors[1] = quintic.intensities[1] - u_rendering.intensity;
-quintic.errors[2] = quintic.intensities[2] - u_rendering.intensity;
-quintic.errors[3] = quintic.intensities[3] - u_rendering.intensity;
-quintic.errors[4] = quintic.intensities[4] - u_rendering.intensity;
-quintic.errors[5] = quintic.intensities[5] - u_rendering.intensity;
+quintic.errors[1] = quintic.values[1] - u_rendering.intensity;
+quintic.errors[2] = quintic.values[2] - u_rendering.intensity;
+quintic.errors[3] = quintic.values[3] - u_rendering.intensity;
+quintic.errors[4] = quintic.values[4] - u_rendering.intensity;
+quintic.errors[5] = quintic.values[5] - u_rendering.intensity;
 
 // Compute resulted quintic interpolation polynomial coefficients
 vec3 y0_y1_y2 = vec3(

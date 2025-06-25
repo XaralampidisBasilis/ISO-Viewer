@@ -5,6 +5,8 @@
 #include "./quartic_roots"
 #include "./poly3_roots"
 #include "./poly5_roots"
+#include "./poly3_has_root"
+#include "./poly5_has_root"
 #include "./cubic_extrema"
 #include "./quintic_extrema"
 #include "./bisection_root"

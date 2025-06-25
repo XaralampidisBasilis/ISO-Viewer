@@ -23,3 +23,5 @@
 #include "./sum"
 #include "./pick"
 #include "./eval_poly"
+#include "./sign_change"
+#include "./sign_changes"

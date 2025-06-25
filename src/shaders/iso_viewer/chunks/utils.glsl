@@ -4,6 +4,7 @@
 #include "../../libraries/utils/logical/logical"
 #include "../../libraries/utils/solvers/solvers"
 #include "../../libraries/utils/math/math"
+#include "../../libraries/utils/matrix/matrix"
 #include "../../libraries/utils/random/random"
 #include "../../libraries/utils/sdf/box_bounds"
 #include "../../libraries/utils/colors/to_color"

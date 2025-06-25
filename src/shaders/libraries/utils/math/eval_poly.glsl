@@ -14,6 +14,26 @@
 //  p(t) = c0 + c1 t + c2 t^2 + ... + cn t^n
 
 // linear 
+float eval_poly(in vec2 c, in float t) 
+{
+    float f = c.x + c.y * t;        // c0 + c1*t
+    return f;
+}
+vec2 eval_poly(in vec2 c, in vec2 t) 
+{
+    vec2 f = c.x + c.y * t;
+    return f;
+}
+vec3 eval_poly(in vec2 c, in vec3 t) 
+{
+    vec3 f = c.x + c.y * t;
+    return f;
+}
+vec4 eval_poly(in vec2 c, in vec4 t) 
+{
+    vec4 f = c.x + c.y * t;
+    return f;
+}
 void eval_poly(in vec2 c, in float t, out float f) 
 {
     f = c.x + c.y * t;        // c0 + c1*t
@@ -32,6 +52,30 @@ void eval_poly(in vec2 c, in vec4 t, out vec4 f)
 }
 
 // quadratic
+float eval_poly(in vec3 c, in float t) 
+{
+    float a1 = c.y + c.z * t; // c1 + c2*t
+    float f = c.x + a1 * t; // c0 + (c1 + c2*t) * t = c0 + c1*t + c2*t^2
+    return f;
+}
+vec2 eval_poly(in vec3 c, in vec2 t) 
+{
+    vec2 a1 = c.y + c.z * t;
+    vec2 f = c.x + a1 * t;
+    return f;
+}
+vec3 eval_poly(in vec3 c, in vec3 t) 
+{
+    vec3 a1 = c.y + c.z * t;
+    vec3 f = c.x + a1 * t;
+    return f;
+}
+vec4 eval_poly(in vec3 c, in vec4 t) 
+{
+    vec4 a1 = c.y + c.z * t;
+    vec4 f = c.x + a1 * t;
+    return f;
+}
 void eval_poly(in vec3 c, in float t, out float f) 
 {
     float a1 = c.y + c.z * t; // c1 + c2*t
@@ -79,6 +123,34 @@ void eval_poly(in vec3 c, in vec4 t, out vec4 f, out vec4 f1)
 }
 
 // cubic
+float eval_poly(in vec4 c, in float t) 
+{
+    float a2 = c.z + c.w * t; // c2 + c3*t
+    float a1 = c.y + a2 * t;  // c1 + (c2 + c3*t) * t = c1 + c2*t + c3*t^2 
+    float f = c.x + a1 * t;         // c0 + (c1 + c2*t + c3*t^2) * t = c0 + c1*t + c2*t^2 + c3*t^3
+    return f;
+}
+vec2 eval_poly(in vec4 c, in vec2 t) 
+{
+    vec2 a2 = c.z + c.w * t;
+    vec2 a1 = c.y + a2 * t;
+    vec2 f = c.x + a1 * t;
+    return f;
+}
+vec3 eval_poly(in vec4 c, in vec3 t) 
+{
+    vec3 a2 = c.z + c.w * t;
+    vec3 a1 = c.y + a2 * t;
+    vec3 f = c.x + a1 * t;
+    return f;
+}
+vec4 eval_poly(in vec4 c, in vec4 t) 
+{
+    vec4 a2 = c.z + c.w * t;
+    vec4 a1 = c.y + a2 * t;
+    vec4 f = c.x + a1 * t;
+    return f;
+}
 void eval_poly(in vec4 c, in float t, out float f) 
 {
     float a2 = c.z + c.w * t; // c2 + c3*t
@@ -189,6 +261,42 @@ void eval_poly(in vec4 c, in vec4 t, out vec4 f, out vec4 f1, out vec4 f2)
 }
 
 // quartic
+float eval_poly(in float c[5], in float t) 
+{
+    float f = c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec2 eval_poly(in float c[5], in vec2 t) 
+{
+    vec2 f = vec2(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec3 eval_poly(in float c[5], in vec3 t) 
+{
+    vec3 f = vec3(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec4 eval_poly(in float c[5], in vec4 t) 
+{
+    vec4 f = vec4(c[4]);
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
 void eval_poly(in float c[5], in float t, out float f) 
 {
     f = c[4];
@@ -275,6 +383,46 @@ void eval_poly(in float c[5], in vec4 t, out vec4 f, out vec4 f1)
 }
 
 // quintic 
+float eval_poly(in float c[6], in float t) 
+{
+    float f = c[5];
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec2 eval_poly(in float c[6], in vec2 t) 
+{
+    vec2 f = vec2(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec3 eval_poly(in float c[6], in vec3 t) 
+{
+    vec3 f = vec3(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
+vec4 eval_poly(in float c[6], in vec4 t) 
+{
+    vec4 f = vec4(c[5]);
+    f = f * t + c[4];
+    f = f * t + c[3];
+    f = f * t + c[2];
+    f = f * t + c[1];
+    f = f * t + c[0];
+    return f;
+}
 void eval_poly(in float c[6], in float t, out float f) 
 {
     f = c[5];
@@ -374,6 +522,54 @@ void eval_poly(in float c[6], in vec4 t, out vec4 f, out vec4 f1)
 
 // general polynomial
 
+float eval_poly(in float c[EVAL_POLY_MAX_DEGREE + 1], in float t) 
+{    
+    float f = c[EVAL_POLY_MAX_DEGREE];
+
+    #pragma unroll
+    for (int i = 0; i < EVAL_POLY_MAX_DEGREE; i++) 
+    {
+        f = f * t + c[EVAL_POLY_MAX_DEGREE - 1 - i];
+    }
+    
+    return f;
+}
+vec2 eval_poly(in float c[EVAL_POLY_MAX_DEGREE + 1], in vec2 t) 
+{    
+    vec2 f = vec2(c[EVAL_POLY_MAX_DEGREE]);
+
+    #pragma unroll
+    for (int i = 0; i < EVAL_POLY_MAX_DEGREE; i++) 
+    {
+        f = f * t + c[EVAL_POLY_MAX_DEGREE - 1 - i];
+    }
+    
+    return f;
+}
+vec3 eval_poly(in float c[EVAL_POLY_MAX_DEGREE + 1], in vec3 t) 
+{    
+    vec3 f = vec3(c[EVAL_POLY_MAX_DEGREE]);
+
+    #pragma unroll
+    for (int i = 0; i < EVAL_POLY_MAX_DEGREE; i++) 
+    {
+        f = f * t + c[EVAL_POLY_MAX_DEGREE - 1 - i];
+    }
+    
+    return f;
+}
+vec4 eval_poly(in float c[EVAL_POLY_MAX_DEGREE + 1], in vec4 t) 
+{    
+    vec4 f = vec4(c[EVAL_POLY_MAX_DEGREE]);
+
+    #pragma unroll
+    for (int i = 0; i < EVAL_POLY_MAX_DEGREE; i++) 
+    {
+        f = f * t + c[EVAL_POLY_MAX_DEGREE - 1 - i];
+    }
+    
+    return f;
+}
 void eval_poly(in float c[EVAL_POLY_MAX_DEGREE + 1], in float t, out float f) 
 {    
     f = c[EVAL_POLY_MAX_DEGREE];

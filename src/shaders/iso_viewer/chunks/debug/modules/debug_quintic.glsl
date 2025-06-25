@@ -2,8 +2,8 @@
 // COMPUTE DEBUG
 
 // coefficients
-vec4 debug_quintic_intensities_0 = to_color(vec3(quintic.intensities[0], quintic.intensities[1], quintic.intensities[2])); 
-vec4 debug_quintic_intensities_1 = to_color(vec3(quintic.intensities[3], quintic.intensities[4], quintic.intensities[5])); 
+vec4 debug_quintic_intensities_0 = to_color(vec3(quintic.values[0], quintic.values[1], quintic.values[2])); 
+vec4 debug_quintic_intensities_1 = to_color(vec3(quintic.values[3], quintic.values[4], quintic.values[5])); 
 
 // coefficients
 vec4 debug_quintic_coefficients_0 = to_color(vec3(quintic.coeffs[0], quintic.coeffs[1], quintic.coeffs[2])); 

@@ -4,15 +4,14 @@
 struct Quintic 
 {
     vec2 interval;
-    float intensities[6];    
-    float corrections[6];    
+    float values[6];    
     float errors[6];
     float distances[6];
     float coeffs[6];  
     float bcoeffs[6];  
     float roots[6];  
     float nroots;
-    float weights[6];
+    float points[6];
     mat3 inv_vander[4]; 
     mat3 pow_bernstein[3];  // power to berstein basis matrix
     mat3 bernstein_pow[3];  // berstein to power basis matrix
@@ -26,13 +25,12 @@ void set_quintic()
     quintic.nroots = 0.0;
     quintic.interval = vec2(0.0, 1.0);
     quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.intensities = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.corrections = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.values = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.weights = float[6](
+    quintic.points = float[6](
         0.0 / 5.0, 
         1.0 / 5.0, 
         2.0 / 5.0, 

@@ -42,12 +42,13 @@ poly.errors[3] = Errors[3][2];
 
 #else
 
+    // Compute berstein coefficients matrix
     mat4x3 B = matrixCompMult(poly.bernstein3 * Errors * poly.bernstein4, poly.bernstein34);
 
-    // Combine all the coefficients to reconstruct the quintic
+    // Compute berstein coefficients
     sum_anti_diags(B, poly.bcoeffs);
 
-    // Compute berstein coefficients signs check to detect no intersection
+    // Compute sign change in berstein coefficients
     if (sign_change(poly.bcoeffs))
     {
         cubic.coeffs = poly.errors * poly.inv_vander4;
@@ -60,12 +61,13 @@ poly.errors[3] = Errors[3][2];
 
 if (cell.intersected)
 {
-    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
-    
-    // Combine all the coefficients to reconstruct the quintic
-    sum_anti_diags(C, poly.coeffs);
+    poly.coeffs[0] = cubic.coeffs[0];
+    poly.coeffs[1] = cubic.coeffs[1];
+    poly.coeffs[2] = cubic.coeffs[2];
+    poly.coeffs[3] = cubic.coeffs[3];
+    poly.coeffs[4] = 0.0;
+    poly.coeffs[5] = 0.0;
 }
-
 
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;

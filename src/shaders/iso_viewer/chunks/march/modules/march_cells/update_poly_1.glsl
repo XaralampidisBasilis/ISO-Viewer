@@ -35,40 +35,57 @@ poly.errors[3] = Errors[3][2];
 // Compute coefficients
 #if BERNSTEIN_SKIP_ENABLED == 0
 
-    cubic.coeffs = poly.errors * poly.inv_vander4;
+    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+    // vec4 c = poly.errors * poly.inv_vander4;
 
-    // compute quintic intersection and sign crossings for degenerate cases
-    cell.intersected = is_cubic_solvable(cubic.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+    // Combine all the coefficients to reconstruct the quintic
+    // Start from the trilinear interpolation coefficients
+    sum_anti_diags(C, poly.coeffs);
+
+    // compute sign crossings for quintic intersection
+    const int N = 6; 
+    cell.intersected = sign_change(poly.errors);
+
+    #pragma unroll
+    for (int n = 0; n < N; ++n) 
+    {   
+        vec4 points = (poly.points + float(n)) / float(N);
+        vec4 errors = eval_poly(poly.coeffs, points);
+        cell.intersected = cell.intersected || sign_change(errors);
+    }
 
 #else
 
     mat4x3 B = matrixCompMult(poly.bernstein3 * Errors * poly.bernstein4, poly.bernstein34);
 
     // Combine all the coefficients to reconstruct the quintic
+    // Start from the trilinear interpolation coefficients
     sum_anti_diags(B, poly.bcoeffs);
 
-    // Compute berstein coefficients signs check to detect no intersection
+    // If bernstein check allows roots, check analytically
     if (sign_change(poly.bcoeffs))
     {
-        cubic.coeffs = poly.errors * poly.inv_vander4;
+        mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+        // vec4 c = poly.errors * poly.inv_vander4;
 
-        // compute quintic intersection and sign crossings for degenerate cases
-        cell.intersected = is_cubic_solvable(cubic.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+        // Combine all the coefficients to reconstruct the quintic
+        sum_anti_diags(C, poly.coeffs);
+
+        // compute sign crossings for quintic intersection       
+        const int N = 6; 
+        cell.intersected = sign_change(poly.errors);
+
+        #pragma unroll
+        for (int n = 0; n < N; ++n) 
+        {   
+            vec4 points = (poly.points + float(n)) / float(N);
+            vec4 errors = eval_poly(poly.coeffs, points);
+            cell.intersected = cell.intersected || sign_change(errors);
+        }
     }
 
 #endif
 
-if (cell.intersected)
-{
-    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
-    
-    // Combine all the coefficients to reconstruct the quintic
-    sum_anti_diags(C, poly.coeffs);
-}
-
-
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
 #endif
-
-
