@@ -35,10 +35,12 @@ poly.errors[3] = Errors[3][2];
 // Compute coefficients
 #if BERNSTEIN_SKIP_ENABLED == 0
 
-    cubic.coeffs = poly.errors * poly.inv_vander4;
+    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+    
+    sum_anti_diags(C, poly.coeffs);
 
     // compute quintic intersection and sign crossings for degenerate cases
-    cell.intersected = is_cubic_solvable(cubic.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+    cell.intersected = is_quintic_solvable(poly.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
 
 #else
 
@@ -48,26 +50,47 @@ poly.errors[3] = Errors[3][2];
     // Compute berstein coefficients
     sum_anti_diags(B, poly.bcoeffs);
 
-    // Compute sign change in berstein coefficients
-    if (sign_change(poly.bcoeffs))
-    {
-        cubic.coeffs = poly.errors * poly.inv_vander4;
+    float min_value = mmin(poly.bcoeffs);
+    float max_value = mmax(poly.bcoeffs);
 
-        // compute quintic intersection and sign crossings for degenerate cases
-        cell.intersected = is_cubic_solvable(cubic.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+    // Compute sign change in berstein coefficients
+    if (sign_change(min_value, max_value))
+    {
+        // Compute quintic intersection
+        mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+
+        sum_anti_diags(C, poly.coeffs);
+
+        float max_residue = abs(poly.coeffs[4]) + abs(poly.coeffs[5]);
+        float max_envelope = max(abs(min_value), abs(max_value));   
+        float ratio = max_residue / max_envelope;
+
+        debug.variable2 = to_color(max_envelope);
+        debug.variable3 = to_color(max_residue);
+        debug.variable4 = to_color(ratio);
+        debug.variable5.xyz += float(ratio < (u_debugging.variable5 * 2.0)) / 10.0;
+        debug.variable6.xyz += 1.0 / 10.0;
+
+        if (ratio < u_debugging.variable5 * 3.0)
+        {
+            // Compute cubic intersection 
+            vec4 c = poly.errors * poly.inv_vander4;
+
+            // poly.coeffs = float[6](c[0], c[1], c[2], c[3], 0.0, 0.0);
+            cell.intersected = is_cubic_solvable(c, poly.points.xw, poly.errors.xw);
+        }
+        else
+        {
+            // compute sign crossings for quintic intersection       
+            cell.intersected = poly_sign_change(poly.coeffs);
+        }
+
+        // Compute sign crossings for degenerate cases
+        cell.intersected = cell.intersected || sign_change(poly.errors);
     }
 
 #endif
 
-if (cell.intersected)
-{
-    poly.coeffs[0] = cubic.coeffs[0];
-    poly.coeffs[1] = cubic.coeffs[1];
-    poly.coeffs[2] = cubic.coeffs[2];
-    poly.coeffs[3] = cubic.coeffs[3];
-    poly.coeffs[4] = 0.0;
-    poly.coeffs[5] = 0.0;
-}
 
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;

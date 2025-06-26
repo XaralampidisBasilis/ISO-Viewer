@@ -17,26 +17,28 @@ float mmin(in float a,in float b) { return min(a, b); }
 float mmin(in float a,in float b, in float c) { return min(a, min(b, c)); }
 float mmin(in float a,in float b, in float c, in float d) { return min(min(a,b), min(c, d)); }
 
-int mmin(in int a) { return a; }
-int mmin(in int a,in int b) { return min(a, b); }
-int mmin(in int a,in int b, in int c) { return min(a, min(b, c)); }
-int mmin(in int a,in int b, in int c, in int d) { return min(min(a,b), min(c, d)); }
-
 float mmin(vec2 v) { return min(v.x, v.y); }
 float mmin(vec3 v) { return mmin(v.x, v.y, v.z); }
 float mmin(vec4 v) { return mmin(v.x, v.y, v.z, v.w); }
+float mmin(float v[5]) 
+{
+    float r = v[0];
+    r = min(r, v[1]);
+    r = min(r, v[2]);
+    r = min(r, v[3]);
+    r = min(r, v[4]);
+    return r;
+}
 float mmin(float v[6]) 
 {
     float r = v[0];
-    for (int i = 1; i < 6; ++i) 
-    {
-        r = min(r, v[i]);
-    }
+    r = min(r, v[1]);
+    r = min(r, v[2]);
+    r = min(r, v[3]);
+    r = min(r, v[4]);
+    r = min(r, v[5]);
     return r;
 }
 
-int mmin(ivec2 v) { return min(v.x, v.y); }
-int mmin(ivec3 v) { return mmin(v.x, v.y, v.z); }
-int mmin(ivec4 v) { return mmin(v.x, v.y, v.z, v.w); }
 
 #endif // MMIN

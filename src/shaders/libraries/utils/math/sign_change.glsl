@@ -1,6 +1,12 @@
 #ifndef SIGN_CHANGE
 #define SIGN_CHANGE
 
+
+bool sign_change(float a, float b) 
+{
+    return (a < 0.0) != (b < 0.0);
+}
+
 bool sign_change(vec2 v) 
 {
     return (v.x < 0.0) != (v.y < 0.0);

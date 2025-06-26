@@ -43,16 +43,7 @@ poly.errors[3] = Errors[3][2];
     sum_anti_diags(C, poly.coeffs);
 
     // compute sign crossings for quintic intersection
-    const int N = 6; 
-    cell.intersected = sign_change(poly.errors);
-
-    #pragma unroll
-    for (int n = 0; n < N; ++n) 
-    {   
-        vec4 points = (poly.points + float(n)) / float(N);
-        vec4 errors = eval_poly(poly.coeffs, points);
-        cell.intersected = cell.intersected || sign_change(errors);
-    }
+    cell.intersected = poly_sign_change(poly.coeffs) || sign_change(poly.errors);
 
 #else
 
@@ -72,16 +63,7 @@ poly.errors[3] = Errors[3][2];
         sum_anti_diags(C, poly.coeffs);
 
         // compute sign crossings for quintic intersection       
-        const int N = 6; 
-        cell.intersected = sign_change(poly.errors);
-
-        #pragma unroll
-        for (int n = 0; n < N; ++n) 
-        {   
-            vec4 points = (poly.points + float(n)) / float(N);
-            vec4 errors = eval_poly(poly.coeffs, points);
-            cell.intersected = cell.intersected || sign_change(errors);
-        }
+        cell.intersected = poly_sign_change(poly.coeffs) || sign_change(poly.errors);
     }
 
 #endif
