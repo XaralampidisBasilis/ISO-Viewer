@@ -36,11 +36,6 @@ vec3 r3_r4_r5 = vec3(
     quintic.errors[5]
 );
 
-vec2 r0_r5 = vec2(
-    quintic.errors[0], 
-    quintic.errors[5]
-);
-
 #if BERNSTEIN_SKIP_ENABLED == 0
 
     // Perform broken 6 x 6 matrix multiplication
@@ -56,7 +51,7 @@ vec2 r0_r5 = vec2(
     quintic.coeffs[5] = c3_c4_c5[2];
 
     // Compute analytic intersection, and sign crossings for degenerate cases
-    cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5) || sign_change(quintic.errors);
+    cell.intersected = poly_sign_change(quintic.coeffs) || sign_change(quintic.errors);
 
 #else
 
@@ -88,7 +83,8 @@ vec2 r0_r5 = vec2(
         quintic.coeffs[5] = c3_c4_c5[2];
 
         // Compute analytic intersection, and sign crossings for degenerate cases
-        cell.intersected = is_quintic_solvable(quintic.coeffs, quintic.interval, r0_r5) || sign_change(quintic.errors);
+        cell.intersected = poly_sign_change(quintic.coeffs) || sign_change(quintic.errors);
     }   
 
 #endif
+

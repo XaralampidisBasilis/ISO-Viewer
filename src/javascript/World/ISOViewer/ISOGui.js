@@ -86,7 +86,7 @@ export default class ISOGui
             INTERSECT_BBOX_ENABLED: Boolean(defines.INTERSECT_BBOX_ENABLED),
             INTERSECT_BVOL_ENABLED: Boolean(defines.INTERSECT_BVOL_ENABLED),
             BERNSTEIN_SKIP_ENABLED: Boolean(defines.BERNSTEIN_SKIP_ENABLED),
-            SKIPPING_ENABLED      : Boolean(defines.SKIPPING_ENABLED),
+            APPROXIMATION_ENABLED : Boolean(defines.APPROXIMATION_ENABLED),
             INTERPOLATION_METHOD  : Number(defines.INTERPOLATION_METHOD),
             INTERSECTION_METHOD   : Number(defines.INTERSECTION_METHOD),
             HYBRID_METHOD         : Number(defines.HYBRID_METHOD),
@@ -113,6 +113,7 @@ export default class ISOGui
             enableIntersectBbox: folder.add(objects, 'INTERSECT_BBOX_ENABLED').name('intersect_bbox').onFinishChange((value) => { defines.INTERSECT_BBOX_ENABLED = Number(value), material.needsUpdate = true }),
             enableIntersectBvol: folder.add(objects, 'INTERSECT_BVOL_ENABLED').name('intersect_bvol').onFinishChange((value) => { defines.INTERSECT_BVOL_ENABLED = Number(value), material.needsUpdate = true }),
             enableBernsteinSkip: folder.add(objects, 'BERNSTEIN_SKIP_ENABLED').name('bernstein_skip').onFinishChange((value) => { defines.BERNSTEIN_SKIP_ENABLED = Number(value), material.needsUpdate = true }),
+            enableApproximation: folder.add(objects, 'APPROXIMATION_ENABLED').name('approximation').onFinishChange((value) => { defines.APPROXIMATION_ENABLED = Number(value), material.needsUpdate = true }),
 
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 0, tricubic : 1, tricubic2 : 2 }).onFinishChange((option) => 
             { 

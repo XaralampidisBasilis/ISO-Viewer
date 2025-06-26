@@ -106,7 +106,7 @@ export default function()
         INTERSECT_BBOX_ENABLED: 0,
         INTERSECT_BVOL_ENABLED: 0,
         BERNSTEIN_SKIP_ENABLED: 1,
-        SKIPPING_ENABLED      : 1,
+        APPROXIMATION_ENABLED : 1,
         VARIATION_ENABLED     : 0,
 
 

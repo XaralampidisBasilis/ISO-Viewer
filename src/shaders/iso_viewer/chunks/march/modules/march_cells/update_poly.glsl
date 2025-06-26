@@ -1,73 +1,127 @@
 
-vec3 p0 = mix(cell.entry_position, cell.exit_position, poly.points[1]);
-vec3 p1 = mix(cell.entry_position, cell.exit_position, poly.points[2]);
-vec3 p2 = mix(cell.entry_position, cell.exit_position, poly.points[3]);
-vec3 g0 = fract(p0 - 0.5);
+vec3 p1 = mix(cell.entry_position, cell.exit_position, poly.points[1]);
+vec3 p2 = mix(cell.entry_position, cell.exit_position, poly.points[2]);
+vec3 p3 = mix(cell.entry_position, cell.exit_position, poly.points[3]);
 vec3 g1 = fract(p1 - 0.5);
 vec3 g2 = fract(p2 - 0.5);
-g0 = g0 * (g0 - 1.0) * 0.5;
+vec3 g3 = fract(p3 - 0.5);
 g1 = g1 * (g1 - 1.0) * 0.5;
 g2 = g2 * (g2 - 1.0) * 0.5;
+g3 = g3 * (g3 - 1.0) * 0.5;
 
-// Compute spatial samples matrix
 mat4x3 gx_gy_gz_g = mat4x3(
-    g0.x, g1.x, g2.x,
-    g0.y, g1.y, g2.y,
-    g0.z, g1.z, g2.z,
+    g1.x, g2.x, g3.x,
+    g1.y, g2.y, g3.y,
+    g1.z, g2.z, g3.z,
     1.0,  1.0,  1.0
 );
 
-// Compute samples matrix
 poly.fxx_fyy_fzz_f[0] = poly.fxx_fyy_fzz_f[3];
-poly.fxx_fyy_fzz_f[1] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p0);
-poly.fxx_fyy_fzz_f[2] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p1);
-poly.fxx_fyy_fzz_f[3] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p2);
+poly.fxx_fyy_fzz_f[1] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p1);
+poly.fxx_fyy_fzz_f[2] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p2);
+poly.fxx_fyy_fzz_f[3] = texture(u_textures.trilaplacian_intensity_map, u_intensity_map.inv_dimensions * p3);
 
-// Compute errors matrix
-mat4x3 Errors = gx_gy_gz_g * poly.fxx_fyy_fzz_f;
-Errors -= u_rendering.intensity;
+// Construct the trilinear cubic coefficients
+// and the quadratic correction coefficients
+mat4x3 values_mat = gx_gy_gz_g * poly.fxx_fyy_fzz_f;
+values_mat -= u_rendering.intensity;
 
-// Compute errors
-poly.errors[0] = poly.errors[3];
-poly.errors[1] = Errors[1][0];
-poly.errors[2] = Errors[2][1];
-poly.errors[3] = Errors[3][2];
-
-// Compute coefficients
 #if BERNSTEIN_SKIP_ENABLED == 0
 
-    // Compute coefficients matrix
-    mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+    // Compute quintic coefficient matrix
+    mat4x3 coeffs_mat = poly.inv_vander3 * values_mat * poly.inv_vander4;
+    
+    // Compute quintic coefficient from the sum of anti diagonals 
+    sum_anti_diags(coeffs_mat, poly.coeffs);
 
-    // Compute quintic coefficients
-    sum_anti_diags(C, poly.coeffs);
+    #if APPROXIMATION_ENABLED == 0
 
-    // Compute quintic intersection and sign changes
-    cell.intersected = is_quintic_solvable(poly.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+        // Compute quintic intersection with sign changes
+        cell.intersected = poly_sign_change(poly.coeffs);
+
+    #else
+        // Compute quintic to cubic maximum residue
+        float max_residue = max(
+            abs(poly.coeffs[4] * 0.2), 
+            abs(poly.coeffs[4] + poly.coeffs[5])
+        );
+
+        // If residue is low we can approximate with cubic
+        if (max_residue < TOLERANCE.MILLI)
+        {
+            // Compute values
+            poly.values = vec4(poly.coeffs[0], values_mat[1][0], values_mat[2][1], values_mat[3][2]);
+
+            // Compute cubic coefficients
+            vec4 coeffs = poly.values * poly.inv_vander4;
+            
+            // Compute cubic intersection and sign changes between values
+            cell.intersected = sign_change(poly.values) || is_cubic_solvable(coeffs, poly.points.xw, poly.values.xw);
+        }
+        else 
+        {
+            // Compute quintic intersection with sign changes
+            cell.intersected = poly_sign_change(poly.coeffs);
+        }
+
+    #endif
 
 #else
 
     // Compute berstein coefficients matrix
-    mat4x3 B = matrixCompMult(poly.bernstein3 * Errors * poly.bernstein4, poly.bernstein34);
+    mat4x3 bcoeffs_mat = matrixCompMult(poly.bernstein3 * values_mat * poly.bernstein4, poly.bernstein34);
 
     // Compute berstein coefficients
-    sum_anti_diags(B, poly.bcoeffs);
+    sum_anti_diags(bcoeffs_mat, poly.bcoeffs);
 
-    // Compute berstein coefficients sign change
+    // Compute sign change in berstein coefficients
     if (sign_change(poly.bcoeffs))
     {
-        // Compute coefficients matrix
-        mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+        // Compute quintic coefficient matrix
+        mat4x3 coeffs_mat = poly.inv_vander3 * values_mat * poly.inv_vander4;
 
-        // Compute quintic coefficients
-        sum_anti_diags(C, poly.coeffs);
+        // Compute quintic coefficient from the sum of anti diagonals 
+        sum_anti_diags(coeffs_mat, poly.coeffs);
 
-        // Compute quintic intersection and sign changes
-        cell.intersected = is_quintic_solvable(poly.coeffs, poly.points.xw, poly.errors.xw) || sign_change(poly.errors);
+        #if APPROXIMATION_ENABLED == 0
+
+            // Compute quintic intersection with sign changes
+            cell.intersected = poly_sign_change(poly.coeffs);
+
+        #else
+            // Compute quintic to cubic maximum residue
+            float max_residue = max(
+                abs(poly.coeffs[4] * 0.2), 
+                abs(poly.coeffs[4] + poly.coeffs[5])
+            );
+
+            // If residue is low we can approximate with cubic
+            if (max_residue < TOLERANCE.MILLI)
+            {
+                // Compute values
+                poly.values = vec4(poly.coeffs[0], values_mat[1][0], values_mat[2][1], values_mat[3][2]);
+
+                // Compute cubic coefficients
+                vec4 coeffs = poly.values * poly.inv_vander4;
+                
+                // Compute cubic intersection and sign changes between values
+                cell.intersected = sign_change(poly.values) || is_cubic_solvable(coeffs, poly.points.xw, poly.values.xw);
+            }
+            else 
+            {
+                // Compute quintic intersection with sign changes
+                cell.intersected = poly_sign_change(poly.coeffs);
+            }
+          
+
+        #endif
     }
 
 #endif
 
+
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
 #endif
+
+

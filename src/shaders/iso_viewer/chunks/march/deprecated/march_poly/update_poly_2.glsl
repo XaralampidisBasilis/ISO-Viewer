@@ -56,31 +56,27 @@ poly.errors[3] = Errors[3][2];
     // Compute sign change in berstein coefficients
     if (sign_change(min_value, max_value))
     {
-        // Compute quintic intersection
-        mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
-
-        sum_anti_diags(C, poly.coeffs);
-
-        float max_residue = abs(poly.coeffs[4]) + abs(poly.coeffs[5]);
         float max_envelope = max(abs(min_value), abs(max_value));   
-        float ratio = max_residue / max_envelope;
 
-        debug.variable2 = to_color(max_envelope);
-        debug.variable3 = to_color(max_residue);
-        debug.variable4 = to_color(ratio);
-        debug.variable5.xyz += float(ratio < (u_debugging.variable5 * 2.0)) / 10.0;
-        debug.variable6.xyz += 1.0 / 10.0;
+        // debug.variable2 = to_color(max_envelope);
+        // debug.variable3 = to_color(max_envelope < 0.01);
+        // debug.variable4.xyz += float(max_envelope < 0.01) / 10.0;
 
-        if (ratio < u_debugging.variable5 * 3.0)
+        if (max_envelope < 0.01)
         {
             // Compute cubic intersection 
             vec4 c = poly.errors * poly.inv_vander4;
 
-            // poly.coeffs = float[6](c[0], c[1], c[2], c[3], 0.0, 0.0);
+            poly.coeffs = float[6](c[0], c[1], c[2], c[3], 0.0, 0.0);
+
             cell.intersected = is_cubic_solvable(c, poly.points.xw, poly.errors.xw);
         }
         else
         {
+            mat4x3 C = poly.inv_vander3 * Errors * poly.inv_vander4;
+
+            sum_anti_diags(C, poly.coeffs);
+
             // compute sign crossings for quintic intersection       
             cell.intersected = poly_sign_change(poly.coeffs);
         }

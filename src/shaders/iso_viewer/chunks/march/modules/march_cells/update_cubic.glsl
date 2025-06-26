@@ -4,10 +4,10 @@ cubic.distances.x = cubic.distances.w;
 cubic.distances.yzw = mmix(cell.entry_distance, cell.exit_distance, cubic.points.yzw);
 
 // compute the intensity samples inside the cell from the intensity map texture
-cubic.values.x = cubic.values.w;
-cubic.values.y = sample_intensity(camera.position + ray.direction * cubic.distances.y);
-cubic.values.z = sample_intensity(camera.position + ray.direction * cubic.distances.z);
-cubic.values.w = sample_intensity(camera.position + ray.direction * cubic.distances.w);
+cubic.values[0] = cubic.values[3];
+cubic.values[1] = sample_intensity(camera.position + ray.direction * cubic.distances[1]);
+cubic.values[2] = sample_intensity(camera.position + ray.direction * cubic.distances[2]);
+cubic.values[3] = sample_intensity(camera.position + ray.direction * cubic.distances[3]);
 
 // compute intensity errors based on iso value
 cubic.errors.x = cubic.errors.w;
@@ -18,25 +18,67 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
     // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
     cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-    // check cubic intersection and sign crossings for degenerate cases
-    cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw) || sign_change(cubic.errors);
+    #if APPROXIMATION_ENABLED == 0
+
+        // check cubic intersection and sign crossings for degenerate cases
+        cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+
+    #else
+
+        // Compute cubic to linear maximum residue
+        float max_residue = max(
+            abs(cubic.coeffs[2] / 3.0),
+            abs(cubic.coeffs[2] / 3.0 + cubic.coeffs[3])
+        );
+
+        // Compute sign change
+        cell.intersected = sign_change(cubic.errors);
+
+        // If residue is low we can linearly approximate
+        if (max_residue > TOLERANCE.MILLI)
+        {
+            // Compute cubic intersection
+            cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+        }
+
+    #endif
 
 #else
 
     // compute berstein coefficients from samples
     cubic.bcoeffs = cubic.sample_bernstein * cubic.errors;
 
-    // Compute berstein coefficients signs check to detect no intersection
-    cell.intersected = (mmin(cubic.bcoeffs) < 0.0) != (mmax(cubic.bcoeffs) < 0.0);
-
     // If bernstein check allows roots, check analytically
-    if (cell.intersected)
+    if (sign_change(cubic.bcoeffs))
     {
         // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
         cubic.coeffs = cubic.inv_vander * cubic.errors;
 
-        // check cubic intersection and sign crossings for degenerate cases
-        cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw) || sign_change(cubic.errors);
+        #if APPROXIMATION_ENABLED == 0
+
+            // check cubic intersection and sign crossings for degenerate cases
+            cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+
+        #else
+
+            // Compute cubic to linear maximum residue
+            float max_residue = max(
+                abs(cubic.coeffs[2] / 3.0),
+                abs(cubic.coeffs[2] / 3.0 + cubic.coeffs[3])
+            );
+
+            // Compute sign change
+            cell.intersected = sign_change(cubic.errors);
+
+            // If residue is low we can linearly approximate
+            if (max_residue > TOLERANCE.MILLI)
+            {
+                // Compute cubic intersection
+                cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+            }
+
+        #endif
     }
 
 #endif
+

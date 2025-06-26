@@ -22,13 +22,7 @@ cell.coords += cell.axes * ray.signs;
 #include "./update_cubic"
 
 #elif INTERPOLATION_METHOD == 1
-// #include "./update_quintic"
-
-    #if VARIATION_ENABLED == 0
-    #include "./update_quintic"
-    #else
-    #include "./update_quintic_2"
-    #endif
+#include "./update_quintic"
 
 #elif INTERPOLATION_METHOD == 2
 // #include "./update_poly"
@@ -36,7 +30,7 @@ cell.coords += cell.axes * ray.signs;
     #if VARIATION_ENABLED == 0
     #include "./update_poly"
     #else
-    #include "./update_poly_1"
+    #include "./update_poly_2"
     #endif
 
 #endif
