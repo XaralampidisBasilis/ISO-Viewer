@@ -51,7 +51,11 @@ vec3 r3_r4_r5 = vec3(
     quintic.coeffs[5] = c3_c4_c5[2];
 
     // Compute analytic intersection, and sign crossings for degenerate cases
-    cell.intersected = poly_sign_change(quintic.coeffs) || sign_change(quintic.errors);
+    cell.intersected = eval_poly_sign_change(quintic.coeffs);
+
+    #if STATS_ENABLED == 1
+    stats.num_checks += 1;
+    #endif
 
 #else
 
@@ -83,7 +87,11 @@ vec3 r3_r4_r5 = vec3(
         quintic.coeffs[5] = c3_c4_c5[2];
 
         // Compute analytic intersection, and sign crossings for degenerate cases
-        cell.intersected = poly_sign_change(quintic.coeffs) || sign_change(quintic.errors);
+        cell.intersected = eval_poly_sign_change(quintic.coeffs);
+
+        #if STATS_ENABLED == 1
+        stats.num_checks += 1;
+        #endif
     }   
 
 #endif

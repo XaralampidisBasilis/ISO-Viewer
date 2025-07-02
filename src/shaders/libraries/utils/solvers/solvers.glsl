@@ -18,7 +18,6 @@
 #include "./is_cubic_solvable"
 #include "./is_quartic_solvable"
 #include "./is_quintic_solvable"
-#include "./poly_sign_change"
 
 // #include "./quartic_roots_new"
 // #include "./poly_roots"

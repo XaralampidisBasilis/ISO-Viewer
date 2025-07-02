@@ -300,6 +300,7 @@ export default class ISOGui
                 stats_num_fetches       : 901,
                 stats_num_cells         : 902,
                 stats_num_blocks        : 903,
+                stats_num_checks        : 904,
                 
                 debug_variable0         : 1000,
                 debug_variable1         : 1001,

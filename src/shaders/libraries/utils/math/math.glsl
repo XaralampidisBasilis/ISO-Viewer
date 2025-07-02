@@ -24,3 +24,4 @@
 #include "./eval_poly"
 #include "./sign_change"
 #include "./sign_changes"
+#include "./eval_poly_sign_change"

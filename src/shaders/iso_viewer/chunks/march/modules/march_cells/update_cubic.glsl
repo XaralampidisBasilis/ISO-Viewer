@@ -35,12 +35,16 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
         cell.intersected = sign_change(cubic.errors);
 
         // If residue is low we can linearly approximate
-        if (max_residue > TOLERANCE.MILLI)
+        if (max_residue > TOLERANCE.CENTI)
         {
             // Compute cubic intersection
             cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
         }
 
+    #endif
+
+    #if STATS_ENABLED == 1
+    stats.num_checks += 1;
     #endif
 
 #else
@@ -71,12 +75,16 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
             cell.intersected = sign_change(cubic.errors);
 
             // If residue is low we can linearly approximate
-            if (max_residue > TOLERANCE.MILLI)
+            if (max_residue > TOLERANCE.CENTI)
             {
                 // Compute cubic intersection
                 cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
             }
 
+        #endif
+        
+        #if STATS_ENABLED == 1
+        stats.num_checks += 1;
         #endif
     }
 

@@ -176,7 +176,6 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
             setOutput(minMaxTotal.y);
     }
 `
-
 class BlockExtremaProgram implements GPGPUProgram 
 {
     variableNames = ['A']

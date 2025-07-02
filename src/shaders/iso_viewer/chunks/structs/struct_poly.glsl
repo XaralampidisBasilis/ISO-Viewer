@@ -11,7 +11,7 @@ struct Poly
     float roots[6];  
 
     mat4 fxx_fyy_fzz_f;
-    mat4x3 gxx_gyy_gzz_g;
+    mat4x3 gx_gy_gz_g;
 
     mat3 inv_vander3;
     mat4 inv_vander4;
@@ -33,7 +33,12 @@ void set_poly()
     poly.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     poly.fxx_fyy_fzz_f = mat4(0);
-    poly.gxx_gyy_gzz_g = mat4x3(1);
+    poly.gx_gy_gz_g = mat4x3(
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0,
+        1, 1, 1
+    );
 
     poly.inv_vander3 = mat3(
         6, -15, 9,

@@ -7,3 +7,4 @@
 #include "./sample_extended_distance"
 #include "./sample_trilaplacian_intensity"
 #include "./softstep_hill"
+#include "./quadratic_bias"
