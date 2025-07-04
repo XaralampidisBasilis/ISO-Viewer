@@ -89,4 +89,3 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
     }
 
 #endif
-

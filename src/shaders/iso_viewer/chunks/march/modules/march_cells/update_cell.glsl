@@ -21,6 +21,12 @@ cell.coords += cell.axes * ray.signs;
 #if INTERPOLATION_METHOD == 0
 #include "./update_cubic"
 
+    // #if VARIATION_ENABLED == 0
+    // #include "./update_cubic"
+    // #else
+    // #include "./update_cubic_2"
+    // #endif
+
 #elif INTERPOLATION_METHOD == 1
 #include "./update_quintic"
 
