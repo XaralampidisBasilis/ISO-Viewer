@@ -1,4 +1,10 @@
 
+const mat3 cubic_inv_vander3 = mat3(
+    2, -8,  6,
+    0,  9, -9,
+    0, -1,  3
+) / 2.0;
+
 const mat3 inv_vander3 = mat3(
     6, -15, 9,
     -6, 24, -18,

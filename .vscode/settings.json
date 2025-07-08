@@ -69,6 +69,7 @@
         "ifndef",
         "inout",
         "interp",
+        "interpolant",
         "isampler",
         "isnan",
         "isnt",

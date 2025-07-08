@@ -1,4 +1,4 @@
-
+#include "./cell_uvw"
 #include "./sample_color"
 #include "./sample_intensity"
 #include "./sample_occupancy"

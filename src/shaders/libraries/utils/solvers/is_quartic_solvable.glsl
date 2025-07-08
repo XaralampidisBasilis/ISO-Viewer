@@ -25,26 +25,17 @@ bool is_quartic_solvable(in float c[5], in vec2 xa_xb)
     x0_x1_x2 = clamp(x0_x1_x2, xa_xb.x, xa_xb.y);
 
     // compute the quartic extrema values at the critical points
-    vec3 y0_y1_y2;
-    eval_poly(c, x0_x1_x2, y0_y1_y2);
+    vec3 y0_y1_y2 = eval_poly(c, x0_x1_x2);
 
-  // compute the quartic at the boundaries
-    vec2 ya_yb;
-    eval_poly(c, xa_xb, ya_yb);
+    // compute the quartic at the boundaries
+    vec2 ya_yb = eval_poly(c, xa_xb);
 
     // combine function values
     vec4 ya_y0_y1_y2 = vec4(ya_yb.x, y0_y1_y2);
     vec4 y0_y1_y2_yb = vec4(y0_y1_y2, ya_yb.y);
 
-    // compute signs for better numerical stability
-    bvec4 sa_s0_s1_s2 = lessThan(ya_y0_y1_y2, vec4(0.0));
-    bvec4 s0_s1_s2_sb = lessThan(y0_y1_y2_yb, vec4(0.0));
-
-    // compute sign changes for intermediate value theorem
-    bvec4 ra0_r01_r12_r2b = notEqual(sa_s0_s1_s2, s0_s1_s2_sb);
-
     // return result
-    return any(ra0_r01_r12_r2b);
+    return sign_change(ya_y0_y1_y2) || sign_change(y0_y1_y2_yb);
 }
 
 bool is_quartic_solvable(in float c[5], in vec2 xa_xb, in vec2 ya_yb)
@@ -62,22 +53,14 @@ bool is_quartic_solvable(in float c[5], in vec2 xa_xb, in vec2 ya_yb)
     x0_x1_x2 = clamp(x0_x1_x2, xa_xb.x, xa_xb.y);
 
     // compute the quartic extrema values at the critical points
-    vec3 y0_y1_y2;
-    eval_poly(c, x0_x1_x2, y0_y1_y2);
+    vec3 y0_y1_y2 = eval_poly(c, x0_x1_x2);
 
     // combine function values
     vec4 ya_y0_y1_y2 = vec4(ya_yb.x, y0_y1_y2);
     vec4 y0_y1_y2_yb = vec4(y0_y1_y2, ya_yb.y);
 
-   // compute signs for better numerical stability
-    bvec4 sa_s0_s1_s2 = lessThan(ya_y0_y1_y2, vec4(0.0));
-    bvec4 s0_s1_s2_sb = lessThan(y0_y1_y2_yb, vec4(0.0));
-
-    // compute sign changes for intermediate value theorem
-    bvec4 ra0_r01_r12_r2b = notEqual(sa_s0_s1_s2, s0_s1_s2_sb);
-
     // return result
-    return any(ra0_r01_r12_r2b);
+    return sign_change(ya_y0_y1_y2) || sign_change(y0_y1_y2_yb);
 }
 
 #endif

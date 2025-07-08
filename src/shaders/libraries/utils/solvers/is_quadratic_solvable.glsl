@@ -7,6 +7,9 @@
 #ifndef EVAL_POLY
 #include "../math/eval_poly"
 #endif
+#ifndef SIGN_CHANGE
+#include "../math/sign_change"
+#endif
 
 // compute if quadratic polynomial c0 + c1x + c2x^2 = y is solvable for x in [xa, xb]
 
@@ -20,24 +23,16 @@ bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb)
     x0 = clamp(x0, xa_xb.x, xa_xb.y);
 
     // compute the quadratic extrema value at the critical point
-    float y0;
-    eval_poly(c, x0, y0);
+    float y0 = eval_poly(c, x0);
 
     // compute the quadratic at the boundaries
-    vec2 ya_yb;
-    eval_poly(c, xa_xb, ya_yb);
+    vec2 ya_yb = eval_poly(c, xa_xb);
 
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
-    // compute signs for numerical stability
-    bvec3 sa_s0_sb = lessThan(ya_y0_yb, vec3(0.0));
-
-    // compute sign changes for intermediate value theorem
-    bvec2 ra0_r0b = notEqual(sa_s0_sb.xy, sa_s0_sb.yz);
-
     // return result
-    return any(ra0_r0b);
+    return sign_change(ya_y0_yb);
 }
 
 bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb, in vec2 ya_yb)
@@ -50,20 +45,13 @@ bool is_quadratic_solvable(in vec3 c, in vec2 xa_xb, in vec2 ya_yb)
     x0 = clamp(x0, xa_xb.x, xa_xb.y);
 
     // compute the quadratic extrema value at the critical point
-    float y0;
-    eval_poly(c, x0, y0);
+    float y0 = eval_poly(c, x0);
 
     // combine function values into a single vector
     vec3 ya_y0_yb = vec3(ya_yb.x, y0, ya_yb.y);
 
-    // compute signs for numerical stability
-    bvec3 sa_s0_sb = lessThan(ya_y0_yb, vec3(0.0));
-
-    // compute sign changes for intermediate value theorem
-    bvec2 ra0_r0b = notEqual(sa_s0_sb.xy, sa_s0_sb.yz);
-
     // return result
-    return any(ra0_r0b);
+    return sign_change(ya_y0_yb);
 }
 
 #endif
