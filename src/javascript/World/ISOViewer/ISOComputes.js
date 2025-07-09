@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import * as TF from '../../Utils/TensorUtils'
+import * as TFUtils from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
@@ -148,7 +148,7 @@ export default class ISOComputes extends EventEmitter
             const data = new Float32Array(intensityMap.data)
             const tensor = tf.tensor4d(data, this.intensityMap.shape)
 
-            return TF.map(intensityMap.min, intensityMap.max, tensor)
+            return TFUtils.map(intensityMap.min, intensityMap.max, tensor)
         })
 
         // compute intensity map data as uint16 encoding for HalfFloatType encoding
@@ -277,7 +277,7 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('computeBoundingBox') 
         
-        const { minCoords, maxCoords } = await TF.computeBoundingBox(this.occupancyMap.tensor)
+        const { minCoords, maxCoords } = await TFUtils.computeBoundingBox(this.occupancyMap.tensor)
 
         this.boundingBox = {}
         this.boundingBox.minCoords = minCoords
@@ -307,7 +307,7 @@ export default class ISOComputes extends EventEmitter
         console.time('computeDistanceMap') 
 
         this.distanceMap = {}
-        this.distanceMap.tensor = await TF.computeDistanceMap(this.occupancyMap.tensor, 255)
+        this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
 
@@ -334,7 +334,7 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
-        this.anisotropicDistanceMap.tensor = await TF.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
 
@@ -361,7 +361,7 @@ export default class ISOComputes extends EventEmitter
         console.time('computeExtendedAnisotropicDistanceMap') 
 
         this.extendedAnisotropicDistanceMap = {}
-        this.extendedAnisotropicDistanceMap.tensor = await TF.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
+        this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)
 
