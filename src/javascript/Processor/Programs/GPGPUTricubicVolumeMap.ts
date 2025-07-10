@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class TrilaplacianProgram implements GPGPUProgram 
+export class GPGPUTricubicVolumeMap implements GPGPUProgram 
 {
     variableNames = ['A'];
     outputShape: number[];
@@ -54,10 +54,11 @@ export class TrilaplacianProgram implements GPGPUProgram
     }
 }
 
-export function trilaplacianProgram(input: tf.Tensor4D): tf.Tensor4D 
+export function computeTricubicVolumeMap(inputTensor: tf.Tensor4D): tf.Tensor4D 
 {
-  const backend = tf.backend() as MathBackendWebGL;
-  const program = new TrilaplacianProgram(input.shape as [number, number, number, number]);
-  const output = backend.compileAndRun(program, [input]);
-  return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;
+    const inputShape = inputTensor.shape as [number, number, number, number]
+    const program = new GPGPUTricubicVolumeMap(inputShape);
+    const backend = tf.backend() as MathBackendWebGL;
+    const output = backend.compileAndRun(program, [inputTensor]);
+    return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;
 }

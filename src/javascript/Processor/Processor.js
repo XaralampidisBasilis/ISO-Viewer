@@ -5,11 +5,21 @@ import Textures from './Textures'
 
 export default class Processor extends EventEmitter
 {
+    static instance = null
+
     constructor()
     {
         super()
 
+        // singleton
+        if (Processor.instance) 
+        {
+            return Processor.instance
+        }
+        Processor.instance = this
+
         this.experience = new Experience()
+        this.config = this.experience.config
         this.settings = this.experience.config.settings
         this.resources = this.experience.resources
 

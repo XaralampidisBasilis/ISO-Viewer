@@ -2,21 +2,22 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class ResizeTrilinearProgram implements GPGPUProgram 
+export class GPGPUTrilinearResize implements GPGPUProgram 
 {
     variableNames = ['A'];
     outputShape: number[];
     userCode: string;
 
-    constructor(
+    constructor
+    (
         inputShape: [number, number, number, number], // [depth, height, width, channels]
-        newDepth: number,
-        newHeight: number,
-        newWidth: number,
+        outputSize: [number, number, number],
         alignCorners: boolean,
         halfPixelCenters: boolean
-    ) {
+    ) 
+    {
         const [inDepth, inHeight, inWidth, channels] = inputShape;
+        const [newDepth, newHeight, newWidth] = outputSize;
         this.outputShape = [newDepth, newHeight, newWidth, channels];
 
         const effectiveInSize = [
@@ -80,25 +81,11 @@ export class ResizeTrilinearProgram implements GPGPUProgram
     }
 }
 
-export function computeResizeTrilinear(
-  input: tf.Tensor4D,
-  newDepth: number,
-  newHeight: number,
-  newWidth: number,
-  alignCorners = false,
-  halfPixelCenters = false
-): tf.Tensor4D 
+export function resize(inputTensor: tf.Tensor4D, outputSize: [number, number, number], alignCorners = false, halfPixelCenters = false): tf.Tensor4D 
 {
-  const backend = tf.backend() as MathBackendWebGL;
-  const program = new ResizeTrilinearProgram(
-    input.shape as [number, number, number, number],
-    newDepth,
-    newHeight,
-    newWidth,
-    alignCorners,
-    halfPixelCenters
-  );
-
-  const output = backend.compileAndRun(program, [input]);
-  return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;
+    const inputShape = inputTensor.shape as [number, number, number, number]
+    const program = new GPGPUTrilinearResize(inputShape, outputSize, alignCorners, halfPixelCenters);
+    const backend = tf.backend() as MathBackendWebGL;
+    const output = backend.compileAndRun(program, [inputTensor]);
+    return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;
 }

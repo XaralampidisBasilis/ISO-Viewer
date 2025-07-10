@@ -1,8 +1,11 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
-import Experience from '../../Experience'
+import Processor from '../Processor'
 import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
+import { computeTricubicVolumeMap } from '../Programs/GPGPUTricubicVolumeMap'
+import { resize } from '../Programs/GPGPUTrilinearResize'
+import { normalize } from '../Programs/GPGPUNormalize'
 
 export default class VolumeMap extends EventEmitter
 {
@@ -10,12 +13,19 @@ export default class VolumeMap extends EventEmitter
     {
         super()
 
-        this.experience = new Experience()
-        this.config = this.experience.config
-        this.source = this.experience.resources.items.volumeMap
+        this.processor = new Processor()
+        this.settings = this.processor.config.settings
+        this.source = this.processor.resources.items.volumeMap
+
+        this.interpolationMethod = this.settings.interpolationMethod
+        this.downscaleFactor = this.settings.downscaleFactor
+
+        this.setParams()
+        this.setTensor()
+        this.setTexture()
     }
 
-    setParameters()
+    setParams()
     {
         this.dimensions = new THREE.Vector3().fromArray(this.source.dimensions)
         this.spacing    = new THREE.Vector3().fromArray(this.source.spacing)
@@ -26,34 +36,61 @@ export default class VolumeMap extends EventEmitter
 
     setTensor()
     {
-        const shape = this.source.dimensions.toReversed().concat(1)
-
-        this.tensor = tf.tensor4d
-        (
-            new Float32Array(this.source.data), 
-            shape
-        ) 
-    }
-
-    setData()
-    {
-        this.data = new Uint16Array(this.tensor.size)
-        const data = this.tensor.dataSync()
-
-        for (let i = 0; i < this.data.length; ++i) 
+        if (this.interpolationMethod === 'trilinear')
         {
-            this.data[i] = toHalfFloat(data[i])
+            this.setTensorForTrilinearInterpolation()
+        }
+        if (this.interpolationMethod === 'tricubic')
+        {
+            this.setTensorForTricubicInterpolation()
         }
     }
 
     setTexture()
     {
-        this.texture = new THREE.Data3DTexture
-        (
-            this.data, 
-            ...this.dimensions
-        )
+        if (this.interpolationMethod === 'trilinear')
+        {
+            this.setTextureForTrilinearInterpolation()
+        }
+        if (this.interpolationMethod === 'tricubic')
+        {
+            this.setTextureForTricubicInterpolation()
+        }
+    }
 
+    setTensorForTrilinearInterpolation()
+    {
+        const data = new Float32Array(this.source.data)
+        const shape = this.source.dimensions.toReversed().concat(1)
+
+        this.tensor = tf.tidy(() =>
+        {
+            let tensor = tf.tensor4d(data, shape) 
+            return normalize(tensor)  
+        })
+        
+    }
+
+    setTensorForTricubicInterpolation()
+    {
+        const data = new Float32Array(this.source.data)
+        const shape = this.source.dimensions.toReversed().concat(1)
+        const size = shape.map((x) => Math.ceil(this.downscaleFactor * x))
+
+        this.tensor = tf.tidy(() =>
+        {
+            let tensor = tf.tensor4d(data, shape) 
+            tensor = resize(tensor, size, false, true)  
+            tensor = normalize(tensor)  
+            return computeTricubicVolumeMap(tensor)
+        })
+    }
+  
+    setTextureForTrilinearInterpolation()
+    {
+        const data = this.getDataFromTensor()
+
+        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
         this.texture.format = THREE.RedFormat
         this.texture.type = THREE.HalfFloatType
         this.texture.internalFormat = 'R16F'
@@ -62,5 +99,33 @@ export default class VolumeMap extends EventEmitter
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
+    }
+
+    setTextureForTricubicInterpolation()
+    {
+        const data = this.getDataFromTensor()
+
+        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
+        this.texture.format = THREE.RGBAFormat
+        this.texture.type = THREE.HalfFloatType
+        this.texture.internalFormat = 'RG16F'
+        this.texture.minFilter = THREE.LinearFilter
+        this.texture.magFilter = THREE.LinearFilter
+        this.texture.generateMipmaps = false
+        this.texture.needsUpdate = true
+        this.texture.unpackAlignment = 4
+    }
+
+    getDataFromTensor()
+    {
+        const dataFloat16 = new Uint16Array(this.tensor.size)
+        const dataFloat32 = this.tensor.dataSync()
+
+        for (let i = 0; i < dataFloat16.length; ++i) 
+        {
+            dataFloat16[i] = toHalfFloat(dataFloat32[i])
+        }
+
+        return dataFloat16
     }
 }

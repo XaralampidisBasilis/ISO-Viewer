@@ -26,11 +26,11 @@ export default class Config extends EventEmitter
         // Default configuration values
         this.settings = 
         {
-            downscaleValue: 0.5,
+            blockSize: 4,
+            downscaleFactor: 0.5,
             isosurfaceValue: 0.69,
             interpolationMethod: 'trilinear',
             skippingMethod: 'anisotropicDistanceMap',       
-            skippingCells: 4,
             skippingEnabled: true,
             debugEnabled: true,
             statsEnabled: true,
