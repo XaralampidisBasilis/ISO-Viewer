@@ -109,7 +109,6 @@ export default function()
         APPROXIMATION_ENABLED : 0,
         VARIATION_ENABLED     : 0,
 
-
         INTERPOLATION_METHOD : 0,
         INTERSECTION_METHOD : 1,
         HYBRID_METHOD : 0,

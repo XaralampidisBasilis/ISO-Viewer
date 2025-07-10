@@ -19,7 +19,7 @@ export default class Camera
     setInstance()
     {
         this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 10)
-        this.instance.position.set(6, 4, 8)
+        this.instance.position.set(1, 1, 1)
         this.scene.add(this.instance)
     }
 
@@ -68,7 +68,7 @@ export default class Camera
 
     destroy() 
     {
-        this.scene.remove(this.instance);
+        this.scene.remove(this.instance)
 
         if (this.orbit) 
         {

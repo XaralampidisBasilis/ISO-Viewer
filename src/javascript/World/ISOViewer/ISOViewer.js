@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import * as tf from '@tensorflow/tfjs'
 import Experience from '../../Experience'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOMaterial from './ISOMaterial'

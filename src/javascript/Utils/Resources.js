@@ -88,7 +88,6 @@ export default class Resources extends EventEmitter
         {
             this.trigger('ready')
             console.timeEnd('Resources')
-            // console.log('ready', this)
         }
     }
 }

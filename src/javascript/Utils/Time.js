@@ -1,5 +1,11 @@
 import EventEmitter from './EventEmitter'
 
+/**
+ * Time
+ * 
+ * A utility class that emits a `tick` event on each animation frame.
+ * Tracks elapsed time and delta between frames. Useful for creating game loops or animation systems.
+ */
 export default class Time extends EventEmitter
 {
     constructor()
@@ -7,10 +13,10 @@ export default class Time extends EventEmitter
         super()
 
         // Setup
-        this.start = Date.now()
-        this.current = this.start
-        this.elapsed = 0
-        this.delta = 16
+        this.start = Date.now()   // Timestamp when the instance was created
+        this.current = this.start // Most recent frame timestamp
+        this.elapsed = 0          // Total time since start in milliseconds
+        this.delta = 16           // Time between frames (initialized to ~60fps)
 
         // Control for animation frame ID
         this.animationFrameId = null
@@ -23,7 +29,7 @@ export default class Time extends EventEmitter
     tick()
     {
         const currentTime = Date.now()
-        this.delta = currentTime - this.current
+        this.delta = currentTime - this.current // Time since last frame
         this.current = currentTime
         this.elapsed = this.current - this.start
 
@@ -35,8 +41,6 @@ export default class Time extends EventEmitter
 
         // Continue the loop
         this.animationFrameId = window.requestAnimationFrame(this.tick)
-
-        // console.log('tick', this)
     }
 
     destroy()

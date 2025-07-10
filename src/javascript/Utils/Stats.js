@@ -1,5 +1,11 @@
 import StatsJs from 'stats.js'
 
+/**
+ * Stats
+ * 
+ * A utility class to handle performance monitoring using stats.js,
+ * with optional WebGL2 GPU timing support via EXT_disjoint_timer_query_webgl2.
+ */
 export default class Stats
 {
     constructor(_active)

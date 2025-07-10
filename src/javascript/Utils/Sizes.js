@@ -1,16 +1,21 @@
-import { cos } from 'mathjs'
 import EventEmitter from './EventEmitter'
 
+/**
+ * Sizes
+ * 
+ * A utility class to track and respond to changes in the browser window size.
+ * Extends EventEmitter to notify subscribers when the window is resized.
+ */
 export default class Sizes extends EventEmitter 
 {
     constructor() 
     {
         super()
 
-        // Setup
+        // Setup initial dimensions
         this.width = window.innerWidth
         this.height = window.innerHeight
-        this.pixelRatio = Math.min(window.devicePixelRatio, 1)
+        this.pixelRatio = Math.min(window.devicePixelRatio, 1) // Cap pixel ratio at 1 for performance
 
         // Bind resize event
         this.onResize = this.onResize.bind(this)
@@ -24,14 +29,13 @@ export default class Sizes extends EventEmitter
         this.height = window.innerHeight
         this.pixelRatio = Math.min(window.devicePixelRatio, 1)
 
-        // Emit the `resize` event
-        this.trigger('resize', {
+        // Emit the `resize` event with updated values
+        this.trigger('resize', 
+        {
             width: this.width,
             height: this.height,
             pixelRatio: this.pixelRatio
         })
-
-        // console.log('resize', this)
     }
 
     destroy() 

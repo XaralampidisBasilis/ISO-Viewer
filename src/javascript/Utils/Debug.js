@@ -1,5 +1,11 @@
 import GUI from 'lil-gui'
 
+/**
+ * Debug
+ * 
+ * A utility class to handle debug UI using lil-gui.
+ * It activates only if the URL hash is set to '#debug'.
+ */
 export default class Debug
 {
     constructor()
@@ -9,7 +15,7 @@ export default class Debug
 
         if (this.active)
         {
-            this.ui = new GUI()
+            this.ui = new GUI() // Initialize the GUI if debug mode is active
         }
     }
 
@@ -21,7 +27,6 @@ export default class Debug
             if (controller._name === name)
             {
                 return controller        
-
             }
         }
 

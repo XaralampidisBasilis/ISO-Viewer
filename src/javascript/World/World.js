@@ -3,6 +3,11 @@ import Experience from '../Experience'
 import ISOViewer from './ISOViewer/ISOViewer'
 import EventEmitter from '../Utils/EventEmitter'
 
+/**
+ * World
+ * 
+ * Manages the 3D scene, including the main viewer and related resources.
+ */
 export default class World extends EventEmitter
 {
     constructor()
@@ -15,7 +20,7 @@ export default class World extends EventEmitter
         this.camera = this.experience.camera
         this.viewer = new ISOViewer()
 
-        // Wait for viewer
+        // Wait for viewer to be ready before positioning the camera
         this.viewer.on('ready', () =>
         {
             this.camera.instance.position.copy(this.viewer.computes.intensityMap.size)
@@ -25,10 +30,30 @@ export default class World extends EventEmitter
 
     destroy()
     {
-        // dispose scene
+        this.disposeScene()
+
+        // Clean up the viewer
+        if (this.viewer)
+        {
+            this.viewer.destroy()
+            this.viewer = null
+        }
+
+        // Nullify references for cleanup
+        this.scene = null
+        this.camera = null
+        this.resources = null
+        this.experience = null
+
+        console.log('World destroyed')
+    }
+
+    disposeScene()
+    {
+        // Dispose of all meshes and their resources in the scene
         this.scene.traverse((child) =>
         {
-            // test if it's a mesh
+            // Test if it's a mesh
             if(child instanceof THREE.Mesh)
             {
                 child.geometry.dispose()
@@ -46,20 +71,6 @@ export default class World extends EventEmitter
                 }
             }
         })
-
-        if (this.viewer)
-        {
-            this.viewer.destroy()
-            this.viewer = null
-        }
-
-        this.scene = null
-        this.camera = null
-        this.resources = null
-        this.experience = null
-
-        console.log('World destroyed')
     }
+
 }
-
-

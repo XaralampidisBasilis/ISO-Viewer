@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import Config from './Utils/Config'
 import Debug from './Utils/Debug'
 import Sizes from './Utils/Sizes'
 import Time from './Utils/Time'
@@ -10,27 +11,28 @@ import World from './World/World'
 import Resources from './Utils/Resources'
 import sources from './sources'
 
-let instance = null
-
 export default class Experience
 {
-    constructor(_canvas, _context)
+    static instance = null
+
+    constructor(canvas, context)
     {
-        // Singleton
-        if(instance)
+        // singleton
+        if (Experience.instance) 
         {
-            return instance
+            return Experience.instance
         }
-        instance = this
+        Experience.instance = this
         
         // Global access
         window.experience = this
 
         // Options
-        this.canvas = _canvas
-        this.context = _context
+        this.canvas = canvas
+        this.context = context
 
         // Setup
+        this.config = new Config()
         this.debug = new Debug()
         this.sizes = new Sizes()
         this.time = new Time()
@@ -42,7 +44,7 @@ export default class Experience
         this.world = new World()
         this.stats = new Stats(true)
 
-        // Resize event
+        // Size resize event
         this.sizes.on('resize', () => 
         {
             this.resize()
@@ -54,7 +56,19 @@ export default class Experience
             this.update()
         })
 
-        // Refresh event
+        // Config change event
+        this.config.on('change', () =>
+        {
+            this.change()
+        })
+
+        // Resources ready event
+        this.resources.on('ready', () =>
+        {
+            
+        })
+
+        // Window refresh event
         window.addEventListener('beforeunload', () => 
         {
             this.destroy()
@@ -74,17 +88,32 @@ export default class Experience
         this.renderer.update()
     }
 
+    change()
+    {
+
+    }
+
     destroy()
     {
         this.sizes.off('resize')
         this.time.off('tick')
+        this.config.off('change')
 
         // destroy components
+        if (this.config) 
+            this.config.destroy()
+
+        if (this.debug)
+            this.debug.destroy()
+
+        if (this.sizes) 
+            this.sizes.destroy()
+
+        if (this.time) 
+            this.time.destroy()
+
         if (this.mouse) 
             this.mouse.destroy()
-
-        if (this.keyboard) 
-            this.keyboard.destroy()
 
         if (this.world) 
             this.world.destroy()
@@ -95,10 +124,9 @@ export default class Experience
         if (this.renderer) 
             this.renderer.destroy()
 
-        if (this.debug) 
-            this.debug.destroy()
 
         // Nullify properties for cleanup
+        this.config = null
         this.debug = null
         this.sizes = null
         this.time = null
