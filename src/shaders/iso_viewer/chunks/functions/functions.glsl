@@ -1,4 +1,5 @@
-#include "./cell_uvw"
+#include "./cell_space"
+#include "./quadratic_bias"
 #include "./sample_color"
 #include "./sample_intensity"
 #include "./sample_occupancy"
@@ -7,4 +8,3 @@
 #include "./sample_extended_distance"
 #include "./sample_trilaplacian_intensity"
 #include "./softstep_hill"
-#include "./quadratic_bias"

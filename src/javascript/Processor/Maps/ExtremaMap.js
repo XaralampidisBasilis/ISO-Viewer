@@ -13,7 +13,6 @@ export default class ExtremaMap extends EventEmitter
         super()
 
         this.processor = new Processor()
-        this.input = this.processor.volumeMap
         this.settings = this.processor.config.settings
 
         this.interpolationMethod = this.settings.interpolationMethod
@@ -26,29 +25,14 @@ export default class ExtremaMap extends EventEmitter
     {
         if (this.interpolationMethod === 'trilinear')
         {
-            this.tensor = computeTrilinearExtremaMap(this.input.volumeMap.tensor, this.blockSize)
+            this.tensor = computeTrilinearExtremaMap(this.processor.volumeMap.tensor, this.blockSize)
         }
         if (this.interpolationMethod === 'tricubic')
         {
-            this.tensor = computeTricubicExtremaMap(this.input.volumeMap.tensor, this.blockSize)
+            this.tensor = computeTricubicExtremaMap(this.processor.volumeMap.tensor, this.blockSize)
         }
     }
 
-    setTexture()
-    {
-        const data = this.getDataFromTensor()
-
-        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
-        this.texture.format = THREE.RGFormat
-        this.texture.type = THREE.HalfFloatType
-        this.texture.internalFormat = 'R16F'
-        this.texture.minFilter = THREE.NearestFilter
-        this.texture.magFilter = THREE.NearestFilter
-        this.texture.generateMipmaps = false
-        this.texture.needsUpdate = true
-        this.texture.unpackAlignment = 2
-    }
-    
     setParametersFromTensor()
     {
         this.dimensions = new THREE.Vector3().fromArray(this.tensor.shape.slice(0, 3).toReversed())
@@ -68,4 +52,19 @@ export default class ExtremaMap extends EventEmitter
 
         return dataFloat16
     }
+
+    setTexture()
+    {
+        const data = this.getDataFromTensor()
+
+        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
+        this.texture.format = THREE.RGFormat
+        this.texture.type = THREE.HalfFloatType
+        this.texture.internalFormat = 'R16F'
+        this.texture.minFilter = THREE.NearestFilter
+        this.texture.magFilter = THREE.NearestFilter
+        this.texture.generateMipmaps = false
+        this.texture.needsUpdate = true
+        this.texture.unpackAlignment = 2
+    }   
 }

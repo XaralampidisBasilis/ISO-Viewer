@@ -85,6 +85,19 @@ export default class VolumeMap extends EventEmitter
             return computeTricubicVolumeMap(tensor)
         })
     }
+
+    getDataFromTensor()
+    {
+        const dataFloat16 = new Uint16Array(this.tensor.size)
+        const dataFloat32 = this.tensor.dataSync()
+
+        for (let i = 0; i < dataFloat16.length; ++i) 
+        {
+            dataFloat16[i] = toHalfFloat(dataFloat32[i])
+        }
+
+        return dataFloat16
+    }
   
     setTextureForTrilinearInterpolation()
     {
@@ -114,18 +127,5 @@ export default class VolumeMap extends EventEmitter
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 4
-    }
-
-    getDataFromTensor()
-    {
-        const dataFloat16 = new Uint16Array(this.tensor.size)
-        const dataFloat32 = this.tensor.dataSync()
-
-        for (let i = 0; i < dataFloat16.length; ++i) 
-        {
-            dataFloat16[i] = toHalfFloat(dataFloat32[i])
-        }
-
-        return dataFloat16
     }
 }

@@ -27,7 +27,7 @@
 float softstep(in float edge0, in float edge1, in float x)
 {
     float t = map(edge0, edge1, x);
-    float g = 1.5;                      // best approximation to smoothstep
+    float g = 1.5;              // best approximation to smoothstep
     vec2 pq = vec2(0.5); // best approximation to smoothstep
     float q_max = pq.x * g;
     float q_min = q_max - g + 1.0 ;

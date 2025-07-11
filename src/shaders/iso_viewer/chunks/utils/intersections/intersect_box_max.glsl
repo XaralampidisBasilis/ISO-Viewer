@@ -15,32 +15,32 @@
 #include "../math/argmin"
 #endif
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 ray_origin, vec3 inv_ray_dir) 
 {
-    vec3 b_min = (box_min - start) * inv_dir;
-    vec3 b_max = (box_max - start) * inv_dir;
+    vec3 b_min = (box_min - ray_origin) * inv_ray_dir;
+    vec3 b_max = (box_max - ray_origin) * inv_ray_dir;
     vec3 t_max = max(b_min, b_max);
     float t_exit = mmin(t_max);
     return t_exit;
 }
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out int axis) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 ray_origin, vec3 inv_ray_dir, out int axis) 
 {
-    vec3 b_min = (box_min - start) * inv_dir;
-    vec3 b_max = (box_max - start) * inv_dir;
+    vec3 b_min = (box_min - ray_origin) * inv_ray_dir;
+    vec3 b_max = (box_max - ray_origin) * inv_ray_dir;
     vec3 t_max = max(b_min, b_max);
     float t_exit = mmin(t_max);
     axis = argmin(t_max);
     return t_exit;
 }
 
-float intersect_box_max(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out ivec3 axes) 
+float intersect_box_max(vec3 box_min, vec3 box_max, vec3 ray_origin, vec3 inv_ray_dir, out ivec3 face) 
 {
-    vec3 b_min = (box_min - start) * inv_dir;
-    vec3 b_max = (box_max - start) * inv_dir;
+    vec3 b_min = (box_min - ray_origin) * inv_ray_dir;
+    vec3 b_max = (box_max - ray_origin) * inv_ray_dir;
     vec3 t_max = max(b_min, b_max);
     float t_exit = mmin(t_max);
-    axes = ivec3(equal(t_max, vec3(t_exit)));
+    face = ivec3(equal(t_max, vec3(t_exit)));
     return t_exit;
 }
 

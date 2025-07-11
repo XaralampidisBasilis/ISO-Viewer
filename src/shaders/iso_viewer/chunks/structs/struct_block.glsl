@@ -9,8 +9,7 @@ struct Block
     bool  occupied;
     bool  terminated;
     ivec3 coords;  
-    int   axis;
-    ivec3 axes;
+    ivec3 exit_axes;
     ivec3 min_coords;
     ivec3 max_coords;
     vec3  min_position;
@@ -30,8 +29,7 @@ void set_block()
     block.occupied       = false;
     block.terminated     = false;
     block.coords         = ivec3(0);
-    block.axis           = 0;
-    block.axes           = ivec3(0);
+    block.exit_axes      = ivec3(0);
     block.min_coords     = ivec3(0);
     block.max_coords     = ivec3(0);
     block.min_position   = vec3(0.0);
