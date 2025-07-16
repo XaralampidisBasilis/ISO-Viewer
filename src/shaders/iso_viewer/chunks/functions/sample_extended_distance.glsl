@@ -17,9 +17,9 @@ ivec3 sample_extended_distance(in ivec3 coords, in int octant, out bool occupied
 
     // sample the correct distance map
     coords.z += octant * u_distance_map.dimensions.z;
-    uvec4 distances = unpack_extended_distance(texelFetch(u_textures.extended_anisotropic_distance_map, coords, 0).r);
+    uvec4 unpacked = unpack_extended_distance(texelFetch(u_textures.extended_anisotropic_distance_map, coords, 0).r);
 
     // return values
-    occupied = bool(distances.w);
-    return ivec3(distances.xyz);
+    occupied = bool(unpacked.a);
+    return ivec3(unpacked.rgb);
 }

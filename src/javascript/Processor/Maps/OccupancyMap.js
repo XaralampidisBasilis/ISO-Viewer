@@ -33,15 +33,15 @@ export default class OccupancyMap extends EventEmitter
 
     getDataFromTensor()
     {
-        const dataFloat16 = new Uint16Array(this.tensor.size)
-        const dataFloat32 = this.tensor.dataSync()
+        const dataFloat = this.tensor.dataSync()
+        const dataHalfFloat = new Uint16Array(this.tensor.size)
 
-        for (let i = 0; i < dataFloat16.length; ++i) 
+        for (let i = 0; i < dataFloat.length; ++i) 
         {
-            dataFloat16[i] = toHalfFloat(dataFloat32[i])
+            dataHalfFloat[i] = toHalfFloat(dataFloat[i])
         }
 
-        return dataFloat16
+        return dataHalfFloat
     }
 
     setTexture()

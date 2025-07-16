@@ -18,12 +18,12 @@ poly.fxx_fyy_fzz_f[3] = texture(u_textures.trilaplacian_intensity_map, u_intensi
 
 // Construct the trilinear cubic coefficients
 // and the quadratic correction coefficients
-mat4x3 temp_values = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensity;
+mat4x3 temp_residuals = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensity;
 
 #if BERNSTEIN_SKIP_ENABLED == 0
 
     // Compute quintic coefficient matrix
-    mat4x3 temp_coeffs = poly.inv_vander3 * temp_values * poly.inv_vander4;
+    mat4x3 temp_coeffs = poly.inv_vander3 * temp_residuals * poly.inv_vander4;
     
     // Compute quintic coefficient from the sum of anti diagonals 
     sum_anti_diags(temp_coeffs, poly.coeffs);
@@ -44,18 +44,18 @@ mat4x3 temp_values = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensit
         if (max_residue < TOLERANCE.CENTI)
         {
             // Compute values
-            poly.values = vec4(
+            poly.residuals = vec4(
                 poly.coeffs[0], 
-                temp_values[1][0], 
-                temp_values[2][1], 
-                temp_values[3][2]
+                temp_residuals[1][0], 
+                temp_residuals[2][1], 
+                temp_residuals[3][2]
             );
 
             // Compute cubic coefficients
-            vec4 coeffs = poly.values * poly.inv_vander4;
+            vec4 coeffs = poly.residuals * poly.inv_vander4;
             
             // Compute cubic intersection and sign changes between values
-            cell.intersected = sign_change(poly.values) || is_cubic_solvable(coeffs, poly.points.xw, poly.values.xw);
+            cell.intersected = sign_change(poly.residuals) || is_cubic_solvable(coeffs, poly.points.xw, poly.residuals.xw);
         }
         else 
         {
@@ -72,7 +72,7 @@ mat4x3 temp_values = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensit
 #else
 
     // Compute berstein coefficients matrix
-    mat4x3 bcoeffs_mat = matrixCompMult(poly.bernstein3 * temp_values * poly.bernstein4, poly.bernstein34);
+    mat4x3 bcoeffs_mat = matrixCompMult(poly.bernstein3 * temp_residuals * poly.bernstein4, poly.bernstein34);
 
     // Compute berstein coefficients
     sum_anti_diags(bcoeffs_mat, poly.bcoeffs);
@@ -81,7 +81,7 @@ mat4x3 temp_values = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensit
     if (sign_change(poly.bcoeffs))
     {
         // Compute quintic coefficient matrix
-        mat4x3 temp_coeffs = poly.inv_vander3 * temp_values * poly.inv_vander4;
+        mat4x3 temp_coeffs = poly.inv_vander3 * temp_residuals * poly.inv_vander4;
 
         // Compute quintic coefficient from the sum of anti diagonals 
         sum_anti_diags(temp_coeffs, poly.coeffs);
@@ -102,18 +102,18 @@ mat4x3 temp_values = poly.gx_gy_gz_g * poly.fxx_fyy_fzz_f - u_rendering.intensit
             if (max_residue < TOLERANCE.CENTI)
             {
                 // Compute values
-                poly.values = vec4(
+                poly.residuals = vec4(
                     poly.coeffs[0], 
-                    temp_values[1][0], 
-                    temp_values[2][1], 
-                    temp_values[3][2]
+                    temp_residuals[1][0], 
+                    temp_residuals[2][1], 
+                    temp_residuals[3][2]
                 );
 
                 // Compute cubic coefficients
-                vec4 coeffs = poly.values * poly.inv_vander4;
+                vec4 coeffs = poly.residuals * poly.inv_vander4;
                 
                 // Compute cubic intersection and sign changes between values
-                cell.intersected = sign_change(poly.values) || is_cubic_solvable(coeffs, poly.points.xw, poly.values.xw);
+                cell.intersected = sign_change(poly.residuals) || is_cubic_solvable(coeffs, poly.points.xw, poly.residuals.xw);
             }
             else 
             {

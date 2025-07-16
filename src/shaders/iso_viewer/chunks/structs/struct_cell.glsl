@@ -7,7 +7,7 @@ struct Cell
     bool  intersected;
     bool  terminated;
     ivec3 coords;
-    ivec3 exit_axes;
+    ivec3 exit_face;
     vec3  min_position;
     vec3  max_position;
     float entry_distance;
@@ -25,7 +25,7 @@ void set_cell()
     cell.intersected        = false;
     cell.terminated         = false;
     cell.coords             = ivec3(0);
-    cell.exit_axes          = ivec3(0);
+    cell.exit_face          = ivec3(0);
     cell.min_position       = vec3(0.0);
     cell.max_position       = vec3(0.0);
     cell.entry_distance     = 0.0;

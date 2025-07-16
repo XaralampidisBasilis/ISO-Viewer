@@ -10,18 +10,18 @@ cubic.values[2] = sample_intensity(camera.position + ray.direction * cubic.dista
 cubic.values[3] = sample_intensity(camera.position + ray.direction * cubic.distances[3]);
 
 // compute intensity errors based on iso value
-cubic.errors.x = cubic.errors.w;
-cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
+cubic.residuals.x = cubic.residuals.w;
+cubic.residuals.yzw = cubic.values.yzw - u_rendering.intensity;
 
 #if BERNSTEIN_SKIP_ENABLED == 0
 
     // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-    cubic.coeffs = cubic.inv_vander * cubic.errors;
+    cubic.coeffs = cubic.inv_vander * cubic.residuals;
 
     #if APPROXIMATION_ENABLED == 0
 
         // check cubic intersection and sign crossings for degenerate cases
-        cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+        cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
 
     #else
 
@@ -32,13 +32,13 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
         );
 
         // Compute sign change
-        cell.intersected = sign_change(cubic.errors);
+        cell.intersected = sign_change(cubic.residuals);
 
         // If residue is low we can linearly approximate
         if (max_residue > TOLERANCE.CENTI)
         {
             // Compute cubic intersection
-            cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+            cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
         }
 
     #endif
@@ -50,18 +50,18 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
 #else
 
     // compute berstein coefficients from samples
-    cubic.bcoeffs = cubic.sample_bernstein * cubic.errors;
+    cubic.bcoeffs = cubic.sample_bernstein * cubic.residuals;
 
     // If bernstein check allows roots, check analytically
     if (sign_change(cubic.bcoeffs))
     {
         // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-        cubic.coeffs = cubic.inv_vander * cubic.errors;
+        cubic.coeffs = cubic.inv_vander * cubic.residuals;
 
         #if APPROXIMATION_ENABLED == 0
 
             // check cubic intersection and sign crossings for degenerate cases
-            cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+            cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
 
         #else
 
@@ -72,13 +72,13 @@ cubic.errors.yzw = cubic.values.yzw - u_rendering.intensity;
             );
 
             // Compute sign change
-            cell.intersected = sign_change(cubic.errors);
+            cell.intersected = sign_change(cubic.residuals);
 
             // If residue is low we can linearly approximate
             if (max_residue > TOLERANCE.CENTI)
             {
                 // Compute cubic intersection
-                cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+                cell.intersected = cell.intersected || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
             }
 
         #endif

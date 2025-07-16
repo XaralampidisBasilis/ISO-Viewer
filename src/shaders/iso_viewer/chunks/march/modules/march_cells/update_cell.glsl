@@ -8,14 +8,14 @@ cell.entry_distance = cell.exit_distance;
 cell.entry_position = cell.exit_position;
 
 // compute exit from cell ray intersection 
-cell.exit_distance = intersect_box_max(cell.min_position, cell.max_position, camera.position, ray.inv_direction, cell.exit_axes);
+cell.exit_distance = intersect_box_max(cell.min_position, cell.max_position, camera.position, ray.inv_direction, cell.exit_face);
 cell.exit_position = camera.position + ray.direction * cell.exit_distance; 
 
 // compute termination condition
 cell.terminated = cell.exit_distance > ray.end_distance; 
 
 // compute next coordinates
-cell.coords += cell.exit_axes * ray.signs;
+cell.coords += cell.exit_face * ray.signs;
 
 // compute cell polynomial interpolation
 #if INTERPOLATION_METHOD == 0

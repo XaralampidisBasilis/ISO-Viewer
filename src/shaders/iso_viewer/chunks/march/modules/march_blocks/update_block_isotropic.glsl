@@ -1,12 +1,12 @@
 
 // compute radius
-block.radius = sample_isotropic_distance(block.coords);
-block.occupied = block.radius == 0;
-block.radius = max(block.radius, 1);
+block.skip_distance = sample_isotropic_distance(block.coords);
+block.occupied = (block.skip_distance == 0);
+block.skip_distance = max(block.skip_distance, 1);
 
 // compute min/max coords
-block.min_coords = block.coords - block.radius + 1;
-block.max_coords = block.coords + block.radius;
+block.min_coords = (block.coords - block.skip_distance) + 1;
+block.max_coords = (block.coords + block.skip_distance);
 
 // compute min/max positions
 block.min_position = vec3(block.min_coords * u_distance_map.stride) - 0.5;
@@ -21,16 +21,16 @@ block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_axes);
+block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_face);
 block.exit_position = camera.position + ray.direction * block.exit_distance;    
 
 // compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;
 
 // compute next coordinates
-ivec3 coordinates = ivec3(round(block.exit_position)) / u_distance_map.stride;
-block.coords += block.radius * block.exit_axes * ray.signs;
-block.coords = pick(bvec3(block.exit_axes), block.coords, coordinates);
+ivec3 stepped_coords = block.coords + block.exit_face * block.skip_distance * ray.signs;
+ivec3 snapped_coords = ivec3(round(block.exit_position)) / u_distance_map.stride;
+block.coords = snapped_coords + block.exit_face * (stepped_coords - snapped_coords);
 
 // update stats
 #if STATS_ENABLED == 1

@@ -16,24 +16,24 @@ quintic.values[4] = sample_trilaplacian_intensity(camera.position + ray.directio
 quintic.values[5] = sample_trilaplacian_intensity(camera.position + ray.direction * quintic.distances[5]);
 
 // errors
-quintic.errors[0] = quintic.errors[5];
-quintic.errors[1] = quintic.values[1] - u_rendering.intensity;
-quintic.errors[2] = quintic.values[2] - u_rendering.intensity;
-quintic.errors[3] = quintic.values[3] - u_rendering.intensity;
-quintic.errors[4] = quintic.values[4] - u_rendering.intensity;
-quintic.errors[5] = quintic.values[5] - u_rendering.intensity;
+quintic.residuals[0] = quintic.residuals[5];
+quintic.residuals[1] = quintic.values[1] - u_rendering.intensity;
+quintic.residuals[2] = quintic.values[2] - u_rendering.intensity;
+quintic.residuals[3] = quintic.values[3] - u_rendering.intensity;
+quintic.residuals[4] = quintic.values[4] - u_rendering.intensity;
+quintic.residuals[5] = quintic.values[5] - u_rendering.intensity;
 
 // Compute resulted quintic interpolation polynomial coefficients
 vec3 r0_r1_r2 = vec3(
-    quintic.errors[0], 
-    quintic.errors[1], 
-    quintic.errors[2]
+    quintic.residuals[0], 
+    quintic.residuals[1], 
+    quintic.residuals[2]
 );
 
 vec3 r3_r4_r5 = vec3(
-    quintic.errors[3], 
-    quintic.errors[4], 
-    quintic.errors[5]
+    quintic.residuals[3], 
+    quintic.residuals[4], 
+    quintic.residuals[5]
 );
 
 #if BERNSTEIN_SKIP_ENABLED == 0

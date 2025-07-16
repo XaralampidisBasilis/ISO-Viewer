@@ -4,12 +4,12 @@
 // struct to hold the current occumap parameters
 struct Block
 {
-    int   radius;
-    ivec3 radii;
+    int   skip_distance;
+    ivec3 skip_distances;
     bool  occupied;
     bool  terminated;
     ivec3 coords;  
-    ivec3 exit_axes;
+    ivec3 exit_face;
     ivec3 min_coords;
     ivec3 max_coords;
     vec3  min_position;
@@ -24,12 +24,12 @@ Block block; // Global mutable struct
 
 void set_block()
 {
-    block.radius         = 0;
-    block.radii          = ivec3(0);
+    block.skip_distance  = 0;
+    block.skip_distances = ivec3(0);
     block.occupied       = false;
     block.terminated     = false;
     block.coords         = ivec3(0);
-    block.exit_axes      = ivec3(0);
+    block.exit_face      = ivec3(0);
     block.min_coords     = ivec3(0);
     block.max_coords     = ivec3(0);
     block.min_position   = vec3(0.0);

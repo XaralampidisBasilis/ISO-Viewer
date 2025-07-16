@@ -5,7 +5,7 @@ struct Quintic
 {
     vec2 interval;
     float values[6];    
-    float errors[6];
+    float residuals[6];
     float distances[6];
     float coeffs[6];  
     float bcoeffs[6];  
@@ -26,7 +26,7 @@ void set_quintic()
     quintic.interval = vec2(0.0, 1.0);
     quintic.distances = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.values = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    quintic.errors = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.residuals = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

@@ -15,7 +15,7 @@ export class GPGPUNormalize implements GPGPUProgram
             throw new Error(`Normalization failed: globalMin and globalMax are equal (${globalMin}).`);
         }
 
-        const range = globalMax - globalMin;
+        const globalRange = globalMax - globalMin;
         this.outputShape = [...inputShape];
         this.userCode = `
         void main() 
@@ -23,7 +23,7 @@ export class GPGPUNormalize implements GPGPUProgram
             ivec4 coords = getOutputCoords();
             float value = getA(coords[0], coords[1], coords[2], coords[3]);
 
-            float normalized = (value - ${globalMin}) / ${range};
+            float normalized = (value - ${globalMin}) / ${globalRange};
             setOutput(normalized);
         }
         `;

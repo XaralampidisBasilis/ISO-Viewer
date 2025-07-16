@@ -195,19 +195,22 @@ export default class ISOGui
 
         this.controllers.debugging = 
         {
+            rayDebug: folder.add(uniforms, 'option').name('ray').options(
+            { 
+                discarded           : 101,
+                direction           : 102,
+                signs               : 103,
+                spacing             : 104,
+                start_distance      : 105,
+                end_distance        : 106,
+                span_distance       : 107,
+                start_position      : 108,
+                end_position        : 109,
+            }),
+
             option: folder.add(uniforms, 'option').options(
             { 
                 default                 : 0,
-
-                ray_discarded           : 101,
-                ray_direction           : 102,
-                ray_signs               : 103,
-                ray_spacing             : 104,
-                ray_start_distance      : 105,
-                ray_end_distance        : 106,
-                ray_span_distance       : 107,
-                ray_start_position      : 108,
-                ray_end_position        : 109,
                  
                 trace_intersected       : 201,
                 trace_terminated        : 202,

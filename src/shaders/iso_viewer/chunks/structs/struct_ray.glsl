@@ -15,7 +15,7 @@ struct Ray
     vec3  end_position;    // ending position of the current ray in 3d model coordinates for ray march
     float span_distance;   // total distance that can be covered by the current ray for ray march
     int   max_cells;       // maximum number of steps allowed
-    int   max_blocks;       // maximum number of skips allowed
+    int   max_blocks;      // maximum number of skips allowed
 };
 
 Ray ray; // Global mutable struct

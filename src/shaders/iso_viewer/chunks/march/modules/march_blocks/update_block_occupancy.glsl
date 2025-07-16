@@ -15,14 +15,14 @@ block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_axes);
+block.exit_distance = intersect_box_max(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_face);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;
 
 // compute next coordinates
-block.coords += block.exit_axes * ray.signs;
+block.coords += block.exit_face * ray.signs;
 
 // update stats
 #if STATS_ENABLED == 1

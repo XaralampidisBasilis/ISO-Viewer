@@ -11,7 +11,7 @@ vec4 debug_cell_terminated = to_color(cell.terminated);
 vec4 debug_cell_coords = to_color(vec3(cell.coords) * u_intensity_map.inv_dimensions);
 
 // axes
-vec4 debug_cell_axes = to_color(vec3(cell.exit_axes));
+vec4 debug_cell_axes = to_color(vec3(cell.exit_face));
 
 // entry distance
 vec4 debug_cell_entry_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, cell.entry_distance)); 

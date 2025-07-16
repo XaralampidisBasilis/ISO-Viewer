@@ -45,17 +45,20 @@ class GPGPUTricubicExtremaMap implements GPGPUProgram
             {
                 vec4 b = vec4(0.0);
 
-                for (int kk = 0; kk < 2; ++kk) {
+                for (int kk = 0; kk < 2; ++kk) 
+                {
                     float Wk = W[k][kk];
                     float Mk = M[k][kk];
                     int zk = z + kk;
 
-                for (int jj = 0; jj < 2; ++jj) {
+                for (int jj = 0; jj < 2; ++jj) 
+                {
                     float Wjk = W[j][jj] * Wk;
                     float Mj = M[j][jj];
                     int yj = y + jj;
 
-                for (int ii = 0; ii < 2; ++ii) {
+                for (int ii = 0; ii < 2; ++ii) 
+                {
                     float Wijk = W[i][ii] * Wjk;
                     float Mi = M[i][ii];
                     int xi = x + ii;

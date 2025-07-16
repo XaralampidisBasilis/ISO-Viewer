@@ -3,10 +3,10 @@
 // COMPUTE DEBUG 
 
 // radius
-vec4 debug_block_radius = to_color(float(block.radius) / 31.0);
+vec4 debug_block_radius = to_color(float(block.skip_distance) / 31.0);
 
 // radii
-vec4 debug_block_radii = to_color(vec3(block.radii) / 31.0);
+vec4 debug_block_radii = to_color(vec3(block.skip_distances) / 31.0);
 
 // occupied
 vec4 debug_block_occupied = to_color(block.occupied);

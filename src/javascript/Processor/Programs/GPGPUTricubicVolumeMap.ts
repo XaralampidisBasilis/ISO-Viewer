@@ -28,22 +28,22 @@ export class GPGPUTricubicVolumeMap implements GPGPUProgram
             {
                 int x0 = clamp(x - 1, 0, ${inWidth - 1});
                 int x1 = clamp(x + 1, 0, ${inWidth - 1});
-                float Lx = getA(z, y, x0, 0) + getA(z, y, x1, 0) - 2.0 * f;
-                setOutput(Lx);
+                float ddx = getA(z, y, x0, 0) + getA(z, y, x1, 0) - 2.0 * f;
+                setOutput(ddx);
             }
             else if (c == 1)
             {
                 int y0 = clamp(y - 1, 0, ${inHeight - 1});
                 int y1 = clamp(y + 1, 0, ${inHeight - 1});
-                float Ly = getA(z, y0, x, 0) + getA(z, y1, x, 0) - 2.0 * f;
-                setOutput(Ly);
+                float ddy = getA(z, y0, x, 0) + getA(z, y1, x, 0) - 2.0 * f;
+                setOutput(ddy);
             }
             else if (c == 2)
             {
                 int z0 = clamp(z - 1, 0, ${inDepth - 1});
                 int z1 = clamp(z + 1, 0, ${inDepth - 1});
-                float Lz = getA(z0, y, x, 0) + getA(z1, y, x, 0) - 2.0 * f;
-                setOutput(Lz);
+                float ddz = getA(z0, y, x, 0) + getA(z1, y, x, 0) - 2.0 * f;
+                setOutput(ddz);
             }
             else
             {

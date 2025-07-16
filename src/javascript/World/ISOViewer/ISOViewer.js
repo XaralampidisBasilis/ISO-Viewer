@@ -86,12 +86,12 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(distanceMap.invSize)
 
-        uniforms.u_bbox.value.min_block_coords.copy(boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_position.copy(boundingBox.minPosition)
-        uniforms.u_bbox.value.max_position.copy(boundingBox.maxPosition)
+        // uniforms.u_volume.value.dimensions.copy(distanceMap.dimensions)
+        // uniforms.u_volume.value.spacing.copy(distanceMap.spacing)
+        // uniforms.u_volume.value.inv_dimensions.copy(distanceMap.invDimensions)
+        // uniforms.u_volume.value.inv_spacing.copy(distanceMap.invSpacing)
+        // uniforms.u_volume.value.block_stride = distanceMap.stride
+        // uniforms.u_volume.value.block_counts = distanceMap.stride
 
         // Defines
         const defines = this.material.defines
@@ -150,13 +150,6 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_distance_map.value.inv_spacing.copy(this.computes.distanceMap.invSpacing)
         uniforms.u_distance_map.value.inv_size.copy(this.computes.distanceMap.invSize)
 
-        uniforms.u_bbox.value.min_block_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
-        uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
-
         // Defines
         const defines = this.material.defines
         defines.MAX_CELLS = this.computes.intensityMap.dimensions.toArray().reduce((s, x) => s + x, -2)
@@ -173,15 +166,7 @@ export default class ISOViewer extends EventEmitter
         this.material.defines.INTERPOLATION_METHOD = interpolationMethod
         await this.computes.onInterpolationChange()
         await this.textures.onInterpolationChange()
-        
-        // Update 
-        const uniforms = this.material.uniforms
-        uniforms.u_bbox.value.min_block_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
-        uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
+
 
         this.material.needsUpdate = true
     }

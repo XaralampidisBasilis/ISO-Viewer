@@ -9,17 +9,17 @@ cubic.values[1] = sample_intensity(camera.position + ray.direction * cubic.dista
 cubic.values[3] = sample_intensity(camera.position + ray.direction * cubic.distances[3]);
 
 // compute intensity errors based on iso value
-cubic.errors.x = cubic.errors.w;
-cubic.errors.yw = cubic.values.yw - u_rendering.intensity;
+cubic.residuals.x = cubic.residuals.w;
+cubic.residuals.yw = cubic.values.yw - u_rendering.intensity;
 
 #if APPROXIMATION_ENABLED == 0
 
     cubic.values[2] = sample_intensity(camera.position + ray.direction * cubic.distances[2]);
-    cubic.errors[2] = cubic.values[2] - u_rendering.intensity;
-    cubic.coeffs = cubic.inv_vander * cubic.errors;
+    cubic.residuals[2] = cubic.values[2] - u_rendering.intensity;
+    cubic.coeffs = cubic.inv_vander * cubic.residuals;
 
     // check cubic intersection and sign crossings for degenerate cases
-    cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+    cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
 
 #else
 
@@ -49,8 +49,8 @@ cubic.errors.yw = cubic.values.yw - u_rendering.intensity;
     // If residue is low we can quadratically approximate
     if (max_residue < u_debugging.variable2)
     {
-        vec3 coeffs = cubic_inv_vander3 * cubic.errors.xyw;
-        cell.intersected = sign_change(cubic.errors.xyw) || is_quadratic_solvable(coeffs, cubic.interval, cubic.errors.xw);
+        vec3 coeffs = cubic_inv_vander3 * cubic.residuals.xyw;
+        cell.intersected = sign_change(cubic.residuals.xyw) || is_quadratic_solvable(coeffs, cubic.interval, cubic.residuals.xw);
         
         cubic.coeffs[0] = coeffs[0];
         cubic.coeffs[1] = coeffs[1];
@@ -60,11 +60,11 @@ cubic.errors.yw = cubic.values.yw - u_rendering.intensity;
     else
     {  
         cubic.values[2] = sample_intensity(camera.position + ray.direction * cubic.distances[2]);
-        cubic.errors[2] = cubic.values[2] - u_rendering.intensity;
-        cubic.coeffs = cubic.inv_vander * cubic.errors;
+        cubic.residuals[2] = cubic.values[2] - u_rendering.intensity;
+        cubic.coeffs = cubic.inv_vander * cubic.residuals;
     
         // Compute cubic intersection
-        cell.intersected = sign_change(cubic.errors) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.errors.xw);
+        cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);
     }
 
 #endif

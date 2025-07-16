@@ -5,7 +5,7 @@ struct Poly
 {
     vec4 points;
     vec4 values;
-    vec4 errors;
+    vec4 residuals;
     float coeffs[6];  
     float bcoeffs[6];  
     float roots[6];  
@@ -26,8 +26,7 @@ Poly poly;
 void set_poly()
 {
     poly.points = vec4(0, 1, 2, 3) / 3.0;
-    poly.values = vec4(0);
-    poly.errors = vec4(0);
+    poly.residuals = vec4(0);
     poly.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     poly.bcoeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     poly.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
