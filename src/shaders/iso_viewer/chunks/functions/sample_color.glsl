@@ -1,10 +1,6 @@
 
 vec3 sample_color(in float x)
 {
-    #if STATS_ENABLED == 1
-    stats.num_fetches += 1;
-    #endif
-
     // map x value between thresholds
     float s = map(u_color_map.thresholds.x, u_color_map.thresholds.y, x);
 

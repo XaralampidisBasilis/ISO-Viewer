@@ -11,7 +11,7 @@
 #include "../math/argmax"
 #endif
 
-float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir) 
+float intersect_box_entry(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir) 
 {
     vec3 t_min_tmp = (box_min - start) * inv_dir;
     vec3 t_max_tmp = (box_max - start) * inv_dir;
@@ -21,7 +21,7 @@ float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir)
 }
 
 
-float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out int axis) 
+float intersect_box_entry(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out int axis) 
 {
     vec3 t_min_tmp = (box_min - start) * inv_dir;
     vec3 t_max_tmp = (box_max - start) * inv_dir;
@@ -31,7 +31,7 @@ float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, ou
     return t_entry;
 }
 
-float intersect_box_min(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out ivec3 face) 
+float intersect_box_entry(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out ivec3 face) 
 {
     vec3 t_min_tmp = (box_min - start) * inv_dir;
     vec3 t_max_tmp = (box_max - start) * inv_dir;

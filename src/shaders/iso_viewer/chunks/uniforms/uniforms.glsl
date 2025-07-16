@@ -1,6 +1,5 @@
+#include "./uniforms_volume"
 #include "./uniforms_textures"
-#include "./uniforms_intensity_map"
-#include "./uniforms_distance_map"
 #include "./uniforms_color_map"
 #include "./uniforms_rendering"
 #include "./uniforms_shading"

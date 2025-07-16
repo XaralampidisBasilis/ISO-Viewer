@@ -15,7 +15,7 @@ vec4 debug_block_occupied = to_color(block.occupied);
 vec4 debug_block_terminated = to_color(block.terminated);
 
 // coords
-vec4 debug_block_coords = to_color(vec3(block.coords) / vec3(u_distance_map.dimensions - 1));
+vec4 debug_block_coords = to_color(vec3(block.coords) / vec3(u_volume.blocks - 1));
 
 // min position
 vec4 debug_block_min_position = to_color(map(box.min_position, box.max_position, block.min_position));

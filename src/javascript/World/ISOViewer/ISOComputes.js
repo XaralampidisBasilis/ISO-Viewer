@@ -56,7 +56,6 @@ export default class ISOComputes extends EventEmitter
         await this.computeBlockExtremaMap()
         tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
-        await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
@@ -75,7 +74,6 @@ export default class ISOComputes extends EventEmitter
         this.threshold = this.uniforms.u_rendering.value.intensity
         
         await this.computeOccupancyMap()
-        await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
@@ -94,7 +92,6 @@ export default class ISOComputes extends EventEmitter
         await this.computeBlockExtremaMap()
         tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
-        await this.computeBoundingBox()
         await this.computeDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()

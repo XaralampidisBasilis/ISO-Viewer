@@ -1,10 +1,9 @@
 
 
-int sample_isotropic_distance(in ivec3 coords)
+int sample_isotropic_distance(in ivec3 coords, out bool occupancy)
 {
-    #if STATS_ENABLED == 1
-    stats.num_fetches += 1;
-    #endif
+    int distance = int(texelFetch(u_textures.isotropic_distance_map, coords, 0).r);
+    occupancy = (distance == 0);
 
-    return int(texelFetch(u_textures.distance_map, coords, 0).r);
+    return distance;
 }

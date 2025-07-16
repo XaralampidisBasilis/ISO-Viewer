@@ -2,17 +2,11 @@
 if (cell.intersected) 
 {
     #if INTERPOLATION_METHOD == 0
+    #include "./march_cells/intersect_cubic"
+    #endif
 
-        #include "./march_cells/intersect_cubic"
-
-    #elif INTERPOLATION_METHOD == 1
-
-        #include "./march_cells/intersect_quintic"
-
-    #elif INTERPOLATION_METHOD == 2
-
-        #include "./march_cells/intersect_poly"
-        
+    #if INTERPOLATION_METHOD == 1
+    #include "./march_cells/intersect_poly"
     #endif
 }
 

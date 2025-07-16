@@ -7,15 +7,24 @@ export default function()
 {
     const uniforms = 
     {
+        u_volume: new THREE.Uniform
+        ({
+            dimensions    : new THREE.Vector3(),
+            inv_dimensions: new THREE.Vector3(),
+            spacing       : new THREE.Vector3(),
+            blocks        : new THREE.Vector3(),
+            stride        : 0,
+        }),
+
         u_textures: new THREE.Uniform
         ({
             color_maps    : null,
             intensity_map : null,
             trilaplacian_intensity_map : null,
             occupancy_map : null,
-            distance_map  : null,
+            isotropic_distance_map  : null,
             anisotropic_distance_map : null,
-            extended_anisotropic_distance_map : null,
+            extended_distance_map : null,
         }),
 
         u_intensity_map : new THREE.Uniform
@@ -108,6 +117,7 @@ export default function()
         BERNSTEIN_SKIP_ENABLED: 0,
         APPROXIMATION_ENABLED : 0,
         VARIATION_ENABLED     : 0,
+        SKIPPING_ENABLED      : 1,
 
         INTERPOLATION_METHOD : 0,
         INTERSECTION_METHOD : 1,

@@ -8,7 +8,7 @@ vec4 debug_cell_intersected = to_color(cell.intersected);
 vec4 debug_cell_terminated = to_color(cell.terminated);
 
 // coords
-vec4 debug_cell_coords = to_color(vec3(cell.coords) * u_intensity_map.inv_dimensions);
+vec4 debug_cell_coords = to_color(vec3(cell.coords) * u_volume.inv_dimensions);
 
 // axes
 vec4 debug_cell_axes = to_color(vec3(cell.exit_face));

@@ -58,40 +58,20 @@ export default class ISOViewer extends EventEmitter
         const uniforms = this.material.uniforms
         const intensityMap = this.computes.intensityMap
         const distanceMap =  this.computes.distanceMap
-        const boundingBox = this.computes.boundingBox
 
         uniforms.u_textures.value.color_maps = this.textures.colorMaps   
         uniforms.u_textures.value.intensity_map = this.textures.intensityMap
         uniforms.u_textures.value.trilaplacian_intensity_map = this.textures.trilaplacianIntensityMap
         uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
-        uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.isotropic_distance_map = this.textures.distanceMap
         uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
-        uniforms.u_textures.value.extended_anisotropic_distance_map = this.textures.extendedAnisotropicDistanceMap
-
-        uniforms.u_intensity_map.value.dimensions.copy(intensityMap.dimensions)
-        uniforms.u_intensity_map.value.spacing.copy(intensityMap.spacing)
-        uniforms.u_intensity_map.value.size.copy(intensityMap.size)
-        uniforms.u_intensity_map.value.size_length = intensityMap.sizeLength
-        uniforms.u_intensity_map.value.spacing_length = intensityMap.spacingLength
-        uniforms.u_intensity_map.value.inv_dimensions.copy(intensityMap.invDimensions)
-        uniforms.u_intensity_map.value.inv_spacing.copy(intensityMap.invSpacing)
-        uniforms.u_intensity_map.value.inv_size.copy(intensityMap.invSize)
- 
-        uniforms.u_distance_map.value.stride = distanceMap.stride
-        uniforms.u_distance_map.value.dimensions.copy(distanceMap.dimensions)
-        uniforms.u_distance_map.value.spacing.copy(distanceMap.spacing)
-        uniforms.u_distance_map.value.size.copy(distanceMap.size)
-        uniforms.u_distance_map.value.inv_stride = distanceMap.invStride
-        uniforms.u_distance_map.value.inv_dimensions.copy(distanceMap.invDimensions)
-        uniforms.u_distance_map.value.inv_spacing.copy(distanceMap.invSpacing)
-        uniforms.u_distance_map.value.inv_size.copy(distanceMap.invSize)
-
-        // uniforms.u_volume.value.dimensions.copy(distanceMap.dimensions)
-        // uniforms.u_volume.value.spacing.copy(distanceMap.spacing)
-        // uniforms.u_volume.value.inv_dimensions.copy(distanceMap.invDimensions)
-        // uniforms.u_volume.value.inv_spacing.copy(distanceMap.invSpacing)
-        // uniforms.u_volume.value.block_stride = distanceMap.stride
-        // uniforms.u_volume.value.block_counts = distanceMap.stride
+        uniforms.u_textures.value.extended_distance_map = this.textures.extendedAnisotropicDistanceMap
+        
+        uniforms.u_volume.value.dimensions.copy(intensityMap.dimensions)
+        uniforms.u_volume.value.inv_dimensions.copy(intensityMap.invDimensions)
+        uniforms.u_volume.value.blocks.copy(distanceMap.dimensions)
+        uniforms.u_volume.value.spacing.copy(intensityMap.spacing)
+        uniforms.u_volume.value.stride = distanceMap.stride
 
         // Defines
         const defines = this.material.defines
@@ -118,14 +98,7 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_rendering.value.intensity = threshold
         await this.computes.onThresholdChange()
         await this.textures.onThresholdChange()
-        
-        // Update 
-        uniforms.u_bbox.value.min_block_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_block_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_cell_coords.copy(this.computes.boundingBox.minCellCoords)
-        uniforms.u_bbox.value.max_cell_coords.copy(this.computes.boundingBox.maxCellCoords)
-        uniforms.u_bbox.value.min_position.copy(this.computes.boundingBox.minPosition)
-        uniforms.u_bbox.value.max_position.copy(this.computes.boundingBox.maxPosition)
+
     }
 
     async onStrideChange(stride)
@@ -137,18 +110,12 @@ export default class ISOViewer extends EventEmitter
         
         // Update 
         uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
-        uniforms.u_textures.value.distance_map = this.textures.distanceMap
+        uniforms.u_textures.value.isotropic_distance_map = this.textures.distanceMap
         uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
-        uniforms.u_textures.value.extended_anisotropic_distance_map = this.textures.extendedAnisotropicDistanceMap
+        uniforms.u_textures.value.extended_distance_map = this.textures.extendedAnisotropicDistanceMap
 
-        uniforms.u_distance_map.value.stride = this.computes.distanceMap.stride
-        uniforms.u_distance_map.value.dimensions.copy(this.computes.distanceMap.dimensions)
-        uniforms.u_distance_map.value.spacing.copy(this.computes.distanceMap.spacing)
-        uniforms.u_distance_map.value.size.copy(this.computes.distanceMap.size)
-        uniforms.u_distance_map.value.inv_stride = this.computes.distanceMap.invStride
-        uniforms.u_distance_map.value.inv_dimensions.copy(this.computes.distanceMap.invDimensions)
-        uniforms.u_distance_map.value.inv_spacing.copy(this.computes.distanceMap.invSpacing)
-        uniforms.u_distance_map.value.inv_size.copy(this.computes.distanceMap.invSize)
+        uniforms.u_volume.value.blocks.copy(this.computes.distanceMap.dimensions)
+        uniforms.u_volume.value.stride = this.computes.distanceMap.stride
 
         // Defines
         const defines = this.material.defines
@@ -166,7 +133,6 @@ export default class ISOViewer extends EventEmitter
         this.material.defines.INTERPOLATION_METHOD = interpolationMethod
         await this.computes.onInterpolationChange()
         await this.textures.onInterpolationChange()
-
 
         this.material.needsUpdate = true
     }

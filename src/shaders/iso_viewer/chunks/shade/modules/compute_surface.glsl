@@ -3,7 +3,7 @@
 triquadratic_bspline_gradient_hessian(u_textures.intensity_map, trace.position, surface.gradient, surface.hessian);
 
 // Scale derivatives to physical space
-vec3 spacing = normalize(u_intensity_map.spacing);
+vec3 spacing = normalize(u_volume.spacing);
 surface.hessian /= outerProduct(spacing, spacing);
 surface.gradient /= spacing;
 

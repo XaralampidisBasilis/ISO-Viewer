@@ -7,6 +7,7 @@ struct Cell
     bool  intersected;
     bool  terminated;
     ivec3 coords;
+    int   exit_axis;
     ivec3 exit_face;
     vec3  min_position;
     vec3  max_position;
@@ -25,6 +26,7 @@ void set_cell()
     cell.intersected        = false;
     cell.terminated         = false;
     cell.coords             = ivec3(0);
+    cell.exit_axis          = 0;
     cell.exit_face          = ivec3(0);
     cell.min_position       = vec3(0.0);
     cell.max_position       = vec3(0.0);

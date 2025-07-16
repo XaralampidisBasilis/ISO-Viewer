@@ -1,11 +1,9 @@
 
-int sample_anisotropic_distance(in ivec3 coords, in int octant)
+int sample_anisotropic_distance(in ivec3 coords, in int octant, out bool occupancy)
 {
-    #if STATS_ENABLED == 1
-    stats.num_fetches += 1;
-    #endif
+    coords.z += octant * u_volume.blocks.z;
+    int distance = int(texelFetch(u_textures.anisotropic_distance_map, coords, 0).r);
+    occupancy = (distance == 0);
 
-    coords.z += octant * u_distance_map.dimensions.z;
-
-    return int(texelFetch(u_textures.anisotropic_distance_map, coords, 0).r);
+    return distance;
 }

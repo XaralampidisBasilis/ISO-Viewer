@@ -3,12 +3,8 @@ Beyond Trilinear Interpolation: Higher Quality for Free (https://dl.acm.org/doi/
 */
 float sample_trilaplacian_intensity(in vec3 coords)
 {
-    #if STATS_ENABLED == 1
-    stats.num_fetches += 1;
-    #endif
-
     // sample the augmented volume    
-    vec3 uvw = coords * u_intensity_map.inv_dimensions;
+    vec3 uvw = coords * u_volume.inv_dimensions;
     vec4 fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
     // compute correction terms
@@ -24,12 +20,8 @@ float sample_trilaplacian_intensity(in vec3 coords)
 
 float sample_trilaplacian_intensity(in vec3 coords, out vec4 fxx_fyy_fzz_f)
 {
-    #if STATS_ENABLED == 1
-    stats.num_fetches += 1;
-    #endif
-
     // sample the augmented volume    
-    vec3 uvw = coords * u_intensity_map.inv_dimensions;
+    vec3 uvw = coords * u_volume.inv_dimensions;
     fxx_fyy_fzz_f = texture(u_textures.trilaplacian_intensity_map, uvw);
     
     // compute correction terms
