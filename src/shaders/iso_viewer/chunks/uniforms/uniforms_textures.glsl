@@ -1,17 +1,17 @@
 #ifndef UNIFORMS_TEXTURES
 #define UNIFORMS_TEXTURES
 
-struct Textures 
+struct UniformsTextures 
 {
-    sampler2D color_maps;      
-    sampler3D intensity_map;
-    sampler3D trilaplacian_intensity_map;
-    usampler3D occupancy_map;
-    usampler3D isotropic_distance_map;
-    usampler3D anisotropic_distance_map;
-    usampler3D extended_distance_map;
+    sampler2D colormaps;      
+    sampler3D trilinear_volume;
+    sampler3D tricubic_volume;
+    usampler3D occupancy;
+    usampler3D isotropic_distance;
+    usampler3D anisotropic_distance;
+    usampler3D extended_distance;
 };
 
-uniform Textures u_textures;
+uniform UniformsTextures u_textures;
 
 #endif

@@ -15,7 +15,7 @@ vec4 debug_quintic_roots_1 = to_color(vec3(quintic.roots[3], quintic.roots[4], q
 
 // PRINT DEBUG
 
-switch (u_debugging.option - 850)
+switch (u_debug.option - 850)
 { 
     case 1: fragColor = debug_quintic_intensities_0;  break;
     case 2: fragColor = debug_quintic_intensities_1;  break;

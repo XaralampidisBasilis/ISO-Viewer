@@ -7,7 +7,6 @@
 #include "./struct_block"
 #include "./struct_cubic"
 #include "./struct_quintic"
-#include "./struct_poly"
 #include "./struct_surface"
 
 #if DEBUG_ENABLED == 1

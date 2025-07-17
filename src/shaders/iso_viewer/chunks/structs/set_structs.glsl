@@ -7,12 +7,11 @@ set_block();
 set_frag();
 set_cubic();
 set_quintic();
-set_poly();
 set_surface();
 
-// #if DEBUG_ENABLED == 1
-// set_debug();
-// #endif
+#if DEBUG_ENABLED == 1
+set_debug();
+#endif
 
 #if STATS_ENABLED == 1
 set_stats();

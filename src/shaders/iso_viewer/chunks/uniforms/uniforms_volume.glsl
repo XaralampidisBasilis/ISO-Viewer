@@ -1,7 +1,7 @@
 #ifndef UNIFORMS_VOLUME
 #define UNIFORMS_VOLUME
 
-struct Volume 
+struct UniformsVolume 
 {
     ivec3 dimensions;    
     vec3  inv_dimensions;    
@@ -10,6 +10,6 @@ struct Volume
     ivec3 blocks;                         
 };
 
-uniform Volume u_volume;
+uniform UniformsVolume u_volume;
 
 #endif

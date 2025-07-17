@@ -29,7 +29,7 @@ vec4 debug_trace_abs_error = to_color(mmix(COLOR.BLACK, COLOR.RED, abs(trace.err
 
 // PRINT DEBUG
 
-switch (u_debugging.option - 200)
+switch (u_debug.option - 200)
 { 
     case  1: fragColor = debug_trace_intersected;     break;
     case  2: fragColor = debug_trace_terminated;      break;

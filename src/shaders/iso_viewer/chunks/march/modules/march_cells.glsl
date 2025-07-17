@@ -4,6 +4,8 @@
 for (int i = 0; i < MAX_CELLS; i++) 
 {
     #include "./march_cells/update_cell"
+    
+    #include "./march_cells/intersected_cell"
 
     if (cell.intersected || cell.terminated) 
     {
@@ -11,4 +13,4 @@ for (int i = 0; i < MAX_CELLS; i++)
     }
 }   
 
-#include "./end_march"
+#include "./march_end"

@@ -1,7 +1,7 @@
 #ifndef UNIFORMS_LIGHTING
 #define UNIFORMS_LIGHTING
 
-struct Lighting 
+struct UniformsLighting 
 {
     float intensity;          
     float shadows;            
@@ -11,6 +11,6 @@ struct Lighting
     vec3  position_offset;    
 };
 
-uniform Lighting u_lighting;
+uniform UniformsLighting u_lighting;
 
 #endif

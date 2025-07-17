@@ -13,5 +13,5 @@ trace.position = mix(cell.entry_position, cell.exit_position, hit_distance);
 trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.distance);
 
 // compute error
-trace.intensity = sample_intensity(trace.position);
+trace.intensity = sample_trilinear_volume(trace.position);
 trace.error = trace.intensity - u_rendering.intensity;

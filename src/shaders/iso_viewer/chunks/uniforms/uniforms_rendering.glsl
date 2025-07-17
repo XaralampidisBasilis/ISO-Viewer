@@ -1,7 +1,7 @@
 #ifndef UNIFORMS_RENDERING
 #define UNIFORMS_RENDERING
 
-struct Rendering 
+struct UniformsRendering 
 {
     float intensity;  
     int   max_groups;         
@@ -9,6 +9,6 @@ struct Rendering
     int   max_blocks;   
 };
 
-uniform Rendering u_rendering;
+uniform UniformsRendering u_rendering;
 
 #endif 

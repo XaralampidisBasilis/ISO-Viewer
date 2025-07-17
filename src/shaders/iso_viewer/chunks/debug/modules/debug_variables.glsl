@@ -1,7 +1,7 @@
 
 // PRINT DEBUG
 
-// debug.variable1 = to_color(surface.steepness <  u_debugging.variable2);
+// debug.variable1 = to_color(surface.steepness <  u_debug.variable2);
 
 // debug.variable9 = to_color(mmix2(
 //     COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA,
@@ -11,7 +11,7 @@
 // ));
 
 
-switch (u_debugging.option - 1000)
+switch (u_debug.option - 1000)
 { 
     case 0  : fragColor = debug.variable0; break;
     case 1  : fragColor = debug.variable1; break;

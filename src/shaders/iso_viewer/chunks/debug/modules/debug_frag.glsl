@@ -59,7 +59,7 @@ vec4 debug_frag_gradient_factor = to_color(frag.gradient_factor);
 
 // PRINT DEBUG
 
-switch (u_debugging.option - 500)
+switch (u_debug.option - 500)
 {
     case  1: fragColor = debug_frag_depth;              break; 
     case  2: fragColor = debug_frag_position;           break; 

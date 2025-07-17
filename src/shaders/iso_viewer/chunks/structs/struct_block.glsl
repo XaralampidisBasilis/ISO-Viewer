@@ -17,6 +17,7 @@ struct Block
     vec3  max_position;
     float entry_distance;
     float exit_distance;
+    float span_distance;
     vec3  entry_position;
     vec3  exit_position;
 };
@@ -38,6 +39,7 @@ void set_block()
     block.max_position   = vec3(0.0);
     block.entry_distance = 0.0;
     block.exit_distance  = 0.0;
+    block.span_distance  = 0.0;
     block.entry_position = vec3(0.0);
     block.exit_position  = vec3(0.0);
 }

@@ -1,7 +1,7 @@
-#ifndef UNIFORMS_DEBUGGING
-#define UNIFORMS_DEBUGGING
+#ifndef UNIFORMS_DEBUG
+#define UNIFORMS_DEBUG
 
-struct Debugging
+struct UniformsDebug
 {
     int option;    
     float variable1; 
@@ -11,6 +11,6 @@ struct Debugging
     float variable5; 
 };
 
-uniform Debugging u_debugging;
+uniform UniformsDebug u_debug;
 
 #endif 

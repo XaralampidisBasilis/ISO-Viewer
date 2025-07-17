@@ -3,14 +3,14 @@
 
 for (int n = 0; n < MAX_GROUPS; n++) 
 {
-    #include "./march_blocks/march_blocks"
+    #include "./march_blocks"
     
     if (!(block.occupied || block.terminated)) 
     {
         continue;
     }
 
-    #include "./march_cells/march_cells_per_block"
+    #include "./march_cells_per_block"
 
     if (cell.intersected || cell.terminated) 
     {
@@ -18,4 +18,4 @@ for (int n = 0; n < MAX_GROUPS; n++)
     }
 }   
 
-#include "./end_march"
+#include "./march_end"

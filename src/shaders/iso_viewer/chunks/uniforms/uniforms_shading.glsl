@@ -1,7 +1,7 @@
 #ifndef UNIFORMS_SHADING
 #define UNIFORMS_SHADING
 
-struct Shading
+struct UniformsShading
 {
     float ambient_reflectance; 
     float diffuse_reflectance; 
@@ -10,6 +10,6 @@ struct Shading
     float edge_contrast;       
 };
 
-uniform Shading u_shading;
+uniform UniformsShading u_shading;
 
 #endif 

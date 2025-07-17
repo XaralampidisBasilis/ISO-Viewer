@@ -13,10 +13,9 @@ struct Cell
     vec3  max_position;
     float entry_distance;
     float exit_distance;
-    float hit_distance;
+    float span_distance;
     vec3  entry_position;
     vec3  exit_position;
-    vec3  hit_position;   
 };
 
 Cell cell; // Global mutable struct
@@ -32,10 +31,9 @@ void set_cell()
     cell.max_position       = vec3(0.0);
     cell.entry_distance     = 0.0;
     cell.exit_distance      = 0.0;
-    cell.hit_distance       = 0.0;
+    cell.span_distance      = 0.0;
     cell.entry_position     = vec3(0.0);
     cell.exit_position      = vec3(0.0);
-    cell.hit_position       = vec3(0.0);
 }
 
 #endif 

@@ -18,13 +18,13 @@ export default function()
 
         u_textures: new THREE.Uniform
         ({
-            color_maps    : null,
-            intensity_map : null,
-            trilaplacian_intensity_map : null,
-            occupancy_map : null,
-            isotropic_distance_map  : null,
-            anisotropic_distance_map : null,
-            extended_distance_map : null,
+            colormaps    : null,
+            trilinear_volume : null,
+            tricubic_volume : null,
+            occupancy : null,
+            isotropic_distance  : null,
+            anisotropic_distance : null,
+            extended_distance : null,
         }),
 
         u_intensity_map : new THREE.Uniform
@@ -63,7 +63,7 @@ export default function()
             inv_size        : new THREE.Vector3(),
         }),
 
-        u_color_map: new THREE.Uniform
+        u_colormap: new THREE.Uniform
         ({
             levels      : 255,
             name        : 'cet_d9',
@@ -99,7 +99,7 @@ export default function()
             position_offset    : new THREE.Vector3(),         // offset position for light source
         }),
 
-        u_debugging: new THREE.Uniform
+        u_debug: new THREE.Uniform
         ({
             option    : 0,
             variable1 : 0,
@@ -112,16 +112,11 @@ export default function()
 
     const defines = 
     {           
-        INTERSECT_BBOX_ENABLED: 0,
-        INTERSECT_BVOL_ENABLED: 0,
-        BERNSTEIN_SKIP_ENABLED: 0,
-        APPROXIMATION_ENABLED : 0,
+        BERNSTEIN_ENABLED: 0,
         VARIATION_ENABLED     : 0,
         SKIPPING_ENABLED      : 1,
 
-        INTERPOLATION_METHOD : 0,
-        INTERSECTION_METHOD : 1,
-        HYBRID_METHOD : 0,
+        INTERPOLATION_METHOD : 1,
         SKIPPING_METHOD : 3,
 
         STATS_ENABLED          : 1,

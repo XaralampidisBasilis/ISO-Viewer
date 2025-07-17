@@ -58,7 +58,7 @@ vec4 debug_surface_soft_curvature = to_color(mmix(COLOR.DARK_BLUE, COLOR.DARK_GR
 
 // PRINT DEBUG
 
-switch (u_debugging.option - 450)
+switch (u_debug.option - 450)
 { 
     case  1: fragColor = debug_surface_orientation;     break;
     case  2: fragColor = debug_surface_normal;          break;

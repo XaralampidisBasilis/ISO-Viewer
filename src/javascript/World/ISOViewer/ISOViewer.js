@@ -59,13 +59,13 @@ export default class ISOViewer extends EventEmitter
         const intensityMap = this.computes.intensityMap
         const distanceMap =  this.computes.distanceMap
 
-        uniforms.u_textures.value.color_maps = this.textures.colorMaps   
-        uniforms.u_textures.value.intensity_map = this.textures.intensityMap
-        uniforms.u_textures.value.trilaplacian_intensity_map = this.textures.trilaplacianIntensityMap
-        uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
-        uniforms.u_textures.value.isotropic_distance_map = this.textures.distanceMap
-        uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
-        uniforms.u_textures.value.extended_distance_map = this.textures.extendedAnisotropicDistanceMap
+        uniforms.u_textures.value.colormaps = this.textures.colorMaps   
+        uniforms.u_textures.value.trilinear_volume = this.textures.intensityMap
+        uniforms.u_textures.value.tricubic_volume = this.textures.trilaplacianIntensityMap
+        uniforms.u_textures.value.occupancy = this.textures.occupancyMap
+        uniforms.u_textures.value.isotropic_distance = this.textures.distanceMap
+        uniforms.u_textures.value.anisotropic_distance = this.textures.anisotropicDistanceMap
+        uniforms.u_textures.value.extended_distance = this.textures.extendedAnisotropicDistanceMap
         
         uniforms.u_volume.value.dimensions.copy(intensityMap.dimensions)
         uniforms.u_volume.value.inv_dimensions.copy(intensityMap.invDimensions)
@@ -109,10 +109,10 @@ export default class ISOViewer extends EventEmitter
         await this.textures.onStrideChange()
         
         // Update 
-        uniforms.u_textures.value.occupancy_map = this.textures.occupancyMap
-        uniforms.u_textures.value.isotropic_distance_map = this.textures.distanceMap
-        uniforms.u_textures.value.anisotropic_distance_map = this.textures.anisotropicDistanceMap
-        uniforms.u_textures.value.extended_distance_map = this.textures.extendedAnisotropicDistanceMap
+        uniforms.u_textures.value.occupancy = this.textures.occupancyMap
+        uniforms.u_textures.value.isotropic_distance = this.textures.distanceMap
+        uniforms.u_textures.value.anisotropic_distance = this.textures.anisotropicDistanceMap
+        uniforms.u_textures.value.extended_distance = this.textures.extendedAnisotropicDistanceMap
 
         uniforms.u_volume.value.blocks.copy(this.computes.distanceMap.dimensions)
         uniforms.u_volume.value.stride = this.computes.distanceMap.stride

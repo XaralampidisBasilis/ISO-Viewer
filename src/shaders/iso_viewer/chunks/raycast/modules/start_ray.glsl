@@ -7,7 +7,4 @@ ray.signs = ivec3(ssign(ray.direction));
 
 // compute 3-bit octant index (0–7) based on sign bits
 ivec3 bits = (ray.signs + 1) / 2; 
-ray.octant = 
-(bits.z << 2) | 
-(bits.y << 1) | 
-(bits.x << 0);
+ray.octant = (bits.z << 2) | (bits.y << 1) | (bits.x << 0);
