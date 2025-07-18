@@ -1,16 +1,11 @@
 
-float cubic_roots[4];
-poly3_roots(cubic_roots, cubic.coeffs, 0.0, 1.0);
-
-float hit_distance = cubic_roots[3];
-hit_distance = min(hit_distance, cubic_roots[0]);
-hit_distance = min(hit_distance, cubic_roots[1]);
-hit_distance = min(hit_distance, cubic_roots[2]);
+poly3_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
 
 // update trace 
-trace.distance = mix(cell.entry_distance, cell.exit_distance, hit_distance);
-trace.position = mix(cell.entry_position, cell.exit_position, hit_distance);
-trace.intersected = inside_closed(ray.start_distance, ray.end_distance, trace.distance);
+trace.distance = mmin(cubic.roots);
+trace.distance = mix(cell.entry_distance, cell.exit_distance, trace.distance);
+trace.position = camera.position + ray.direction * trace.distance;
+trace.intersected = (ray.start_distance < trace.distance || trace.distance < ray.end_distance);
 
 // compute error
 trace.intensity = sample_trilinear_volume(trace.position);

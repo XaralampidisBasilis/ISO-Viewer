@@ -26,7 +26,6 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 //        Typically the error will be much lower but in theory it can be
 //        bigger.
 // \return true if a root was found, false if no root exists.
-
 bool poly3_roots_newton_bisection
 (
     out float out_root, 
@@ -91,13 +90,12 @@ bool poly3_roots_newton_bisection
     return true;
 }
 
-
 // Finds all roots of the given polynomial in the interval [begin, end] and
 // writes them to out_roots. Some entries will be POLY3_NO_INTERSECTION but other 
 // than that the array is sorted. The last entry is always POLY3_NO_INTERSECTION.
 void poly3_roots
 (
-    out float out_roots[4], 
+    out vec4 out_roots, 
     vec4 poly3, 
     float begin, 
     float end

@@ -11,7 +11,7 @@ block.max_coords = (block.coords + block.skip_distance);
 block.min_position = vec3(block.min_coords * u_volume.stride) - 0.5;
 block.max_position = vec3(block.max_coords * u_volume.stride) - 0.5;  
 
-// inflate to avoid boundaries
+// compute inflation to avoid instabilities
 block.min_position -= 0.001;
 block.max_position += 0.001; 
 

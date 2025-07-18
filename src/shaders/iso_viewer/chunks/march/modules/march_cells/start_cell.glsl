@@ -17,16 +17,13 @@
 // start interpolant
 #if INTERPOLATION_METHOD == 1
 
-    cubic.distances[3] = cell.exit_distance;
-    cubic.values[3] = sample_trilinear_volume(cell.exit_position);
-    cubic.residuals[3] = cubic.values[3] - u_rendering.intensity;
+    cubic.residuals[3] = sample_trilinear_volume(cell.exit_position) - u_rendering.intensity;
 
 #endif
 
 #if INTERPOLATION_METHOD == 2
 
-    quintic.residuals[3] = sample_tricubic_volume(cell.exit_position, quintic.fxx_fyy_fzz_f[3]);
-    quintic.residuals[3] -= u_rendering.intensity;
+    quintic.features[3] = sample_tricubic_volume(cell.exit_position);
 
 #endif
 

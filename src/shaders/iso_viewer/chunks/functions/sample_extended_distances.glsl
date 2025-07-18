@@ -2,7 +2,7 @@
 #define SAMPLE_EXTENDED_DISTANCE
 
 // Unpacks a 16-bit 5551-encoded extended distance sample into 3 distances and 1 occupancy bit.
-uvec4 unpack_extended_distances(in uint packed_sample)
+uvec4 unpack_sample(in uint packed_sample)
 {
     return uvec4(
         (packed_sample >> 11u) & 0x1Fu, // Extract bits 15–11: X distance
@@ -24,7 +24,7 @@ ivec3 sample_extended_distances(in ivec3 block_coords, in int octant, out bool o
     uint packed_sample = texelFetch(u_textures.extended_distance, slab_coords, 0).r;
 
     // Unpack into 3 distances and 1 occupancy flag
-    uvec4 unpacked_sample = unpack_extended_distances(packed_sample);
+    uvec4 unpacked_sample = unpack_sample(packed_sample);
 
     // Get integer distances
     ivec3 distances = ivec3(unpacked_sample.rgb);

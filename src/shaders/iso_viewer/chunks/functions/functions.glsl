@@ -1,5 +1,5 @@
 #include "./cell_space"
-#include "./quadratic_bias"
+#include "./tricubic_bias"
 #include "./sample_colormaps"
 #include "./sample_trilinear_volume"
 #include "./sample_tricubic_volume"
