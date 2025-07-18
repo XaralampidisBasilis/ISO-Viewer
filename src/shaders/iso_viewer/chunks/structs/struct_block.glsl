@@ -10,7 +10,7 @@ struct Block
     bool  terminated;
     ivec3 coords;  
     int   exit_axis;
-    ivec3 exit_face;
+    ivec3 exit_normal;
     ivec3 min_coords;
     ivec3 max_coords;
     vec3  min_position;
@@ -32,7 +32,7 @@ void set_block()
     block.terminated     = false;
     block.coords         = ivec3(0);
     block.exit_axis      = 0;
-    block.exit_face      = ivec3(0);
+    block.exit_normal    = ivec3(0);
     block.min_coords     = ivec3(0);
     block.max_coords     = ivec3(0);
     block.min_position   = vec3(0.0);

@@ -1,5 +1,5 @@
-#ifndef TRIQUADRATIC_BSPLINE_FILTER
-#define TRIQUADRATIC_BSPLINE_FILTER
+#ifndef SAMPLE_TRIQUADRATIC_GRADIENT
+#define SAMPLE_TRIQUADRATIC_GRADIENT
 
 /* Sources
 One Step Further Beyond Trilinear Interpolation and Central
@@ -11,7 +11,7 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
 
-// Triquadratic B-spline interpolation basis
+// Triquadratic B-spline interpolation helper functions
 
 void triquadratic_bspline_basis(in sampler3D tex, in vec3 coords, out vec3 p0, out vec3 p1, out vec3 g0)
 {
@@ -35,8 +35,6 @@ void triquadratic_bspline_basis(in sampler3D tex, in vec3 coords, out vec3 p0, o
     p1 = p0 + 0.5 * t;
 }
 
-// Triquadratic B-spline interpolation samples
-
 void triquadratic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, out vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1)
 {
     // Sample the 8 corner points of the interpolation cube based on p0, p1
@@ -55,38 +53,6 @@ void triquadratic_bspline_samples(in sampler3D tex, in vec3 p0, in vec3 p1, out 
         texture(tex, vec3(p1.x, p1.y, p1.z)).r  // x1y1z1
     );
 }
-
-// Triquadratic B-spline interpolation of value    
-
-float triquadratic_bspline_xyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
-{
-    // Sample cube
-    vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1;
-    triquadratic_bspline_samples(tex, p0, p1, s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, s_x1y0z0_x1y1z0_x1y0z1_x1y1z1);
-
-    // Interpolate along x
-    vec4 s_xy0z0_xy1z0_xy0z1_xy1z1 = mix(
-        s_x1y0z0_x1y1z0_x1y0z1_x1y1z1, 
-        s_x0y0z0_x0y1z0_x0y0z1_x0y1z1, 
-    g0.x);
-
-    // Interpolate along y
-    vec2 s_xyz0_xyz1 = mix(
-        s_xy0z0_xy1z0_xy0z1_xy1z1.yw,
-        s_xy0z0_xy1z0_xy0z1_xy1z1.xz,
-    g0.y);
-
-    // Interpolate along z
-    float s_xyz = mix(
-        s_xyz0_xyz1.y,
-        s_xyz0_xyz1.x, 
-    g0.z);
-
-    // Intensity
-    return s_xyz;
-}
-
-// Triquadratic B-spline interpolation of gradient
 
 vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
@@ -133,8 +99,6 @@ vec3 triquadratic_bspline_dxyz_xdyz_xydz(in sampler3D tex, in vec3 p0, in vec3 p
     // Gradient
     return vec3(s_dxyz_xdyz, s_xydz);
 }
-
-// Triquadratic B-spline interpolation of hessian
 
 vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec3 p1, in vec3 g0)
 {
@@ -184,7 +148,7 @@ vec3 triquadratic_bspline_xdydz_dxydz_dxdyz(in sampler3D tex, in vec3 p0, in vec
     return vec3(s_xdydz_dxydz, s_dxdyz);
 }
 
-vec3 triquadratic_bspline_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
+vec3 triquadratic_bspline_ddx_ddy_ddz(in sampler3D tex, in vec3 coords)
 {
     // Pure second derivatives of xyz axes
 
@@ -216,35 +180,18 @@ vec3 triquadratic_bspline_d2x_d2y_d2z(in sampler3D tex, in vec3 coords)
 
 // Triquadratic B-spline interpolations
 
-void triquadratic_bspline_gradient(in sampler3D tex, in vec3 coords,  out vec3 gradient)
+vec3 sample_triquadratic_gradient(in vec3 coords)
 {
     vec3 p0, p1, g0;
     triquadratic_bspline_basis(tex, coords, p0, p1, g0);
  
     // Gradient
-    gradient = triquadratic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0);
+    vec3 gradient = triquadratic_bspline_dxyz_xdyz_xydz(tex, p0, p1, g0);
+
+    return gradient;
 }
  
-void triquadratic_bspline_hessian(in sampler3D tex, in vec3 coords, out mat3 hessian)
-{
-    vec3 p0, p1, g0; 
-    triquadratic_bspline_basis(tex, coords, p0, p1, g0);
- 
-    // Mixed derivatives
-    vec3 s_xdydz_dxydz_dxdyz = triquadratic_bspline_xdydz_dxydz_dxdyz(tex, p0, p1, g0);
-
-    // Pure derivatives
-    vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
-
-    // Hessian
-    hessian = mat3(
-       s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
-       s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
-       s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
-   );
-}
-
-void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out vec3 gradient, out mat3 hessian)
+vec3 sample_triquadratic_gradient(in vec3 coords, out mat3 hessian)
 {
     vec3 p0, p1, g0;
     triquadratic_bspline_basis(tex, coords, p0, p1, g0);
@@ -293,7 +240,7 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
     vec3 s_d2x_d2y_d2z = triquadratic_bspline_d2x_d2y_d2z(tex, coords);
 
     // Gradient
-    gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
+    vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
 
     // Hessian
     hessian = mat3(
@@ -301,8 +248,8 @@ void triquadratic_bspline_gradient_hessian(in sampler3D tex, in vec3 coords, out
        s_dxyz_xdyz_dxdyz.z, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
        s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
    );
+
+   return gradient;
 }
-
-
 
 #endif

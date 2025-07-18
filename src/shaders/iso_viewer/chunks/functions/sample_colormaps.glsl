@@ -1,5 +1,7 @@
+#ifndef SAMPLE_COLORMAP
+#define SAMPLE_COLORMAP
 
-vec3 sample_color(in float x)
+vec3 sample_colormap(in float x)
 {
     // map x value between thresholds
     float s = map(u_colormap.thresholds.x, u_colormap.thresholds.y, x);
@@ -13,4 +15,4 @@ vec3 sample_color(in float x)
     return texture(u_textures.colormaps, texture_coords).rgb;
 }
 
-
+#endif

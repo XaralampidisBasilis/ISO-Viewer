@@ -1,3 +1,6 @@
+#ifndef SAMPLE_ANISOTROPIC_DISTANCE
+#define SAMPLE_ANISOTROPIC_DISTANCE
+
 // Samples the anisotropic distance texture at given coordinates and octant.
 int sample_anisotropic_distance(in ivec3 block_coords, in int octant, out bool occupancy)
 {    
@@ -16,3 +19,5 @@ int sample_anisotropic_distance(in ivec3 block_coords, in int octant, out bool o
 
     return distance;
 }
+
+#endif

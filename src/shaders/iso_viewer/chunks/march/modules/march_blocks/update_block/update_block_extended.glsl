@@ -20,7 +20,7 @@ block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_exit(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_axis);
+block.exit_distance = intersect_box_exit(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_normal);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // compute span distance
@@ -29,7 +29,7 @@ block.span_distance = block.exit_distance - block.entry_distance;
 // compute next coordinates
 ivec3 coords = block.coords + block.skip_distances * ray.signs;
 block.coords = ivec3(round(block.exit_position)) / u_volume.stride;
-block.coords[block.exit_axis] = coords[block.exit_axis];
+block.coords += block.exit_normal * (coords - block.coords);
 
 // compute termination condition
 block.terminated = block.exit_distance > ray.end_distance;

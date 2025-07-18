@@ -12,13 +12,13 @@ cubic.values[3] = sample_trilinear_volume(camera.position + ray.direction * cubi
 cubic.residuals = cubic.values - u_rendering.intensity;
 
 // compute berstein coefficients from samples
-cubic.bcoeffs = cubic.sample_bernstein * cubic.residuals;
+cubic.bcoeffs = cubic_sample_bernstein * cubic.residuals;
 
 // If bernstein check allows roots, check analytically
 if (sign_change(cubic.bcoeffs))
 {
     // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-    cubic.coeffs = cubic.inv_vander * cubic.residuals;
+    cubic.coeffs = cubic_inv_vander * cubic.residuals;
 
     // check cubic intersection and sign crossings for degenerate cases 
     cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw);

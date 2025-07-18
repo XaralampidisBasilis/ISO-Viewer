@@ -16,8 +16,11 @@ quintic.fxx_fyy_fzz_f[1] = texture(u_textures.tricubic_volume, u_volume.inv_dime
 quintic.fxx_fyy_fzz_f[2] = texture(u_textures.tricubic_volume, u_volume.inv_dimensions * p2);
 quintic.fxx_fyy_fzz_f[3] = texture(u_textures.tricubic_volume, u_volume.inv_dimensions * p3);
 
+// Construct the trilinear cubic coefficients
+mat4x3 residuals_mat = quintic.gx_gy_gz_g * quintic.fxx_fyy_fzz_f - u_rendering.intensity;
+
 // Compute berstein coefficients matrix
-mat4x3 bcoeffs_mat = matrixCompMult(quintic.bernstein3 * residuals_mat * quintic.bernstein4, quintic.bernstein34);
+mat4x3 bcoeffs_mat = matrixCompMult(quintic_bernstein3 * residuals_mat * quintic_bernstein4, quintic_bernstein34);
 
 // Compute berstein coefficients
 sum_anti_diags(bcoeffs_mat, quintic.bcoeffs);
@@ -26,7 +29,7 @@ sum_anti_diags(bcoeffs_mat, quintic.bcoeffs);
 if (sign_change(quintic.bcoeffs))
 {
     // Compute quintic coefficient matrix
-    mat4x3 coeffs_mat = quintic.inv_vander3 * residuals_mat * quintic.inv_vander4;
+    mat4x3 coeffs_mat = quintic_inv_vander3 * residuals_mat * quintic_inv_vander4;
 
     // Compute quintic coefficient from the sum of anti diagonals 
     sum_anti_diags(coeffs_mat, quintic.coeffs);

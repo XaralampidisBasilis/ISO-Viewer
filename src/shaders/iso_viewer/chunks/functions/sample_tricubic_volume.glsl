@@ -1,3 +1,6 @@
+#ifndef SAMPLE_TRICUBIC_VOLUME
+#define SAMPLE_TRICUBIC_VOLUME
+
 /* Source:
    Beyond Trilinear Interpolation: Higher Quality for Free
    https://dl.acm.org/doi/10.1145/3306346.3323032
@@ -36,3 +39,4 @@ float sample_tricubic_volume(in vec3 coords, out vec4 tricubic_basis)
     return tricubic_sample;
 }
 
+#endif

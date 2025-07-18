@@ -1,3 +1,6 @@
+#ifndef SAMPLE_OCCUPANCY
+#define SAMPLE_OCCUPANCY
+
 // Samples the occupancy texture at the given integer coordinates.
 bool sample_occupancy(in ivec3 block_coords)
 {
@@ -9,3 +12,5 @@ bool sample_occupancy(in ivec3 block_coords)
     
     return occupancy;
 }
+
+#endif

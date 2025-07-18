@@ -7,7 +7,7 @@
 
     #else
 
-        #include "./intersected_cell/intersected_cell_trilinear"
+        #include "./intersected_cell/intersected_cell_trilinear_default"
 
     #endif
 
@@ -21,7 +21,7 @@
 
     #else
 
-        #include "./intersected_cell/intersected_cell_tricubic"
+        #include "./intersected_cell/intersected_cell_tricubic_default"
         
     #endif
 

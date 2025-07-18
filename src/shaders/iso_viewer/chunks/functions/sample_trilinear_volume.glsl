@@ -1,3 +1,5 @@
+#ifndef SAMPLE_TRILINEAR_VOLUME
+#define SAMPLE_TRILINEAR_VOLUME
 
 // Samples the base volume using standard trilinear interpolation.
 // Assumes texture uses linear filtering and normalized coordinates.
@@ -18,3 +20,5 @@ float sample_trilinear_volume(in vec3 coords)
 
     return trilinear_sample;
 }
+
+#endif

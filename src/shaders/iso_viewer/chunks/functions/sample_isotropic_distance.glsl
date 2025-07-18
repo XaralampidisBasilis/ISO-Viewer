@@ -1,3 +1,5 @@
+#ifndef SAMPLE_ISOTROPIC_DISTANCE
+#define SAMPLE_ISOTROPIC_DISTANCE
 
 // Samples the isotropic distance texture at given integer coordinates.
 int sample_isotropic_distance(in ivec3 block_coords, out bool occupancy)
@@ -13,3 +15,5 @@ int sample_isotropic_distance(in ivec3 block_coords, out bool occupancy)
 
     return distance;
 }
+
+#endif

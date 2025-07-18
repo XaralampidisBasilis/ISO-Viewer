@@ -20,7 +20,7 @@ quintic.fxx_fyy_fzz_f[3] = texture(u_textures.tricubic_volume, u_volume.inv_dime
 mat4x3 residuals_mat = quintic.gx_gy_gz_g * quintic.fxx_fyy_fzz_f - u_rendering.intensity;
 
 // Compute quintic coefficient matrix
-mat4x3 coeffs_mat = quintic.inv_vander3 * residuals_mat * quintic.inv_vander4;
+mat4x3 coeffs_mat = quintic_inv_vander3 * residuals_mat * quintic_inv_vander4;
 
 // Compute quintic coefficient from the sum of anti diagonals 
 sum_anti_diags(coeffs_mat, quintic.coeffs);

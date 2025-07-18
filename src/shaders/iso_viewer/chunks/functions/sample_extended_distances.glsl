@@ -1,3 +1,6 @@
+#ifndef SAMPLE_EXTENDED_DISTANCE
+#define SAMPLE_EXTENDED_DISTANCE
+
 // Unpacks a 16-bit 5551-encoded extended distance sample into 3 distances and 1 occupancy bit.
 uvec4 unpack_extended_distances(in uint packed_sample)
 {
@@ -31,3 +34,5 @@ ivec3 sample_extended_distances(in ivec3 block_coords, in int octant, out bool o
 
     return distances;
 }
+
+#endif
