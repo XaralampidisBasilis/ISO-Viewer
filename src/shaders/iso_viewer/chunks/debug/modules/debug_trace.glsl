@@ -19,7 +19,7 @@ vec4 debug_trace_distance = to_color(map(box.min_entry_distance, box.max_exit_di
 vec4 debug_trace_position = to_color(map(box.min_position, box.max_position, trace.position));
 
 // intensity 
-vec4 debug_trace_intensity = to_color(trace.intensity);
+vec4 debug_trace_intensity = to_color(trace.value);
 
 // error
 vec4 debug_trace_error = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, trace.error / MILLI_TOLERANCE)));

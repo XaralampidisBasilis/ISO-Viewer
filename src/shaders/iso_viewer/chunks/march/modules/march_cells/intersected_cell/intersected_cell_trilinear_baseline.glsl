@@ -9,7 +9,7 @@ cubic.residuals[2] = sample_trilinear_volume(camera.position + ray.direction * c
 cubic.residuals[3] = sample_trilinear_volume(camera.position + ray.direction * cubic.distances[3]) - u_rendering.intensity;
     
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
-cubic.coeffs = cubic_inv_vander * cubic.residuals;
+cubic.coeffs = cubic.residuals * cubic_inv_vander;
 
 // check cubic intersection and sign crossings for degenerate cases
 cell.intersected = is_cubic_solvable(cubic.coeffs, cubic.interval, cubic.residuals.xw) || sign_change(cubic.residuals);

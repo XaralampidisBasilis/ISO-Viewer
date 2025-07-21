@@ -11,7 +11,7 @@ vec4 debug_stats_num_cells = to_color(float(stats.num_cells) / float(MAX_CELLS))
 vec4 debug_stats_num_blocks = to_color(float(stats.num_blocks) / float(MAX_BLOCKS));
 
 // num checks
-vec4 debug_stats_num_checks = to_color(float(stats.num_tests) / mix(0.0, 100.0, u_debug.variable2));
+vec4 debug_stats_num_checks = to_color(float(stats.num_tests) / float(MAX_BLOCKS));
 
 // PRINT DEBUG
 

@@ -16,7 +16,7 @@ quintic.biases[2] = tricubic_bias(p3);
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_rendering.intensity;
 
 // Compute quintic coefficient matrix and sum the anti diagonals
-mat4x3 coeffs = quintic_inv_vander3 * residuals * quintic_inv_vander4;
+mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
 sum_anti_diags(coeffs, quintic.coeffs);
 
 // Compute quintic intersection by evaluating sign changes

@@ -15,29 +15,35 @@ quintic.biases[2] = tricubic_bias(p3);
 // Construct the trilinear cubic coefficients
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_rendering.intensity;
 
-// Compute berstein coefficients matrix and sum the anti diagonals
-mat4x3 bernstein_coeffs = quad_bernstein * residuals * cubic_bernstein;
-bernstein_coeffs = matrixCompMult(bernstein_coeffs, to_quintic_bernstein);
-sum_anti_diags(bernstein_coeffs, quintic.bernstein_coeffs);
+// Compute quintic coefficient matrix and sum the anti diagonals
+mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
+sum_anti_diags(coeffs, quintic.coeffs);
 
-// Compute sign change in berstein coefficients
-if (sign_change(quintic.bernstein_coeffs))
+// Compute quintic intersection by evaluating sign changes
+float t = 0.0;
+float t2 = t * t;
+float t3 = t2 * t;
+vec4 pt = vec4(1.0, t, t2, t3);
+float value = dot(pt.xyz, coeffs * pt);
+
+#pragma unroll
+for (int i = 1; i <= 16; i++)
 {
-    // Compute quintic coefficient matrix and sum the anti diagonals
-    mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
-    sum_anti_diags(coeffs, quintic.coeffs);
+    float t = float(i)/16.0;
+    float t2 = t * t;
+    float t3 = t2 * t;
+    vec4 pt = vec4(1.0, t, t2, t3);
 
-    // Compute quintic intersection by evaluating sign changes
-    cell.intersected = eval_poly_sign_change(quintic.coeffs);
-
-    #if STATS_ENABLED == 1
-    stats.num_tests += 1;
-    #endif
+    float temp = dot(pt.xyz, coeffs * pt);
+    cell.intersected = cell.intersected || sign_change(temp, value);
+    value = temp;
 }
 
 // update stats
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
+stats.num_tests += 1;
 #endif
+
 
 

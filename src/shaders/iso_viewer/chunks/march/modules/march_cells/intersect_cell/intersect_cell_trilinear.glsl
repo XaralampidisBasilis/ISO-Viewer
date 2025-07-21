@@ -8,5 +8,5 @@ trace.position = camera.position + ray.direction * trace.distance;
 trace.intersected = (ray.start_distance < trace.distance || trace.distance < ray.end_distance);
 
 // compute error
-trace.intensity = sample_trilinear_volume(trace.position);
-trace.error = trace.intensity - u_rendering.intensity;
+trace.value = sample_trilinear_volume(trace.position);
+trace.error = trace.value - u_rendering.intensity;

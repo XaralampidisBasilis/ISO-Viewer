@@ -18,7 +18,7 @@ frag.gradient_factor = softstep_hill(0.0, 0.3, surface.steepness, 0.9);
 // frag.gradient_factor = 1.0;
 
 // Material
-frag.material_color = sample_colormap(trace.intensity);
+frag.material_color = sample_colormap(trace.value);
 
 // Ambient 
 frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);
