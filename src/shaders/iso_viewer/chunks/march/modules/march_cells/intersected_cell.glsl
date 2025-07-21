@@ -3,7 +3,11 @@
 
     #if BERNSTEIN_ENABLED == 1
 
+        #if VARIATION_ENABLED == 1
+        #include "./intersected_cell/intersected_cell_trilinear_bernstein_2"
+        #else
         #include "./intersected_cell/intersected_cell_trilinear_bernstein"
+        #endif
 
     #else
 
@@ -17,7 +21,11 @@
 
     #if BERNSTEIN_ENABLED == 1
 
+        #if VARIATION_ENABLED == 1
+        #include "./intersected_cell/intersected_cell_tricubic_bernstein_2"
+        #else
         #include "./intersected_cell/intersected_cell_tricubic_bernstein"
+        #endif
 
     #else
 

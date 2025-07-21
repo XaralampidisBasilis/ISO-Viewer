@@ -3,8 +3,7 @@
 
 struct Quintic 
 {
-    vec4 points;
-    float residuals[6];
+    vec4 residuals;
     float coeffs[6];  
     float bernstein_coeffs[6];  
     float roots[6]; 
@@ -16,8 +15,7 @@ Quintic quintic;
 
 void set_quintic()
 {
-    quintic.points = vec4(0, 1, 2, 3) / 3.0;
-    quintic.residuals = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    quintic.residuals = vec4(0.0);
     quintic.coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.bernstein_coeffs = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     quintic.roots = float[6](0.0, 0.0, 0.0, 0.0, 0.0, 0.0);

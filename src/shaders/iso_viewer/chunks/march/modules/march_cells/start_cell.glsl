@@ -23,7 +23,7 @@
 
 #if INTERPOLATION_METHOD == 2
 
-    quintic.features[3] = sample_tricubic_volume(cell.exit_position);
+    quintic.residuals[3] = sample_tricubic_volume(cell.exit_position, quintic.features[3]) - u_rendering.intensity;
 
 #endif
 

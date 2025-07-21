@@ -24,12 +24,8 @@ sum_anti_diags(bernstein_coeffs, quintic.bernstein_coeffs);
 // Compute sign change in berstein coefficients
 if (sign_change(quintic.bernstein_coeffs))
 {
-    // Compute quintic coefficient matrix and sum the anti diagonals
-    mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
-    sum_anti_diags(coeffs, quintic.coeffs);
-
     // Compute quintic intersection by evaluating sign changes
-    cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+    cell.intersected = sign_change(quintic.residuals) || split_bernstein_sign_change(quintic.bernstein_coeffs);
 
     #if STATS_ENABLED == 1
     stats.num_tests += 1;

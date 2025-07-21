@@ -1,3 +1,7 @@
+
+// Sampling points to compute the interpolation polynomials
+const vec4 sampling_points = vec4(0, 1, 2, 3) / 3.0;
+
 // Inverse Vandermonde matrix for a quadratic polynomial sampled at points [1/3, 2/3, 1]
 // Transforms 3 samples of a quadratic function at those positions into polynomial coefficients
 const mat3 quad_inv_vander = mat3(
@@ -40,7 +44,7 @@ const mat4 cubic_bernstein = mat4(
 //      B_n^3(t) * B_m^2(t) = [ binomial(3,n) * binomial(2,m) / binomial(5, n+m) ] * B_{n+m}^5(t)
 //
 // This 4x3 matrix corresponds to the coefficients of B_{n+m}^5 for all combinations of n in [0,3], m in [0,2]
-const mat4x3 to_quintic_bernstein = mat4x3(
+const mat4x3 quintic_bernstein_weights = mat4x3(
     10, 4, 1,  
      6, 6, 3,  
      3, 6, 6,  

@@ -25,3 +25,5 @@
 #include "./sign_change"
 #include "./sign_changes"
 #include "./eval_poly_sign_change"
+#include "./split_bernstein"
+#include "./split_bernstein_sign_change"

@@ -3,10 +3,10 @@
 // COMPUTE DEBUG 
 
 // radius
-vec4 debug_block_radius = to_color(float(block.skip_distance) / 31.0);
+vec4 debug_block_skip_distance = to_color(float(block.skip_distance) / 31.0);
 
 // radii
-vec4 debug_block_radii = to_color(vec3(block.skip_distances) / 31.0);
+vec4 debug_block_skip_distances = to_color(vec3(block.skip_distances) / 31.0);
 
 // occupied
 vec4 debug_block_occupied = to_color(block.occupied);
@@ -39,8 +39,8 @@ vec4 debug_block_exit_position = to_color(map(box.min_position, box.max_position
 
 switch (u_debug.option - 400)
 {
-    case  1: fragColor = debug_block_radius;         break;
-    case  2: fragColor = debug_block_radii;          break;
+    case  1: fragColor = debug_block_skip_distance;  break;
+    case  2: fragColor = debug_block_skip_distances; break;
     case  3: fragColor = debug_block_occupied;       break;
     case  4: fragColor = debug_block_terminated;     break;
     case  5: fragColor = debug_block_coords;         break;
