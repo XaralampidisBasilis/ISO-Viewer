@@ -17,7 +17,7 @@ Hit hit; // Global mutable struct
 
 void set_hit()
 {
-    hit.discarded  = false;
+    hit.discarded  = true;
     hit.position   = vec3(0.0);
     hit.distance   = 0.0;
     hit.value      = 0.0;

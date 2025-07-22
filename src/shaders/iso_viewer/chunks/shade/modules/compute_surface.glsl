@@ -1,6 +1,7 @@
 
 // Compute gradient and hessian via triquadratic reconstruction
-surface.gradient = sample_triquadratic_gradient(hit.position, surface.curvatures);
+surface.gradient = hit.gradient;
+surface.curvatures = hit.curvatures;
 
 // Compute steepness, curvatures and curvient vectors
 surface.normal = normalize(surface.gradient);

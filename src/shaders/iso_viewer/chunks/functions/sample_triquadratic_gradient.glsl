@@ -17,6 +17,9 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_TRICUBIC_VOLUME
 #include "./sample_tricubic_volume"
 #endif
+#ifndef PRINCIPAL_CURVATURES
+#include "./principal_curvatures"
+#endif
 
 void compute_triquadratic_parameters(in vec3 p, out vec3 p0, out vec3 p1, out vec3 g0)
 {
@@ -62,33 +65,6 @@ vec3 compute_hessian_diagonal(in vec3 p)
         return sample_tricubic_features(p).xyz;
 
     #endif
-}
-
-vec2 compute_principal_curvatures(in vec3 gradient, in mat3 hessian)
-{
-    vec3 normal = normalize(gradient);
-
-    // create a linearly independent vector from normal 
-    vec3 independent = (abs(normal.x) < abs(normal.y)) 
-        ? (abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 0, 1)) 
-        : (abs(normal.y) < abs(normal.z) ? vec3(0, 1, 0) : vec3(0, 0, 1));
-
-    // compute arbitrary orthogonal tangent space
-    mat2x3 tangent;
-    tangent[0] = normalize(independent - normal * dot(independent, normal)); 
-    tangent[1] = cross(normal, tangent[0]);
-
-    // compute shape operator projected into the tangent space
-    mat2 shape = (transpose(tangent) * hessian) * tangent / length(gradient);
-    float determinant = determinant(shape);
-    float trace = (shape[0][0] + shape[1][1]) * 0.5;
-
-    // compute principal curvatures as eigenvalues of shape operator
-    float discriminant = sqrt(abs(trace * trace - determinant));
-    vec2 curvatures = trace + discriminant * vec2(-1, 1);
-
-    // return curvatures
-    return curvatures;
 }
 
 vec3 sample_triquadratic_gradient(in vec3 p)
@@ -231,7 +207,7 @@ vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
     gradient /= scale;
 
     // Principal curvatures
-    curvatures = compute_principal_curvatures(gradient, hessian);
+    curvatures = principal_curvatures(gradient, hessian);
 
     // Return Gradient
     return gradient;

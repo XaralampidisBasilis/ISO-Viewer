@@ -3,6 +3,8 @@
 #include "./sample_colormaps"
 #include "./sample_trilinear_volume"
 #include "./sample_tricubic_volume"
+#include "./sample_trilinear_gradient"
+#include "./sample_tricubic_gradient"
 #include "./sample_triquadratic_gradient"
 #include "./sample_occupancy"
 #include "./sample_isotropic_distance"

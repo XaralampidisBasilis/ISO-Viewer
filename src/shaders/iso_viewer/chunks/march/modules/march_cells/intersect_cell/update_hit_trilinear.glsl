@@ -13,7 +13,10 @@ hit.value = sample_trilinear_volume(hit.position);
 hit.residue = hit.value - u_rendering.isovalue;
 
 // Compute gradients and curvatures
-hit.gradient = sample_triquadratic_gradient(hit.position, hit.curvatures);
+if (u_debug.variable2 < 0.5)
+    hit.gradient = sample_trilinear_gradient(hit.position);
+else 
+    hit.gradient = sample_triquadratic_gradient(hit.position, hit.curvatures);
 
 // Compute termination condition
 hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance );
