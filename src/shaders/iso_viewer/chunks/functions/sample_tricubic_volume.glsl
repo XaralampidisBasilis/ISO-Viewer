@@ -1,10 +1,16 @@
-#ifndef SAMPLE_TRICUBIC_VOLUME
-#define SAMPLE_TRICUBIC_VOLUME
-
 /* Source:
    Beyond Trilinear Interpolation: Higher Quality for Free
    https://dl.acm.org/doi/10.1145/3306346.3323032
 */
+#ifndef SAMPLE_TRICUBIC_VOLUME
+#define SAMPLE_TRICUBIC_VOLUME
+
+vec4 sample_tricubic_features(in ivec3 coords)
+{
+    // Sample the precomputed augmented volume texture (fxx, fyy, fzz, f)
+    return texelFetch(u_textures.tricubic_volume, coords, 0);
+}
+
 vec4 sample_tricubic_features(in vec3 coords)
 {
     // Normalize coordinates to texture space

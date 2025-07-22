@@ -8,13 +8,13 @@
 vec3 sample_trilinear_gradient(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
-    vec3 x = p - 0.5; // to cell space
-    vec3 i = floor(x); // cell index
+    vec3 x = p - 0.5;     // cell space
+    vec3 i = floor(x); // cell coords
 
-    vec3 a0 = x - i; // cell space coordinates
+    vec3 a0 = x - i; // cell space
 
-    vec3 p0 = i - 0.5;
-    vec3 p1 = i + 0.5;
+    vec3 p0 = i + 0.5;
+    vec3 p1 = i + 1.5;
 
     // Take cube samples
     float f_x0y0z0 = sample_trilinear_volume(vec3(p0.x, p0.y, p0.z));
@@ -45,15 +45,15 @@ vec3 sample_trilinear_gradient(in vec3 p)
     float f_dxyz1 = mix(f_dxy0z1, f_dxy1z1, a0.y);
 
     // Differentiate across y
-    float f_xdyz0  = f_xy1z0  - f_xy0z0;
-    float f_xdyz1  = f_xy1z1  - f_xy0z1;
+    float f_xdyz0 = f_xy1z0  - f_xy0z0;
+    float f_xdyz1 = f_xy1z1  - f_xy0z1;
 
     // Interpolate along z
-    float f_dxyz  = mix(f_dxyz0,  f_dxyz1,  a0.z);
-    float f_xdyz  = mix(f_xdyz0,  f_xdyz1,  a0.z);
+    float f_dxyz = mix(f_dxyz0,  f_dxyz1,  a0.z);
+    float f_xdyz = mix(f_xdyz0,  f_xdyz1,  a0.z);
 
     // Differentiate across z
-    float f_xydz  = f_xyz1  - f_xyz0;
+    float f_xydz = f_xyz1  - f_xyz0;
 
     // Gradient
     vec3 gradient = vec3(f_dxyz, f_xdyz, f_xydz);

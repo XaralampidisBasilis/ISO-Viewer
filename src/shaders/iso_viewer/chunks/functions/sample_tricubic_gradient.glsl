@@ -1,3 +1,7 @@
+/* Source:
+   Beyond Trilinear Interpolation: Higher Quality for Free
+   https://dl.acm.org/doi/10.1145/3306346.3323032
+*/
 #ifndef SAMPLE_TRICUBIC_GRADIENT
 #define SAMPLE_TRICUBIC_GRADIENT
 
@@ -8,13 +12,88 @@
 #include "./principal_curvatures"
 #endif
 
-vec3 sample_tricubic_gradient(in vec3 p, out vec2 curvatures)
+/*
+    This function produces analytic gradients and curvatures directly from the 
+    interpolation function described in "Beyond Trilinear Interpolation: Higher Quality for Free".
+    For some reason there are some visible boundary artifacts between cells and my guess
+    is that they are produced from the HalfFloat encoding of the input texture
+*/
+vec3 sample_tricubic_gradient(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // to cell space
     vec3 i = floor(x); // cell index
 
     vec3 a0 = x - i; // cell space coordinates
+    vec3 a1 = a0 - 0.5;
+
+    vec3 p0 = i + 0.5;
+    vec3 p1 = i + 1.5;
+
+    vec4 bias = vec4(a0 * (a0 - 1.0) / 2.0, 1.0);
+
+    // Take cube samples
+    vec4 f_x0y0z0 = sample_tricubic_features(vec3(p0.x, p0.y, p0.z));
+    vec4 f_x0y1z0 = sample_tricubic_features(vec3(p0.x, p1.y, p0.z));
+    vec4 f_x0y0z1 = sample_tricubic_features(vec3(p0.x, p0.y, p1.z));
+    vec4 f_x0y1z1 = sample_tricubic_features(vec3(p0.x, p1.y, p1.z));
+    vec4 f_x1y0z0 = sample_tricubic_features(vec3(p1.x, p0.y, p0.z));
+    vec4 f_x1y1z0 = sample_tricubic_features(vec3(p1.x, p1.y, p0.z));
+    vec4 f_x1y0z1 = sample_tricubic_features(vec3(p1.x, p0.y, p1.z));
+    vec4 f_x1y1z1 = sample_tricubic_features(vec3(p1.x, p1.y, p1.z));
+
+    // Interpolate along x
+    vec4 f_xy0z0 = mix(f_x0y0z0, f_x1y0z0, a0.x);
+    vec4 f_xy1z0 = mix(f_x0y1z0, f_x1y1z0, a0.x);
+    vec4 f_xy0z1 = mix(f_x0y0z1, f_x1y0z1, a0.x);
+    vec4 f_xy1z1 = mix(f_x0y1z1, f_x1y1z1, a0.x);
+
+    // Differentiate across x
+    vec4 f_dxy0z0 = f_x1y0z0 - f_x0y0z0;
+    vec4 f_dxy1z0 = f_x1y1z0 - f_x0y1z0;
+    vec4 f_dxy0z1 = f_x1y0z1 - f_x0y0z1;
+    vec4 f_dxy1z1 = f_x1y1z1 - f_x0y1z1;
+
+    // Interpolate along y
+    vec4 f_xyz0  = mix(f_xy0z0,  f_xy1z0,  a0.y);
+    vec4 f_xyz1  = mix(f_xy0z1,  f_xy1z1,  a0.y);
+    vec4 f_dxyz0 = mix(f_dxy0z0, f_dxy1z0, a0.y);
+    vec4 f_dxyz1 = mix(f_dxy0z1, f_dxy1z1, a0.y);
+
+    // Differentiate across y
+    vec4 f_xdyz0 = f_xy1z0  - f_xy0z0;
+    vec4 f_xdyz1 = f_xy1z1  - f_xy0z1;
+
+    // Interpolate along z
+    vec4 f_xyz  = mix(f_xyz0,   f_xyz1,   a0.z);
+    vec4 f_dxyz = mix(f_dxyz0,  f_dxyz1,  a0.z);
+    vec4 f_xdyz = mix(f_xdyz0,  f_xdyz1,  a0.z);
+
+    // Differentiate across z
+    vec4 f_xydz = f_xyz1  - f_xyz0;
+
+    // first partial derivatives
+    float Fx_xyz = dot(f_dxyz, bias) + f_xyz.x * a1.x;
+    float Fy_xyz = dot(f_xdyz, bias) + f_xyz.y * a1.y;
+    float Fz_xyz = dot(f_xydz, bias) + f_xyz.z * a1.z;
+
+    // Gradient
+    vec3 gradient = vec3(Fx_xyz, Fy_xyz, Fz_xyz);
+
+    // Scale from grid to physical space
+    vec3 scale = normalize(u_volume.spacing);
+    gradient /= scale;
+
+    return gradient;
+}
+
+vec3 sample_tricubic_gradient(in vec3 p, out vec2 curvatures)
+{
+    // Convert to voxel-space and compute local coordinates
+    vec3 x = p - 0.5; // cell offset
+    vec3 i = floor(x); // cell coords [0, N]
+
+    vec3 a0 = x - i; // cell space [0, 1]
     vec3 a1 = a0 - 0.5;
 
     vec3 p0 = i + 0.5;
