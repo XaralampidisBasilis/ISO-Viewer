@@ -74,7 +74,7 @@ export default function()
         
         u_rendering: new THREE.Uniform
         ({
-            intensity : 0.69,
+            isovalue : 0.69,
             max_groups : 0,
             max_cells : 0,
             max_blocks: 0,

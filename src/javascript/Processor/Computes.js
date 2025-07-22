@@ -21,7 +21,7 @@ export default class Computes extends EventEmitter
         this.uniforms = this.viewer.material.uniforms
         this.defines = this.viewer.material.defines
         this.stride = this.uniforms.u_distance_map.value.stride
-        this.threshold = this.uniforms.u_rendering.value.intensity
+        this.threshold = this.uniforms.u_rendering.value.isovalue
         this.interpolationMethod = this.defines.INTERPOLATION_METHOD
         this.skippingMethod = this.defines.SKIPPING_METHOD
 
@@ -45,7 +45,7 @@ export default class Computes extends EventEmitter
     {
         console.time('onThresholdChange') 
 
-        this.threshold = this.uniforms.u_rendering.value.intensity
+        this.threshold = this.uniforms.u_rendering.value.isovalue
         
         await this.computeOccupancyMap()
         await this.computeBoundingBox()

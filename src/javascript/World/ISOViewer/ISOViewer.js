@@ -95,7 +95,7 @@ export default class ISOViewer extends EventEmitter
     async onThresholdChange(threshold)
     {
         const uniforms = this.material.uniforms
-        uniforms.u_rendering.value.intensity = threshold
+        uniforms.u_rendering.value.isovalue = threshold
         await this.computes.onThresholdChange()
         await this.textures.onThresholdChange()
 

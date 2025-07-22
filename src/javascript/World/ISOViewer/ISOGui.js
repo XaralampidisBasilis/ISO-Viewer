@@ -80,7 +80,7 @@ export default class ISOGui
         const uDistanceMap = this.viewer.material.uniforms.u_distance_map.value
         const objects = 
         { 
-            intensity             : uRendering.intensity,
+            isovalue             : uRendering.isovalue,
             stride                : uDistanceMap.stride,
             BERNSTEIN_ENABLED: Boolean(defines.BERNSTEIN_ENABLED),
             VARIATION_ENABLED     : Boolean(defines.VARIATION_ENABLED),
@@ -91,7 +91,7 @@ export default class ISOGui
     
         this.controllers.rendering = 
         {
-            isoIntensity: folder.add(objects, 'intensity').min(0).max(1).step(0.0001).onFinishChange((threshold) => 
+            isovalue: folder.add(objects, 'isovalue').min(0).max(1).step(0.0001).onFinishChange((threshold) => 
             { 
                 this.viewer.onThresholdChange(threshold) 
             }),

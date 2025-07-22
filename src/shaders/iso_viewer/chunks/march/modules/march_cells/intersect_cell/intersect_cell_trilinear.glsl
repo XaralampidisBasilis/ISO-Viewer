@@ -13,4 +13,4 @@ trace.intersected = (ray.start_distance < trace.distance || trace.distance < ray
 
 // compute error
 trace.value = sample_trilinear_volume(trace.position);
-trace.error = trace.value - u_rendering.intensity;
+trace.error = trace.value - u_rendering.isovalue;

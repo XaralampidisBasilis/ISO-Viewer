@@ -88,7 +88,7 @@ void split_bernstein(in float b[6], out float left[6], out float right[6])
         mix(m1, m2, 0.5),
         mix(m2, m3, 0.5),
         mix(m3, m4, 0.5)
-    );
+    );  
 
     // Stage 3
     vec3 o = mix(n.xyz, n.yzw, 0.5);

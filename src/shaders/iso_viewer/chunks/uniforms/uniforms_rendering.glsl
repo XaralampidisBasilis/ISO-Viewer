@@ -3,7 +3,7 @@
 
 struct UniformsRendering 
 {
-    float intensity;  
+    float isovalue;  
     int   max_groups;         
     int   max_cells;     
     int   max_blocks;   

@@ -1,6 +1,6 @@
 
 // Construct the quintic coefficients
-mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_rendering.intensity;
+mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_rendering.isovalue;
 mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
 sum_anti_diags(coeffs, quintic.coeffs);
 
@@ -15,4 +15,4 @@ trace.intersected = (ray.start_distance < trace.distance || trace.distance < ray
 
 // compute error
 trace.value = sample_tricubic_volume(trace.position);
-trace.error = trace.value - u_rendering.intensity;
+trace.error = trace.value - u_rendering.isovalue;

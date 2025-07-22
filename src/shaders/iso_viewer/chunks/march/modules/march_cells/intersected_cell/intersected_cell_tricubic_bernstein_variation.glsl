@@ -31,20 +31,31 @@ if (sign_change(quintic.residuals))
     break;
 }
 
-// Reconstruct the quintic polynomial coefficients from the residual matrix
-// Using inverse Vandermonde matrices for quadratic and cubic interpolation
-mat4x3 coeffs = quad_inv_vander * residuals * cubic_inv_vander;
+// Convert the residual polynomial to Bernstein basis using precomputed transformation matrices
+mat4x3 bernstein_coeffs = quad_bernstein * residuals * cubic_bernstein;
 
-// Extract final quintic coefficients by summing the anti-diagonals of the matrix
-// Each anti-diagonal corresponds to a coefficient basis term
-sum_anti_diags(coeffs, quintic.coeffs);
+// Apply element-wise scaling to map products of Bernstein bases to the quintic Bernstein basis
+bernstein_coeffs = matrixCompMult(bernstein_coeffs, bernstein_product_to_quintic);
 
-// Perform root detection in [0,1] by checking sign changes:
-// First on sampled residuals (fast), then refined on polynomial coefficients (fallback)
-cell.intersected = eval_poly_sign_change(quintic.coeffs);
+// Collapse the Bernstein coefficient matrix into a coefficients vector by summing anti-diagonals
+sum_anti_diags(bernstein_coeffs, quintic.bernstein_coeffs);
 
-// Update fetch/test counters for performance statistics
+// Perform early rejection, if all Bernstein coefficients share the same sign, skip intersection
+if (sign_change(quintic.bernstein_coeffs))
+{
+    // Perform root detection in [0,1] by firstly checking sign changes 
+    // on sampled residuals, then refined using Bernstein subdivision root finding
+    cell.intersected = split_bernstein_sign_change(quintic.bernstein_coeffs);
+
+    // Update tests counters for performance statistics
+    #if STATS_ENABLED == 1
+    stats.num_tests += 1;
+    #endif
+}
+
+// Update fetch counters for performance statistics
 #if STATS_ENABLED == 1
 stats.num_fetches += 3;
-stats.num_tests += 1;
 #endif
+
+

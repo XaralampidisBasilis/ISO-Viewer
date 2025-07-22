@@ -7,14 +7,23 @@ for (int i = 1; i < 4; i++)
 {
     vec3 position = mix(cell.entry_position, cell.exit_position, sampling_points[i]);
 
-    cubic.residuals[i] = sample_trilinear_volume(position) - u_rendering.intensity;
+    cubic.residuals[i] = sample_trilinear_volume(position);
+    cubic.residuals[i] -= u_rendering.isovalue;
+}
+
+// Compute sign change between residual values
+// If sign change detected terminate and declare intersection
+if (sign_change(cubic.residuals))
+{
+    cell.intersected = true;
+    break;
 }
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
 cubic.coeffs = cubic.residuals * cubic_inv_vander;
 
 // check cubic intersection and sign crossings for degenerate cases
-cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, sampling_points.xw, cubic.residuals.xw);
+cell.intersected = is_cubic_solvable(cubic.coeffs, sampling_points.xw, cubic.residuals.xw);
 
 // update stats
 #if STATS_ENABLED == 1

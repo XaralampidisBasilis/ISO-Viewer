@@ -7,7 +7,16 @@ for (int i = 1; i < 4; i++)
 {
     vec3 position = mix(cell.entry_position, cell.exit_position, sampling_points[i]);
 
-    cubic.residuals[i] = sample_trilinear_volume(position) - u_rendering.intensity;
+    cubic.residuals[i] = sample_trilinear_volume(position);
+    cubic.residuals[i] -= u_rendering.isovalue;
+}
+
+// Compute sign change between residual values
+// If sign change detected terminate and declare intersection
+if (sign_change(cubic.residuals))
+{
+    cell.intersected = true;
+    break;
 }
 
 // compute berstein coefficients from samples
@@ -17,7 +26,7 @@ cubic.bernstein_coeffs = cubic.residuals * cubic_bernstein;
 if (sign_change(cubic.bernstein_coeffs))
 {
     // check cubic intersection and sign crossings for degenerate cases 
-    cell.intersected = sign_change(cubic.residuals) || split_bernstein_sign_change(cubic.coeffs);
+    cell.intersected = split_bernstein_sign_change(cubic.bernstein_coeffs);
 
     #if STATS_ENABLED == 1
     stats.num_tests += 1;
