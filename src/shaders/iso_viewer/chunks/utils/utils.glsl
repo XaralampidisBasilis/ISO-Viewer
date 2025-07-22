@@ -9,8 +9,7 @@
 #include "./sdf/box_bounds"
 #include "./colors/to_color"
 #include "./colors/posterize"
-#include "./filters/triquadratic_bspline_filter"
-#include "./geometry/principal_curvatures"
+
 
 
 

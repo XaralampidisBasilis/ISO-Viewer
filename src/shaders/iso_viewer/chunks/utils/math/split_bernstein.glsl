@@ -38,16 +38,14 @@ void split_bernstein(in vec4 b, out vec4 left, out vec4 right)
     right = vec4(p, n.y, m.z, b.w);  
 }
 
-
 void split_bernstein(in float b[5], out float left[5], out float right[5]) 
 {
+    // Stage 0
+    vec4 b0 = vec4(b[0], b[1], b[2], b[3]);
+    vec4 b1 = vec4(b[1], b[2], b[3], b[4]);
+
     // Stage 1
-    vec4 m = vec4(
-        mix(b[0], b[1], 0.5),
-        mix(b[1], b[2], 0.5),
-        mix(b[2], b[3], 0.5),
-        mix(b[3], b[4], 0.5)
-    );
+    vec4 m = mix(b0, b1, 0.5);
 
     // Stage 2
     vec3 n = mix(m.xyz, m.yzw, 0.5);
@@ -76,18 +74,18 @@ void split_bernstein(in float b[5], out float left[5], out float right[5])
 void split_bernstein(in float b[6], out float left[6], out float right[6]) 
 {
     // Stage 1
-    float m0 = mix(b[0], b[1], 0.5);
-    float m1 = mix(b[1], b[2], 0.5);
-    float m2 = mix(b[2], b[3], 0.5);
-    float m3 = mix(b[3], b[4], 0.5);
-    float m4 = mix(b[4], b[5], 0.5);
+    float m0 = (b[0] + b[1]) * 0.5;
+    float m1 = (b[1] + b[2]) * 0.5;
+    float m2 = (b[2] + b[3]) * 0.5;
+    float m3 = (b[3] + b[4]) * 0.5;
+    float m4 = (b[4] + b[5]) * 0.5;
 
     // Stage 2
     vec4 n = vec4(
-        mix(m0, m1, 0.5),
-        mix(m1, m2, 0.5),
-        mix(m2, m3, 0.5),
-        mix(m3, m4, 0.5)
+        (m0 + m1) * 0.5,
+        (m1 + m2) * 0.5,
+        (m2 + m3) * 0.5,
+        (m3 + m4) * 0.5
     );  
 
     // Stage 3
@@ -115,5 +113,6 @@ void split_bernstein(in float b[6], out float left[6], out float right[6])
     right[4] = m4;
     right[5] = b[5];
 }
+
 
 #endif

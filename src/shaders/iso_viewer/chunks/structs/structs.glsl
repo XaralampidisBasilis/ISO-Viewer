@@ -3,6 +3,7 @@
 #include "./struct_box"
 #include "./struct_ray"
 #include "./struct_trace"
+#include "./struct_hit"
 #include "./struct_cell"
 #include "./struct_block"
 #include "./struct_cubic"

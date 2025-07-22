@@ -11,7 +11,7 @@ struct Trace
     vec3  position;             // current position in 3d model coordinates
     float distance;             // current distance traveled from camera
     float value;            // sampled value at the current position
-    float error;           
+    float residue;           
 };
 
 Trace trace; // Global mutable struct
@@ -24,8 +24,8 @@ void set_trace()
     trace.coords      = ivec3(0.0);
     trace.position    = vec3(0.0);
     trace.distance    = 0.0;
-    trace.value   = 0.0;
-    trace.error       = 0.0;
+    trace.value       = 0.0;
+    trace.residue     = 0.0;
 }
 
 #endif // STRUCT_TRACE

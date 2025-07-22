@@ -1,30 +1,17 @@
 
 // Compute gradient and hessian via triquadratic reconstruction
-triquadratic_bspline_gradient_hessian(u_textures.trilinear_volume, trace.position, surface.gradient, surface.hessian);
-
-// Scale derivatives to physical space
-vec3 spacing = normalize(u_volume.spacing);
-surface.hessian /= outerProduct(spacing, spacing);
-surface.gradient /= spacing;
-
-// Compute laplacian from the hessian matrix
-surface.laplacian = surface.hessian[0][0] + surface.hessian[1][1] + surface.hessian[2][2];
+surface.gradient = sample_triquadratic_gradient(hit.position, surface.curvatures);
 
 // Compute steepness, curvatures and curvient vectors
 surface.normal = normalize(surface.gradient);
 surface.steepness = length(surface.gradient);
-surface.curvatures = principal_curvatures(surface.gradient, surface.hessian, surface.curvients);
 
 // Compute the normal of the surface and correctly orient curvatures
-// surface.orientation = acos(dot(surface.normal, normalize(camera.position - trace.position))) < MATH.HALF_PI ? 1.0 : -1.0;
-surface.orientation = dot(surface.normal, normalize(camera.position - trace.position)) >= 0.0 ? 1.0 : -1.0;
+surface.orientation = dot(surface.normal, normalize(camera.position - hit.position)) >= 0.0 ? 1.0 : -1.0;
 surface.normal *= surface.orientation;
 surface.curvatures *= surface.orientation;
-surface.curvients *= surface.orientation;
 
 // Compute specific curvatures
 surface.mean_curvature = mean(surface.curvatures);
 surface.gauss_curvature = prod(surface.curvatures);
 surface.max_curvature = maxabs(surface.curvatures);
-surface.soft_curvature = (surface.laplacian / surface.steepness) * 0.5;
-surface.soft_curvature *= surface.orientation;

@@ -3,8 +3,8 @@
 vec3 light_position = camera.position;
 
 // Compute shading vectors in texture coordinated
-frag.light_vector = light_position - trace.position;
-frag.view_vector = camera.position - trace.position;
+frag.light_vector = light_position - hit.position;
+frag.view_vector = camera.position - hit.position;
 frag.halfway_vector = frag.light_vector + frag.view_vector;
 
 // Normalize shading vectors in model coordinates

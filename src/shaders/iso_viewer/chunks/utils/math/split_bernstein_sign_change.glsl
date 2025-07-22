@@ -15,7 +15,7 @@ bool split_bernstein_sign_change(in vec3 b)
 
     split_bernstein(b, b, r1); // [0,0.5], [0.5,1]
     split_bernstein(b, b, r2); // [0,0.25], [0.25,0.5]
-    split_bernstein(b, b, r3); if (sign_change(b) || sign_change(r3)) return true;
+    split_bernstein(b, b, r3);  if (sign_change(b) || sign_change(r3)) return true;
     split_bernstein(r2, b, r3); if (sign_change(b) || sign_change(r3)) return true;
 
     split_bernstein(r1, b, r2); // [0.5,0.75], [0.75,1.0]
@@ -31,7 +31,7 @@ bool split_bernstein_sign_change(in vec4 b)
 
     split_bernstein(b, b, r1); // [0,0.5], [0.5,1]
     split_bernstein(b, b, r2); // [0,0.25], [0.25,0.5]
-    split_bernstein(b, b, r3); if (sign_change(b) || sign_change(r3)) return true;
+    split_bernstein(b, b, r3);  if (sign_change(b) || sign_change(r3)) return true;
     split_bernstein(r2, b, r3); if (sign_change(b) || sign_change(r3)) return true;
 
     split_bernstein(r1, b, r2); // [0.5,0.75], [0.75,1.0]
@@ -47,7 +47,7 @@ bool split_bernstein_sign_change(in float b[5])
 
     split_bernstein(b, b, r1); // [0,0.5], [0.5,1]
     split_bernstein(b, b, r2); // [0,0.25], [0.25,0.5]
-    split_bernstein(b, b, r3); if (sign_change(b) || sign_change(r3)) return true;
+    split_bernstein(b, b, r3);  if (sign_change(b) || sign_change(r3)) return true;
     split_bernstein(r2, b, r3); if (sign_change(b) || sign_change(r3)) return true;
 
     split_bernstein(r1, b, r2); // [0.5,0.75], [0.75,1.0]
@@ -64,7 +64,7 @@ bool split_bernstein_sign_change(in float b[6])
 
     split_bernstein(b, b, r1); // [0,0.5], [0.5,1]
     split_bernstein(b, b, r2); // [0,0.25], [0.25,0.5]
-    split_bernstein(b, b, r3); if (sign_change(b) || sign_change(r3)) return true;
+    split_bernstein(b, b, r3);  if (sign_change(b) || sign_change(r3)) return true;
     split_bernstein(r2, b, r3); if (sign_change(b) || sign_change(r3)) return true;
 
     split_bernstein(r1, b, r2); // [0.5,0.75], [0.75,1.0]

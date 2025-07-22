@@ -1,19 +1,19 @@
 
 // compute current ray intersection distances with the volume box
-vec2 ray_box_distances = intersect_box(box.min_position, box.max_position, camera.position, ray.inv_direction);
+vec2 entry_exit = intersect_box(box.min_position, box.max_position, camera.position, ray.inv_direction);
 
 // set distances to zero when we are inside
-ray_box_distances = max(ray_box_distances, 0.0); 
+entry_exit = max(entry_exit, 0.0); 
 
 // update ray if there is an intersection 
-if (ray_box_distances.x < ray_box_distances.y)
+if (entry_exit.x < entry_exit.y)
 {
     // update ray box distances
-    box.entry_distance = ray_box_distances.x;
-    box.entry_position = ray_box_distances.x * ray.direction + camera.position;
-    box.exit_distance  = ray_box_distances.y;
-    box.exit_position  = ray_box_distances.y * ray.direction + camera.position;
-    box.span_distance  = ray_box_distances.y - ray_box_distances.x;
+    box.entry_distance = entry_exit.x;
+    box.entry_position = entry_exit.x * ray.direction + camera.position;
+    box.exit_distance  = entry_exit.y;
+    box.exit_position  = entry_exit.y * ray.direction + camera.position;
+    box.span_distance  = entry_exit.y - entry_exit.x;
     
     // update ray distances
     ray.start_distance = box.entry_distance;

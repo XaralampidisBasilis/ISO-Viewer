@@ -112,16 +112,16 @@ export default function()
 
     const defines = 
     {           
-        BERNSTEIN_ENABLED: 0,
-        VARIATION_ENABLED     : 0,
-        SKIPPING_ENABLED      : 1,
+        VARIATION_ENABLED: 1,
+        BERNSTEIN_ENABLED: 1,
+        SKIPPING_ENABLED : 1,
 
-        INTERPOLATION_METHOD : 1,
-        SKIPPING_METHOD : 3,
+        INTERPOLATION_METHOD: 2,
+        SKIPPING_METHOD     : 3,
 
-        STATS_ENABLED          : 1,
-        DEBUG_ENABLED          : 1,
-        DISCARDING_DISABLED    : 0,
+        STATS_ENABLED      : 1,
+        DEBUG_ENABLED      : 1,
+        DISCARDING_DISABLED: 0,
 
         MAX_CELLS           : 1000,
         MAX_BLOCKS          : 1000,

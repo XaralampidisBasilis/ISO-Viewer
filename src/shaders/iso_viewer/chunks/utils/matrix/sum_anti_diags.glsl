@@ -2,7 +2,7 @@
 #define SUM_ANTI_DIAGS
 
 // mat2: 2x2 → 3 anti-diagonals
-void sum_anti_diags(in mat2 C, out vec4 v)
+void sum_anti_diags(in mat2 C, out vec3 v)
 {
     v[0] = C[0][0];            // i + j = 0
     v[1] = C[1][0] + C[0][1];  // i + j = 1

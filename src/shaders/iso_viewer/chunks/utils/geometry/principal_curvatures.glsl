@@ -9,17 +9,9 @@ vec2 principal_curvatures(in vec3 gradient, in mat3 hessian)
     vec3 normal = normalize(gradient);
 
     // create a linearly independent vector from normal 
-    // vec3 independent = normal.zxy;
-    // vec3 independent = abs(normal.x) > abs(normal.z) ? 
-    //     vec3(0, 0, 1) : 
-    //     vec3(1, 0, 0);
     vec3 independent = (abs(normal.x) < abs(normal.y)) 
-        ? (abs(normal.x) < abs(normal.z) ? 
-            vec3(1, 0, 0) : 
-            vec3(0, 0, 1)) 
-        : (abs(normal.y) < abs(normal.z) ? 
-            vec3(0, 1, 0) : 
-            vec3(0, 0, 1));
+        ? (abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 0, 1)) 
+        : (abs(normal.y) < abs(normal.z) ? vec3(0, 1, 0) : vec3(0, 0, 1));
 
     // compute arbitrary orthogonal tangent space
     mat2x3 tangent;
