@@ -9,7 +9,7 @@ for (int i = 1; i < 4; i++)
     vec3 position = mix(cell.entry_position, cell.exit_position, sampling_points[i]);
 
     // Sample the packed tricubic features: (fxx, fyy, fzz, f)
-    quintic.features[i] = sample_tricubic_features(position);
+    quintic.features[i] = sample_volume_tricubic_features(position);
 
     // Compute the bias vector corresponding to quadratic correction terms
     quintic.biases[i - 1] = tricubic_bias(position);

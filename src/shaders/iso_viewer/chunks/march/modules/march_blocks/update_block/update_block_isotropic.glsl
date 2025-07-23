@@ -1,6 +1,6 @@
 
 // compute skip distance
-block.skip_distance = sample_isotropic_distance(block.coords, block.occupied);
+block.skip_distance = sample_distance_isotropic(block.coords, block.occupied);
 block.skip_distance = max(block.skip_distance, 1);
 
 // compute min/max coords

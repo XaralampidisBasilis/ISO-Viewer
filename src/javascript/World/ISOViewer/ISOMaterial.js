@@ -118,6 +118,7 @@ export default function()
 
         INTERPOLATION_METHOD: 2,
         SKIPPING_METHOD     : 3,
+        GRADIENTS_METHOD    : 3,
 
         STATS_ENABLED      : 1,
         DEBUG_ENABLED      : 1,

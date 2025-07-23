@@ -1,14 +1,14 @@
-#ifndef SAMPLE_TRILINEAR_GRADIENT
-#define SAMPLE_TRILINEAR_GRADIENT
+#ifndef SAMPLE_GRADIENT_TRILINEAR_ANALYTIC
+#define SAMPLE_GRADIENT_TRILINEAR_ANALYTIC
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
-#include "./sample_trilinear_volume"
+#include "../sample_volume_trilinear"
 #endif
 #ifndef PRINCIPAL_CURVATURES
-#include "./principal_curvatures"
+#include "../principal_curvatures"
 #endif
 
-vec3 sample_trilinear_gradient(in vec3 p)
+vec3 sample_gradient_trilinear_analytic(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;     // cell space
@@ -20,14 +20,14 @@ vec3 sample_trilinear_gradient(in vec3 p)
     vec3 p1 = i + 1.5;
 
     // Take cube samples
-    float f_x0y0z0 = sample_trilinear_volume(vec3(p0.x, p0.y, p0.z));
-    float f_x0y1z0 = sample_trilinear_volume(vec3(p0.x, p1.y, p0.z));
-    float f_x0y0z1 = sample_trilinear_volume(vec3(p0.x, p0.y, p1.z));
-    float f_x0y1z1 = sample_trilinear_volume(vec3(p0.x, p1.y, p1.z));
-    float f_x1y0z0 = sample_trilinear_volume(vec3(p1.x, p0.y, p0.z));
-    float f_x1y1z0 = sample_trilinear_volume(vec3(p1.x, p1.y, p0.z));
-    float f_x1y0z1 = sample_trilinear_volume(vec3(p1.x, p0.y, p1.z));
-    float f_x1y1z1 = sample_trilinear_volume(vec3(p1.x, p1.y, p1.z));
+    float f_x0y0z0 = sample_volume_trilinear(vec3(p0.x, p0.y, p0.z));
+    float f_x0y1z0 = sample_volume_trilinear(vec3(p0.x, p1.y, p0.z));
+    float f_x0y0z1 = sample_volume_trilinear(vec3(p0.x, p0.y, p1.z));
+    float f_x0y1z1 = sample_volume_trilinear(vec3(p0.x, p1.y, p1.z));
+    float f_x1y0z0 = sample_volume_trilinear(vec3(p1.x, p0.y, p0.z));
+    float f_x1y1z0 = sample_volume_trilinear(vec3(p1.x, p1.y, p0.z));
+    float f_x1y0z1 = sample_volume_trilinear(vec3(p1.x, p0.y, p1.z));
+    float f_x1y1z1 = sample_volume_trilinear(vec3(p1.x, p1.y, p1.z));
 
     // Interpolate along x
     float f_xy0z0 = mix(f_x0y0z0, f_x1y0z0, a0.x);
@@ -68,7 +68,7 @@ vec3 sample_trilinear_gradient(in vec3 p)
     return gradient;
 }
 
-vec3 sample_trilinear_gradient(in vec3 p, out vec2 curvatures)
+vec3 sample_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset
@@ -80,14 +80,14 @@ vec3 sample_trilinear_gradient(in vec3 p, out vec2 curvatures)
     vec3 p1 = i + 1.5;
 
     // Take cube samples
-    float f_x0y0z0 = sample_trilinear_volume(vec3(p0.x, p0.y, p0.z));
-    float f_x0y1z0 = sample_trilinear_volume(vec3(p0.x, p1.y, p0.z));
-    float f_x0y0z1 = sample_trilinear_volume(vec3(p0.x, p0.y, p1.z));
-    float f_x0y1z1 = sample_trilinear_volume(vec3(p0.x, p1.y, p1.z));
-    float f_x1y0z0 = sample_trilinear_volume(vec3(p1.x, p0.y, p0.z));
-    float f_x1y1z0 = sample_trilinear_volume(vec3(p1.x, p1.y, p0.z));
-    float f_x1y0z1 = sample_trilinear_volume(vec3(p1.x, p0.y, p1.z));
-    float f_x1y1z1 = sample_trilinear_volume(vec3(p1.x, p1.y, p1.z));
+    float f_x0y0z0 = sample_volume_trilinear(vec3(p0.x, p0.y, p0.z));
+    float f_x0y1z0 = sample_volume_trilinear(vec3(p0.x, p1.y, p0.z));
+    float f_x0y0z1 = sample_volume_trilinear(vec3(p0.x, p0.y, p1.z));
+    float f_x0y1z1 = sample_volume_trilinear(vec3(p0.x, p1.y, p1.z));
+    float f_x1y0z0 = sample_volume_trilinear(vec3(p1.x, p0.y, p0.z));
+    float f_x1y1z0 = sample_volume_trilinear(vec3(p1.x, p1.y, p0.z));
+    float f_x1y0z1 = sample_volume_trilinear(vec3(p1.x, p0.y, p1.z));
+    float f_x1y1z1 = sample_volume_trilinear(vec3(p1.x, p1.y, p1.z));
 
     // Interpolate along x
     float f_xy0z0 = mix(f_x0y0z0, f_x1y0z0, a0.x);

@@ -80,13 +80,14 @@ export default class ISOGui
         const uDistanceMap = this.viewer.material.uniforms.u_distance_map.value
         const objects = 
         { 
-            isovalue             : uRendering.isovalue,
-            stride                : uDistanceMap.stride,
-            BERNSTEIN_ENABLED: Boolean(defines.BERNSTEIN_ENABLED),
-            VARIATION_ENABLED     : Boolean(defines.VARIATION_ENABLED),
-            SKIPPING_ENABLED      : Boolean(defines.SKIPPING_ENABLED),
-            INTERPOLATION_METHOD  : Number(defines.INTERPOLATION_METHOD),
-            SKIPPING_METHOD       : Number(defines.SKIPPING_METHOD),
+            isovalue            : uRendering.isovalue,
+            stride              : uDistanceMap.stride,
+            BERNSTEIN_ENABLED   : Boolean(defines.BERNSTEIN_ENABLED),
+            VARIATION_ENABLED   : Boolean(defines.VARIATION_ENABLED),
+            SKIPPING_ENABLED    : Boolean(defines.SKIPPING_ENABLED),
+            INTERPOLATION_METHOD: Number(defines.INTERPOLATION_METHOD),
+            SKIPPING_METHOD     : Number(defines.SKIPPING_METHOD),
+            GRADIENTS_METHOD    : Number(defines.GRADIENTS_METHOD),
         }
     
         this.controllers.rendering = 
@@ -101,16 +102,22 @@ export default class ISOGui
                 this.viewer.onStrideChange(stride) 
             }),
 
-            maxGroups      : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
-            maxCellCount   : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
-            maxBlockCount  : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
-            enableVariation: folder.add(objects, 'VARIATION_ENABLED').name('variation').onFinishChange((value) => { defines.VARIATION_ENABLED = Number(value), material.needsUpdate = true }),
-            enableBernstein: folder.add(objects, 'BERNSTEIN_ENABLED').name('bernstein').onFinishChange((value) => { defines.BERNSTEIN_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+            maxGroups              : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
+            maxCellCount           : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
+            maxBlockCount          : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
+            enableVariation        : folder.add(objects, 'VARIATION_ENABLED').name('variation').onFinishChange((value) => { defines.VARIATION_ENABLED = Number(value), material.needsUpdate = true }),
+            enableBernstein        : folder.add(objects, 'BERNSTEIN_ENABLED').name('bernstein').onFinishChange((value) => { defines.BERNSTEIN_ENABLED = Number(value), material.needsUpdate = true }),
+            enableSkipping         : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
 
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 1, tricubic : 2 }).onFinishChange((option) => 
             { 
                 this.viewer.onInterpolationChange(option) 
+            }),
+
+            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, sobel : 2, bspline2 : 3, bspline3 : 4 }).onFinishChange((option) => 
+            { 
+                defines.GRADIENTS_METHOD = Number(option)
+                material.needsUpdate = true 
             }),
 
             skippingMethod: folder.add(objects, 'SKIPPING_METHOD').name('skipping').options({ occupancy : 1, isotropic : 2, anisotropic : 3, extended : 4 }).onFinishChange((option) => 

@@ -1,6 +1,6 @@
 
 // compute skip distance
-block.skip_distance = sample_anisotropic_distance(block.coords, ray.octant, block.occupied);
+block.skip_distance = sample_distance_anisotropic(block.coords, ray.octant, block.occupied);
 block.skip_distance = max(block.skip_distance, 1);
 
 // compute min/max coords

@@ -1,5 +1,5 @@
-#ifndef SAMPLE_EXTENDED_DISTANCE
-#define SAMPLE_EXTENDED_DISTANCE
+#ifndef SAMPLE_DISTANCE_EXTENDED
+#define SAMPLE_DISTANCE_EXTENDED
 
 // Unpacks a 16-bit 5551-encoded extended distance sample into 3 distances and 1 occupancy bit.
 uvec4 unpack_sample(in uint packed_sample)
@@ -14,7 +14,7 @@ uvec4 unpack_sample(in uint packed_sample)
 
 // Samples the extended distance texture at given coordinates and octant.
 // Returns 3-component distance vector and sets occupancy flag.
-ivec3 sample_extended_distances(in ivec3 block_coords, in int octant, out bool occupancy)
+ivec3 sample_distances_extended(in ivec3 block_coords, in int octant, out bool occupancy)
 {
     // Offset z to access the correct slab for the given octant.
     ivec3 slab_coords = block_coords;

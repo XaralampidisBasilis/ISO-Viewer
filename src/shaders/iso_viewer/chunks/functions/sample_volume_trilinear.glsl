@@ -1,9 +1,9 @@
 // Samples the base volume using standard trilinear interpolation.
 // Assumes texture uses linear filtering and normalized coordinates.
-#ifndef SAMPLE_TRILINEAR_VOLUME
-#define SAMPLE_TRILINEAR_VOLUME
+#ifndef SAMPLE_VOLUME_TRILINEAR
+#define SAMPLE_VOLUME_TRILINEAR
 
-float sample_trilinear_volume(in ivec3 coords)
+float sample_volume_trilinear(in ivec3 coords)
 {
     // Sample red channel from trilinear volume texture
     #if INTERPOLATION_METHOD == 1
@@ -16,7 +16,7 @@ float sample_trilinear_volume(in ivec3 coords)
     #endif
 }
 
-float sample_trilinear_volume(in vec3 coords)
+float sample_volume_trilinear(in vec3 coords)
 {
     // Normalize coordinates to texture space [0,1]
     vec3 texture_coords = coords * u_volume.inv_dimensions;

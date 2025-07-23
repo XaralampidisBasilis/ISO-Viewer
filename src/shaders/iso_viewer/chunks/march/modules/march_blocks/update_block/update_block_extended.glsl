@@ -1,6 +1,6 @@
 
 // compute skip distances
-block.skip_distances = sample_extended_distances(block.coords, ray.octant, block.occupied);
+block.skip_distances = sample_distances_extended(block.coords, ray.octant, block.occupied);
 block.skip_distances = max(block.skip_distances, 1);
 
 // compute min/max coords

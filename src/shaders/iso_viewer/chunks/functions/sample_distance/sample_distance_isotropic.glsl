@@ -1,8 +1,8 @@
-#ifndef SAMPLE_ISOTROPIC_DISTANCE
-#define SAMPLE_ISOTROPIC_DISTANCE
+#ifndef SAMPLE_DISTANCE_ISOTROPIC
+#define SAMPLE_DISTANCE_ISOTROPIC
 
 // Samples the isotropic distance texture at given integer coordinates.
-int sample_isotropic_distance(in ivec3 block_coords, out bool occupancy)
+int sample_distance_isotropic(in ivec3 block_coords, out bool occupancy)
 {
     // Fetch red channel value from the 3D texture
     uint texture_sample = texelFetch(u_textures.isotropic_distance, block_coords, 0).r;

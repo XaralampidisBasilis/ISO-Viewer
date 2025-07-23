@@ -1,13 +1,13 @@
 #include "./cell_space"
 #include "./tricubic_bias"
 #include "./sample_colormaps"
-#include "./sample_trilinear_volume"
-#include "./sample_tricubic_volume"
-#include "./sample_trilinear_gradient"
-#include "./sample_tricubic_gradient"
-#include "./sample_triquadratic_gradient"
+#include "./sample_volume_trilinear"
+#include "./sample_volume_tricubic"
 #include "./sample_occupancy"
-#include "./sample_isotropic_distance"
-#include "./sample_anisotropic_distance"
-#include "./sample_extended_distances"
+#include "./sample_distance"
+#include "./sample_gradient"
 #include "./softstep_hill"
+
+
+
+

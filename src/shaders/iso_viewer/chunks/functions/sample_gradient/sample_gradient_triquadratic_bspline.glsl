@@ -7,52 +7,26 @@ Derivatives at the Cost of One Additional Texture Fetch
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
-#ifndef SAMPLE_TRIQUADRATIC_GRADIENT
-#define SAMPLE_TRIQUADRATIC_GRADIENT
+#ifndef SAMPLE_GRADIENT_TRIQUADRATIC_BSPLINE
+#define SAMPLE_GRADIENT_TRIQUADRATIC_BSPLINE
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
-#include "./sample_trilinear_volume"
+#include "../sample_volume_trilinear"
 #endif
 #ifndef SAMPLE_TRICUBIC_VOLUME
-#include "./sample_tricubic_volume"
+#include "../sample_volume_tricubic"
+#endif
+#ifndef SAMPLE_SECOND_DERIVATIVES
+#include "../sample_second_derivatives"
 #endif
 #ifndef PRINCIPAL_CURVATURES
-#include "./principal_curvatures"
+#include "../principal_curvatures"
 #endif
 
 /*
     The gradients produced are C^1 continuous
 */
-vec3 second_derivatives(in vec3 p)
-{
-    #if INTERPOLATION_METHOD == 1
-
-        // Central differencing samples
-        vec3 s_x0yz_xy0z_xyz0 = vec3(
-            sample_trilinear_volume(vec3(p.x - 1.0, p.y, p.z)),
-            sample_trilinear_volume(vec3(p.x, p.y - 1.0, p.z)),
-            sample_trilinear_volume(vec3(p.x, p.y, p.z - 1.0))
-        );
-
-        vec3 s_x1yz_xy1z_xyz1 = vec3(
-            sample_trilinear_volume(vec3(p.x + 1.0, p.y, p.z)),
-            sample_trilinear_volume(vec3(p.x, p.y + 1.0, p.z)),
-            sample_trilinear_volume(vec3(p.x, p.y, p.z + 1.0))
-        );
-
-        // Pure second derivatives
-        return s_x0yz_xy0z_xyz0 + s_x1yz_xy1z_xyz1 - sample_trilinear_volume(p) * 2.0;
-
-    #endif
-
-    #if INTERPOLATION_METHOD == 2
-
-        return sample_tricubic_features(p).xyz;
-
-    #endif
-}
-
-vec3 sample_triquadratic_gradient(in vec3 p)
+vec3 sample_gradient_triquadratic_bspline(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -70,17 +44,17 @@ vec3 sample_triquadratic_gradient(in vec3 p)
  
     // Cube samples
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        sample_trilinear_volume(vec3(p0.x, p0.y, p0.z)), 
-        sample_trilinear_volume(vec3(p0.x, p1.y, p0.z)), 
-        sample_trilinear_volume(vec3(p0.x, p0.y, p1.z)), 
-        sample_trilinear_volume(vec3(p0.x, p1.y, p1.z))  
+        sample_volume_trilinear(vec3(p0.x, p0.y, p0.z)), 
+        sample_volume_trilinear(vec3(p0.x, p1.y, p0.z)), 
+        sample_volume_trilinear(vec3(p0.x, p0.y, p1.z)), 
+        sample_volume_trilinear(vec3(p0.x, p1.y, p1.z))  
     );
 
     vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        sample_trilinear_volume(vec3(p1.x, p0.y, p0.z)), 
-        sample_trilinear_volume(vec3(p1.x, p1.y, p0.z)), 
-        sample_trilinear_volume(vec3(p1.x, p0.y, p1.z)), 
-        sample_trilinear_volume(vec3(p1.x, p1.y, p1.z))  
+        sample_volume_trilinear(vec3(p1.x, p0.y, p0.z)), 
+        sample_volume_trilinear(vec3(p1.x, p1.y, p0.z)), 
+        sample_volume_trilinear(vec3(p1.x, p0.y, p1.z)), 
+        sample_volume_trilinear(vec3(p1.x, p1.y, p1.z))  
     );
 
     // Interpolate along x
@@ -128,7 +102,7 @@ vec3 sample_triquadratic_gradient(in vec3 p)
     return gradient;
 }
  
-vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
+vec3 sample_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -146,17 +120,17 @@ vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
 
     // Cube samples
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        sample_trilinear_volume(vec3(p0.x, p0.y, p0.z)), 
-        sample_trilinear_volume(vec3(p0.x, p1.y, p0.z)), 
-        sample_trilinear_volume(vec3(p0.x, p0.y, p1.z)), 
-        sample_trilinear_volume(vec3(p0.x, p1.y, p1.z))  
+        sample_volume_trilinear(vec3(p0.x, p0.y, p0.z)), 
+        sample_volume_trilinear(vec3(p0.x, p1.y, p0.z)), 
+        sample_volume_trilinear(vec3(p0.x, p0.y, p1.z)), 
+        sample_volume_trilinear(vec3(p0.x, p1.y, p1.z))  
     );
 
     vec4 s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        sample_trilinear_volume(vec3(p1.x, p0.y, p0.z)), 
-        sample_trilinear_volume(vec3(p1.x, p1.y, p0.z)), 
-        sample_trilinear_volume(vec3(p1.x, p0.y, p1.z)), 
-        sample_trilinear_volume(vec3(p1.x, p1.y, p1.z))  
+        sample_volume_trilinear(vec3(p1.x, p0.y, p0.z)), 
+        sample_volume_trilinear(vec3(p1.x, p1.y, p0.z)), 
+        sample_volume_trilinear(vec3(p1.x, p0.y, p1.z)), 
+        sample_volume_trilinear(vec3(p1.x, p1.y, p1.z))  
     );
 
     // Interpolate along x
@@ -196,16 +170,16 @@ vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
     ) * 2.0;
 
     // Pure second derivatives
-    vec3 s_ddx_ddy_ddz = second_derivatives(p);
+    vec3 s_d2x_d2y_d2z = sample_second_derivatives(p);
 
     // Gradient
     vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
 
     // Hessian
     mat3 hessian = mat3(
-        s_ddx_ddy_ddz.x, s_dxyz_xdyz_dxdyz.z, s_xydz_dxydz_xdydz.y,  
-        s_dxyz_xdyz_dxdyz.z, s_ddx_ddy_ddz.y, s_xydz_dxydz_xdydz.z,  
-        s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_ddx_ddy_ddz.z     
+        s_d2x_d2y_d2z.x, s_dxyz_xdyz_dxdyz.z, s_xydz_dxydz_xdydz.y,  
+        s_dxyz_xdyz_dxdyz.z, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
+        s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
     );
 
     // Scale from grid to physical space
