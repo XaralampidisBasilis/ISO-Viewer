@@ -2,8 +2,8 @@
    Beyond Trilinear Interpolation: Higher Quality for Free
    https://dl.acm.org/doi/10.1145/3306346.3323032
 */
-#ifndef SAMPLE_GRADIENT_TRICUBIC_ANALYTIC
-#define SAMPLE_GRADIENT_TRICUBIC_ANALYTIC
+#ifndef COMPUTE_GRADIENT_TRICUBIC_ANALYTIC
+#define COMPUTE_GRADIENT_TRICUBIC_ANALYTIC
 
 #ifndef SAMPLE_TRICUBIC_VOLUME
 #include "../sample_volume_tricubic"
@@ -17,7 +17,7 @@
     interpolation function described in "Beyond Trilinear Interpolation: Higher Quality for Free".
     There are some visible boundary artifacts between cells because gradients are C^0 piecewise continuous 
 */
-vec3 sample_gradient_tricubic_analytic(in vec3 p)
+vec3 compute_gradient_tricubic_analytic(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // to cell space
@@ -60,7 +60,7 @@ vec3 sample_gradient_tricubic_analytic(in vec3 p)
     return gradient;
 }
 
-vec3 sample_gradient_tricubic_analytic(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_tricubic_analytic(in vec3 p, out vec2 curvatures)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset

@@ -5,7 +5,7 @@
 #include "./sample_volume_tricubic"
 #include "./sample_occupancy"
 #include "./sample_distance"
-#include "./sample_gradient"
+#include "./compute_gradient"
 #include "./softstep_hill"
 
 

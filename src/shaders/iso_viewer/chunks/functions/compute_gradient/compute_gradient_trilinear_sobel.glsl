@@ -6,8 +6,8 @@ MRIcroGL Gradients
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
-#ifndef SAMPLE_GRADIENT_TRILINEAR_SOBEL
-#define SAMPLE_GRADIENT_TRILINEAR_SOBEL
+#ifndef COMPUTE_GRADIENT_TRILINEAR_SOBEL
+#define COMPUTE_GRADIENT_TRILINEAR_SOBEL
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_volume_trilinear"
@@ -19,7 +19,7 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #include "../principal_curvatures"
 #endif
 
-vec3 sample_gradient_trilinear_sobel(in vec3 p)
+vec3 compute_gradient_trilinear_sobel(in vec3 p)
 {
     // 1D B-spline filter normalized positions for each axis
     vec3 p0 = p - 0.5;
@@ -86,7 +86,7 @@ vec3 sample_gradient_trilinear_sobel(in vec3 p)
     return gradient;
 }
 
-vec3 sample_gradient_trilinear_sobel(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_trilinear_sobel(in vec3 p, out vec2 curvatures)
 {
     // 1D B-spline filter normalized positions for each axis
     vec3 p0 = p - 0.5;

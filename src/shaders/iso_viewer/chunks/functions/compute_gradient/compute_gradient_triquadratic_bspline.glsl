@@ -7,8 +7,8 @@ Derivatives at the Cost of One Additional Texture Fetch
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
-#ifndef SAMPLE_GRADIENT_TRIQUADRATIC_BSPLINE
-#define SAMPLE_GRADIENT_TRIQUADRATIC_BSPLINE
+#ifndef COMPUTE_GRADIENT_TRIQUADRATIC_BSPLINE
+#define COMPUTE_GRADIENT_TRIQUADRATIC_BSPLINE
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_volume_trilinear"
@@ -26,7 +26,7 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 /*
     The gradients produced are C^1 continuous
 */
-vec3 sample_gradient_triquadratic_bspline(in vec3 p)
+vec3 compute_gradient_triquadratic_bspline(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -102,7 +102,7 @@ vec3 sample_gradient_triquadratic_bspline(in vec3 p)
     return gradient;
 }
  
-vec3 sample_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;

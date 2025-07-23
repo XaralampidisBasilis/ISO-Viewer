@@ -13,26 +13,15 @@ hit.value = sample_volume_trilinear(hit.position);
 hit.residue = hit.value - u_rendering.isovalue;
 
 // Compute gradients and curvatures
-#if GRADIENTS_METHOD == 1
+hit.gradient = compute_gradient(hit.position, hit.curvatures);
 
-    hit.gradient = sample_gradient_trilinear_analytic(hit.position, hit.curvatures);
+// Compute polarity of gradient with view direction
+float polarity = ssign(dot(camera.position - hit.position, hit.gradient));
 
-#endif
-#if GRADIENTS_METHOD == 2
-
-    hit.gradient = sample_gradient_trilinear_sobel(hit.position, hit.curvatures);
-
-#endif
-#if GRADIENTS_METHOD == 3
-
-    hit.gradient = sample_gradient_triquadratic_bspline(hit.position, hit.curvatures);
-
-#endif
-#if GRADIENTS_METHOD == 4
-
-    hit.gradient = sample_gradient_tricubic_bspline(hit.position, hit.curvatures);
-
-#endif
+// Compute normal
+hit.normal = normalize(hit.gradient * polarity);
+hit.curvatures *= polarity;
 
 // Compute termination condition
 hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance);
+

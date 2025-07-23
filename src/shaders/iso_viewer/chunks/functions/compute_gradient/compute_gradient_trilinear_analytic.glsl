@@ -1,5 +1,5 @@
-#ifndef SAMPLE_GRADIENT_TRILINEAR_ANALYTIC
-#define SAMPLE_GRADIENT_TRILINEAR_ANALYTIC
+#ifndef COMPUTE_GRADIENT_TRILINEAR_ANALYTIC
+#define COMPUTE_GRADIENT_TRILINEAR_ANALYTIC
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_volume_trilinear"
@@ -8,7 +8,7 @@
 #include "../principal_curvatures"
 #endif
 
-vec3 sample_gradient_trilinear_analytic(in vec3 p)
+vec3 compute_gradient_trilinear_analytic(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;     // cell space
@@ -68,7 +68,7 @@ vec3 sample_gradient_trilinear_analytic(in vec3 p)
     return gradient;
 }
 
-vec3 sample_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset

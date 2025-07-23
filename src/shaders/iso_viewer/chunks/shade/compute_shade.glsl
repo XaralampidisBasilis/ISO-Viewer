@@ -1,46 +1,46 @@
 // Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
-// Compute surface properties
-#include "./modules/compute_surface"
+// Compute light position in texture coordinated
+vec3 light_position = camera.position;
 
-// Compute shading angles
-#include "./modules/compute_angles"
+// Compute shading vectors in texture coordinated
+vec3 vector_view = camera.position - hit.position;
+vec3 vector_light = light_position - hit.position;
+vec3 vector_halfway = vector_light + vector_view;
+
+// Normalize shading vectors in model coordinates
+vec3 scale = normalize(u_volume.spacing);
+vector_view = normalize(vector_view * scale);
+vector_light = normalize(vector_light * scale);
+vector_halfway = normalize(vector_halfway * scale);
+
+// Compute vector angles
+float angle_view = dot(vector_view, hit.normal);
+float angle_light = dot(vector_light, hit.normal);
+float angle_halfway = dot(vector_halfway, hit.normal);
 
 // Compute parameters
-float lambertian = clamp(frag.light_angle, 0.0, 1.0);
-float specular = pow(clamp(frag.halfway_angle, 0.0, 1.0), u_shading.shininess);
+float lambertian = clamp(angle_light, 0.0, 1.0);
+float specular = pow(clamp(angle_halfway, 0.0, 1.0), u_shading.shininess);
 
-// Edges 
-frag.edge_factor = smoothstep(0.0, u_shading.edge_contrast, abs(frag.view_angle));
+// Colors 
+frag.color_material = sample_colormap(hit.value);
+frag.color_ambient = frag.color_material * u_shading.reflect_ambient;
+frag.color_diffuse = frag.color_material * u_shading.reflect_diffuse  * lambertian;
+frag.color_specular = frag.color_material + (1.0 - frag.color_material) * u_shading.reflect_specular * specular;
+frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
 
-// Gradient
-frag.gradient_factor = softstep_hill(0.0, 0.3, surface.steepness, 0.9);
-// frag.gradient_factor = 1.0;
+// Modulations
+float edge_modulation = smoothstep(0.0, u_shading.edge_contrast, abs(angle_view));
+float curv_modulation = smoothstep(-2.0, 0.0, mean(hit.curvatures)); 
+float grad_modulation = softstep_hill(0.0, 0.3, length(hit.gradient), 0.9);
 
-// Material
-frag.material_color = sample_colormap(hit.value);
-
-// Ambient 
-frag.ambient_color = frag.material_color * (u_shading.ambient_reflectance * u_lighting.ambient_color);
-frag.ambient_color *= smoothstep(-2.0, 0.0, surface.mean_curvature); 
-
-// Diffuse
-frag.diffuse_color = frag.material_color * (u_shading.diffuse_reflectance * u_lighting.diffuse_color * lambertian);
-
-// Specular
-frag.specular_color = mix(frag.material_color, u_lighting.specular_color, u_shading.specular_reflectance * specular);
-
-// Directional
-frag.direct_color = mix(frag.diffuse_color, frag.specular_color, specular);
-frag.direct_color *= mmin(frag.edge_factor, frag.gradient_factor);
-frag.direct_color *= frag.edge_factor;
+frag.color_directional *= mmin(edge_modulation, grad_modulation);
+frag.color_ambient *= curv_modulation;
 
 // Compose colors
-frag.color = frag.ambient_color + frag.direct_color;
+frag.color = frag.color_ambient + frag.color_directional;
 frag.color *= u_lighting.intensity;
 
 // Assign frag color
 fragColor = vec4(frag.color, 1.0);
-
-// Compute fragment depth
-#include "./modules/compute_depth"

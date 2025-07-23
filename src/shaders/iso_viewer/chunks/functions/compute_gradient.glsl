@@ -1,0 +1,89 @@
+#ifndef COMPUTE_GRADIENT
+#define COMPUTE_GRADIENT
+
+#if GRADIENTS_METHOD == 1
+#if INTERPOLATION_METHOD == 1
+#include "./compute_gradient/compute_gradient_trilinear_analytic"
+#endif
+#if INTERPOLATION_METHOD == 2
+#include "./compute_gradient/compute_gradient_tricubic_analytic"
+#endif
+#endif
+#if GRADIENTS_METHOD == 2
+#include "./compute_gradient/compute_gradient_trilinear_sobel"
+#endif
+#if GRADIENTS_METHOD == 3
+#include "./compute_gradient/compute_gradient_triquadratic_bspline"
+#endif
+#if GRADIENTS_METHOD == 4
+#include "./compute_gradient/compute_gradient_tricubic_bspline"
+#endif
+
+vec3 compute_gradient(in vec3 coords)
+{
+    #if GRADIENTS_METHOD == 1
+
+        #if INTERPOLATION_METHOD == 1
+
+            return compute_gradient_trilinear_analytic(coords);
+
+        #elif INTERPOLATION_METHOD == 2
+
+            return compute_gradient_tricubic_analytic(coords);
+
+        #endif
+
+    #elif GRADIENTS_METHOD == 2
+    
+        return compute_gradient_trilinear_sobel(coords);
+
+    #elif GRADIENTS_METHOD == 3
+
+        return compute_gradient_triquadratic_bspline(coords);
+
+    #elif GRADIENTS_METHOD == 4
+
+        return compute_gradient_tricubic_bspline(coords);
+
+    #else
+
+        return vec3(0.0); 
+
+    #endif
+}
+
+vec3 compute_gradient(in vec3 coords, out vec2 curvatures)
+{
+    #if GRADIENTS_METHOD == 1
+
+        #if INTERPOLATION_METHOD == 1
+
+            return compute_gradient_trilinear_analytic(coords, curvatures);
+            
+        #elif INTERPOLATION_METHOD == 2
+
+            return compute_gradient_tricubic_analytic(coords, curvatures);
+
+        #endif
+
+    #elif GRADIENTS_METHOD == 2
+
+        return compute_gradient_trilinear_sobel(coords, curvatures);
+
+    #elif GRADIENTS_METHOD == 3
+
+        return compute_gradient_triquadratic_bspline(coords, curvatures);
+
+    #elif GRADIENTS_METHOD == 4
+
+        return compute_gradient_tricubic_bspline(coords, curvatures);
+
+    #else
+    
+        curvatures = vec2(0.0);
+        return vec3(0.0); 
+
+    #endif
+}
+
+#endif 

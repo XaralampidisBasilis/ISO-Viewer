@@ -3,7 +3,6 @@
 
 struct Cubic 
 {
-    vec4 values;    
     vec4 residuals;
     vec4 distances;
     vec4 coeffs;    
@@ -16,7 +15,6 @@ Cubic cubic; // Global mutable struct
 void set_cubic()
 {
     cubic.roots = vec4(0);
-    cubic.values = vec4(0);
     cubic.residuals = vec4(0);
     cubic.distances = vec4(0);
     cubic.coeffs = vec4(0);

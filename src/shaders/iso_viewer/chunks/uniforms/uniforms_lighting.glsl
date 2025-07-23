@@ -5,9 +5,9 @@ struct UniformsLighting
 {
     float intensity;          
     float shadows;            
-    vec3  ambient_color;      
-    vec3  diffuse_color;      
-    vec3  specular_color;     
+    vec3  color_ambient;      
+    vec3  color_diffuse;      
+    vec3  color_specular;     
     vec3  position_offset;    
 };
 

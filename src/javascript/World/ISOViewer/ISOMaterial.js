@@ -82,9 +82,9 @@ export default function()
 
         u_shading: new THREE.Uniform
         ({
-            ambient_reflectance  : 0.2,
-            diffuse_reflectance  : 1.0,
-            specular_reflectance : 0.6,
+            reflect_ambient  : 0.2,
+            reflect_diffuse  : 1.0,
+            reflect_specular : 0.6,
             shininess            : 40.0,
             edge_contrast        : 0.4,
         }),
@@ -93,9 +93,9 @@ export default function()
         ({
             intensity          : 1.0,                         // overall light intensity
             shadows            : 0.0,                         // threshold for shadow casting
-            ambient_color      : new THREE.Color(0xffffff),   // ambient light color
-            diffuse_color      : new THREE.Color(0xffffff),   // diffuse light color
-            specular_color     : new THREE.Color(0xffffff),   // specular light color
+            color_ambient      : new THREE.Color(0xffffff),   // ambient light color
+            color_diffuse      : new THREE.Color(0xffffff),   // diffuse light color
+            color_specular     : new THREE.Color(0xffffff),   // specular light color
             position_offset    : new THREE.Vector3(),         // offset position for light source
         }),
 

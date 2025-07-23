@@ -5,8 +5,8 @@ Efficient GPU-Based Texture Interpolation using Uniofm B-Splines
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
-#ifndef SAMPLE_GRADIENT_TRICUBIC_BSPLINE
-#define SAMPLE_GRADIENT_TRICUBIC_BSPLINE
+#ifndef COMPUTE_GRADIENT_TRICUBIC_BSPLINE
+#define COMPUTE_GRADIENT_TRICUBIC_BSPLINE
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_volume_trilinear"
@@ -318,7 +318,7 @@ vec3 tricubic_bspline_xdydz_dxydz_dxdyz(in vec3 p0, in vec3 p1, in vec3 g0, in v
     return vec3(s_xdydz, s_dxydz, s_dxdyz);
 }
 
-vec3 sample_gradient_tricubic_bspline(in vec3 p)
+vec3 compute_gradient_tricubic_bspline(in vec3 p)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(p, p0, p1, g0, dp0, dp1, dg0);
@@ -333,7 +333,7 @@ vec3 sample_gradient_tricubic_bspline(in vec3 p)
     return gradient;
 }
 
-vec3 sample_gradient_tricubic_bspline(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_tricubic_bspline(in vec3 p, out vec2 curvatures)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(p, p0, p1, g0, dp0, dp1, dg0);

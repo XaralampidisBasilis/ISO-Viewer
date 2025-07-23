@@ -6,7 +6,7 @@ struct Quintic
     vec4 residuals;
     float coeffs[6];  
     float bernstein_coeffs[6];  
-    float roots[6]; 
+    float roots[6];
     mat4 features;
     mat3x4 biases;
 };

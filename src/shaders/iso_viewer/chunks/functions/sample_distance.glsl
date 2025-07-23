@@ -13,7 +13,7 @@
     #endif
     #if SKIPPING_METHOD == 4
 
-        #include "./sample_distance/sample_distance_extended"
+        #include "./sample_distance/sample_distances_extended"
 
     #endif    
 
