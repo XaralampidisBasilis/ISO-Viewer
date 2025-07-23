@@ -14,9 +14,13 @@ hit.residue = hit.value - u_rendering.isovalue;
 
 // Compute gradients and curvatures
 if (u_debug.variable2 < 0.5)
-    hit.gradient = sample_trilinear_gradient(hit.position);
+{
+    hit.gradient = sample_trilinear_gradient(hit.position, hit.curvatures);
+}
 else 
+{
     hit.gradient = sample_triquadratic_gradient(hit.position, hit.curvatures);
+}
 
 // Compute termination condition
-hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance );
+hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance);

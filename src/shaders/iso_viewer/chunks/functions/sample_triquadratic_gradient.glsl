@@ -7,7 +7,6 @@ Derivatives at the Cost of One Additional Texture Fetch
 GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering 
 (https://developer.nvidia.com/gpugems/gpugems2/part-iii-high-quality-rendering/chapter-20-fast-third-order-texture-filtering),
 */
-
 #ifndef SAMPLE_TRIQUADRATIC_GRADIENT
 #define SAMPLE_TRIQUADRATIC_GRADIENT
 
@@ -21,24 +20,10 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #include "./principal_curvatures"
 #endif
 
-void compute_triquadratic_parameters(in vec3 p, out vec3 p0, out vec3 p1, out vec3 g0)
-{
-    // Convert to voxel-space and compute local coordinates
-    vec3 x = p - 0.5;
-    vec3 b = x - round(x);
-
-    // 1D B-spline filter coefficients for each axis
-    g0 = 0.5 - b;
-
-    // 1D B-spline filter offsets for each axis
-    vec3 h0 = (0.5 + b) * 0.5;
-
-    // 1D B-spline filter normalized positions for each axis
-    p0 = p - h0;
-    p1 = p0 + 0.5;
-}
-
-vec3 compute_hessian_diagonal(in vec3 p)
+/*
+    The gradients produced are C^1 continuous
+*/
+vec3 second_derivatives(in vec3 p)
 {
     #if INTERPOLATION_METHOD == 1
 
@@ -69,8 +54,19 @@ vec3 compute_hessian_diagonal(in vec3 p)
 
 vec3 sample_triquadratic_gradient(in vec3 p)
 {
-    vec3 p0, p1, g0;
-    compute_triquadratic_parameters(p, p0, p1, g0);
+    // Convert to voxel-space and compute local coordinates
+    vec3 x = p - 0.5;
+    vec3 b = x - round(x);
+
+    // 1D B-spline filter coefficients for each axis
+    vec3 g0 = 0.5 - b;
+
+    // 1D B-spline filter offsets for each axis
+    vec3 h0 = (0.5 + b) * 0.5;
+
+    // 1D B-spline filter normalized positions for each axis
+    vec3 p0 = p - h0;
+    vec3 p1 = p0 + 0.5;
  
     // Cube samples
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
@@ -134,8 +130,19 @@ vec3 sample_triquadratic_gradient(in vec3 p)
  
 vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
 {
-    vec3 p0, p1, g0;
-    compute_triquadratic_parameters(p, p0, p1, g0);
+    // Convert to voxel-space and compute local coordinates
+    vec3 x = p - 0.5;
+    vec3 b = x - round(x);
+
+    // 1D B-spline filter coefficients for each axis
+    vec3 g0 = 0.5 - b;
+
+    // 1D B-spline filter offsets for each axis
+    vec3 h0 = (0.5 + b) * 0.5;
+
+    // 1D B-spline filter normalized positions for each axis
+    vec3 p0 = p - h0;
+    vec3 p1 = p0 + 0.5;
 
     // Cube samples
     vec4 s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
@@ -189,7 +196,7 @@ vec3 sample_triquadratic_gradient(in vec3 p, out vec2 curvatures)
     ) * 2.0;
 
     // Pure second derivatives
-    vec3 s_ddx_ddy_ddz = compute_hessian_diagonal(p);
+    vec3 s_ddx_ddy_ddz = second_derivatives(p);
 
     // Gradient
     vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);

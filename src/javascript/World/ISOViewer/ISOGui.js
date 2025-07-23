@@ -101,12 +101,12 @@ export default class ISOGui
                 this.viewer.onStrideChange(stride) 
             }),
 
-            maxGroups          : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
-            maxCellCount       : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
-            maxBlockCount      : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
-            enableVariation    : folder.add(objects, 'VARIATION_ENABLED').name('variation').onFinishChange((value) => { defines.VARIATION_ENABLED = Number(value), material.needsUpdate = true }),
-            enableBernsteinSkip: folder.add(objects, 'BERNSTEIN_ENABLED').name('bernstein_skip').onFinishChange((value) => { defines.BERNSTEIN_ENABLED = Number(value), material.needsUpdate = true }),
-            enableSkipping     : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
+            maxGroups      : folder.add(uRendering, 'max_groups').min(0).max(1000).step(1),
+            maxCellCount   : folder.add(uRendering, 'max_cells').min(0).max(1000).step(1),
+            maxBlockCount  : folder.add(uRendering, 'max_blocks').min(0).max(200).step(1),
+            enableVariation: folder.add(objects, 'VARIATION_ENABLED').name('variation').onFinishChange((value) => { defines.VARIATION_ENABLED = Number(value), material.needsUpdate = true }),
+            enableBernstein: folder.add(objects, 'BERNSTEIN_ENABLED').name('bernstein').onFinishChange((value) => { defines.BERNSTEIN_ENABLED = Number(value), material.needsUpdate = true }),
+            enableSkipping : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
 
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 1, tricubic : 2 }).onFinishChange((option) => 
             { 

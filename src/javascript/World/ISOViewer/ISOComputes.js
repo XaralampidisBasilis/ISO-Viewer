@@ -152,7 +152,8 @@ export default class ISOComputes extends EventEmitter
         this.intensityMap.array = new Uint16Array(this.intensityMap.tensor.size)
         const array = this.intensityMap.tensor.dataSync()
 
-        for (let i = 0; i < this.intensityMap.array.length; ++i) {
+        for (let i = 0; i < this.intensityMap.array.length; ++i) 
+        {
             this.intensityMap.array[i] = toHalfFloat(array[i])
         }
 
