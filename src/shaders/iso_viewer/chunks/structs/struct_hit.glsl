@@ -10,6 +10,7 @@ struct Hit
     float value;        
     float residue;    
     vec3  gradient;   
+    mat3  hessian;   
     vec3  normal;   
     vec2  curvatures;    
 };
@@ -24,6 +25,7 @@ void set_hit()
     hit.value      = 0.0;
     hit.residue    = 0.0;
     hit.gradient   = vec3(0.0);
+    hit.hessian    = mat3(0.0);
     hit.normal     = vec3(0.0);
     hit.curvatures = vec2(0.0);
 }

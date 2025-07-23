@@ -4,9 +4,6 @@
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_volume_trilinear"
 #endif
-#ifndef PRINCIPAL_CURVATURES
-#include "../principal_curvatures"
-#endif
 
 vec3 compute_gradient_trilinear_analytic(in vec3 p)
 {
@@ -68,7 +65,7 @@ vec3 compute_gradient_trilinear_analytic(in vec3 p)
     return gradient;
 }
 
-vec3 compute_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_trilinear_analytic(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset
@@ -128,7 +125,7 @@ vec3 compute_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
     vec3 gradient = vec3(f_dxyz, f_xdyz, f_xydz);
 
     // Hessian
-    mat3 hessian = mat3(
+    hessian = mat3(
         0.0, f_dxdyz, f_dxydz,  
         f_dxdyz, 0.0, f_xdydz,  
         f_dxydz, f_xdydz, 0.0     
@@ -138,9 +135,6 @@ vec3 compute_gradient_trilinear_analytic(in vec3 p, out vec2 curvatures)
     vec3 scale = normalize(u_volume.spacing);
     hessian /= outerProduct(scale, scale);
     gradient /= scale;
-
-    // Principal curvatures
-    curvatures = principal_curvatures(gradient, hessian);
 
     return gradient;
 }

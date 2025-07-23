@@ -11,7 +11,7 @@ vec4 debug_stats_num_cells = to_color(float(stats.num_cells) / float(MAX_CELLS))
 vec4 debug_stats_num_blocks = to_color(float(stats.num_blocks) / float(MAX_BLOCKS));
 
 // num checks
-vec4 debug_stats_num_checks = to_color(float(stats.num_tests) / float(MAX_BLOCKS));
+vec4 debug_stats_num_tests = to_color(float(stats.num_tests) / float(MAX_BLOCKS));
 
 // PRINT DEBUG
 
@@ -20,5 +20,5 @@ switch (u_debug.option - 900)
     case 1: fragColor = debug_stats_num_fetches; break;
     case 2: fragColor = debug_stats_num_cells;   break;
     case 3: fragColor = debug_stats_num_blocks;  break;
-    case 4: fragColor = debug_stats_num_checks;  break;
+    case 4: fragColor = debug_stats_num_tests;  break;
 }

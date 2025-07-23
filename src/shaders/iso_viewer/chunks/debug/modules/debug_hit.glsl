@@ -18,7 +18,7 @@ vec4 debug_trace_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED,
 vec4 debug_hit_normal = to_color((map(-1.0, 1.0, hit.normal)));
 
 // gradient
-vec4 debug_hit_gradient = to_color(map(-1.0, 1.0, hit.gradient));
+vec4 debug_hit_gradient = to_color(map(-1.0, 1.0, normalize(hit.gradient)) * length(hit.gradient));
 
 // steepness
 vec4 debug_hit_steepness = to_color(map(0.0, 1.0, length(hit.gradient)));

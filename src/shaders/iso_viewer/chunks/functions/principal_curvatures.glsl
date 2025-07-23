@@ -1,4 +1,7 @@
-
+/*
+    From the paper "Real-Time Ray-Casting and Advanced Shading of Discrete Isosurfaces"
+    in the 4.1. Differential Surface Properties/Extrinsic curvatures
+*/
 #ifndef PRINCIPAL_CURVATURES
 #define PRINCIPAL_CURVATURES
 

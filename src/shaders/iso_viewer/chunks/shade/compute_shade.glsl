@@ -32,8 +32,11 @@ frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
 
 // Modulations
 float edge_modulation = smoothstep(0.0, u_shading.edge_contrast, abs(angle_view));
-float curv_modulation = smoothstep(-2.0, 0.0, mean(hit.curvatures)); 
 float grad_modulation = softstep_hill(0.0, 0.3, length(hit.gradient), 0.9);
+float curv_modulation = mean(
+    smoothstep(-1.2, 0.0, hit.curvatures.x), 
+    smoothstep(-1.2, 0.0, hit.curvatures.y)
+); 
 
 frag.color_directional *= mmin(edge_modulation, grad_modulation);
 frag.color_ambient *= curv_modulation;

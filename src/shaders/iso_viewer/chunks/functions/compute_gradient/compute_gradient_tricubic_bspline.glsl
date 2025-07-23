@@ -17,10 +17,6 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_SECOND_DERIVATIVES
 #include "../sample_second_derivatives"
 #endif
-#ifndef PRINCIPAL_CURVATURES
-#include "../principal_curvatures"
-#endif
-
 
 void tricubic_bspline_basis(in vec3 p, out vec3 p0, out vec3 p1, out vec3 g0, out vec3 dp0, out vec3 dp1, out vec3 dg0)
 { 
@@ -333,7 +329,7 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p)
     return gradient;
 }
 
-vec3 compute_gradient_tricubic_bspline(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_tricubic_bspline(in vec3 p, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(p, p0, p1, g0, dp0, dp1, dg0);
@@ -348,7 +344,7 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p, out vec2 curvatures)
     vec3 s_d2x_d2y_d2z = sample_second_derivatives(p);
 
     // Hessian
-    mat3 hessian = mat3(
+    hessian = mat3(
        s_d2x_d2y_d2z.x, s_xdydz_dxydz_dxdyz.z, s_xdydz_dxydz_dxdyz.y,  
        s_xdydz_dxydz_dxdyz.z, s_d2x_d2y_d2z.y, s_xdydz_dxydz_dxdyz.x,  
        s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
@@ -358,9 +354,6 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p, out vec2 curvatures)
     vec3 scale = normalize(u_volume.spacing);
     hessian /= outerProduct(scale, scale);
     gradient /= scale;
-
-    // Principal curvatures
-    curvatures = principal_curvatures(gradient, hessian);
 
     return gradient;
 }

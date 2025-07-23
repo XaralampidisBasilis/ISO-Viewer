@@ -12,15 +12,17 @@ hit.value = sample_volume_trilinear(hit.position);
 // Compute intersection residue (should be near zero)
 hit.residue = hit.value - u_rendering.isovalue;
 
-// Compute gradients and curvatures
-hit.gradient = compute_gradient(hit.position, hit.curvatures);
+// Compute gradients and hessian
+hit.gradient = compute_gradient(hit.position, hit.hessian);
 
-// Compute polarity of gradient with view direction
-float polarity = ssign(dot(camera.position - hit.position, hit.gradient));
+// Align gradient with ray direction
+hit.gradient *= ssign(dot(ray.direction, hit.gradient));
 
 // Compute normal
-hit.normal = normalize(hit.gradient * polarity);
-hit.curvatures *= polarity;
+hit.normal = normalize(hit.gradient);
+
+// Compute principal curvatures
+hit.curvatures = principal_curvatures(hit.gradient, hit.hessian);
 
 // Compute termination condition
 hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance);

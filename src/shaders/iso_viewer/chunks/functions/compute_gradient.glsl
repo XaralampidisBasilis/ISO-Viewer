@@ -52,35 +52,35 @@ vec3 compute_gradient(in vec3 coords)
     #endif
 }
 
-vec3 compute_gradient(in vec3 coords, out vec2 curvatures)
+vec3 compute_gradient(in vec3 coords, out mat3 hessian)
 {
     #if GRADIENTS_METHOD == 1
 
         #if INTERPOLATION_METHOD == 1
 
-            return compute_gradient_trilinear_analytic(coords, curvatures);
+            return compute_gradient_trilinear_analytic(coords, hessian);
             
         #elif INTERPOLATION_METHOD == 2
 
-            return compute_gradient_tricubic_analytic(coords, curvatures);
+            return compute_gradient_tricubic_analytic(coords, hessian);
 
         #endif
 
     #elif GRADIENTS_METHOD == 2
 
-        return compute_gradient_trilinear_sobel(coords, curvatures);
+        return compute_gradient_trilinear_sobel(coords, hessian);
 
     #elif GRADIENTS_METHOD == 3
 
-        return compute_gradient_triquadratic_bspline(coords, curvatures);
+        return compute_gradient_triquadratic_bspline(coords, hessian);
 
     #elif GRADIENTS_METHOD == 4
 
-        return compute_gradient_tricubic_bspline(coords, curvatures);
+        return compute_gradient_tricubic_bspline(coords, hessian);
 
     #else
     
-        curvatures = vec2(0.0);
+        hessian = vec2(0.0);
         return vec3(0.0); 
 
     #endif

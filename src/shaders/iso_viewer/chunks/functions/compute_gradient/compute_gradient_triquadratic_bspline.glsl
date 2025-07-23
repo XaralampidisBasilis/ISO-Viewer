@@ -19,9 +19,6 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_SECOND_DERIVATIVES
 #include "../sample_second_derivatives"
 #endif
-#ifndef PRINCIPAL_CURVATURES
-#include "../principal_curvatures"
-#endif
 
 /*
     The gradients produced are C^1 continuous
@@ -102,7 +99,7 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p)
     return gradient;
 }
  
-vec3 compute_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_triquadratic_bspline(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -176,7 +173,7 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
     vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
 
     // Hessian
-    mat3 hessian = mat3(
+    hessian = mat3(
         s_d2x_d2y_d2z.x, s_dxyz_xdyz_dxdyz.z, s_xydz_dxydz_xdydz.y,  
         s_dxyz_xdyz_dxdyz.z, s_d2x_d2y_d2z.y, s_xydz_dxydz_xdydz.z,  
         s_xydz_dxydz_xdydz.y, s_xydz_dxydz_xdydz.z, s_d2x_d2y_d2z.z     
@@ -186,9 +183,6 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p, out vec2 curvatures)
     vec3 scale = normalize(u_volume.spacing);
     hessian /= outerProduct(scale, scale);
     gradient /= scale;
-
-    // Principal curvatures
-    curvatures = principal_curvatures(gradient, hessian);
 
     // Return Gradient
     return gradient;

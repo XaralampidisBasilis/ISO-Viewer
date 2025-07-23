@@ -8,9 +8,6 @@
 #ifndef SAMPLE_TRICUBIC_VOLUME
 #include "../sample_volume_tricubic"
 #endif
-#ifndef PRINCIPAL_CURVATURES
-#include "../principal_curvatures"
-#endif
 
 /*
     This function produces analytic gradients and curvatures directly from the 
@@ -60,7 +57,7 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p)
     return gradient;
 }
 
-vec3 compute_gradient_tricubic_analytic(in vec3 p, out vec2 curvatures)
+vec3 compute_gradient_tricubic_analytic(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset
@@ -138,7 +135,7 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p, out vec2 curvatures)
     vec3 gradient = vec3(Fx_xyz, Fy_xyz, Fz_xyz);
 
     // Hessian
-    mat3 hessian = mat3(
+    hessian = mat3(
         Fxx_xyz, Fxy_xyz, Fxz_xyz,  
         Fxy_xyz, Fyy_xyz, Fyz_xyz,  
         Fxz_xyz, Fyz_xyz, Fzz_xyz     
@@ -148,9 +145,6 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p, out vec2 curvatures)
     vec3 scale = normalize(u_volume.spacing);
     hessian /= outerProduct(scale, scale);
     gradient /= scale;
-
-    // Principal curvatures
-    curvatures = principal_curvatures(gradient, hessian);
 
     return gradient;
 }
