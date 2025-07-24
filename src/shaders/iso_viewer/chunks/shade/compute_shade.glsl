@@ -1,14 +1,14 @@
 // Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
 // Compute shading vectors
-vec3 light_position = camera.position;
+vec3 light_position = camera.position + u_lighting.position_offset * 100.0;
 vec3 light_vector = light_position - hit.position;
 vec3 view_vector = camera.position - hit.position;
 
 // Compute shading directions
 vec3 light_direction = normalize(light_vector * u_volume.anisotropy);
 vec3 view_direction = normalize(view_vector * u_volume.anisotropy);
-vec3 halfway_direction = normalize(light_vector + view_vector);
+vec3 halfway_direction = normalize(light_direction + view_direction);
 
 // Compute vector angles
 float light_angle = dot(light_direction, hit.normal);
@@ -28,10 +28,14 @@ frag.color_specular = frag.color_material + (1.0 - frag.color_material) * u_shad
 frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
 
 // Modulations
-float edge_modulation = smoothstep(0.0, u_shading.edge_contrast, abs(view_angle));
-float gradient_modulation = softstep_hill(0.0, 0.3, length(hit.gradient), 0.9);
-float curvature_modulation = mean(smoothstep(-1.0, 0.0, hit.curvatures.x), smoothstep(-1.0, 0.0, hit.curvatures.y)); 
-curvature_modulation = mix(1.0, curvature_modulation, u_debug.variable2);
+float edge_modulation = smoothstep(0.0, 0.5, abs(view_angle));
+float gradient_modulation = mix(0.2, 1.0, 
+    smoothstep(0.0, 0.1, length(hit.gradient))
+);
+float curvature_modulation = mean(
+    smoothstep(-1.0, 0.0, hit.curvatures.x), 
+    smoothstep(-1.0, 0.0, hit.curvatures.y)
+); 
 
 frag.color_directional *= mmin(edge_modulation, gradient_modulation);
 frag.color_ambient *= curvature_modulation;

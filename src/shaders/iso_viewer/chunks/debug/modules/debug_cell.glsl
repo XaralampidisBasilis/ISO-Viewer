@@ -11,7 +11,7 @@ vec4 debug_cell_terminated = to_color(cell.terminated);
 vec4 debug_cell_coords = to_color(vec3(cell.coords) * u_volume.inv_dimensions);
 
 // axes
-vec4 debug_cell_axes = to_color(vec3(cell.exit_normal));
+vec4 debug_cell_exit_normal = to_color(vec3(cell.exit_normal));
 
 // entry distance
 vec4 debug_cell_entry_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, cell.entry_distance)); 
@@ -35,7 +35,7 @@ switch (u_debug.option - 300)
     case 1: fragColor = debug_cell_intersected;        break;
     case 2: fragColor = debug_cell_terminated;         break;
     case 3: fragColor = debug_cell_coords;             break;
-    case 4: fragColor = debug_cell_axes;               break;
+    case 4: fragColor = debug_cell_exit_normal;        break;
     case 5: fragColor = debug_cell_max_position;       break;
     case 6: fragColor = debug_cell_min_position;       break;
     case 7: fragColor = debug_cell_entry_distance;     break;

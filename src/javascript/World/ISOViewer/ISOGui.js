@@ -114,7 +114,7 @@ export default class ISOGui
                 this.viewer.onInterpolationChange(option) 
             }),
 
-            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, sobel : 2, bspline2 : 3, bspline3 : 4 }).onFinishChange((option) => 
+            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, trilinear_sobel : 2, triquadratic_bspline : 3, tricubic_bspline : 4 }).onFinishChange((option) => 
             { 
                 defines.GRADIENTS_METHOD = Number(option)
                 material.needsUpdate = true 
@@ -205,7 +205,7 @@ export default class ISOGui
                 cell_intersected        : 301,
                 cell_terminated         : 302,
                 cell_coords             : 303,
-                cell_axes               : 304,
+                cell_exit_normal        : 304,
                 cell_max_position       : 305,
                 cell_min_position       : 306,
                 cell_entry_distance     : 307,
@@ -217,12 +217,13 @@ export default class ISOGui
                 block_occupied          : 403,
                 block_terminated        : 404,
                 block_coords            : 405,
-                block_min_position      : 406,
-                block_max_position      : 407,
-                block_entry_distance    : 408,
-                block_exit_distance     : 409,
-                block_entry_position    : 410,
-                block_exit_position     : 411,
+                block_exit_normal       : 406,
+                block_min_position      : 407,
+                block_max_position      : 408,
+                block_entry_distance    : 409,
+                block_exit_distance     : 410,
+                block_entry_position    : 411,
+                block_exit_position     : 412,
 
                 hit_discarded           : 201,
                 hit_distance            : 202,
@@ -233,9 +234,9 @@ export default class ISOGui
                 hit_gradient            : 207,
                 hit_steepness           : 208,
                 hit_curvatures          : 209,
-                hit_mean_curvature      : 210,
-                hit_max_curvature       : 211,
-                hit_total_curvature     : 212,
+                // hit_mean_curvature      : 210,
+                // hit_max_curvature       : 211,
+                // hit_total_curvature     : 212,
                
                 frag_color_material     : 511,
                 frag_color_ambient      : 512,
@@ -243,7 +244,7 @@ export default class ISOGui
                 frag_color_specular     : 514,
                 frag_direct_color       : 515,
                 frag_color              : 516,
-                frag_shaded_luminance   : 517,
+                frag_luminance   : 517,
 
                 box_entry_distance      : 601,
                 box_exit_distance       : 602,

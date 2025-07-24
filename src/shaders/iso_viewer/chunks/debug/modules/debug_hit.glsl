@@ -11,7 +11,7 @@ vec4 debug_hit_position = to_color(map(box.min_position, box.max_position, hit.p
 
 // residue
 vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, 
-    map(-MILLI_TOLERANCE, MILLI_TOLERANCE, hit.residue))
+    map(-0.0001, 0.0001, hit.residue))
 );
 
 // facing
@@ -41,20 +41,20 @@ vec4 debug_hit_curvatures = to_color(mmix2(
     map(-2.0, 2.0, hit.curvatures)
 ));
 
-// mean curvature
-vec4 debug_hit_mean_curvature = to_color(mmix(COLOR.LIGHT_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_RED, 
-    map(-2.0, 2.0, mean(hit.curvatures) * 2.0))
-);
+// // mean curvature
+// vec4 debug_hit_mean_curvature = to_color(mmix(COLOR.LIGHT_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_RED, 
+//     map(-2.0, 2.0, mean(hit.curvatures) * 2.0))
+// );
 
-// max curvature
-vec4 debug_hit_max_curvature = to_color(mmix(COLOR.BLUE, COLOR.DARK_GRAY, COLOR.RED, 
-    map(-2.0, 2.0, maxabs(hit.curvatures)))
-);
+// // max curvature
+// vec4 debug_hit_max_curvature = to_color(mmix(COLOR.BLUE, COLOR.DARK_GRAY, COLOR.RED, 
+//     map(-2.0, 2.0, maxabs(hit.curvatures)))
+// );
 
-// soft curvature
-vec4 debug_hit_total_curvature = to_color(mmix(COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_YELLOW, 
-    map(-2.0, 2.0, mean(abs(hit.curvatures))))
-);
+// // soft curvature
+// vec4 debug_hit_total_curvature = to_color(mmix(COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_YELLOW, 
+//     map(-2.0, 2.0, mean(abs(hit.curvatures))))
+// );
 
 // PRINT DEBUG
 
@@ -69,7 +69,7 @@ switch (u_debug.option - 200)
     case  7: fragColor = debug_hit_gradient;        break;
     case  8: fragColor = debug_hit_steepness;       break;
     case  9: fragColor = debug_hit_curvatures;      break;
-    case 10: fragColor = debug_hit_mean_curvature;  break;
-    case 11: fragColor = debug_hit_max_curvature;   break;
-    case 12: fragColor = debug_hit_total_curvature; break;
+    // case 10: fragColor = debug_hit_mean_curvature;  break;
+    // case 11: fragColor = debug_hit_max_curvature;   break;
+    // case 12: fragColor = debug_hit_total_curvature; break;
 }

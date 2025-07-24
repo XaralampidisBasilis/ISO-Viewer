@@ -21,7 +21,6 @@
     cubic.residuals[3] -= u_rendering.isovalue;
 
 #endif
-
 #if INTERPOLATION_METHOD == 2
 
     quintic.residuals[3] = sample_volume_tricubic(cell.exit_position, quintic.features[3]);

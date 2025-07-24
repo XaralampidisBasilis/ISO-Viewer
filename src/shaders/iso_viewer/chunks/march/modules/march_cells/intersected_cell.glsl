@@ -20,7 +20,6 @@
     #endif
 
 #endif
-
 #if INTERPOLATION_METHOD == 2
 
     #if BERNSTEIN_ENABLED == 1

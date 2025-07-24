@@ -19,7 +19,7 @@ hit.gradient = compute_gradient(hit.position, hit.hessian);
 hit.facing = -ssign(dot(hit.gradient, ray.direction * u_volume.anisotropy));
 
 // Align gradient and hessian to view direction
-hit.gradient *= hit.facing;
+hit.gradient *= hit.facing; 
 hit.hessian *= hit.facing;
 
 // Compute normal

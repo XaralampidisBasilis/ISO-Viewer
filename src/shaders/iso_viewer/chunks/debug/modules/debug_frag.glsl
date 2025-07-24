@@ -20,7 +20,7 @@ vec4 debug_frag_direct_color = to_color(frag.color_directional);
 vec4 debug_frag_color = to_color(frag.color);
 
 // shaded luminance
-vec4 debug_frag_shaded_luminance = to_color(dot(frag.color, vec3(0.2126, 0.7152, 0.0722)));
+vec4 debug_frag_luminance = to_color(dot(frag.color, vec3(0.2126, 0.7152, 0.0722)));
 
 
 // PRINT DEBUG
@@ -34,5 +34,5 @@ switch (u_debug.option - 500)
     case 14: fragColor = debug_frag_color_specular;     break; 
     case 15: fragColor = debug_frag_direct_color;       break; 
     case 16: fragColor = debug_frag_color;              break; 
-    case 17: fragColor = debug_frag_shaded_luminance;   break; 
+    case 17: fragColor = debug_frag_luminance;   break; 
 }   

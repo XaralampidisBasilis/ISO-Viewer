@@ -11,9 +11,6 @@ struct Frag
     vec3  color_specular;
     vec3  color_directional;
     vec3  color;           // color after shading has been applied
-    float camera_angle;
-    float edge_factor;
-    float gradient_factor;
 };
 
 Frag frag; // Global mutable struct
@@ -28,9 +25,6 @@ void set_frag()
     frag.color_specular    = vec3(0.0);
     frag.color_directional = vec3(0.0);
     frag.color             = vec3(0.0);
-    frag.camera_angle      = 0.0;
-    frag.edge_factor       = 0.0;
-    frag.gradient_factor   = 0.0;
 }
 
 #endif // STRUCT_FRAG

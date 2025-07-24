@@ -5,6 +5,14 @@
 #ifndef SAMPLE_VOLUME_TRICUBIC
 #define SAMPLE_VOLUME_TRICUBIC
 
+vec4 tricubic_bias(vec3 coords)
+{
+    vec3 r = fract(coords - 0.5);;
+    vec3 bias = r * (r - 1.0) * 0.5;
+    
+    return vec4(bias, 1.0);
+}
+
 vec4 sample_volume_tricubic_features(in ivec3 coords)
 {
     // Sample the precomputed augmented volume texture (fxx, fyy, fzz, f)
