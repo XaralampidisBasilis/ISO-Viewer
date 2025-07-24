@@ -11,6 +11,7 @@ export default function()
         ({
             dimensions    : new THREE.Vector3(),
             inv_dimensions: new THREE.Vector3(),
+            anisotropy    : new THREE.Vector3(),
             spacing       : new THREE.Vector3(),
             blocks        : new THREE.Vector3(),
             stride        : 0,

@@ -7,56 +7,59 @@
 vec2 principal_curvatures(in vec3 gradient, in mat3 hessian)
 {
     vec3 normal = normalize(gradient);
-    vec3 independent = (abs(normal.x) < abs(normal.y)) 
-        ? (abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 0, 1)) 
-        : (abs(normal.y) < abs(normal.z) ? vec3(0, 1, 0) : vec3(0, 0, 1));
 
-    // compute arbitrary orthogonal tangent space
-    mat2x3 tangent;
-    tangent[0] = normalize(independent - normal * dot(independent, normal)); 
-    tangent[1] = cross(normal, tangent[0]);
+    // Generate a stable orthogonal vector to the normal
+    vec3 orthogonal = cross(normal, abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 1, 0));
 
-    // compute shape operator projected into the tangent space
-    mat2 S = -(transpose(tangent) * (hessian * tangent)) / length(gradient);
-    float determinant = determinant(S);
-    float trace = (S[0][0] + S[1][1]) * 0.5;
+    // Compute arbitrary orthonormal tangent space
+    vec3 t0 = normalize(orthogonal);
+    vec3 t1 = cross(normal, t0);
 
-    // compute principal curvatures as eigenvalues of shape operator
-    float discriminant = sqrt(abs(trace * trace - determinant));
-    vec2 curvatures = trace + discriminant * vec2(-1, 1);
+    // Build tangent basis matrix (2x3)
+    mat2x3 tangents = mat2x3(t0, t1);
 
-    // return curvatures
+    // Project Hessian into tangent space to get the 2x2 shape operator
+    mat2 shape = (transpose(tangents) * hessian * tangents) / length(gradient);
+
+    // Compute eigenvalues of the 2x2 shape matrix
+    float trace = shape[0][0] + shape[1][1];
+    float determinant = determinant(shape);
+    float discriminant = sqrt(max(trace * trace - 4.0 * determinant, 0.0));
+
+    // Principal curvatures
+    vec2 curvatures = vec2(trace - discriminant, trace + discriminant) * 0.5;
     return curvatures;
 }
 
-vec2 principal_curvatures(in vec3 gradient, in mat3 hessian, out mat2x3 directions)
+vec2 principal_curvatures(in vec3 gradient, in mat3 hessian, out vec3 eigenvectors[2])
 {
     vec3 normal = normalize(gradient);
-    vec3 independent = (abs(normal.x) < abs(normal.y)) 
-        ? (abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 0, 1)) 
-        : (abs(normal.y) < abs(normal.z) ? vec3(0, 1, 0) : vec3(0, 0, 1));
 
-    // compute arbitrary orthogonal tangent space
-    mat2x3 tangent;
-    tangent[0] = normalize(independent - normal * dot(independent, normal)); 
-    tangent[1] = cross(normal, tangent[0]);
+    // Generate a stable orthogonal vector to the normal
+    vec3 orthogonal = cross(normal, abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 1, 0));
 
-    // compute shape operator projected into the tangent space
-    mat2 shape = -(transpose(tangent) * (hessian * tangent)) / length(gradient);
+    // Compute arbitrary orthonormal tangent space
+    vec3 t0 = normalize(orthogonal);
+    vec3 t1 = cross(normal, t0);
+
+    // Build tangent basis matrix (2x3)
+    mat2x3 tangents = mat2x3(t0, t1);
+
+    // Project Hessian into tangent space to get the 2x2 shape operator
+    mat2 shape = (transpose(tangents) * hessian * tangents) / length(gradient);
+
+    // Compute eigenvalues of the 2x2 shape matrix
+    float trace = shape[0][0] + shape[1][1];
     float determinant = determinant(shape);
-    float trace = (shape[0][0] + shape[1][1]) * 0.5;
+    float discriminant = sqrt(max(trace * trace - 4.0 * determinant, 0.0));
 
-    // compute principal curvatures as eigenvalues of shape operator
-    float discriminant = sqrt(abs(trace * trace - determinant));
-    vec2 curvatures = trace + discriminant * vec2(-1, 1);
+    // Principal curvatures
+    vec2 curvatures = vec2(trace - discriminant, trace + discriminant) * 0.5;
 
-    // compute principal curvatures directions as eigenvectors
-    vec2 alpha = curvatures;
-    vec2 beta = curvatures + shape[1][1] - shape[0][0];
-    directions = mat2x3(
-        normalize(tangent[0] * alpha.x + tangent[1] * beta.x),
-        normalize(tangent[0] * alpha.y + tangent[1] * beta.y)
-    );
+    // compute principal curvature eigenvectors
+    float difference = shape[1][1] - shape[0][0];
+    eigenvectors[0] = curvatures.x * t0 + (curvatures.x + difference) * t1;
+    eigenvectors[1] = curvatures.y * t0 + (curvatures.y + difference) * t1;
 
     // return curvatures
     return curvatures;

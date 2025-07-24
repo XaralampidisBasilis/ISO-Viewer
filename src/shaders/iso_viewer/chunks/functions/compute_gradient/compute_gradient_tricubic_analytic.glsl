@@ -50,9 +50,8 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p)
     // Gradient
     vec3 gradient = vec3(F_dx, F_dy, F_dz);
 
-    // Scale from grid to physical space
-    vec3 scale = normalize(u_volume.spacing);
-    gradient /= scale;
+    // Account for anisotropy in physical space
+    gradient /= u_volume.anisotropy;
 
     return gradient;
 }
@@ -141,10 +140,9 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p, out mat3 hessian)
         Fxz_xyz, Fyz_xyz, Fzz_xyz     
     );
 
-    // Scale from grid to physical space
-    vec3 scale = normalize(u_volume.spacing);
-    hessian /= outerProduct(scale, scale);
-    gradient /= scale;
+    // Account for anisotropy in physical space
+    hessian /= outerProduct(u_volume.anisotropy, u_volume.anisotropy);
+    gradient /= u_volume.anisotropy;
 
     return gradient;
 }

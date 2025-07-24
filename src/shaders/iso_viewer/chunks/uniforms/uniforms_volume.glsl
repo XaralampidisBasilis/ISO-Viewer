@@ -6,6 +6,7 @@ struct UniformsVolume
     ivec3 dimensions;    
     vec3  inv_dimensions;    
     vec3  spacing;           
+    vec3  anisotropy;           
     int   stride;
     ivec3 blocks;                         
 };

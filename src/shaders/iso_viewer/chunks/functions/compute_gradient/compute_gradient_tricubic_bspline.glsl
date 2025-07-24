@@ -322,9 +322,8 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p)
     // Gradient
     vec3 gradient = tricubic_bspline_dxyz_xdyz_xydz(p0, p1, g0, dp0, dp1, dg0);
 
-    // Scale from grid to physical space
-    vec3 scale = normalize(u_volume.spacing);
-    gradient /= scale;
+    // Account for anisotropy in physical space
+    gradient /= u_volume.anisotropy;
 
     return gradient;
 }
@@ -350,10 +349,9 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p, out mat3 hessian)
        s_xdydz_dxydz_dxdyz.y, s_xdydz_dxydz_dxdyz.x, s_d2x_d2y_d2z.z     
    );
 
-    // Scale from grid to physical space
-    vec3 scale = normalize(u_volume.spacing);
-    hessian /= outerProduct(scale, scale);
-    gradient /= scale;
+    // Account for anisotropy in physical space
+    hessian /= outerProduct(u_volume.anisotropy, u_volume.anisotropy);
+    gradient /= u_volume.anisotropy;
 
     return gradient;
 }

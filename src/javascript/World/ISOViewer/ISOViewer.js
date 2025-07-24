@@ -71,6 +71,7 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_volume.value.inv_dimensions.copy(intensityMap.invDimensions)
         uniforms.u_volume.value.blocks.copy(distanceMap.dimensions)
         uniforms.u_volume.value.spacing.copy(intensityMap.spacing)
+        uniforms.u_volume.value.anisotropy.copy(intensityMap.spacing).normalize()
         uniforms.u_volume.value.stride = distanceMap.stride
 
         // Defines

@@ -10,9 +10,12 @@ vec4 debug_hit_distance = to_color(map(box.min_entry_distance, box.max_exit_dist
 vec4 debug_hit_position = to_color(map(box.min_position, box.max_position, hit.position));
 
 // residue
-vec4 debug_trace_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, 
+vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, 
     map(-MILLI_TOLERANCE, MILLI_TOLERANCE, hit.residue))
 );
+
+// facing
+vec4 debug_hit_facing = to_color(map(-1.0, 1.0, hit.facing));
 
 // normal
 vec4 debug_hit_normal = to_color((map(-1.0, 1.0, hit.normal)));
@@ -60,12 +63,13 @@ switch (u_debug.option - 200)
     case  1: fragColor = debug_hit_discarded;       break;
     case  2: fragColor = debug_hit_distance;        break;
     case  3: fragColor = debug_hit_position;        break;
-    case  4: fragColor = debug_trace_residue;       break;
-    case  5: fragColor = debug_hit_normal;          break;
-    case  6: fragColor = debug_hit_gradient;        break;
-    case  7: fragColor = debug_hit_steepness;       break;
-    case  8: fragColor = debug_hit_curvatures;      break;
-    case  9: fragColor = debug_hit_mean_curvature;  break;
+    case  4: fragColor = debug_hit_residue;         break;
+    case  5: fragColor = debug_hit_facing;          break;
+    case  6: fragColor = debug_hit_normal;          break;
+    case  7: fragColor = debug_hit_gradient;        break;
+    case  8: fragColor = debug_hit_steepness;       break;
+    case  9: fragColor = debug_hit_curvatures;      break;
+    case 10: fragColor = debug_hit_mean_curvature;  break;
     case 11: fragColor = debug_hit_max_curvature;   break;
     case 12: fragColor = debug_hit_total_curvature; break;
 }

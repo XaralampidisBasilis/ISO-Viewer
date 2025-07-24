@@ -1,27 +1,24 @@
 // Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
-// Compute light position in texture coordinated
+// Compute shading vectors
 vec3 light_position = camera.position;
+vec3 light_vector = light_position - hit.position;
+vec3 view_vector = camera.position - hit.position;
 
-// Compute shading vectors in texture coordinated
-vec3 vector_view = camera.position - hit.position;
-vec3 vector_light = light_position - hit.position;
-vec3 vector_halfway = vector_light + vector_view;
-
-// Normalize shading vectors in model coordinates
-vec3 scale = normalize(u_volume.spacing);
-vector_view = normalize(vector_view * scale);
-vector_light = normalize(vector_light * scale);
-vector_halfway = normalize(vector_halfway * scale);
+// Compute shading directions
+vec3 light_direction = normalize(light_vector * u_volume.anisotropy);
+vec3 view_direction = normalize(view_vector * u_volume.anisotropy);
+vec3 halfway_direction = normalize(light_vector + view_vector);
 
 // Compute vector angles
-float angle_view = dot(vector_view, hit.normal);
-float angle_light = dot(vector_light, hit.normal);
-float angle_halfway = dot(vector_halfway, hit.normal);
+float light_angle = dot(light_direction, hit.normal);
+float view_angle = dot(view_direction, hit.normal);
+float halfway_angle = dot(halfway_direction, hit.normal);
 
 // Compute parameters
-float lambertian = clamp(angle_light, 0.0, 1.0);
-float specular = pow(clamp(angle_halfway, 0.0, 1.0), u_shading.shininess);
+float lambertian = clamp(light_angle, 0.0, 1.0);
+float specular = clamp(halfway_angle, 0.0, 1.0);
+specular = pow(specular, u_shading.shininess);
 
 // Colors 
 frag.color_material = sample_colormap(hit.value);
@@ -31,15 +28,13 @@ frag.color_specular = frag.color_material + (1.0 - frag.color_material) * u_shad
 frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
 
 // Modulations
-float edge_modulation = smoothstep(0.0, u_shading.edge_contrast, abs(angle_view));
-float grad_modulation = softstep_hill(0.0, 0.3, length(hit.gradient), 0.9);
-float curv_modulation = mean(
-    smoothstep(-1.2, 0.0, hit.curvatures.x), 
-    smoothstep(-1.2, 0.0, hit.curvatures.y)
-); 
+float edge_modulation = smoothstep(0.0, u_shading.edge_contrast, abs(view_angle));
+float gradient_modulation = softstep_hill(0.0, 0.3, length(hit.gradient), 0.9);
+float curvature_modulation = mean(smoothstep(-1.0, 0.0, hit.curvatures.x), smoothstep(-1.0, 0.0, hit.curvatures.y)); 
+curvature_modulation = mix(1.0, curvature_modulation, u_debug.variable2);
 
-frag.color_directional *= mmin(edge_modulation, grad_modulation);
-frag.color_ambient *= curv_modulation;
+frag.color_directional *= mmin(edge_modulation, gradient_modulation);
+frag.color_ambient *= curvature_modulation;
 
 // Compose colors
 frag.color = frag.color_ambient + frag.color_directional;
