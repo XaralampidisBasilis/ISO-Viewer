@@ -24,27 +24,28 @@
 
 vec3 colormap(in float t, in int type)
 {
-    if      (type == PARULA)    return parula(t);
-    else if (type == TURBO)     return turbo(t);
-    else if (type == HSV)       return hsv(t);
-    else if (type == HOT)       return hot(t);
-    else if (type == COOL)      return cool(t);
-    else if (type == SPRING)    return spring(t);
-    else if (type == SUMMER)    return summer(t);
-    else if (type == AUTUMN)    return autumn(t);
-    else if (type == WINTER)    return winter(t);
-    else if (type == GRAY)      return gray(t);
-    else if (type == BONE)      return bone(t);
-    else if (type == COPPER)    return copper(t);
-    else if (type == PINK)      return pink(t);
-    else if (type == JET)       return jet(t);
+    if (type == PARULA) return parula(t);
+    else if (type == TURBO) return turbo(t);
+    else if (type == HSV) return hsv(t);
+    else if (type == HOT) return hot(t);
+    else if (type == COOL) return cool(t);
+    else if (type == SPRING) return spring(t);
+    else if (type == SUMMER) return summer(t);
+    else if (type == AUTUMN) return autumn(t);
+    else if (type == WINTER) return winter(t);
+    else if (type == GRAY) return gray(t);
+    else if (type == BONE) return bone(t);
+    else if (type == COPPER) return copper(t);
+    else if (type == PINK) return pink(t);
+    else if (type == JET) return jet(t);
     else if (type == PASTELJET) return pasteljet(t);
-    else if (type == VIRIDIS)   return viridis(t);
-    else if (type == PLASMA)    return plasma(t);
-    else if (type == INFERNO)   return inferno(t);
-    else if (type == MAGMA)     return magma(t);
-    else if (type == CIVIDIS)   return cividis(t);
-    else                        return vec3(0.0); 
+    else if (type == VIRIDIS) return viridis(t);
+    else if (type == PLASMA) return plasma(t);
+    else if (type == INFERNO) return inferno(t);
+    else if (type == MAGMA) return magma(t);
+    else if (type == CIVIDIS) return cividis(t);
+
+    else return vec3(0.0); 
 }
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef TURBO
-#define TURBO 2
+#ifndef HSV
+#define HSV 2
 
 #ifndef PALETTE
 #include "../palette"
