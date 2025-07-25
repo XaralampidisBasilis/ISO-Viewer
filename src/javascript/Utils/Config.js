@@ -4,7 +4,7 @@ import EventEmitter from './EventEmitter'
  * Configures
  * 
  * A utility class to manage global application state like interpolation methods,
- * skipping strategies, and debugging/statistics toggles.
+ * skipping strategies, and debug/statistics toggles.
  */
 export default class Config extends EventEmitter
 {

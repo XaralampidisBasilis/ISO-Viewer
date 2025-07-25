@@ -11,6 +11,7 @@
 #include "./colors/posterize"
 #include "./geometry/principal_curvatures"
 #include "./geometry/directional_curvature"
+#include "./colors/colormap"
 
 
 

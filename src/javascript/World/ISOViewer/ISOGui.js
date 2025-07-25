@@ -31,7 +31,7 @@ export default class ISOGui
         this.subfolders.colormap = this.folders.viewer.addFolder('colormap').close()
         this.subfolders.shading  = this.folders.viewer.addFolder('shading').close()
         this.subfolders.lighting = this.folders.viewer.addFolder('lighting').close()
-        this.subfolders.debugging = this.folders.viewer.addFolder('debugging').close()
+        this.subfolders.debug = this.folders.viewer.addFolder('debug').close()
 
         this.addToggles()            
     }
@@ -147,17 +147,16 @@ export default class ISOGui
     
     addControllersShading() 
     {
-        const folder = this.subfolders.shading
         const uniforms = this.viewer.material.uniforms.u_shading.value
+        const folder = this.subfolders.shading
 
-        this.controllers.shading = 
-        {
-            ambientreflect : folder.add(uniforms, 'reflect_ambient').min(0).max(1).step(0.001),
-            diffusereflect : folder.add(uniforms, 'reflect_diffuse').min(0).max(1).step(0.001),
-            specularreflect: folder.add(uniforms, 'reflect_specular').min(0).max(1).step(0.001),
-            shininess          : folder.add(uniforms, 'shininess').min(0).max(40.0).step(0.2),
-            edgeContrast       : folder.add(uniforms, 'edge_contrast').min(0).max(1).step(0.001),
-        }
+        folder.add(uniforms, 'reflect_ambient').min(0).max(1).step(0.001)
+        folder.add(uniforms, 'reflect_diffuse').min(0).max(1).step(0.001)
+        folder.add(uniforms, 'reflect_specular').min(0).max(1).step(0.001)
+        folder.add(uniforms, 'shininess').min(0).max(40.0).step(0.2)
+        folder.add(uniforms, 'modulate_edges').min(0).max(1).step(0.001)
+        folder.add(uniforms, 'modulate_gradient').min(0).max(1).step(0.001)
+        folder.add(uniforms, 'modulate_curvature').min(0).max(1).step(0.001)
     }
 
     addControllersLighting() 
@@ -180,13 +179,13 @@ export default class ISOGui
     
     addControllersDebugging()
     {
-        const folder = this.subfolders.debugging
+        const folder = this.subfolders.debug
         const uniforms = this.viewer.material.uniforms.u_debug.value
         const defines = this.viewer.material.defines
         const material = this.viewer.material
         const objects = { DISCARDING_DISABLED: Boolean(defines.DISCARDING_DISABLED) }
 
-        this.controllers.debugging = 
+        this.controllers.debug = 
         {
             option: folder.add(uniforms, 'option').options(
             { 
@@ -244,7 +243,7 @@ export default class ISOGui
                 frag_color_specular     : 514,
                 frag_direct_color       : 515,
                 frag_color              : 516,
-                frag_luminance   : 517,
+                frag_luminance          : 517,
 
                 box_entry_distance      : 601,
                 box_exit_distance       : 602,

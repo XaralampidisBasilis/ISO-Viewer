@@ -10,9 +10,7 @@ vec4 debug_hit_distance = to_color(map(box.min_entry_distance, box.max_exit_dist
 vec4 debug_hit_position = to_color(map(box.min_position, box.max_position, hit.position));
 
 // residue
-vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, 
-    map(-0.0001, 0.0001, hit.residue))
-);
+vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-0.0001, 0.0001, hit.residue)));
 
 // facing
 vec4 debug_hit_facing = to_color(map(-1.0, 1.0, hit.facing));
@@ -27,21 +25,14 @@ vec4 debug_hit_gradient = to_color(map(-1.0, 1.0, normalize(hit.gradient)) * len
 vec4 debug_hit_steepness = to_color(map(0.0, 1.0, length(hit.gradient)));
 
 // curvatures
-/*
-| k_2 \ k_1  | < 0                 | = 0              | > 0                 |
-| ---------- | ------------------- | ---------------- | ------------------- |
-| < 0        | Concave Ellipsoid   | Concave Cylinder | Hyperboloid Surface |
-| = 0        | Concave Cylinder    | Flat Plane       | Convex Cylinder     |
-| > 0        | Hyperboloid Surface | Convex Cylinder  | Convex Ellipsoid    |
-*/
-vec4 debug_hit_curvatures = to_color(mmix2(
-    COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA, 
-    COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,
-    COLOR.MAGENTA,   COLOR.ORANGE,    COLOR.GOLD,  
-    map(-2.0, 2.0, hit.curvatures)
-));
+vec4 debug_hit_curvatures = to_color(mmix2(                
+    COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA, // | < 0        | concave ellipsoid   | concave cylinder | hyperboloid Surface |                  
+    COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,  // | = 0        | concave cylinder    | flap plane       | convex cylinder     |
+    COLOR.MAGENTA,   COLOR.ORANGE,    COLOR.GOLD,    // | > 0        | hyperboloid Surface | convex cylinder  | convex ellipsoid    |
+    map(-2.0, 2.0, hit.curvatures)                   // | k_2 \ k_1  | < 0                 | ~ 0              | > 0                 |
+));                 
 
-// // mean curvature
+// mean curvature
 // vec4 debug_hit_mean_curvature = to_color(mmix(COLOR.LIGHT_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_RED, 
 //     map(-2.0, 2.0, mean(hit.curvatures) * 2.0))
 // );

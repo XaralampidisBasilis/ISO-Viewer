@@ -44,7 +44,7 @@ const mat4 cubic_bernstein = mat4(
 //      B_n^3(t) * B_m^2(t) = [ binomial(3,n) * binomial(2,m) / binomial(5, n+m) ] * B_{n+m}^5(t)
 //
 // This 4x3 matrix corresponds to the coefficients of B_{n+m}^5 for all combinations of n in [0,3], m in [0,2]
-const mat4x3 bernstein_product_to_quintic = mat4x3(
+const mat4x3 quintic_bernstein_weights = mat4x3(
     10, 4, 1,  
      6, 6, 3,  
      3, 6, 6,  

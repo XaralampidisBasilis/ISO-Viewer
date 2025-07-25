@@ -7,7 +7,9 @@ struct UniformsShading
     float reflect_diffuse; 
     float reflect_specular;
     float shininess;           
-    float edge_contrast;       
+    float modulate_edges;       
+    float modulate_gradient;       
+    float modulate_curvature;       
 };
 
 uniform UniformsShading u_shading;

@@ -32,10 +32,7 @@ if (sign_change(quintic.residuals))
 }
 
 // Convert the residual polynomial to Bernstein basis using precomputed transformation matrices
-mat4x3 bernstein_coeffs = quad_bernstein * residuals * cubic_bernstein;
-
-// Apply element-wise scaling to map products of Bernstein bases to the quintic Bernstein basis
-bernstein_coeffs = matrixCompMult(bernstein_coeffs, bernstein_product_to_quintic);
+mat4x3 bernstein_coeffs = matrixCompMult(quad_bernstein * residuals * cubic_bernstein, quintic_bernstein_weights);
 
 // Collapse the Bernstein coefficient matrix into a coefficients vector by summing anti-diagonals
 sum_anti_diags(bernstein_coeffs, quintic.bernstein_coeffs);
