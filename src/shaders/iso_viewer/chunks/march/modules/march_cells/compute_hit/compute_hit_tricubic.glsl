@@ -26,12 +26,12 @@ hit.residue = hit.value - u_rendering.isovalue;
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
 
-// Compute facing
-hit.facing = -ssign(quintic.derivative); // hit.facing = -ssign(dot(hit.gradient, ray.direction * u_volume.anisotropy));
+// Compute orientation
+hit.orientation = -ssign(quintic.derivative); // hit.orientation = -ssign(dot(hit.gradient, ray.direction * u_volume.anisotropy));
 
 // Align gradient and hessian to view direction
-hit.gradient *= hit.facing; 
-hit.hessian *= hit.facing;
+hit.gradient *= hit.orientation; 
+hit.hessian *= hit.orientation;
 
 // Compute normal
 hit.normal = normalize(hit.gradient);

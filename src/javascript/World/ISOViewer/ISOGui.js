@@ -242,7 +242,7 @@ export default class ISOGui
                 hit_distance            : 452,
                 hit_position            : 453,
                 hit_residue             : 454,
-                hit_facing              : 455,
+                hit_orientation         : 455,
                 hit_normal              : 456,
                 hit_gradient            : 457,
                 hit_steepness           : 458,

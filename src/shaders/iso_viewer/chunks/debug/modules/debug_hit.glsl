@@ -12,8 +12,8 @@ vec4 debug_hit_position = to_color(map(box.min_position, box.max_position, hit.p
 // residue
 vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-0.001, 0.001, hit.residue)));
 
-// facing
-vec4 debug_hit_facing = to_color(map(-1.0, 1.0, hit.facing));
+// orientation
+vec4 debug_hit_orientation = to_color(map(-1.0, 1.0, hit.orientation));
 
 // normal
 vec4 debug_hit_normal = to_color((map(-1.0, 1.0, hit.normal)));
@@ -55,7 +55,7 @@ switch (u_debug.option - 450)
     case  2: fragColor = debug_hit_distance;        break;
     case  3: fragColor = debug_hit_position;        break;
     case  4: fragColor = debug_hit_residue;         break;
-    case  5: fragColor = debug_hit_facing;          break;
+    case  5: fragColor = debug_hit_orientation;          break;
     case  6: fragColor = debug_hit_normal;          break;
     case  7: fragColor = debug_hit_gradient;        break;
     case  8: fragColor = debug_hit_steepness;       break;

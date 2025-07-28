@@ -5,10 +5,7 @@ vec2 distances = vec2(trace.prev_distance, trace.distance);
 vec2 residues = vec2(trace.prev_residue, trace.residue);
 
 // Neubauer start
-float span_distance = distances.y - distances.x;
-float span_residue = residues.y - residues.x;
-
-hit.distance = distances.x - (residues.x * span_distance) / span_residue;
+hit.distance = distances.x - (residues.x * diff(distances)) / diff(residues);
 hit.position = camera.position + ray.direction * hit.distance; 
 
 #pragma unroll
@@ -30,25 +27,22 @@ for (int i = 0; i < 10; ++i)
     }
 
     // Neubauer update
-    span_distance = distances.y - distances.x;
-    span_residue = residues.y - residues.x;
-
-    hit.distance = distances.x - (residues.x * span_distance) / span_residue;
+    hit.distance = distances.x - (residues.x * diff(distances)) / diff(residues);
     hit.position = camera.position + ray.direction * hit.distance; 
 }
 
 // Compute value
 hit.value = hit.residue + u_rendering.isovalue;
 
-// Compute facing direction
-hit.facing = ssign(trace.prev_residue - trace.residue);
+// Compute orientation
+hit.orientation = ssign(trace.prev_residue - trace.residue);
 
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
 
 // Align gradient and hessian to view direction
-hit.gradient *= hit.facing; 
-hit.hessian *= hit.facing;
+hit.gradient *= hit.orientation; 
+hit.hessian *= hit.orientation;
 
 // Compute normal
 hit.normal = normalize(hit.gradient);
