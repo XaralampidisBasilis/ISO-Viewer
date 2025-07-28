@@ -1,7 +1,7 @@
 
 #include "./start_trace"
 
-for (int i = 0; i < MAX_CELLS * 2; i++) 
+for (int i = 0; i < MAX_TRACES; i++) 
 {
     #include "./update_trace"
 

@@ -9,17 +9,21 @@ struct Trace
     vec3  position;             // current position in 3d model coordinates
     float distance;             // current distance traveled from camera
     float residue;           
+    float prev_distance;           
+    float prev_residue;           
 };
 
 Trace trace; // Global mutable struct
 
 void set_trace()
 {
-    trace.intersected = false;
-    trace.terminated  = false;
-    trace.position    = vec3(0.0);
-    trace.distance    = 0.0;
-    trace.residue     = 0.0;
+    trace.intersected   = false;
+    trace.terminated    = false;
+    trace.position      = vec3(0.0);
+    trace.distance      = 0.0;
+    trace.residue       = 0.0;
+    trace.prev_distance = 0.0;
+    trace.prev_residue  = 0.0;
 }
 
 #endif // STRUCT_TRACE

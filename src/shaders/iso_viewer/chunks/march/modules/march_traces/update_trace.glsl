@@ -1,4 +1,7 @@
 
+// Store previous distance
+trace.prev_distance = trace.distance;
+
 // Increment distance
 trace.distance += ray.spacing;
 

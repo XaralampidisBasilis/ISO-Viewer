@@ -10,7 +10,7 @@ vec4 debug_hit_distance = to_color(map(box.min_entry_distance, box.max_exit_dist
 vec4 debug_hit_position = to_color(map(box.min_position, box.max_position, hit.position));
 
 // residue
-vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-0.0001, 0.0001, hit.residue)));
+vec4 debug_hit_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-0.001, 0.001, hit.residue)));
 
 // facing
 vec4 debug_hit_facing = to_color(map(-1.0, 1.0, hit.facing));

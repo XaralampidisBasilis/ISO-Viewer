@@ -1,21 +1,28 @@
 
-// #if SKIPPING_ENABLED == 1
+#if MARCHING_METHOD == 1
 
-//     #include "./modules/march_skipping"
+    #if SKIPPING_ENABLED == 1
 
-// #else
+        #include "./modules/march_cells/march_cells_skipping"
 
-//     #include "./modules/march_baseline"
-    
-// #endif
+    #else
 
+        #include "./modules/march_cells/march_cells_baseline"
+        
+    #endif
 
-#if SKIPPING_ENABLED == 1
+#endif
 
-    #include "./modules/march_traces/march_traces_skipping"
+#if MARCHING_METHOD == 2
 
-#else
+    #if SKIPPING_ENABLED == 1
 
-    #include "./modules/march_traces/march_traces_baseline"
-    
+        #include "./modules/march_traces/march_traces_skipping"
+
+    #else
+
+        #include "./modules/march_traces/march_traces_baseline"
+        
+    #endif
+
 #endif

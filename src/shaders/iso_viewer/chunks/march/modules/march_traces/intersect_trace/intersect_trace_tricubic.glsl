@@ -1,22 +1,21 @@
 
 
-// Compute start
-vec2 distances = vec2(trace.distance); 
-vec2 residues = vec2(trace.residue);
+// Define brackets
+vec2 distances = vec2(trace.prev_distance, trace.distance);
+vec2 residues = vec2(trace.prev_residue, trace.residue);
 
-// Compute start
-distances[0] = trace.distance - ray.spacing;
-residues[0] = sample_volume_tricubic(camera.position + ray.direction * distances[0]);
+// Neubauer start
+float span_distance = distances.y - distances.x;
+float span_residue = residues.y - residues.x;
 
-// Bisection start
-trace.distance = mean(distances);
+trace.distance = distances.x - (residues.x * span_distance) / span_residue;
 trace.position = camera.position + ray.direction * trace.distance; 
 
 #pragma unroll
-for (int i = 0; i < 20; ++i)
+for (int i = 0; i < 10; ++i)
 {
     // evaluate polynomial
-    trace.residue = sample_volume_tricubic(trace.position);
+    trace.residue = sample_volume_tricubic(trace.position) - u_rendering.isovalue;
 
     // determine bracket based on sign
     if (sign_change(trace.residue, residues.y))
@@ -30,9 +29,10 @@ for (int i = 0; i < 20; ++i)
         residues.y = trace.residue;
     }
 
-    // Bisection update
-    trace.distance = mean(distances);
+    // Neubauer update
+    span_distance = distances.y - distances.x;
+    span_residue = residues.y - residues.x;
+
+    trace.distance = distances.x - (residues.x * span_distance) / span_residue;
     trace.position = camera.position + ray.direction * trace.distance; 
 }
-
-

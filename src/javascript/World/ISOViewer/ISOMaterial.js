@@ -119,6 +119,7 @@ export default function()
         BERNSTEIN_ENABLED: 1,
         SKIPPING_ENABLED : 1,
 
+        MARCHING_METHOD     : 1,
         INTERPOLATION_METHOD: 2,
         SKIPPING_METHOD     : 3,
         GRADIENTS_METHOD    : 3,
@@ -127,11 +128,13 @@ export default function()
         DEBUG_ENABLED      : 1,
         DISCARDING_DISABLED: 0,
 
-        MAX_CELLS           : 1000,
-        MAX_BLOCKS          : 1000,
-        MAX_GROUPS          : 100,
-        MAX_CELLS_PER_BLOCK : 10,
-        MAX_BLOCKS_PER_GROUP: 20,
+        MAX_CELLS            : 1000,
+        MAX_TRACES           : 5000,
+        MAX_BLOCKS           : 1000,
+        MAX_GROUPS           : 100,
+        MAX_CELLS_PER_BLOCK  : 10,
+        MAX_TRACES_PER_BLOCK : 50,
+        MAX_BLOCKS_PER_GROUP : 20,
     }
 
     const material = new THREE.ShaderMaterial

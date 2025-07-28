@@ -1,6 +1,6 @@
 
-float residue = sample_volume_trilinear(trace.position) - u_rendering.isovalue;
+trace.prev_residue = trace.residue;
 
-trace.intersected = sign_change(trace.residue, residue);
+trace.residue = sample_volume_trilinear(trace.position) - u_rendering.isovalue;
 
-trace.residue = residue;
+trace.intersected = sign_change(trace.residue, trace.prev_residue);

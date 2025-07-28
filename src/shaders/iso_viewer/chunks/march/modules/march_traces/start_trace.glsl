@@ -2,12 +2,12 @@
 // start trace
 #if SKIPPING_ENABLED == 1
 
-    trace.distance = block.entry_distance - random(block.entry_position);
+    trace.distance = block.entry_distance - ray.spacing * random(block.entry_position);
     trace.position = camera.position + ray.direction * trace.distance;
 
 #else
 
-    trace.distance = ray.start_distance - random(ray.start_position);
+    trace.distance = ray.start_distance - ray.spacing * random(ray.start_position);
     trace.position = camera.position + ray.direction * trace.distance; 
 
 #endif

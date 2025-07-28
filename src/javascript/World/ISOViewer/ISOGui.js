@@ -85,6 +85,7 @@ export default class ISOGui
             BERNSTEIN_ENABLED   : Boolean(defines.BERNSTEIN_ENABLED),
             VARIATION_ENABLED   : Boolean(defines.VARIATION_ENABLED),
             SKIPPING_ENABLED    : Boolean(defines.SKIPPING_ENABLED),
+            MARCHING_METHOD     : Number(defines.MARCHING_METHOD),
             INTERPOLATION_METHOD: Number(defines.INTERPOLATION_METHOD),
             SKIPPING_METHOD     : Number(defines.SKIPPING_METHOD),
             GRADIENTS_METHOD    : Number(defines.GRADIENTS_METHOD),
@@ -109,20 +110,26 @@ export default class ISOGui
             enableBernstein        : folder.add(objects, 'BERNSTEIN_ENABLED').name('bernstein').onFinishChange((value) => { defines.BERNSTEIN_ENABLED = Number(value), material.needsUpdate = true }),
             enableSkipping         : folder.add(objects, 'SKIPPING_ENABLED').name('skipping').onFinishChange((value) => { defines.SKIPPING_ENABLED = Number(value), material.needsUpdate = true }),
 
+            marchingMethod: folder.add(objects, 'MARCHING_METHOD').name('marching').options({ cells : 1, traces : 2 }).onFinishChange((option) => 
+            { 
+                defines.MARCHING_METHOD = Number(option)
+                material.needsUpdate = true 
+            }),
+
             interpolationMethod: folder.add(objects, 'INTERPOLATION_METHOD').name('interpolation').options({ trilinear : 1, tricubic : 2 }).onFinishChange((option) => 
             { 
                 this.viewer.onInterpolationChange(option) 
             }),
 
-            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, trilinear_sobel : 2, triquadratic_bspline : 3, tricubic_bspline : 4 }).onFinishChange((option) => 
-            { 
-                defines.GRADIENTS_METHOD = Number(option)
-                material.needsUpdate = true 
-            }),
-
             skippingMethod: folder.add(objects, 'SKIPPING_METHOD').name('skipping').options({ occupancy : 1, isotropic : 2, anisotropic : 3, extended : 4 }).onFinishChange((option) => 
             { 
                 defines.SKIPPING_METHOD = Number(option)
+                material.needsUpdate = true 
+            }),
+
+            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, sobel : 2, bspline_triquadratic : 3, bspline_tricubic : 4 }).onFinishChange((option) => 
+            { 
+                defines.GRADIENTS_METHOD = Number(option)
                 material.needsUpdate = true 
             }),
         }

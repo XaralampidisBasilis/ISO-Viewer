@@ -78,7 +78,9 @@ export default class ISOViewer extends EventEmitter
         const defines = this.material.defines
         defines.MAX_CELLS = intensityMap.dimensions.toArray().reduce((s, x) => s + x, -2)
         defines.MAX_BLOCKS = distanceMap.dimensions.toArray().reduce((s, x) => s + x, -2)
+        defines.MAX_TRACES = defines.MAX_CELLS * 5
         defines.MAX_CELLS_PER_BLOCK = distanceMap.stride * 3
+        defines.MAX_TRACES_PER_BLOCK = defines.MAX_CELLS_PER_BLOCK * 5
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
     }
