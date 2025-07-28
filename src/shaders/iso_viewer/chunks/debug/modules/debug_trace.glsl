@@ -3,14 +3,8 @@
 // intersected
 vec4 debug_trace_intersected = to_color(trace.intersected);
 
-// exhausted
-vec4 debug_trace_exhausted = to_color(trace.exhausted);
-
 // terminated 
 vec4 debug_trace_terminated = to_color(trace.terminated);
-
-// outside
-vec4 debug_trace_outside = to_color(!inside_closed_box(0.0, 1.0, map(box.min_position, box.max_position, trace.position)));
 
 // distance
 vec4 debug_trace_distance = to_color(map(box.min_entry_distance, box.max_exit_distance, trace.distance));
@@ -18,26 +12,20 @@ vec4 debug_trace_distance = to_color(map(box.min_entry_distance, box.max_exit_di
 // position
 vec4 debug_trace_position = to_color(map(box.min_position, box.max_position, trace.position));
 
-// intensity 
-vec4 debug_trace_intensity = to_color(trace.value);
-
 // error
-vec4 debug_trace_error = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, trace.residue / MILLI_TOLERANCE)));
+vec4 debug_trace_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, trace.residue / MILLI_TOLERANCE)));
 
-// abs error
-vec4 debug_trace_abs_error = to_color(mmix(COLOR.BLACK, COLOR.RED, abs(trace.residue / MILLI_TOLERANCE)));
+// Span residue
+vec4 debug_trace_span_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, (trace.residue - trace.prev_residue) / MILLI_TOLERANCE)));
 
 // PRINT DEBUG
 
-switch (u_debug.option - 200)
+switch (u_debug.option - 300)
 { 
     case  1: fragColor = debug_trace_intersected;     break;
     case  2: fragColor = debug_trace_terminated;      break;
-    case  3: fragColor = debug_trace_exhausted;       break;
-    case  4: fragColor = debug_trace_outside;         break;
-    case  5: fragColor = debug_trace_distance;        break;
-    case  6: fragColor = debug_trace_position;        break;
-    case  7: fragColor = debug_trace_intensity;       break;
-    case  8: fragColor = debug_trace_error;           break;
-    case  9: fragColor = debug_trace_abs_error;       break;
+    case  3: fragColor = debug_trace_distance;        break;
+    case  4: fragColor = debug_trace_position;        break;
+    case  5: fragColor = debug_trace_residue;         break;
+    case  6: fragColor = debug_trace_span_residue;    break;
 }

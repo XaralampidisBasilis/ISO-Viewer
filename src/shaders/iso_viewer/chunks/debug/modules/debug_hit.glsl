@@ -49,7 +49,7 @@ vec4 debug_hit_curvatures = to_color(mmix2(
 
 // PRINT DEBUG
 
-switch (u_debug.option - 200)
+switch (u_debug.option - 450)
 { 
     case  1: fragColor = debug_hit_discarded;       break;
     case  2: fragColor = debug_hit_distance;        break;
