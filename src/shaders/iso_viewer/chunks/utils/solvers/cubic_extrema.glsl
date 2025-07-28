@@ -24,8 +24,7 @@ vec2 cubic_extrema(in vec4 c)
     vec2 x0_x1 = quadratic_roots(d);
 
     // compute the cubic extrema values at the critical points
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     return y0_y1;
 }
@@ -42,8 +41,7 @@ vec2 cubic_extrema(in vec4 c, in vec2 xa_xb)
     x0_x1 = clamp(x0_x1, xa_xb.x, xa_xb.y);
 
     // compute the cubic extrema values at the critical points
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // return result
     return y0_y1;

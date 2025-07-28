@@ -24,8 +24,7 @@ vec3 quartic_extrema(in float c[5])
     vec3 x0_x1_x2 = cubic_roots(d);
 
     // compute the quartic extrema values at the critical points
-    vec3 y0_y1_y2;
-    eval_poly(c, x0_x1_x2, y0_y1_y2);
+    vec3 y0_y1_y2 = eval_poly(c, x0_x1_x2);
 
     // return result
     return y0_y1_y2;
@@ -48,8 +47,7 @@ bool quartic_extrema(in float c[5], in vec2 xa_xb)
     x0_x1_x2 = clamp(x0_x1_x2, xa_xb.x, xa_xb.y);
 
     // compute the quartic extrema values at the critical points
-    vec3 y0_y1_y2;
-    eval_poly(c, x0_x1_x2, y0_y1_y2);
+    vec3 y0_y1_y2 = eval_poly(c, x0_x1_x2);
 
     // return result
     return y0_y1_y2;

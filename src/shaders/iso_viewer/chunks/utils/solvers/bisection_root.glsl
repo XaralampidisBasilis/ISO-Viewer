@@ -11,8 +11,7 @@
 
 float bisection_root(in vec4 c, in vec2 x0_x1)
 {
-     vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
     
     float y;
     float x = (x0_x1.x + x0_x1.y) * 0.5;
@@ -21,7 +20,7 @@ float bisection_root(in vec4 c, in vec2 x0_x1)
     for (int i = 0; i < BISECTION_ITERATIONS; ++i)
     {
         // evaluate new y using honers method
-        eval_poly(c, x, y);
+        y = eval_poly(c, x);
 
         // determine if the root is in the left or right sub-interval
         if ((y < 0.0) == (y0_y1.y < 0.0))
@@ -43,9 +42,8 @@ float bisection_root(in vec4 c, in vec2 x0_x1)
 }
 
 float bisection_root(in float c[5], in vec2 x0_x1)
-{
-     vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+{;
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     float y;
     float x = (x0_x1.x + x0_x1.y) * 0.5;
@@ -54,7 +52,7 @@ float bisection_root(in float c[5], in vec2 x0_x1)
     for (int i = 0; i < BISECTION_ITERATIONS; ++i)
     {
         // evaluate new y using honers method
-        eval_poly(c, x, y);
+        y = eval_poly(c, x);
 
         // determine if the root is in the left or right sub-interval
         if ((y < 0.0) == (y0_y1.y < 0.0))
@@ -77,8 +75,7 @@ float bisection_root(in float c[5], in vec2 x0_x1)
 
 float bisection_root(in float c[6], in vec2 x0_x1)
 {
-     vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     float y;
     float x = (x0_x1.x + x0_x1.y) * 0.5;
@@ -87,7 +84,7 @@ float bisection_root(in float c[6], in vec2 x0_x1)
     for (int i = 0; i < BISECTION_ITERATIONS; ++i)
     {
         // evaluate new y using honers method
-        eval_poly(c, x, y);
+        y = eval_poly(c, x);
 
         // determine if the root is in the left or right sub-interval
         if ((y < 0.0) == (y0_y1.y < 0.0))

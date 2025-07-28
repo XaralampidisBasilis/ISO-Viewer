@@ -1,9 +1,7 @@
 
 if (trace.intersected) 
 { 
-    #include "./intersect_trace" 
-
-    #include "./update_hit" 
+    #include "./compute_hit" 
 }
 
 if (hit.discarded) 

@@ -6,7 +6,7 @@
 #define COMPUTE_GRADIENT_TRICUBIC_ANALYTIC
 
 #ifndef SAMPLE_TRICUBIC_VOLUME
-#include "../sample_volume_tricubic"
+#include "../sample_value_tricubic"
 #endif
 
 /*
@@ -29,13 +29,13 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p)
     vec4 bias = vec4(a0 * (a0 - 1.0) * 0.5, 1.0);
 
     // Take cross samples
-    vec4 f    = sample_volume_tricubic_features(p);
-    vec4 f_x0 = sample_volume_tricubic_features(vec3(p0.x, p.y,  p.z));
-    vec4 f_x1 = sample_volume_tricubic_features(vec3(p1.x, p.y,  p.z));
-    vec4 f_y0 = sample_volume_tricubic_features(vec3(p.x,  p0.y, p.z));
-    vec4 f_y1 = sample_volume_tricubic_features(vec3(p.x,  p1.y, p.z));
-    vec4 f_z0 = sample_volume_tricubic_features(vec3(p.x,  p.y,  p0.z));
-    vec4 f_z1 = sample_volume_tricubic_features(vec3(p.x,  p.y,  p1.z));
+    vec4 f    = tricubic_features(p);
+    vec4 f_x0 = tricubic_features(vec3(p0.x, p.y,  p.z));
+    vec4 f_x1 = tricubic_features(vec3(p1.x, p.y,  p.z));
+    vec4 f_y0 = tricubic_features(vec3(p.x,  p0.y, p.z));
+    vec4 f_y1 = tricubic_features(vec3(p.x,  p1.y, p.z));
+    vec4 f_z0 = tricubic_features(vec3(p.x,  p.y,  p0.z));
+    vec4 f_z1 = tricubic_features(vec3(p.x,  p.y,  p1.z));
 
     // Central differences
     vec4 f_dx = f_x1 - f_x0;
@@ -71,14 +71,14 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p, out mat3 hessian)
     vec4 bias = vec4(a0 * (a0 - 1.0) * 0.5, 1.0);
 
     // Take cube samples
-    vec4 f_x0y0z0 = sample_volume_tricubic_features(vec3(p0.x, p0.y, p0.z));
-    vec4 f_x0y1z0 = sample_volume_tricubic_features(vec3(p0.x, p1.y, p0.z));
-    vec4 f_x0y0z1 = sample_volume_tricubic_features(vec3(p0.x, p0.y, p1.z));
-    vec4 f_x0y1z1 = sample_volume_tricubic_features(vec3(p0.x, p1.y, p1.z));
-    vec4 f_x1y0z0 = sample_volume_tricubic_features(vec3(p1.x, p0.y, p0.z));
-    vec4 f_x1y1z0 = sample_volume_tricubic_features(vec3(p1.x, p1.y, p0.z));
-    vec4 f_x1y0z1 = sample_volume_tricubic_features(vec3(p1.x, p0.y, p1.z));
-    vec4 f_x1y1z1 = sample_volume_tricubic_features(vec3(p1.x, p1.y, p1.z));
+    vec4 f_x0y0z0 = tricubic_features(vec3(p0.x, p0.y, p0.z));
+    vec4 f_x0y1z0 = tricubic_features(vec3(p0.x, p1.y, p0.z));
+    vec4 f_x0y0z1 = tricubic_features(vec3(p0.x, p0.y, p1.z));
+    vec4 f_x0y1z1 = tricubic_features(vec3(p0.x, p1.y, p1.z));
+    vec4 f_x1y0z0 = tricubic_features(vec3(p1.x, p0.y, p0.z));
+    vec4 f_x1y1z0 = tricubic_features(vec3(p1.x, p1.y, p0.z));
+    vec4 f_x1y0z1 = tricubic_features(vec3(p1.x, p0.y, p1.z));
+    vec4 f_x1y1z1 = tricubic_features(vec3(p1.x, p1.y, p1.z));
 
     // Interpolate along x
     vec4 f_xy0z0 = mix(f_x0y0z0, f_x1y0z0, a0.x);

@@ -14,8 +14,7 @@
 
 float newton_bisection_root(in vec4 c, in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // perform newton bisection iterations
     float y, dydx;       
@@ -25,7 +24,7 @@ float newton_bisection_root(in vec4 c, in vec2 x0_x1)
     for (int i = 0; i < NEWTON_BISECTION_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based sign
         if ((y < 0.0) != (y0_y1.y < 0.0)) 
@@ -54,8 +53,7 @@ float newton_bisection_root(in vec4 c, in vec2 x0_x1)
 
 float newton_bisection_root(in float c[5], in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // perform newton bisection iterations
     float y, dydx;       
@@ -65,7 +63,7 @@ float newton_bisection_root(in float c[5], in vec2 x0_x1)
     for (int i = 0; i < NEWTON_BISECTION_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based sign
         if ((y < 0.0) != (y0_y1.y < 0.0)) 
@@ -94,8 +92,7 @@ float newton_bisection_root(in float c[5], in vec2 x0_x1)
 
 float newton_bisection_root(in float c[6], in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // perform newton bisection iterations
     float y, dydx;       
@@ -105,7 +102,7 @@ float newton_bisection_root(in float c[6], in vec2 x0_x1)
     for (int i = 0; i < NEWTON_BISECTION_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based sign
         if ((y < 0.0) != (y0_y1.y < 0.0)) 

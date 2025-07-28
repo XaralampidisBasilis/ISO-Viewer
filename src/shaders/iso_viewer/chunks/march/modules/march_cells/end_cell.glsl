@@ -1,9 +1,7 @@
 
 if (cell.intersected) 
 { 
-    #include "./intersect_cell" 
-
-    #include "./update_hit" 
+    #include "./compute_hit" 
 }
 
 if (hit.discarded) 

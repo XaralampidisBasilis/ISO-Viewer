@@ -14,8 +14,7 @@
 
 float newton_neubauer_root(in vec4 c, in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // initialize neubauer
     float dx = x0_x1.y - x0_x1.x;
@@ -26,7 +25,7 @@ float newton_neubauer_root(in vec4 c, in vec2 x0_x1)
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based on value signs
         if ((y < 0.0) != (y0_y1.y < 0.0)) 
@@ -57,8 +56,7 @@ float newton_neubauer_root(in vec4 c, in vec2 x0_x1)
 
 float newton_neubauer_root(in float c[5], in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // neubauer
     float dx = x0_x1.y - x0_x1.x;
@@ -69,7 +67,7 @@ float newton_neubauer_root(in float c[5], in vec2 x0_x1)
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based on value signs
         if ((y < 0.0) != (y0_y1.y < 0.0)) 
@@ -100,8 +98,7 @@ float newton_neubauer_root(in float c[5], in vec2 x0_x1)
 
 float newton_neubauer_root(in float c[6], in vec2 x0_x1)
 {
-    vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    vec2 y0_y1 = eval_poly(c, x0_x1);
 
     // neubauer
     float dx = x0_x1.y - x0_x1.x;
@@ -112,7 +109,7 @@ float newton_neubauer_root(in float c[6], in vec2 x0_x1)
     for (int i = 0; i < NEWTON_NEUBAUER_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, dydx);
+        y = eval_poly(c, x, dydx);
 
         // update bracket based on value signs
         if ((y < 0.0) != (y0_y1.y < 0.0)) 

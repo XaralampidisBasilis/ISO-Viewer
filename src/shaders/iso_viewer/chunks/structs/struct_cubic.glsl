@@ -8,6 +8,8 @@ struct Cubic
     vec4 coeffs;    
     vec4 bernstein_coeffs; 
     vec4 roots;
+    float root;
+    float derivative;
 };
 
 Cubic cubic; // Global mutable struct
@@ -19,6 +21,8 @@ void set_cubic()
     cubic.distances = vec4(0);
     cubic.coeffs = vec4(0);
     cubic.bernstein_coeffs = vec4(0);
+    cubic.root = 0.0;
+    cubic.derivative = 0.0;
 }
 
 #endif 

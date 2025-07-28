@@ -1,10 +1,8 @@
 #include "./sample_colormaps"
-#include "./sample_volume_trilinear"
-#include "./sample_volume_tricubic"
 #include "./sample_occupancy"
-#include "./sample_distance"
+#include "./sample_value_trilinear"
+#include "./sample_value_tricubic"
+#include "./sample_distance_isotropic"
+#include "./sample_distance_anisotropic"
+#include "./sample_distances_extended"
 #include "./compute_gradient"
-
-
-
-

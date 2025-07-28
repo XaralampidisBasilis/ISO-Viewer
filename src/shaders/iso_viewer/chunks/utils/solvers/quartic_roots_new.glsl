@@ -11,9 +11,6 @@ Wikipedia quartic equation
 #ifndef PICK
 #include "../math/pick"
 #endif
-#ifndef EVAL_POLY
-#include "../math/eval_poly"
-#endif
 #ifndef SSIGN
 #include "../math/ssign"
 #endif

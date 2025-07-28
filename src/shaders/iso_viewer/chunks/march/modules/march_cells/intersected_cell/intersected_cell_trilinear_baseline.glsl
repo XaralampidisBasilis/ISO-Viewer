@@ -7,7 +7,7 @@ for (int i = 1; i < 4; i++)
 {
     vec3 position = mix(cell.entry_position, cell.exit_position, sampling_points[i]);
 
-    cubic.residuals[i] = sample_volume_trilinear(position);
+    cubic.residuals[i] = sample_value_trilinear(position);
     cubic.residuals[i] -= u_rendering.isovalue;
 }
 

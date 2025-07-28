@@ -14,16 +14,16 @@
 
 float newton_root(in vec4 c, in float x)
 {
-    float y, d;
+    float y, dydx;
 
     #pragma unroll
     for (int i = 0; i < NEWTON_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, d);
+        y = eval_poly(c, x, dydx);
 
         // newtons
-        x -= y / d;
+        x -= y / dydx;
     }
 
     return x;
@@ -31,16 +31,16 @@ float newton_root(in vec4 c, in float x)
 
 float newton_root(in float c[5], in float x)
 {
-    float y, d;
+    float y, dydx;
 
     #pragma unroll
     for (int i = 0; i < NEWTON_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, d);
+        y = eval_poly(c, x, dydx);
 
         // newtons
-        x -= y / d;
+        x -= y / dydx;
     }
 
     return x;
@@ -48,16 +48,16 @@ float newton_root(in float c[5], in float x)
 
 float newton_root(in float c[6], in float x)
 {
-    float y, d;
+    float y, dydx;
 
     #pragma unroll
     for (int i = 0; i < NEWTON_ITERATIONS; ++i)
     {
         // compute polynomial
-        eval_poly(c, x, y, d);
+        y = eval_poly(c, x, dydx);
 
         // newtons
-        x -= y / d;
+        x -= y / dydx;
     }
 
     return x;

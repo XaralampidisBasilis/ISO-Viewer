@@ -70,9 +70,9 @@ float resolvent_cubic_max_root(in float rc, in float rb, in float ra)
 
     // Improve numerical stability of max root with Newton–Raphson correction
     // float f, dfdU;
-    // eval_poly(n, U, f, dfdU);
+    // f = eval_poly(n, U, dfdU);
     // U -= f / dfdU; 
-    // eval_poly(n, U, f, dfdU);
+    // f = eval_poly(n, U, dfdU);
     // U -= f / dfdU; 
 
     // return root
@@ -150,9 +150,9 @@ vec4 quartic_roots(in float c[5])
 
     // Improve numerical stability of roots with Newton–Raphson corrections
     vec4 f, dfdx; 
-    eval_poly(c, x, f, dfdx);
+    f = eval_poly(c, x, dfdx);
     x -= f / dfdx; 
-    eval_poly(c, x, f, dfdx);
+    f = eval_poly(c, x, dfdx);
     x -= f / dfdx; 
 
     // Return solutions

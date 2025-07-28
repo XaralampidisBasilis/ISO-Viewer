@@ -9,10 +9,10 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #define COMPUTE_GRADIENT_TRICUBIC_BSPLINE
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
-#include "../sample_volume_trilinear"
+#include "../sample_value_trilinear"
 #endif
 #ifndef SAMPLE_TRICUBIC_VOLUME
-#include "../sample_volume_tricubic"
+#include "../sample_value_tricubic"
 #endif
 #ifndef SAMPLE_SECOND_DERIVATIVES
 #include "../sample_second_derivatives"
@@ -72,17 +72,17 @@ void tricubic_bspline_samples(in vec3 p0, in vec3 p1, out vec4 s_x0y0z0_x0y1z0_x
     // Sample the 8 corner points of the interpolation cube based on p0, p1
 
     s_x0y0z0_x0y1z0_x0y0z1_x0y1z1 = vec4(
-        sample_volume_trilinear(vec3(p0.x, p0.y, p0.z)), // x0y0z0
-        sample_volume_trilinear(vec3(p0.x, p1.y, p0.z)), // x0y1z0
-        sample_volume_trilinear(vec3(p0.x, p0.y, p1.z)), // x0y0z1
-        sample_volume_trilinear(vec3(p0.x, p1.y, p1.z))  // x0y1z1
+        sample_value_trilinear(vec3(p0.x, p0.y, p0.z)), // x0y0z0
+        sample_value_trilinear(vec3(p0.x, p1.y, p0.z)), // x0y1z0
+        sample_value_trilinear(vec3(p0.x, p0.y, p1.z)), // x0y0z1
+        sample_value_trilinear(vec3(p0.x, p1.y, p1.z))  // x0y1z1
     );
 
     s_x1y0z0_x1y1z0_x1y0z1_x1y1z1 = vec4(
-        sample_volume_trilinear(vec3(p1.x, p0.y, p0.z)), // x1y0z0
-        sample_volume_trilinear(vec3(p1.x, p1.y, p0.z)), // x1y1z0
-        sample_volume_trilinear(vec3(p1.x, p0.y, p1.z)), // x1y0z1
-        sample_volume_trilinear(vec3(p1.x, p1.y, p1.z))  // x1y1z1
+        sample_value_trilinear(vec3(p1.x, p0.y, p0.z)), // x1y0z0
+        sample_value_trilinear(vec3(p1.x, p1.y, p0.z)), // x1y1z0
+        sample_value_trilinear(vec3(p1.x, p0.y, p1.z)), // x1y0z1
+        sample_value_trilinear(vec3(p1.x, p1.y, p1.z))  // x1y1z1
     );
 }
 

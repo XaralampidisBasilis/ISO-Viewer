@@ -25,8 +25,7 @@ vec4 quintic_extrema(in float c[6])
     vec4 x0_x1_x2_x3 = quartic_roots(d);
 
     // compute the quintic extrema values at the critical points
-    vec4 y0_y1_y2_y3;
-    eval_poly(c, x0_x1_x2_x3, y0_y1_y2_y3);
+    vec4 y0_y1_y2_y3 = eval_poly(c, x0_x1_x2_x3);
 
     // detect any sign change
     return y0_y1_y2_y3;
@@ -48,8 +47,7 @@ vec4 quintic_extrema(in float c[6], in vec2 xa_xb)
     x0_x1_x2_x3 = clamp(x0_x1_x2_x3, xa_xb.x, xa_xb.y);
 
     // compute the quintic extrema values at the critical points
-    vec4 y0_y1_y2_y3;
-    eval_poly(c, x0_x1_x2_x3, y0_y1_y2_y3);
+    vec4 y0_y1_y2_y3 = eval_poly(c, x0_x1_x2_x3);
 
     // detect any sign change
     return y0_y1_y2_y3;

@@ -51,7 +51,7 @@ bool is_cubic_solvable(in vec4 c, in vec2 xa_xb, in vec2 ya_yb)
 
     // compute the cubic extrema values at the critical points
     vec2 y0_y1;
-    eval_poly(c, x0_x1, y0_y1);
+    y0_y1 = eval_poly(c, x0_x1);
 
      // combine function values
     vec4 ya_y0_y1_yb = vec4(ya_yb.x, y0_y1, ya_yb.y);

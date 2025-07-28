@@ -26,8 +26,7 @@ bvec4 test_quartic_residue(in float c[5], in float x0)
     sort(x0_x1_x2_x3);
 
     // Evaluate the original polynomial at each root
-    vec4 y0_y1_y2_y3;
-    eval_poly(c, x0_x1_x2_x3, y0_y1_y2_y3);
+    vec4 y0_y1_y2_y3 = eval_poly(c, x0_x1_x2_x3);
 
     // Check if values are near zero
     bvec4 b0_b1_b2_b3 = lessThan(abs(y0_y1_y2_y3), vec4(MILLI_TOLERANCE));

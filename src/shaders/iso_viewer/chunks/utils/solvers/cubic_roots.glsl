@@ -75,9 +75,9 @@ vec3 cubic_roots(in vec4 c)
 
     // Improve numerical stability of roots with Newton–Raphson correction
     vec3 y, dydx;
-    eval_poly(c, x, y, dydx);
+    y = eval_poly(c, x, dydx);
     x -= y / dydx; 
-    eval_poly(c, x, y, dydx);
+    y = eval_poly(c, x, dydx);
     x -= y / dydx; 
 
     // return result

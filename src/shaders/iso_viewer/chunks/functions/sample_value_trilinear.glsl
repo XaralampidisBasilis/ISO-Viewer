@@ -1,22 +1,9 @@
 // Samples the base volume using standard trilinear interpolation.
 // Assumes texture uses linear filtering and normalized coordinates.
-#ifndef SAMPLE_VOLUME_TRILINEAR
-#define SAMPLE_VOLUME_TRILINEAR
+#ifndef SAMPLE_VALUE_TRILINEAR
+#define SAMPLE_VALUE_TRILINEAR
 
-float sample_volume_trilinear(in ivec3 coords)
-{
-    // Sample red channel from trilinear volume texture
-    #if INTERPOLATION_METHOD == 1
-    return texelFetch(u_textures.trilinear_volume, coords, 0).r;
-    #endif
-
-    // Sample alpha channel from tricubic volume texture
-    #if INTERPOLATION_METHOD == 2
-    return texelFetch(u_textures.tricubic_volume, coords, 0).a;
-    #endif
-}
-
-float sample_volume_trilinear(in vec3 coords)
+float sample_value_trilinear(in vec3 coords)
 {
     // Normalize coordinates to texture space [0,1]
     vec3 texture_coords = coords * u_volume.inv_dimensions;
