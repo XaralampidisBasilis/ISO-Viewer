@@ -12,7 +12,6 @@ export class GPGPUTricubicVolumeMap implements GPGPUProgram
     {
         const [inDepth, inHeight, inWidth, _] = inputShape;
         this.outputShape = [inDepth, inHeight, inWidth, 4];
-
         this.userCode = `
         void main() 
         {

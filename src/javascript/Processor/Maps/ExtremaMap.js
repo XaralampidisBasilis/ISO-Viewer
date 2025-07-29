@@ -3,8 +3,8 @@ import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
 import Processor from '../Processor'
 import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
-import { computeTrilinearExtremaMap } from '../Programs/GPGPUTrilinearExtremaMap'
-import { computeTricubicExtremaMap } from '../Programs/GPGPUTricubicExtremaMap'
+import { computeTrilinearExtrema } from '../Programs/GPGPUTrilinearExtremaMap'
+import { computeTricubicExtrema } from '../Programs/GPGPUTricubicExtremaMap'
 
 export default class ExtremaMap extends EventEmitter
 {
@@ -17,45 +17,29 @@ export default class ExtremaMap extends EventEmitter
 
         this.interpolationMethod = this.settings.interpolationMethod
         this.blockSize = this.settings.blockSize
-
-        this.setTensor()
     }
 
     setTensor()
     {
         if (this.interpolationMethod === 'trilinear')
-        {
-            this.tensor = computeTrilinearExtremaMap(this.processor.volumeMap.tensor, this.blockSize)
-        }
+            this.tensor = computeTrilinearExtrema(this.processor.valuesMap.tensor, this.blockSize)
+
         if (this.interpolationMethod === 'tricubic')
-        {
-            this.tensor = computeTricubicExtremaMap(this.processor.volumeMap.tensor, this.blockSize)
-        }
+            this.tensor = computeTricubicExtrema(this.processor.featuresMap.tensor, this.blockSize)
+
+        this.setParameters()
     }
 
-    setParametersFromTensor()
+    setParameters()
     {
         this.dimensions = new THREE.Vector3().fromArray(this.tensor.shape.slice(0, 3).toReversed())
-        this.spacing    = new THREE.Vector3().copy(this.intensityMap.spacing).multiplyScalar(this.extremaMap.stride)
-        this.size       = new THREE.Vector3().copy(this.extremaMap.dimensions).multiply(this.extremaMap.spacing)
-    }
-
-    getDataFromTensor()
-    {
-        const dataFloat = this.tensor.dataSync()
-        const dataHalfFloat = new Uint16Array(this.tensor.size)
-
-        for (let i = 0; i < dataFloat.length; ++i) 
-        {
-            dataHalfFloat[i] = toHalfFloat(dataFloat[i])
-        }
-
-        return dataHalfFloat
+        this.spacing = new THREE.Vector3().copy(this.intensityMap.spacing).multiplyScalar(this.extremaMap.stride)
+        this.size = new THREE.Vector3().copy(this.extremaMap.dimensions).multiply(this.extremaMap.spacing)
     }
 
     setTexture()
     {
-        const data = this.getDataFromTensor()
+        const data = this.getData()
 
         this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
         this.texture.format = THREE.RGFormat
@@ -67,4 +51,17 @@ export default class ExtremaMap extends EventEmitter
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 2
     }   
+
+    getData()
+    {
+        const dataFloat = this.tensor.dataSync()
+        const dataHalfFloat = new Uint16Array(this.tensor.size)
+
+        for (let i = 0; i < dataFloat.length; ++i) 
+        {
+            dataHalfFloat[i] = toHalfFloat(dataFloat[i])
+        }
+
+        return dataHalfFloat
+    }
 }

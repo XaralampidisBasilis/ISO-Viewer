@@ -10,26 +10,20 @@ cubic.root = mmin(cubic.roots);
 eval_poly(cubic.coeffs, cubic.root, hit.derivative);
 hit.derivative /= cell.span_distance;
 
-// Compute intersection distance
-hit.distance = mix(cell.entry_distance, cell.exit_distance, cubic.root);
-
-// Compute intersection position
-hit.position = camera.position + ray.direction * hit.distance;
-
-// Sample value
-hit.value = sample_value_trilinear(hit.position);
-
-// Compute intersection residue (should be near zero)
-hit.residue = hit.value - u_rendering.isovalue;
-
 // Compute orientation
 hit.orientation = -ssign(hit.derivative); 
 
+// Compute intersection distance/position
+hit.distance = mix(cell.entry_distance, cell.exit_distance, cubic.root);
+hit.position = camera.position + ray.direction * hit.distance;
+
+// Sample value/residue
+hit.value = sample_value_trilinear(hit.position);
+hit.residue = hit.value - u_rendering.isovalue;
+
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
-
-// Align gradient and hessian to view direction
-hit.gradient *= hit.orientation;
+hit.gradient *= hit.orientation; 
 hit.hessian *= hit.orientation;
 
 // Compute normal

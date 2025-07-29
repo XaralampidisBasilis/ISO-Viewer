@@ -12,25 +12,19 @@ quintic.root = mmin(quintic.roots);
 eval_poly(quintic.coeffs, quintic.root, hit.derivative);
 hit.derivative /= cell.span_distance;
 
+// Compute orientation
+hit.orientation = -ssign(hit.derivative); 
+
 // Compute intersection distance
 hit.distance = mix(cell.entry_distance, cell.exit_distance, quintic.root);
-
-// Compute intersection position
 hit.position = camera.position + ray.direction * hit.distance;
 
 // Sample value
 hit.value = sample_value_tricubic(hit.position);
-
-// Compute intersection residue (should be near zero)
 hit.residue = hit.value - u_rendering.isovalue;
-
-// Compute orientation
-hit.orientation = -ssign(hit.derivative); 
 
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
-
-// Align gradient and hessian to view direction
 hit.gradient *= hit.orientation; 
 hit.hessian *= hit.orientation;
 

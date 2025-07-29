@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-class GPGPUTrilinearExtremaMap implements GPGPUProgram 
+class GPGPUTrilinearExtrema implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -66,10 +66,10 @@ class GPGPUTrilinearExtremaMap implements GPGPUProgram
     }
 }
 
-export function computeTrilinearExtremaMap(inputTensor: tf.Tensor, inputStride: number) : tf.Tensor4D
+export function computeTrilinearExtrema(inputTensor: tf.Tensor, inputStride: number) : tf.Tensor4D
 {
     const inputShape = inputTensor.shape as [number, number, number, number]
-    const program = new GPGPUTrilinearExtremaMap(inputShape, inputStride)
+    const program = new GPGPUTrilinearExtrema(inputShape, inputStride)
     const backend = tf.backend() as MathBackendWebGL
     const result = backend.compileAndRun(program, [inputTensor])
     return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor4D

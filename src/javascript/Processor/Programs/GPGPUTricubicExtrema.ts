@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-class GPGPUTricubicExtremaMap implements GPGPUProgram 
+class GPGPUTricubicExtrema implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -139,10 +139,10 @@ class GPGPUTricubicExtremaMap implements GPGPUProgram
     }
 }
 
-export function computeTricubicExtremaMap(inputTensor: tf.Tensor, inputStride: number) : tf.Tensor4D
+export function computeTricubicExtrema(inputTensor: tf.Tensor, inputStride: number) : tf.Tensor4D
 {
     const inputShape = inputTensor.shape as [number, number, number, number]
-    const program = new GPGPUTricubicExtremaMap(inputShape, inputStride)
+    const program = new GPGPUTricubicExtrema(inputShape, inputStride)
     const backend = tf.backend() as MathBackendWebGL
     const result = backend.compileAndRun(program, [inputTensor])
     return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor4D

@@ -23,7 +23,6 @@ export default class Config extends EventEmitter
     {
         super()
 
-        // Default configuration values
         this.settings = 
         {
             blockSize: 4,

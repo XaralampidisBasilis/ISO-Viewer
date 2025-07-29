@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class GPGPUOccupancyMap implements GPGPUProgram 
+export class GPGPUOccupancy implements GPGPUProgram 
 {
     variableNames = ['A'];
     outputShape: number[];
@@ -13,7 +13,7 @@ export class GPGPUOccupancyMap implements GPGPUProgram
         const [inDepth, inHeight, inWidth, channels] = inputExtremaMap;
         if (channels !== 2) 
         {
-            throw new Error(`GPGPUOccupancyMap expects Extrema map input with 2 channels (min, max), but got ${channels}`);
+            throw new Error(`GPGPUOccupancy expects Extrema map input with 2 channels (min, max), but got ${channels}`);
         }
 
         this.outputShape = [inDepth, inHeight, inWidth, 1];
@@ -36,10 +36,10 @@ export class GPGPUOccupancyMap implements GPGPUProgram
     }
 }
 
-export function computeOccupancyMap(inputTensor: tf.Tensor4D, inputThreshold: number): tf.Tensor4D 
+export function computeOccupancy(inputTensor: tf.Tensor4D, inputThreshold: number): tf.Tensor4D 
 {
     const inputShape = inputTensor.shape as [number, number, number, number]
-    const program = new GPGPUOccupancyMap(inputShape, inputThreshold);
+    const program = new GPGPUOccupancy(inputShape, inputThreshold);
     const backend = tf.backend() as MathBackendWebGL;
     const output = backend.compileAndRun(program, [inputTensor]);
     return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;

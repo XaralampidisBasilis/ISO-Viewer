@@ -22,9 +22,6 @@ export default class Processor extends EventEmitter
         this.config = this.experience.config
         this.settings = this.experience.config.settings
         this.resources = this.experience.resources
-
-        this.computes = new Computes()
-        this.textures = new Textures()
     }
 
     async setup()

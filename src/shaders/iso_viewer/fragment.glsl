@@ -3,7 +3,6 @@ in vec3 v_position;
 in vec3 v_camera_position;
 in vec3 v_camera_direction;
 in vec3 v_ray_direction;
-in mat4 v_clip_space_matrix;
 
 out vec4 fragColor;
 

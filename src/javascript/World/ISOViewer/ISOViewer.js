@@ -47,9 +47,7 @@ export default class ISOViewer extends EventEmitter
   
     setGeometry()
     {
-        const size = new THREE.Vector3().setScalar(1)
-        const offset = new THREE.Vector3().setScalar(0.5)
-        this.geometry = new THREE.BoxGeometry(...size).translate(offset) 
+        this.geometry = new THREE.BoxGeometry(1, 1, 1)
     }
 
     setMaterial()
@@ -71,6 +69,7 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_volume.value.inv_dimensions.copy(intensityMap.invDimensions)
         uniforms.u_volume.value.blocks.copy(distanceMap.dimensions)
         uniforms.u_volume.value.spacing.copy(intensityMap.spacing)
+        uniforms.u_volume.value.size.copy(intensityMap.dimensions).multiply(intensityMap.spacing)
         uniforms.u_volume.value.anisotropy.copy(intensityMap.spacing).normalize()
         uniforms.u_volume.value.stride = distanceMap.stride
 
@@ -91,7 +90,6 @@ export default class ISOViewer extends EventEmitter
 
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.scale.copy(size)
-        this.mesh.position.copy(size).multiplyScalar(-0.5)
         this.scene.add(this.mesh)
     }
 

@@ -36,8 +36,6 @@ hit.orientation = -ssign(hit.derivative);
 
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
-
-// Align gradient and hessian to view direction
 hit.gradient *= hit.orientation; 
 hit.hessian *= hit.orientation;
 
