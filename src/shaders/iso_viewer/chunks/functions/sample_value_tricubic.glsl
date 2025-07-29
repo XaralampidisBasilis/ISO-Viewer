@@ -31,9 +31,9 @@ float sample_value_tricubic(in vec3 coords)
     vec4 bias = tricubic_bias(coords);
 
     // Compute corrected sample using dot product of coefficients and weights
-    float tricubic_sample = dot(bias, features);
+    float value = dot(bias, features);
 
-    return tricubic_sample;
+    return value;
 }       
 
 float sample_value_tricubic(in vec3 coords, out vec4 features)
@@ -45,9 +45,10 @@ float sample_value_tricubic(in vec3 coords, out vec4 features)
     vec4 bias = tricubic_bias(coords);
 
     // Compute corrected sample using dot product of coefficients and weights
-    float tricubic_sample = dot(bias, features);
+    float value = dot(bias, features);
 
-    return tricubic_sample;
+    return value;
 }    
+
 
 #endif

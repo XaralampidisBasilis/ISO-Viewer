@@ -2,6 +2,8 @@
 #include "./sample_occupancy"
 #include "./sample_value_trilinear"
 #include "./sample_value_tricubic"
+#include "./sample_residue_trilinear"
+#include "./sample_residue_tricubic"
 #include "./sample_distance_isotropic"
 #include "./sample_distance_anisotropic"
 #include "./sample_distances_extended"

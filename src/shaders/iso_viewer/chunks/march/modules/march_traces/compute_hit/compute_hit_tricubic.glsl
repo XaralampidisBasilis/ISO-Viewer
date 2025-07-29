@@ -4,13 +4,14 @@
 vec2 distances = vec2(trace.prev_distance, trace.distance);
 vec2 residues = vec2(trace.prev_residue, trace.residue);
 
-// Neubauer start
-hit.distance = distances.x - (residues.x * diff(distances)) / diff(residues);
-hit.position = camera.position + ray.direction * hit.distance; 
-
 #pragma unroll
 for (int i = 0; i < 10; ++i)
 {
+    // Neubauer update
+    hit.derivative = diff(residues) / diff(distances);
+    hit.distance = distances.x - residues.x / hit.derivative;
+    hit.position = camera.position + ray.direction * hit.distance; 
+
     // evaluate polynomial
     hit.residue = sample_value_tricubic(hit.position) - u_rendering.isovalue;
     
@@ -25,17 +26,13 @@ for (int i = 0; i < 10; ++i)
         distances.x = hit.distance;
         residues.x = hit.residue;
     }
-
-    // Neubauer update
-    hit.distance = distances.x - (residues.x * diff(distances)) / diff(residues);
-    hit.position = camera.position + ray.direction * hit.distance; 
 }
 
 // Compute value
 hit.value = hit.residue + u_rendering.isovalue;
 
 // Compute orientation
-hit.orientation = ssign(trace.prev_residue - trace.residue);
+hit.orientation = -ssign(hit.derivative);
 
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);

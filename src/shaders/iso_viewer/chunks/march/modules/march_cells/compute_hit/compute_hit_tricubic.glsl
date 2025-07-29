@@ -8,8 +8,9 @@ sum_anti_diags(coeffs, quintic.coeffs);
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 quintic.root = mmin(quintic.roots);
 
-// Compute quintic derivative at min root
-eval_poly(quintic.coeffs, quintic.root, quintic.derivative);
+// Compute derivative at root
+eval_poly(quintic.coeffs, quintic.root, hit.derivative);
+hit.derivative /= cell.span_distance;
 
 // Compute intersection distance
 hit.distance = mix(cell.entry_distance, cell.exit_distance, quintic.root);
@@ -23,11 +24,11 @@ hit.value = sample_value_tricubic(hit.position);
 // Compute intersection residue (should be near zero)
 hit.residue = hit.value - u_rendering.isovalue;
 
+// Compute orientation
+hit.orientation = -ssign(hit.derivative); 
+
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
-
-// Compute orientation
-hit.orientation = -ssign(quintic.derivative); // hit.orientation = -ssign(dot(hit.gradient, ray.direction * u_volume.anisotropy));
 
 // Align gradient and hessian to view direction
 hit.gradient *= hit.orientation; 

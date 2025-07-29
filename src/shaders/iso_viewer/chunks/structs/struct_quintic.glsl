@@ -10,7 +10,6 @@ struct Quintic
     mat4 features;
     mat3x4 biases;
     float root;
-    float derivative;
 };
 
 Quintic quintic; 
@@ -24,7 +23,6 @@ void set_quintic()
     quintic.biases = mat3x4(0);
     quintic.features = mat4(0);
     quintic.root = 0.0;
-    quintic.derivative = 0.0;
 }
 
 #endif 
