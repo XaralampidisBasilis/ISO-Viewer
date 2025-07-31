@@ -3,11 +3,11 @@
 
 struct Cubic 
 {
-    vec4 residuals;
-    vec4 distances;
-    vec4 coeffs;    
-    vec4 bernstein_coeffs; 
-    vec4 roots;
+    vec4  residuals;
+    vec4  distances;
+    vec4  coeffs;    
+    vec4  bernstein_coeffs; 
+    vec4  roots;
     float root;
 };
 

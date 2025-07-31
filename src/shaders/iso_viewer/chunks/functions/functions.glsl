@@ -6,5 +6,5 @@
 #include "./sample_residue_tricubic"
 #include "./sample_distance_isotropic"
 #include "./sample_distance_anisotropic"
-#include "./sample_distances_extended"
+#include "./sample_distance_extended"
 #include "./compute_gradient"

@@ -1,5 +1,4 @@
 
-
 // Define brackets
 vec2 distances = vec2(trace.prev_distance, trace.distance);
 vec2 residues = vec2(trace.prev_residue, trace.residue);
@@ -44,7 +43,3 @@ hit.normal = normalize(hit.gradient);
 
 // Compute principal curvatures
 hit.curvatures = principal_curvatures(hit.gradient, hit.hessian);
-
-// Compute termination condition
-hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance);
-

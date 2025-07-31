@@ -7,17 +7,17 @@ out vec3 v_ray_direction;
 #include "./chunks/uniforms/uniforms_volume"
 
 void main() 
-{				    
+{	
+    const vec3 cameraDirection = vec3(0.0, 0.0, -1.0);
+  
     // vertex position varying
-    v_position = (position + 0.5) * vec3(u_volume.dimensions); // vertex position in grid coordinates
+    v_position = vec3(u_volume.grid_matrix * vec4(position, 1.0));
 
     // Camera varying
-    vec4 camera_position = inverse(modelMatrix) * vec4(cameraPosition, 1.0);   
-    v_camera_position = (camera_position.xyz + 0.5) * vec3(u_volume.dimensions); // camera position in grid coordinates
+    v_camera_position = vec3(u_volume.grid_matrix * inverse(modelMatrix) * vec4(cameraPosition, 1.0));   
 
     // camera direction
-    vec4 camera_direction = inverse(modelViewMatrix) * vec4(vec3(0.0, 0.0, -1.0), 0.0);
-    v_camera_direction = camera_direction.xyz * vec3(u_volume.dimensions); // camera direction in grid coordinates
+    v_camera_direction = vec3(u_volume.grid_matrix * inverse(modelViewMatrix) * vec4(cameraDirection, 0.0));
 
     // Ray varying
     v_ray_direction = v_position - v_camera_position; // direction vector from camera to vertex in grid coordinates

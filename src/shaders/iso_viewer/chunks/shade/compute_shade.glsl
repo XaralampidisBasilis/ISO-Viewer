@@ -30,7 +30,7 @@ frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
 // Modulations
 float edges_modulation = smoothstep(0.0, 0.5, abs(view_angle));
 float gradient_modulation = mix(0.2, 1.0, smoothstep(0.0, 0.1, length(hit.gradient)));
-float curvature_modulation = mean(smoothstep(-1.0, 0.0, hit.curvatures.x), smoothstep(-1.0, 0.0, hit.curvatures.y)); 
+float curvature_modulation = mean(smoothstep(-1.2, 0.0, hit.curvatures.x), smoothstep(-1.2, 0.0, hit.curvatures.y)); 
 
 edges_modulation = mix(1.0, edges_modulation, u_shading.modulate_edges);
 gradient_modulation = mix(1.0, gradient_modulation, u_shading.modulate_gradient);

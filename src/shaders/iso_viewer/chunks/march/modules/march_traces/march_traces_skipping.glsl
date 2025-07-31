@@ -1,9 +1,9 @@
 
 #include "../march_blocks/start_block"
 
-for (int n = 0; n < MAX_GROUPS; n++) 
+for (int k = 0; k < MAX_GROUPS; k++) 
 {
-    for (int i = 0; i < MAX_BLOCKS_PER_GROUP; i++) 
+    for (int j = 0; j < MAX_BLOCKS_PER_GROUP; j++) 
     {
         #include "../march_blocks/update_block"
 

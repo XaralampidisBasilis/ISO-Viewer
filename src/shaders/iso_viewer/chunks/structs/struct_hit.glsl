@@ -5,6 +5,8 @@
 struct Hit 
 {
     bool  discarded;          
+    bool  escaped;          
+    bool  undefined;
     vec3  position;           
     float distance;   
     float value;        
@@ -21,7 +23,9 @@ Hit hit; // Global mutable struct
 
 void set_hit()
 {
-    hit.discarded   = true;
+    hit.discarded   = false;
+    hit.escaped     = false;
+    hit.undefined   = false;
     hit.position    = vec3(0.0);
     hit.distance    = 0.0;
     hit.value       = 0.0;

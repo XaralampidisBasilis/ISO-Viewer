@@ -9,7 +9,8 @@ struct UniformsVolume
     vec3  spacing;           
     vec3  anisotropy;           
     int   stride;
-    ivec3 blocks;                         
+    ivec3 blocks;        
+    mat4  grid_matrix;                 
 };
 
 uniform UniformsVolume u_volume;

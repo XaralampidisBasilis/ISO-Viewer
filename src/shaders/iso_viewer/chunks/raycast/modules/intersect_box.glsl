@@ -24,7 +24,7 @@ if (entry_exit.x < entry_exit.y)
 }
 else // discard ray if there is no intersection
 {
-    #if DISCARDING_DISABLED == 0
+    #if DISCARDING_ENABLED == 1
     discard;  
     #else
     ray.discarded = true;

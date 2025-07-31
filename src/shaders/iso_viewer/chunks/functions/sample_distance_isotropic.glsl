@@ -2,7 +2,7 @@
 #define SAMPLE_DISTANCE_ISOTROPIC
 
 // Samples the isotropic distance texture at given integer coordinates.
-int sample_distance_isotropic(in ivec3 block_coords, out bool occupancy)
+ivec3 sample_distance_isotropic(in ivec3 block_coords, out bool occupancy)
 {
     // Fetch red channel value from the 3D texture
     uint texture_sample = texelFetch(u_textures.isotropic_distance, block_coords, 0).r;
@@ -13,7 +13,7 @@ int sample_distance_isotropic(in ivec3 block_coords, out bool occupancy)
     // Determine if block is occupied 
     occupancy = (distance == 0);
 
-    return distance;
+    return ivec3(distance);
 }
 
 #endif

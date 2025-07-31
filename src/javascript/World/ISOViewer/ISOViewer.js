@@ -73,10 +73,14 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_volume.value.anisotropy.copy(intensityMap.spacing).normalize()
         uniforms.u_volume.value.stride = distanceMap.stride
 
+        const scale = new THREE.Matrix4().makeScale(...intensityMap.dimensions);
+        const translate = new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.5)
+        uniforms.u_volume.value.grid_matrix.multiplyMatrices(scale, translate);
+
         // Defines
         const defines = this.material.defines
-        defines.MAX_CELLS = intensityMap.dimensions.toArray().reduce((s, x) => s + x, -2)
-        defines.MAX_BLOCKS = distanceMap.dimensions.toArray().reduce((s, x) => s + x, -2)
+        defines.MAX_CELLS = intensityMap.dimensions.toArray().reduce((s, x) => s + x, 0)
+        defines.MAX_BLOCKS = distanceMap.dimensions.toArray().reduce((s, x) => s + x, 0)
         defines.MAX_TRACES = defines.MAX_CELLS * 5
         defines.MAX_CELLS_PER_BLOCK = distanceMap.stride * 3
         defines.MAX_TRACES_PER_BLOCK = defines.MAX_CELLS_PER_BLOCK * 5
@@ -120,9 +124,11 @@ export default class ISOViewer extends EventEmitter
 
         // Defines
         const defines = this.material.defines
-        defines.MAX_CELLS = this.computes.intensityMap.dimensions.toArray().reduce((s, x) => s + x, -2)
-        defines.MAX_BLOCKS = this.computes.distanceMap.dimensions.toArray().reduce((s, x) => s + x, -2)
+        defines.MAX_CELLS = this.computes.intensityMap.dimensions.toArray().reduce((s, x) => s + x, 0)
+        defines.MAX_BLOCKS = this.computes.distanceMap.dimensions.toArray().reduce((s, x) => s + x, 0)
+        defines.MAX_TRACES = defines.MAX_CELLS * 5
         defines.MAX_CELLS_PER_BLOCK = this.computes.distanceMap.stride * 3
+        defines.MAX_TRACES_PER_BLOCK = defines.MAX_CELLS_PER_BLOCK * 5
         defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
         defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
 

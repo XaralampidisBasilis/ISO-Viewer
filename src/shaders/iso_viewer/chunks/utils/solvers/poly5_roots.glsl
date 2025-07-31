@@ -59,7 +59,7 @@ bool poly5_roots_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 30; ++i) 
+    for (int i = 0; i != 40; ++i) 
     {
         // Evaluate the polynomial and its derivative
         float value = poly5[5] * current + poly5[4];

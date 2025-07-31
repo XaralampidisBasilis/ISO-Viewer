@@ -16,6 +16,7 @@ export default function()
             anisotropy    : new THREE.Vector3(),
             blocks        : new THREE.Vector3(),
             stride        : 0,
+            grid_matrix   : new THREE.Matrix4(),
         }),
 
         u_textures: new THREE.Uniform
@@ -122,12 +123,12 @@ export default function()
 
         MARCHING_METHOD     : 1,
         INTERPOLATION_METHOD: 2,
-        SKIPPING_METHOD     : 3,
+        SKIPPING_METHOD     : 1,
         GRADIENTS_METHOD    : 3,
 
-        STATS_ENABLED      : 1,
-        DEBUG_ENABLED      : 1,
-        DISCARDING_DISABLED: 0,
+        STATS_ENABLED     : 1,
+        DEBUG_ENABLED     : 1,
+        DISCARDING_ENABLED: 1,
 
         MAX_CELLS            : 1000,
         MAX_TRACES           : 5000,

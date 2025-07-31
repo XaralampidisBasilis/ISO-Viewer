@@ -1,22 +1,5 @@
 
-// compute the intensity samples inside the cell from the intensity map texture
-cubic.residuals[0] = cubic.residuals[3];
-
-#pragma unroll
-for (int i = 1; i < 4; i++) 
-{
-    vec3 position = mix(cell.entry_position, cell.exit_position, sampling_points[i]);
-
-    cubic.residuals[i] = sample_residue_trilinear(position);
-}
-
-// Compute sign change between residual values
-// If sign change detected terminate and declare intersection
-if (sign_change(cubic.residuals))
-{
-    cell.intersected = true;
-    break;
-}
+#include "./update_cubic"
 
 // compute berstein coefficients from samples
 cubic.bernstein_coeffs = cubic.residuals * cubic_bernstein;
@@ -25,7 +8,7 @@ cubic.bernstein_coeffs = cubic.residuals * cubic_bernstein;
 if (sign_change(cubic.bernstein_coeffs))
 {
     // check cubic intersection and sign crossings for degenerate cases 
-    cell.intersected = split_bernstein_sign_change(cubic.bernstein_coeffs);
+    cell.intersected = sign_change(cubic.residuals) || split_bernstein_sign_change(cubic.bernstein_coeffs);
 
     #if STATS_ENABLED == 1
     stats.num_tests += 1;

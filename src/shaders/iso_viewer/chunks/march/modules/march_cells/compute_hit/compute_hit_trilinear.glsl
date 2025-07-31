@@ -1,6 +1,6 @@
 
-// Compute cubic coefficients
-cubic.coeffs = cubic.residuals * cubic_inv_vander;
+// // Compute cubic coefficients
+// cubic.coeffs = cubic.residuals * cubic_inv_vander;
 
 // Compute cubic polynomial roots in [0, 1]
 poly3_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
@@ -31,7 +31,3 @@ hit.normal = normalize(hit.gradient);
 
 // Compute principal curvatures
 hit.curvatures = principal_curvatures(hit.gradient, hit.hessian);
-
-// Compute termination condition
-hit.discarded = (hit.distance < ray.start_distance || ray.end_distance < hit.distance);
-

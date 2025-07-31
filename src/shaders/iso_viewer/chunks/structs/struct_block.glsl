@@ -4,8 +4,7 @@
 // struct to hold the current occumap parameters
 struct Block
 {
-    int   skip_distance;
-    ivec3 skip_distances;
+    ivec3 skip_distance;
     bool  occupied;
     bool  terminated;
     ivec3 coords;  
@@ -25,8 +24,7 @@ Block block; // Global mutable struct
 
 void set_block()
 {
-    block.skip_distance  = 0;
-    block.skip_distances = ivec3(0);
+    block.skip_distance  = ivec3(0);
     block.occupied       = false;
     block.terminated     = false;
     block.coords         = ivec3(0);

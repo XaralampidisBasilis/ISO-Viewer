@@ -127,7 +127,7 @@ export default class ISOGui
                 material.needsUpdate = true 
             }),
 
-            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, sobel : 2, bspline_triquadratic : 3, bspline_tricubic : 4 }).onFinishChange((option) => 
+            gradientsMethod: folder.add(objects, 'GRADIENTS_METHOD').name('gradients').options({ analytic : 1, sobel : 2, bspline : 3 }).onFinishChange((option) => 
             { 
                 defines.GRADIENTS_METHOD = Number(option)
                 material.needsUpdate = true 
@@ -190,7 +190,7 @@ export default class ISOGui
         const uniforms = this.viewer.material.uniforms.u_debug.value
         const defines = this.viewer.material.defines
         const material = this.viewer.material
-        const objects = { DISCARDING_DISABLED: Boolean(defines.DISCARDING_DISABLED) }
+        const objects = { DISCARDING_ENABLED: Boolean(defines.DISCARDING_ENABLED) }
 
         this.controllers.debug = 
         {
@@ -209,17 +209,15 @@ export default class ISOGui
                 ray_end_position        : 109,
 
                 block_skip_distance     : 401,
-                block_skip_distances    : 402,
-                block_occupied          : 403,
-                block_terminated        : 404,
-                block_coords            : 405,
-                block_exit_normal       : 406,
-                block_min_position      : 407,
-                block_max_position      : 408,
-                block_entry_distance    : 409,
-                block_exit_distance     : 410,
-                block_entry_position    : 411,
-                block_exit_position     : 412,
+                block_occupied          : 402,
+                block_terminated        : 403,
+                block_coords            : 404,
+                block_exit_normal       : 405,
+                block_entry_distance    : 406,
+                block_exit_distance     : 407,
+                block_span_distance     : 408,
+                block_min_position      : 409,
+                block_max_position      : 410,
                 
                 cell_intersected        : 201,
                 cell_terminated         : 202,
@@ -239,15 +237,17 @@ export default class ISOGui
                 trace_span_residue      : 306,
 
                 hit_discarded           : 451,
-                hit_distance            : 452,
-                hit_position            : 453,
-                hit_residue             : 454,
-                hit_derivative          : 455,
-                hit_orientation         : 456,
-                hit_normal              : 457,
-                hit_gradient            : 458,
-                hit_steepness           : 459,
-                hit_curvatures          : 460,
+                hit_escaped             : 452,
+                hit_undefined           : 453,
+                hit_distance            : 454,
+                hit_position            : 455,
+                hit_residue             : 456,
+                hit_derivative          : 457,
+                hit_orientation         : 458,
+                hit_normal              : 459,
+                hit_gradient            : 460,
+                hit_steepness           : 461,
+                hit_curvatures          : 462,
         
                 frag_color_material     : 511,
                 frag_color_ambient      : 512,
@@ -292,7 +292,7 @@ export default class ISOGui
             variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.001),
             variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(0.001),
             variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(0.001),
-            discarding: folder.add(objects, 'DISCARDING_DISABLED').name('disable_discarding').onFinishChange((value) => { defines.DISCARDING_DISABLED = Number(value), material.needsUpdate = true }),
+            discarding: folder.add(objects, 'DISCARDING_ENABLED').name('enable_discarding').onFinishChange((value) => { defines.DISCARDING_ENABLED = Number(value), material.needsUpdate = true }),
         }
     }
     

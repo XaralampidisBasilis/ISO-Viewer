@@ -2,7 +2,7 @@
 #define SAMPLE_DISTANCE_ANISOTROPIC
 
 // Samples the anisotropic distance texture at given coordinates and octant.
-int sample_distance_anisotropic(in ivec3 block_coords, in int octant, out bool occupancy)
+ivec3 sample_distance_anisotropic(in ivec3 block_coords, in int octant, out bool occupancy)
 {    
     // Offset z to access the correct slab for the given octant.
     ivec3 slab_coords = block_coords;
@@ -17,7 +17,7 @@ int sample_distance_anisotropic(in ivec3 block_coords, in int octant, out bool o
     // Determine occupancy based on distance == 0
     occupancy = (distance == 0);
 
-    return distance;
+    return ivec3(distance);
 }
 
 #endif
