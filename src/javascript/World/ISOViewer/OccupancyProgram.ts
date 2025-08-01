@@ -4,15 +4,16 @@ import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 export class OccupancyProgram implements GPGPUProgram 
 {
-    variableNames = ['A'];
-    outputShape: number[];
-    userCode: string;
+    variableNames = ['A']
+    outputShape: number[]
+    userCode: string
+    packedInputs = false
+    packedOutput = false
 
     constructor(inputShape: [number, number, number, number], inputThreshold: number) 
     {
-        const [inDepth, inHeight, inWidth, channels] = inputShape;
-        this.outputShape = [inDepth, inHeight, inWidth, 1];
-
+        const [inDepth, inHeight, inWidth] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 1]
         this.userCode = `
         void main() 
         {

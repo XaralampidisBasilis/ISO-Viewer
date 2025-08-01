@@ -7,6 +7,8 @@ class GPGPUTricubicExtrema implements GPGPUProgram
     variableNames = ['A']
     outputShape: number[]
     userCode: string
+    packedInputs = true;
+    packedOutput = true;
 
     constructor(inputShape: number[], inputStride: number) 
     {

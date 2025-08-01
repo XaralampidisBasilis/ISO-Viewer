@@ -10,7 +10,7 @@ struct Trace
     float distance;             // current distance traveled from camera
     float residue;           
     float prev_distance;           
-    float prev_residue;           
+    float prev_residue;         
 };
 
 Trace trace; // Global mutable struct

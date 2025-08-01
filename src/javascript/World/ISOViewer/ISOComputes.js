@@ -8,6 +8,9 @@ import { blockExtremaProgram } from './BlockExtremaProgram'
 import { resizeProgram } from './ResizeProgram'
 import { trilaplacianProgram } from './TrilaplacianProgram'
 import { occupancyProgram } from './OccupancyProgram'
+import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
+import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
+import { occupancyPackedProgram } from './occupancyPackedProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -199,7 +202,8 @@ export default class ISOComputes extends EventEmitter
         console.time('computeTrilaplacianIntensityMap') 
 
         this.trilaplacianIntensityMap = {}
-        this.trilaplacianIntensityMap.tensor = trilaplacianProgram(this.intensityMap.tensor)
+        this.trilaplacianIntensityMap.tensor = trilaplacianPackedProgram(this.intensityMap.tensor);
+        // this.trilaplacianIntensityMap.tensor = trilaplacianProgram(this.intensityMap.tensor)
         this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
 
         // convert data to half float type
@@ -230,8 +234,8 @@ export default class ISOComputes extends EventEmitter
         console.time('computeBlockExtremaMap') 
 
         this.blockExtremaMap = {}
-        // this.blockExtremaMap.tensor = await TF.computeBlockExtremaMap(this.intensityMap.tensor, this.stride)
-        this.blockExtremaMap.tensor = blockExtremaProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
+        this.blockExtremaMap.tensor = blockExtremaPackedProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
+        // this.blockExtremaMap.tensor = blockExtremaProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
         this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
 
         this.blockExtremaMap.stride        = this.stride
@@ -253,7 +257,8 @@ export default class ISOComputes extends EventEmitter
 
         this.occupancyMap = {}
         // this.occupancyMap.tensor = await TF.computeOccupancyMap(this.blockExtremaMap.tensor, this.threshold)
-        this.occupancyMap.tensor = occupancyProgram(this.blockExtremaMap.tensor, this.threshold)
+        // this.occupancyMap.tensor = occupancyProgram(this.blockExtremaMap.tensor, this.threshold)
+        this.occupancyMap.tensor = occupancyPackedProgram(this.blockExtremaMap.tensor, this.threshold)
         this.occupancyMap.array = new Uint8Array(this.occupancyMap.tensor.dataSync())
        
         this.occupancyMap.threshold     = this.threshold

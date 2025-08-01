@@ -7,47 +7,59 @@ export class TrilaplacianProgram implements GPGPUProgram
     variableNames = ['A'];
     outputShape: number[];
     userCode: string;
+    packedInputs = false;
+    packedOutput = false;
 
     constructor(inputShape: [number, number, number, number]) 
     {
         const [inDepth, inHeight, inWidth, _] = inputShape;
         this.outputShape = [inDepth, inHeight, inWidth, 4];
-
         this.userCode = `
         void main() 
         {
-            ivec4 coords = getOutputCoords();
-            int z = coords[0];
-            int y = coords[1];
-            int x = coords[2];
-            int c = coords[3];
+            ivec4 outputCoords = getOutputCoords();
 
-            float f = getA(z, y, x, 0);
+            int voxelZ = outputCoords[0];
+            int voxelY = outputCoords[1];
+            int voxelX = outputCoords[2];
 
-            if (c == 0)
+            float F = getA(voxelZ, voxelY, voxelX, 0);
+
+            int outputChannel = outputCoords[3];
+
+            if (outputChannel == 3)
             {
-                int x0 = clamp(x - 1, 0, ${inWidth - 1});
-                int x1 = clamp(x + 1, 0, ${inWidth - 1});
-                float Lx = getA(z, y, x0, 0) + getA(z, y, x1, 0) - 2.0 * f;
-                setOutput(Lx);
+                setOutput(F);
             }
-            else if (c == 1)
+
+            if (outputChannel == 2)
             {
-                int y0 = clamp(y - 1, 0, ${inHeight - 1});
-                int y1 = clamp(y + 1, 0, ${inHeight - 1});
-                float Ly = getA(z, y0, x, 0) + getA(z, y1, x, 0) - 2.0 * f;
-                setOutput(Ly);
+                ivec2 frontBack = clamp(voxelZ + ivec2(-1, 1), 0, ${inDepth - 1});
+
+                float Fzz = getA(frontBack.x, voxelY, voxelX, 0) + 
+                            getA(frontBack.y, voxelY, voxelX, 0) - F * 2.0;
+
+                setOutput(Fzz);
             }
-            else if (c == 2)
+
+            if (outputChannel == 1)
             {
-                int z0 = clamp(z - 1, 0, ${inDepth - 1});
-                int z1 = clamp(z + 1, 0, ${inDepth - 1});
-                float Lz = getA(z0, y, x, 0) + getA(z1, y, x, 0) - 2.0 * f;
-                setOutput(Lz);
+                ivec2 topBottom = clamp(voxelY + ivec2(-1, 1), 0, ${inHeight - 1});
+
+                float Fyy = getA(voxelZ, topBottom.x, voxelX, 0) + 
+                            getA(voxelZ, topBottom.y, voxelX, 0) - F * 2.0;
+
+                setOutput(Fyy);
             }
-            else
+
+            if (outputChannel == 0)
             {
-                setOutput(f);
+                ivec2 leftRight = clamp(voxelX + ivec2(-1, 1), 0, ${inWidth - 1});
+
+                float Fxx = getA(voxelZ, voxelY, leftRight.x, 0) + 
+                            getA(voxelZ, voxelY, leftRight.y, 0) - F * 2.0;
+
+                setOutput(Fxx);
             }
         }
         `;
@@ -57,8 +69,8 @@ export class TrilaplacianProgram implements GPGPUProgram
 
 export function trilaplacianProgram(input: tf.Tensor4D): tf.Tensor4D 
 {
-  const backend = tf.backend() as MathBackendWebGL;
-  const program = new TrilaplacianProgram(input.shape as [number, number, number, number]);
-  const output = backend.compileAndRun(program, [input]);
-  return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D;
+  const backend = tf.backend() as MathBackendWebGL
+  const program = new TrilaplacianProgram(input.shape)
+  const output = backend.compileAndRun(program, [input])
+  return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D
 }

@@ -14,10 +14,3 @@ if (trace.intersected)
     // Keep the hit only if it’s within the valid distance range
     hit.discarded = hit.escaped;
 }
-
-if (hit.discarded) 
-{
-    #if DISCARDING_ENABLED == 1
-    discard;
-    #endif
-}

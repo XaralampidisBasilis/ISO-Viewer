@@ -3,7 +3,7 @@ import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 
-const trilinearCode = (inputShape: number[], inputStride: number) => `
+const trilinearCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
 
     // Compute the min and max values of the trilinear interpolation inside a single cell
     vec2 computeCellExtrema(int cellX, int cellY, int cellZ)
@@ -11,15 +11,15 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int localZ = 0; localZ < 2; ++localZ) {
-        for (int localY = 0; localY < 2; ++localY) {
         for (int localX = 0; localX < 2; ++localX) {
-        
-            int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
-            int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
-            int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+        for (int localY = 0; localY < 2; ++localY) {
+        for (int localZ = 0; localZ < 2; ++localZ) {
             
-            float voxelValue = getA(voxelX, voxelY, voxelZ, 3); // raw scalar value
+            int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+            int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
+            int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
+            
+            float voxelValue = getA(voxelX, voxelY, voxelZ, 0, 0).a; // F
 
             minValue = min(minValue, voxelValue);
             maxValue = max(maxValue, voxelValue);
@@ -43,9 +43,9 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
-        for (int cellY = startY; cellY < endY; ++cellY) {
         for (int cellX = startX; cellX < endX; ++cellX) {
+        for (int cellY = startY; cellY < endY; ++cellY) {
+        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
             
             vec2 cellExtrema = computeCellExtrema(cellX, cellY, cellZ);
 
@@ -69,19 +69,10 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         int blockZ = outputCoords.z;
 
         vec2 blockExtrema = computeBlockExtrema(blockX, blockY, blockZ);
-
-        int outputChannel = outputCoords.w;
-        if (outputChannel == 0) 
-        {
-            setOutput(blockExtrema.x); // min value
-        } 
-        else 
-        {
-            setOutput(blockExtrema.y); // max value
-        }
+        setOutput(vec4(blockExtrema, 0.0, 0.0));
     }
 `
-const tricubicCode = (inputShape: number[], inputStride: number) => `
+const tricubicCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
     
     // Compute the extrema of the tricubic interpolation in a single cell
     vec2 computeCellExtrema(int cellX, int cellY, int cellZ)
@@ -105,35 +96,30 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int coeffZ = 0; coeffZ < 4; ++coeffZ) {
-        for (int coeffY = 0; coeffY < 4; ++coeffY) {
         for (int coeffX = 0; coeffX < 4; ++coeffX) {
+        for (int coeffY = 0; coeffY < 4; ++coeffY) {
+        for (int coeffZ = 0; coeffZ < 4; ++coeffZ) {
 
             float bernsteinCoeff = 0.0;
 
-            for (int localZ = 0; localZ < 2; ++localZ) {
-            for (int localY = 0; localY < 2; ++localY) {
             for (int localX = 0; localX < 2; ++localX) {
+            for (int localY = 0; localY < 2; ++localY) {
+            for (int localZ = 0; localZ < 2; ++localZ) {
 
-                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
-                int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
                 int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+                int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
+                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
 
-                float elevateZ = BernsteinElevations[coeffZ][localZ];
-                float elevateY = BernsteinElevations[coeffY][localY];
                 float elevateX = BernsteinElevations[coeffX][localX];
+                float elevateY = BernsteinElevations[coeffY][localY];
+                float elevateZ = BernsteinElevations[coeffZ][localZ];
 
-                float contributeZ = BernsteinContributions[coeffZ][localZ];
-                float contributeY = BernsteinContributions[coeffY][localY];
                 float contributeX = BernsteinContributions[coeffX][localX];
+                float contributeY = BernsteinContributions[coeffY][localY];
+                float contributeZ = BernsteinContributions[coeffZ][localZ];
 
-                vec4 voxelFeatures = vec4(
-                    getA(voxelX, voxelY, voxelZ, 0), // fxx
-                    getA(voxelX, voxelY, voxelZ, 1), // fyy
-                    getA(voxelX, voxelY, voxelZ, 2), // fzz
-                    getA(voxelX, voxelY, voxelZ, 3)  // f
-                );
-
+                vec4 voxelFeatures = getA(voxelX, voxelY, voxelZ, 0, 0); // Fxx Fyy Fzz F
+         
                 vec4 contributions = vec4(contributeX, contributeY, contributeZ, 1.0);
                 float elevation = elevateX * elevateY * elevateZ;
 
@@ -164,9 +150,9 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
-        for (int cellY = startY; cellY < endY; ++cellY) {
         for (int cellX = startX; cellX < endX; ++cellX) {
+        for (int cellY = startY; cellY < endY; ++cellY) {
+        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
 
             vec2 cellExtrema = computeCellExtrema(cellX, cellY, cellZ);
 
@@ -183,48 +169,39 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
 
     void main()
     {
-        ivec4 outputCoords = getOutputCoords();
+        ivec5 outputCoords = getOutputCoords();
 
         int blockX = outputCoords.x;
         int blockY = outputCoords.y;
         int blockZ = outputCoords.z;
         
         vec2 blockExtrema = computeBlockExtrema(blockX, blockY, blockZ);
-
-        int outputChannel = outputCoords.w;
-        if (outputChannel == 0) 
-        {
-            setOutput(blockExtrema.x);
-        } 
-        else 
-        {
-            setOutput(blockExtrema.y);
-        }
+        setOutput(vec4(blockExtrema, 0.0, 0.0));
     }
 `
 
-class BlockExtremaProgram implements GPGPUProgram 
+class BlockExtremaPackedProgram implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
     userCode: string
-    packedInputs = false
-    packedOutput = false
+    packedInputs = true
+    packedOutput = true
 
-    constructor(inputShape: number[], inputStride: number, inputMethod: number) 
+    constructor(inputShape: [number, number, number, number, number], inputStride: number, inputMethod: number) 
     {
-        this.outputShape = inputShape.map((inputDim) => Math.ceil((inputDim + 1) / inputStride))
-        this.outputShape[3] = 2        
-        this.userCode = (inputMethod == 0) 
-        ? trilinearCode(inputShape, inputStride) 
-        : tricubicCode(inputShape, inputStride) 
+        const [inDepth, inHeight, inWidth] = inputShape
+        const [outDepth, outHeight, outWidth] = [inDepth, inHeight, inWidth].map((inDimension) => Math.ceil((inDimension + 1) / inputStride))
+        this.outputShape = [outDepth, outHeight, outWidth, 2, 2]
+        this.userCode = (inputMethod == 0) ? trilinearCode(inputShape, inputStride) : tricubicCode(inputShape, inputStride) 
     }
 }
 
-export function blockExtremaProgram(inputTensor: tf.Tensor, inputStride: number, inputMethod = 1) : tf.Tensor4D
+export function blockExtremaPackedProgram(inputPackedTensor: tf.Tensor5D, inputStride: number, inputMethod = 1) : tf.Tensor5D
 {
-    const program = new BlockExtremaProgram(inputTensor.shape, inputStride, inputMethod)
+    const inputShape = inputPackedTensor.shape
+    const program = new BlockExtremaPackedProgram(inputShape, inputStride, inputMethod)
     const backend = tf.backend() as MathBackendWebGL
-    const result = backend.compileAndRun(program, [inputTensor])
-    return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor4D
+    const result = backend.compileAndRun(program, [inputPackedTensor])
+    return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor5D
 }

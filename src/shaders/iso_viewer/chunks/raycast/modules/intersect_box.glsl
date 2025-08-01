@@ -22,11 +22,3 @@ if (entry_exit.x < entry_exit.y)
     ray.end_position   = box.exit_position;
     ray.span_distance  = box.span_distance;
 }
-else // discard ray if there is no intersection
-{
-    #if DISCARDING_ENABLED == 1
-    discard;  
-    #else
-    ray.discarded = true;
-    #endif
-}

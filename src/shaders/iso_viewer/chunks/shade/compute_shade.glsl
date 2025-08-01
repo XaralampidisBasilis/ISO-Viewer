@@ -45,3 +45,13 @@ frag.color *= u_lighting.intensity;
 
 // Assign frag color
 fragColor = vec4(frag.color, 1.0);
+
+// Discard fragment
+#if DISCARDING_ENABLED == 1
+fragColor.rgb *= hit.discarded ? 0.0 : 1.0;
+#endif
+
+// #if DISCARDING_ENABLED == 1
+// if (hit.discarded) discard;
+// #endif
+

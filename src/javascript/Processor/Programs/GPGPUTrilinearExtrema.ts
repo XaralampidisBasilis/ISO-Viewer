@@ -13,54 +13,80 @@ class GPGPUTrilinearExtrema implements GPGPUProgram
         this.outputShape = inputShape.map((inputDim) => Math.ceil((inputDim + 1) / inputStride))
         this.outputShape[3] = 2        
         this.userCode = `
-        // Compute voxel-wise min/max values for trilinear approximation within the block
-        vec2 blockExtrema(int xx, int yy, int zz)
+        // Compute the min and max values of the trilinear interpolation inside a single cell
+        vec2 computeCellExtrema(int cellX, int cellY, int cellZ)
         {
-            // compute min voxel indices of block
-            int xMin = max(xx * ${inputStride} - 1, 0);
-            int yMin = max(yy * ${inputStride} - 1, 0);
-            int zMin = max(zz * ${inputStride} - 1, 0);
+            float minValue = 1.0;
+            float maxValue = 0.0;
+
+            for (int localZ = 0; localZ < 2; ++localZ) {
+            for (int localY = 0; localY < 2; ++localY) {
+            for (int localX = 0; localX < 2; ++localX) {
             
-            // compute max voxel indices of block
-            int xMax = min(xMin + ${inputStride}, ${inputShape[0] - 1});
-            int yMax = min(yMin + ${inputStride}, ${inputShape[1] - 1});
-            int zMax = min(zMin + ${inputStride}, ${inputShape[2] - 1});
+                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
+                int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
+                int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+                
+                float voxelValue = getA(voxelX, voxelY, voxelZ, 3); // raw scalar value
 
-            // initialize total block min/max value
-            float minVal = 1.0;
-            float maxVal = 0.0;
+                minValue = min(minValue, voxelValue);
+                maxValue = max(maxValue, voxelValue);
 
-            for (int z = zMin; z <= zMax; ++z) 
-            for (int y = yMin; y <= yMax; ++y)
-            for (int x = xMin; x <= xMax; ++x)
-            {
-                float val = getA(x, y, z, 3);
-                minVal = min(minVal, val);
-                maxVal = max(maxVal, val);
-            }
-
-            minVal = clamp(minVal, 0.0, 1.0);
-            maxVal = clamp(maxVal, 0.0, 1.0);
-
-            return vec2(minVal, maxVal);
+            }}}
+            
+            return vec2(minValue, maxValue);
         }
 
-        void main() 
+        // Compute the extrema across all cells in a block
+        vec2 computeBlockExtrema(int blockX, int blockY, int blockZ)
         {
-            ivec4 coords = getOutputCoords();
+            int startX = blockX * ${inputStride};
+            int startY = blockY * ${inputStride};
+            int startZ = blockZ * ${inputStride};
 
-            // get block indices
-            int xx = coords[0];
-            int yy = coords[1];
-            int zz = coords[2];
+            int endX = startX + ${inputStride};
+            int endY = startY + ${inputStride};
+            int endZ = startZ + ${inputStride};
 
-            // compute block berstein extrema
-            vec2 minMaxVal = blockExtrema(xx, yy, zz);
+            float minValue = 1.0;
+            float maxValue = 0.0;
 
-            if (coords[3] == 0) 
-                setOutput(minMaxVal.x);
+            for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
+            for (int cellY = startY; cellY < endY; ++cellY) {
+            for (int cellX = startX; cellX < endX; ++cellX) {
+                
+                vec2 cellExtrema = computeCellExtrema(cellX, cellY, cellZ);
+
+                minValue = min(minValue, cellExtrema.x);
+                maxValue = max(maxValue, cellExtrema.y);
+
+            }}}
+
+            minValue = clamp(minValue, 0.0, 1.0);
+            maxValue = clamp(maxValue, 0.0, 1.0);
+
+            return vec2(minValue, maxValue);
+        }
+
+        void main()
+        {
+            ivec4 outputCoords = getOutputCoords();
+
+            int blockX = outputCoords.x;
+            int blockY = outputCoords.y;
+            int blockZ = outputCoords.z;
+
+            vec2 blockExtrema = computeBlockExtrema(blockX, blockY, blockZ);
+
+            int outputChannel = outputCoords.w;
+            if (outputChannel == 0) 
+            {
+                setOutput(blockExtrema.x); // min value
+            } 
             else 
-                setOutput(minMaxVal.y);
+            {
+                setOutput(blockExtrema.y); // max value
+            }
         }
         `
     }
