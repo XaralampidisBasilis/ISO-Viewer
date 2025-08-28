@@ -10,7 +10,7 @@ export class IsotropicDistancePassX implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number]) 
+    constructor(inputShape: [number, number, number, number], maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
@@ -33,14 +33,13 @@ export class IsotropicDistancePassX implements GPGPUProgram
                 return;
             }
 
-            for (int distanceX = 1; distanceX <= ${Math.min(255, inWidth - 1)}; distanceX++) 
+            for (int distanceX = 1; distanceX <= ${Math.min(maxDistance, inWidth - 1)}; distanceX++) 
             {
                 int leftX = blockX - distanceX;
                 if (leftX >= 0) 
-                { 
-                    bool leftOccupied = getA(blockZ, blockY, leftX, 0) > 127.5;
+                {                     
                     blockDistance = float(distanceX);
-
+                    bool leftOccupied = getA(blockZ, blockY, leftX, 0) > 127.5;
                     if (leftOccupied)
                     {
                         break;
@@ -50,9 +49,8 @@ export class IsotropicDistancePassX implements GPGPUProgram
                 int rightX = blockX + distanceX;
                 if (rightX < ${inWidth}) 
                 { 
-                    bool rightOccupied = getA(blockZ, blockY, rightX, 0) > 127.5;
                     blockDistance = float(distanceX);
-                    
+                    bool rightOccupied = getA(blockZ, blockY, rightX, 0) > 127.5;
                     if (rightOccupied)
                     {
                         break;
@@ -74,7 +72,7 @@ export class IsotropicDistancePassY implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number]) 
+    constructor(inputShape: [number, number, number, number], maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
@@ -87,9 +85,8 @@ export class IsotropicDistancePassY implements GPGPUProgram
             int blockY = outputCoords[1];
             int blockX = outputCoords[2];
 
-            // Current best from X pass, clamp into [0,255]
+            // Current best from X pass
             float blockDistance = getA(blockZ, blockY, blockX, 0);
-            blockDistance = clamp(blockDistance, 0.0, 255.0);
 
             // Early out if already zero
             if (blockDistance <= 0.0) 
@@ -99,7 +96,7 @@ export class IsotropicDistancePassY implements GPGPUProgram
             }
 
             // Zig-zag along Y. Stop when distanceY >= blockDistance
-            for (int distanceY = 1; distanceY < ${Math.min(255, inHeight - 1)}; ++distanceY) 
+            for (int distanceY = 1; distanceY < ${Math.min(maxDistance, inHeight - 1)}; distanceY++) 
             {
                 if (float(distanceY) >= blockDistance) 
                 {
@@ -142,7 +139,7 @@ export class IsotropicDistancePassZ implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number]) 
+    constructor(inputShape: [number, number, number, number], maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
@@ -155,9 +152,8 @@ export class IsotropicDistancePassZ implements GPGPUProgram
             int blockY = outputCoords[1];
             int blockX = outputCoords[2];
 
-            // Current best from XY pass, clamp into [0,255]
+            // Current best from XY pass
             float blockDistance = getA(blockZ, blockY, blockX, 0);
-            blockDistance = clamp(blockDistance, 0.0, 255.0);
 
             // Early out if already zero
             if (blockDistance <= 0.0) 
@@ -167,7 +163,7 @@ export class IsotropicDistancePassZ implements GPGPUProgram
             }
 
             // Zig-zag along Z. Stop when distanceZ >= blockDistance
-            for (int distanceZ = 1; distanceZ < ${Math.min(255, inDepth - 1)}; ++distanceZ) 
+            for (int distanceZ = 1; distanceZ < ${Math.min(maxDistance, inDepth - 1)}; distanceZ++) 
             {
                 if (float(distanceZ) >= blockDistance) 
                 {
@@ -202,18 +198,17 @@ export class IsotropicDistancePassZ implements GPGPUProgram
     }
 }
 
-export function isotropicDistanceProgram(input: tf.Tensor4D): tf.Tensor4D 
+export function isotropicDistanceProgram(inputTensor: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
 {
     const backend = tf.backend() as MathBackendWebGL
-    const shape = input.shape;
+    const shape = inputTensor.shape;
 
-    const passX = new IsotropicDistancePassX(shape)
-    const infoX = backend.compileAndRun(passX, [input])
+    const passX = new IsotropicDistancePassX(shape, maxDistance)
+    const passY = new IsotropicDistancePassY(shape, maxDistance)
+    const passZ = new IsotropicDistancePassZ(shape, maxDistance)
 
-    const passY = new IsotropicDistancePassY(shape)
+    const infoX = backend.compileAndRun(passX, [inputTensor])
     const infoY = backend.compileAndRun(passY, [infoX])
-
-    const passZ = new IsotropicDistancePassZ(shape)
     const infoZ = backend.compileAndRun(passZ, [infoY])
 
     backend.disposeData(infoX.dataId)

@@ -422,13 +422,13 @@ export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance)
     // compute octant distance maps with binary code order
     let distances = [
         await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
-        await computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]), // await computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
     ]
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions

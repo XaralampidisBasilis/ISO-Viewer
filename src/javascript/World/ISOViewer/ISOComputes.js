@@ -12,6 +12,7 @@ import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
 import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { isotropicDistanceProgram } from './IsotropicDistanceProgram'
+import { anisotropicDistanceProgram } from './AnisotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -311,11 +312,16 @@ export default class ISOComputes extends EventEmitter
         console.time('computeDistanceMap') 
 
         this.distanceMap = {}
-        this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        // this.distanceMap.tensor = isotropicDistanceProgram(this.occupancyMap.tensor)
+
+        // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
+        // console.log(this.distanceMap.tensor.dataSync())
+
+        this.distanceMap.tensor = isotropicDistanceProgram(this.occupancyMap.tensor, 255)
+        // console.log(this.distanceMap.tensor.dataSync())  
+
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
-        
+
         this.distanceMap.threshold     = this.occupancyMap.threshold    
         this.distanceMap.stride        = this.occupancyMap.stride       
         this.distanceMap.shape         = this.occupancyMap.shape        
@@ -339,7 +345,14 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
+
         this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        console.log(this.anisotropicDistanceMap.tensor.dataSync())
+
+        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
+        console.log(this.anisotropicDistanceMap.tensor.dataSync())
+
+
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
 
