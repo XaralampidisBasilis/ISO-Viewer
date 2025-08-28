@@ -31,7 +31,7 @@ export class GPGPUNormalize implements GPGPUProgram
 
 export function normalize(inputTensor: tf.Tensor3D): tf.Tensor3D 
 {
-    const inputShape = inputTensor.shape as [number, number, number]
+    const inputShape = inputTensor.shape
     const globalMin = tf.min(inputTensor).arraySync() as number
     const globalMax = tf.max(inputTensor).arraySync() as number
 

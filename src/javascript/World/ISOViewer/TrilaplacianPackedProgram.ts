@@ -38,7 +38,7 @@ export class TrilaplacianPackedProgram implements GPGPUProgram
             float Fzz = getA(frontBack.x, voxelY, voxelX, 0) + 
                         getA(frontBack.y, voxelY, voxelX, 0) - F * 2.0;
          
-            setOutput(vec4(Fxx, Fyy, Fzz, F)); // setOutput(vec4(0.0, 1.0, 2.0, 3.0));           
+            setOutput(vec4(Fxx, Fyy, Fzz, F));        
         }
         `;
     }

@@ -421,14 +421,14 @@ export async function computeAnisotropicDistanceMap(occupancyMap, maxDistance)
 {  
     // compute octant distance maps with binary code order
     let distances = [
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
-        await this.computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1, 0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1, 0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [0]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2, 1]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [1]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, [2]),
+        await computeDirectional8DistanceMap(occupancyMap, maxDistance, []),
     ]
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
@@ -443,44 +443,44 @@ export async function computeExtendedAnisotropicDistanceMap(occupancyMap)
     // compute distance maps with binary code order
     const distances = [
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [0], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [0], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [0], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [0], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2, 1], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [1], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [1], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [2], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [2], 0),
         ],
         [
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 2),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 1),
-            await this.computeDirectional24DistanceMap(occupancyMap, 31, [], 0),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [], 2),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [], 1),
+            await computeDirectional24DistanceMap(occupancyMap, 31, [], 0),
         ],
     ]
 
@@ -494,7 +494,7 @@ export async function computeExtendedAnisotropicDistanceMap(occupancyMap)
         const zDistances = distance[2]
 
         // pack distances into a 16 bit uint, assuming each distance is a 5 bit uint 
-        packedDistances.push( tf.tidy(() => this.uint5551(xDistances, yDistances, zDistances, occupancyMap)) ) 
+        packedDistances.push( tf.tidy(() => uint5551(xDistances, yDistances, zDistances, occupancyMap)) ) 
         tf.dispose([xDistances, yDistances, zDistances])
     }
 

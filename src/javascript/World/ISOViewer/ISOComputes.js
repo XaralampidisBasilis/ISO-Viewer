@@ -10,7 +10,8 @@ import { trilaplacianProgram } from './TrilaplacianProgram'
 import { occupancyProgram } from './OccupancyProgram'
 import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
-import { occupancyPackedProgram } from './occupancyPackedProgram'
+import { occupancyPackedProgram } from './OccupancyPackedProgram'
+import { isotropicDistanceProgram } from './IsotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -311,9 +312,10 @@ export default class ISOComputes extends EventEmitter
 
         this.distanceMap = {}
         this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
+        // this.distanceMap.tensor = isotropicDistanceProgram(this.occupancyMap.tensor)
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
-
+        
         this.distanceMap.threshold     = this.occupancyMap.threshold    
         this.distanceMap.stride        = this.occupancyMap.stride       
         this.distanceMap.shape         = this.occupancyMap.shape        

@@ -18,16 +18,16 @@ export class OccupancyProgram implements GPGPUProgram
         void main() 
         {
             ivec4 coords = getOutputCoords();
-            int z = coords[0];
-            int y = coords[1];
-            int x = coords[2];
-            int c = coords[3];
+            int blockZ = coords[0];
+            int blockY = coords[1];
+            int blockX = coords[2];
 
-            float minVal = getA(z, y, x, 0);
-            float maxVal = getA(z, y, x, 1);
-            float occupied = (minVal <= ${inputThreshold} && ${inputThreshold} <= maxVal) ? 255.0 : 0.0;
+            float blockMinVal = getA(blockZ, blockY, blockX, 0);
+            float blockMaxVal = getA(blockZ, blockY, blockX, 1);
+            bool blockOccupied = (blockMinMaxValue.x <= ${inputThreshold} && ${inputThreshold} <= blockMinMaxValue.y);
+            float occupancyValue = blockOccupied ? 255.0 : 0.0;
 
-            setOutput(occupied);
+            setOutput(occupancyValue);
         }
         `;
     }

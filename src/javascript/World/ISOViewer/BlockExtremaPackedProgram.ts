@@ -75,7 +75,7 @@ const trilinearCode = (inputShape: [number, number, number, number, number], inp
 const tricubicCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
     
     // Compute the extrema of the tricubic interpolation in a single cell
-    vec2 computeCellExtrema(int cellX, int cellY, int cellZ)
+    vec2 computeCellExtrema(int cellZ, int cellY, int cellX)
     {
         // Bernstein elevation coefficients (order 1 → order 3)
         const vec2 BernsteinElevations[4] = vec2[4](
@@ -85,8 +85,8 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
             vec2(0.0, 1.0)
         );
 
-        // Bernstein contribution coefficients for mixed-order derivatives
-        const vec2 BernsteinContributions[4] = vec2[4](
+        // Bernstein correction coefficients for mixed-order derivatives
+        const vec2 BernsteinCorrections[4] = vec2[4](
             vec2(0.0, 0.0),
             vec2(-1.0 / 4.0, 0.0),
             vec2(0.0, -1.0 / 4.0),
@@ -96,35 +96,35 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
         float minValue = 1.0;
         float maxValue = 0.0;
 
+        for (int coeffZ = 0; coeffZ < 4; ++coeffZ) {
         for (int coeffX = 0; coeffX < 4; ++coeffX) {
         for (int coeffY = 0; coeffY < 4; ++coeffY) {
-        for (int coeffZ = 0; coeffZ < 4; ++coeffZ) {
 
             float bernsteinCoeff = 0.0;
 
+            for (int localZ = 0; localZ < 2; ++localZ) {
             for (int localX = 0; localX < 2; ++localX) {
             for (int localY = 0; localY < 2; ++localY) {
-            for (int localZ = 0; localZ < 2; ++localZ) {
 
-                int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[0] - 1});
                 int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
-                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
+                int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[1] - 1});
 
+                float elevateZ = BernsteinElevations[coeffZ][localZ];
                 float elevateX = BernsteinElevations[coeffX][localX];
                 float elevateY = BernsteinElevations[coeffY][localY];
-                float elevateZ = BernsteinElevations[coeffZ][localZ];
 
-                float contributeX = BernsteinContributions[coeffX][localX];
-                float contributeY = BernsteinContributions[coeffY][localY];
-                float contributeZ = BernsteinContributions[coeffZ][localZ];
+                float correctZ = BernsteinCorrections[coeffZ][localZ];
+                float correctX = BernsteinCorrections[coeffX][localX];
+                float correctY = BernsteinCorrections[coeffY][localY];
 
-                vec4 voxelFeatures = getA(voxelX, voxelY, voxelZ, 0, 0); // Fxx Fyy Fzz F
+                vec4 voxelFeatures = getA(voxelZ, voxelY, voxelX, 0, 0); // Fxx Fyy Fzz F
          
-                vec4 contributions = vec4(contributeX, contributeY, contributeZ, 1.0);
+                vec4 corrections = vec4(correctX, correctY, correctZ, 1.0);
                 float elevation = elevateX * elevateY * elevateZ;
 
-                float voxelCoeff = dot(voxelFeatures, contributions) * elevation;
-                bernsteinCoeff += voxelCoeff;
+                float voxelContribution = dot(voxelFeatures, corrections) * elevation;
+                bernsteinCoeff += voxelContribution;
 
             }}} 
 
@@ -137,24 +137,24 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
     }
 
     // Compute extrema over all cells in the block
-    vec2 computeBlockExtrema(int blockX, int blockY, int blockZ)
+    vec2 computeBlockExtrema(int blockZ, int blockY, int blockX)
     {
-        int startX = blockX * ${inputStride};
-        int startY = blockY * ${inputStride};
         int startZ = blockZ * ${inputStride};
+        int startY = blockY * ${inputStride};
+        int startX = blockX * ${inputStride};
 
-        int endX = startX + ${inputStride};
-        int endY = startY + ${inputStride};
         int endZ = startZ + ${inputStride};
+        int endY = startY + ${inputStride};
+        int endX = startX + ${inputStride};
 
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int cellX = startX; cellX < endX; ++cellX) {
-        for (int cellY = startY; cellY < endY; ++cellY) {
         for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
+        for (int cellY = startY; cellY < endY; ++cellY) {
+        for (int cellX = startX; cellX < endX; ++cellX) {
 
-            vec2 cellExtrema = computeCellExtrema(cellX, cellY, cellZ);
+            vec2 cellExtrema = computeCellExtrema(cellZ, cellY, cellX);
 
             minValue = min(minValue, cellExtrema.x);
             maxValue = max(maxValue, cellExtrema.y);
@@ -171,11 +171,11 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
     {
         ivec5 outputCoords = getOutputCoords();
 
-        int blockX = outputCoords.x;
+        int blockZ = outputCoords.x;
         int blockY = outputCoords.y;
-        int blockZ = outputCoords.z;
+        int blockX = outputCoords.z;
         
-        vec2 blockExtrema = computeBlockExtrema(blockX, blockY, blockZ);
+        vec2 blockExtrema = computeBlockExtrema(blockZ, blockY, blockX);
         setOutput(vec4(blockExtrema, 0.0, 0.0));
     }
 `

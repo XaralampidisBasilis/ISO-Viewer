@@ -23,10 +23,10 @@ export class OccupancyPackedProgram implements GPGPUProgram
             int blockX = outputCoords.z;
 
             vec4 blockMinMaxValue = getA(blockZ, blockY, blockX, 0, 0);
-            bool inRange = blockMinMaxValue.x <= ${inputValue} && ${inputValue} <= blockMinMaxValue.y;
-            float blockOccupied = inRange ? 255.0 : 0.0;
+            bool blockOccupied = (blockMinMaxValue.x <= ${inputValue} && ${inputValue} <= blockMinMaxValue.y);
+            float occupancyValue = blockOccupied ? 255.0 : 0.0;
 
-            setOutput(blockOccupied);
+            setOutput(occupancyValue);
         }
         `
     }
