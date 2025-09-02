@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class AnisotropicDistancePassX implements GPGPUProgram 
+class AnisotropicDistancePassX implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -10,15 +10,16 @@ export class AnisotropicDistancePassX implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number], inputDirection: -1 | 1, maxDistance: number = 255) 
+    constructor(inputShape: [number, number, number, number], passDirection: -1 | 1, maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
         this.userCode = `
 
-        #ifndef PASS_DIRECTION
-        #define PASS_DIRECTION ${inputDirection}
-        #endif
+        bool outBounds(int neighborX) 
+        { 
+            return neighborX < 0 || ${inWidth} <= neighborX; 
+        }
 
         void main() 
         {
@@ -30,7 +31,7 @@ export class AnisotropicDistancePassX implements GPGPUProgram
             // Sample occupancy of current block
             float blockOccupied = getA(blockZ, blockY, blockX, 0);
 
-            // Early out if current block is already occupied
+            // Early out if current block is already occupied   
             if (blockOccupied > 0.0) 
             {
                 setOutput(0.0);
@@ -40,37 +41,27 @@ export class AnisotropicDistancePassX implements GPGPUProgram
             // If there is no hit with occupied block set maximum distance
             float blockDistance = ${maxDistance}.0;
 
-            // Zig-zag along x dimension. Stop when you find an occupied block
-            const int maxDistanceX = ${Math.min(maxDistance, inWidth - 1)};
-            for (int distanceX = 1; distanceX <= maxDistanceX; distanceX++) 
+            // Scan along x dimension. Stop when you find an occupied block
+            for (int i = 1; i <= ${Math.min(maxDistance, inWidth - 1)}; i++) 
             {
-                #if PASS_DIRECTION < 0
-                
-                int leftBlockX = blockX - distanceX;
-                if (leftBlockX >= 0)
-                {
-                    float leftOccupied = getA(blockZ, blockY, leftBlockX, 0);
-                    if (leftOccupied > 0.0)
-                    {
-                        blockDistance = float(distanceX);
-                        break;
-                    }
+                // Compute neighbor block along x dimension based on pass direction
+                int neighborX = ${passDirection < 0 ? 'blockX - i' : 'blockX + i'};
+
+                // If neighbor x coordinate is outside the boundaries terminate loop
+                if (outBounds(neighborX))
+                {   
+                    break;
                 }
 
-                #else
+                // If neighbor is inside boundaries compute block occupancy
+                float neighborOccupied = getA(blockZ, blockY, neighborX, 0);
 
-                int rightBlockX = blockX + distanceX;
-                if (rightBlockX < ${inWidth})
+                // If neighbor block is occupied update the distance and terminate loop
+                if (neighborOccupied > 0.0)
                 {
-                    float rightOccupied = getA(blockZ, blockY, rightBlockX, 0);
-                    if (rightOccupied > 0.0)
-                    {
-                        blockDistance = float(distanceX);
-                        break;
-                    }
+                    blockDistance = float(i);
+                    break;
                 }
-                
-                #endif
             }
 
             setOutput(blockDistance);
@@ -79,7 +70,7 @@ export class AnisotropicDistancePassX implements GPGPUProgram
     }
 }
 
-export class AnisotropicDistancePassY implements GPGPUProgram 
+class AnisotropicDistancePassY implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -87,15 +78,16 @@ export class AnisotropicDistancePassY implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number], inputDirection: -1 | 1, maxDistance: number = 255) 
+    constructor(inputShape: [number, number, number, number], passDirection: -1 | 1, maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
         this.userCode = `
 
-        #ifndef PASS_DIRECTION
-        #define PASS_DIRECTION ${inputDirection}
-        #endif
+        bool outBounds(int neighborY) 
+        { 
+            return neighborY < 0 || ${inHeight} <= neighborY; 
+        }
 
         void main() 
         {
@@ -104,7 +96,7 @@ export class AnisotropicDistancePassY implements GPGPUProgram
             int blockY = outputCoords[1];
             int blockX = outputCoords[2];
 
-            // Current best from previous pass in x dimension
+            // Current best distance from previous pass in x dimension
             float blockDistance = getA(blockZ, blockY, blockX, 0);
 
             // Early out if current distance is less than one
@@ -114,37 +106,35 @@ export class AnisotropicDistancePassY implements GPGPUProgram
                 return;
             }
 
-            // Zig-zag along y dimension. Stop when current distance is greater than previous
-            const int maxDistanceY = ${Math.min(maxDistance, inHeight - 1)};
-            for (int distanceY = 1; distanceY <= maxDistanceY; distanceY++) 
+            // Scan along y dimension
+            for (int j = 1; j <= ${Math.min(maxDistance, inHeight - 1)}; j++) 
             {
-                #if PASS_DIRECTION < 0
+                // Compute neighbor block along y dimension based on pass direction
+                int neighborY = ${passDirection < 0 ? 'blockY - j' : 'blockY + j'};
 
-                int downBlockY = blockY - distanceY;
-                if (downBlockY >= 0) 
+                // If neighbor y coordinate is outside the boundaries terminate loop
+                if (outBounds(neighborY))
                 {
-                    float downDistanceX = getA(blockZ, downBlockY, blockX, 0);
-                    blockDistance = clamp(float(distanceY), downDistanceX, blockDistance);
-                    if (float(distanceY) >= blockDistance) 
-                    {
-                        break;
-                    }
+                    break;
                 }
 
-                #else
+                // Compute distance components to the nearest candidate block
+                float distanceX = getA(blockZ, neighborY, blockX, 0);
+                float distanceY = float(j);
 
-                int upBlockY = blockY + distanceY;
-                if (upBlockY < ${inHeight}) 
+                // Chebyshev distance to this candidate block
+                float candidateDistance = max(distanceX, distanceY);
+
+                // Keep the smallest Chebyshev distance seen so far
+                blockDistance = min(blockDistance, candidateDistance);
+
+                // Early exit since in this case no further 
+                // candidate  can improve the result
+                if (distanceY >= blockDistance) 
                 {
-                    float upDistanceX = getA(blockZ, upBlockY, blockX, 0);
-                    blockDistance = clamp(float(distanceY), upDistanceX, blockDistance);
-                    if (float(distanceY) >= blockDistance) 
-                    {
-                        break;
-                    }
+                    break;
                 }
-
-                #endif
+                
             }
 
             setOutput(blockDistance);
@@ -153,7 +143,7 @@ export class AnisotropicDistancePassY implements GPGPUProgram
     }
 }
 
-export class AnisotropicDistancePassZ implements GPGPUProgram 
+class AnisotropicDistancePassZ implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -161,15 +151,16 @@ export class AnisotropicDistancePassZ implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number], inputDirection: -1 | 1, maxDistance: number = 255) 
+    constructor(inputShape: [number, number, number, number], passDirection: -1 | 1, maxDistance: number = 255) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
         this.userCode = `
 
-        #ifndef PASS_DIRECTION
-        #define PASS_DIRECTION ${inputDirection}
-        #endif
+        bool outBounds(int neighborZ) 
+        { 
+            return neighborZ < 0 || ${inDepth} <= neighborZ; 
+        }
 
         void main() 
         {
@@ -188,37 +179,34 @@ export class AnisotropicDistancePassZ implements GPGPUProgram
                 return;
             }
 
-            // Zig-zag along z dimension. Stop when current distance is greater than previous
-            const int maxDistanceZ = ${Math.min(maxDistance, inDepth - 1)};
-            for (int distanceZ = 1; distanceZ <= maxDistanceZ; distanceZ++) 
+            // Scan along z dimension.
+            for (int k = 1; k <= ${Math.min(maxDistance, inDepth - 1)}; k++) 
             {
-                #if PASS_DIRECTION < 0
+                // Compute neighbor block along z dimension based on pass direction
+                int neighborZ = ${passDirection < 0 ? 'blockZ - k' : 'blockZ + k'};
 
-                int backBlockZ = blockZ - distanceZ;
-                if (backBlockZ >= 0) 
+                // If neighbor z coordinate is outside the boundaries terminate loop
+                if (outBounds(neighborZ))
                 {
-                    float backDistanceXY = getA(backBlockZ, blockY, blockX, 0);
-                    blockDistance = clamp(float(distanceZ), backDistanceXY, blockDistance);
-                    if (float(distanceZ) >= blockDistance) 
-                    {
-                        break;
-                    }
+                    break;
                 }
 
-                #else
+                // Compute distance components to the nearest candidate block
+                float distanceXY = getA(neighborZ, blockY, blockX, 0);
+                float distanceZ = float(k);
 
-                int frontBlockZ = blockZ + distanceZ;
-                if (frontBlockZ < ${inDepth}) 
+                // Chebyshev distance to this candidate block
+                float candidateDistance = max(distanceXY, distanceZ);
+
+                // Keep the smallest Chebyshev distance seen so far
+                blockDistance = min(blockDistance, candidateDistance);
+
+                // Early exit since in this case no further 
+                // candidate  can improve the result
+                if (distanceZ >= blockDistance) 
                 {
-                    float frontDistanceXY = getA(frontBlockZ, blockY, blockX, 0);
-                    blockDistance = clamp(float(distanceZ), frontDistanceXY, blockDistance);
-                    if (float(distanceZ) >= blockDistance) 
-                    {
-                        break;
-                    }
+                    break;
                 }
-
-                #endif
             }
 
             setOutput(blockDistance);
@@ -226,6 +214,7 @@ export class AnisotropicDistancePassZ implements GPGPUProgram
         `
     }
 }
+
 export function anisotropicDistanceProgram(inputTensor: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
 {
     return tf.tidy(() => 

@@ -27,7 +27,7 @@ class IsotropicDistancePassX implements GPGPUProgram
             float blockOccupied = getA(blockZ, blockY, blockX, 0);
 
             // Early out if current block is already occupied
-            if (blockOccupied > 0.0) 
+            if (blockOccupied == 255.0) 
             {
                 setOutput(0.0);
                 return;
@@ -44,7 +44,7 @@ class IsotropicDistancePassX implements GPGPUProgram
                 if (leftBlockX >= 0)
                 {
                     float leftOccupied = getA(blockZ, blockY, leftBlockX, 0);
-                    if (leftOccupied > 0.0)
+                    if (leftOccupied == 255.0)
                     {
                         blockDistance = float(distanceX);
                         break;
@@ -55,7 +55,7 @@ class IsotropicDistancePassX implements GPGPUProgram
                 if (rightBlockX < ${inWidth})
                 {
                     float rightOccupied = getA(blockZ, blockY, rightBlockX, 0);
-                    if (rightOccupied > 0.0)
+                    if (rightOccupied == 255.0)
                     {
                         blockDistance = float(distanceX);
                         break;

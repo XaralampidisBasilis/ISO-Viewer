@@ -13,6 +13,7 @@ import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
 import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { isotropicDistanceProgram } from './IsotropicDistanceProgram'
 import { anisotropicDistanceProgram } from './AnisotropicDistanceProgram'
+import { extendedDistanceProgram } from './ExtendedDistanceProgram2'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -342,11 +343,11 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
-
         // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        // const tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
+        // console.log(tf.equal(this.anisotropicDistanceMap.tensor, tensor).all().dataSync())
 
-        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
-
+        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 255)
 
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
@@ -375,6 +376,11 @@ export default class ISOComputes extends EventEmitter
 
         this.extendedAnisotropicDistanceMap = {}
         this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
+
+        // this.extendedAnisotropicDistanceMap.tensor = extendedDistanceProgram(this.occupancyMap.tensor, 31)
+        // console.log(tf.equal(this.extendedAnisotropicDistanceMap.tensor, tensor).all().dataSync())
+
+
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)
 
