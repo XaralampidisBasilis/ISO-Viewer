@@ -21,23 +21,17 @@ class ExtendedDistancePass implements GPGPUProgram
         const [inSign, inAxis] = inputDirection.toLowerCase()
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
+        
+        const getDistance = (x) => inputVariable == 'Occupancy' ?
+            `getDistanceFromOccupancy(getInputVariable(${x}))` : 
+            `getInputVariable(${x})`
 
         this.userCode = `
         const ivec3 maxCoords = ivec3(${inWidth - 1}, ${inHeight - 1}, ${inDepth - 1});
         const int maxSteps = clamp(${maxDistance}, 0, maxCoords.${inAxis}); 
-
-        float getDistanceFromOccupancy(float occupancy) { 
-            return (occupancy > 0.0) ? 0.0 : ${maxDistance}.0 ; 
-        }
-
-        float getDistance(ivec3 coords) {
-            float var = getInputVariable(coords.z, coords.y, coords.x, 0)
-            return ${inputVariable == 'Occupancy' ? `getDistanceFromOccupancy(var)` : `var`};
-        }
-            
-        bool outOfBounds(int coord) { 
-            return ${inSign == '-' ? `coord < 0` : `coord > maxCoords.${inAxis}`};
-        }
+        
+        float getInputVariable(ivec3 coords) { return getInputVariable(coords.z, coords.y, coords.x, 0); }
+        float getDistanceFromOccupancy(float occupancy) { return (occupancy > 0.0) ? 0.0 : ${maxDistance}.0 ; }
 
         void main() 
         {
@@ -49,13 +43,15 @@ class ExtendedDistancePass implements GPGPUProgram
             for (int step = 0; step <= maxSteps; step++) 
             {
                 neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} step;
-                if (outOfBounds(neighborCoords.${inAxis}))
+                if (${inSign == '-' ? 
+                    `neighborCoords.${inAxis} < 0` : 
+                    `neighborCoords.${inAxis} > maxCoords.${inAxis}`})
                 {
                     break;
                 }
 
                 float neighborDistanceY = float(step);
-                float neighborDistanceX = getDistance(neighborCoords);
+                float neighborDistanceX = ${getDistance(`neighborCoords`)};
                 if (neighborDistanceY >= neighborDistanceX) 
                 {
                     blockDistance = neighborDistanceY;

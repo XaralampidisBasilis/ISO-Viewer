@@ -14,7 +14,6 @@ import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { isotropicDistanceProgram } from './IsotropicDistanceProgram'
 import { anisotropicDistanceProgram } from './AnisotropicDistanceProgram'
 import { extendedDistanceProgram } from './ExtendedDistanceProgram'
-import { cos } from 'mathjs'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -315,8 +314,9 @@ export default class ISOComputes extends EventEmitter
 
         this.distanceMap = {}
 
-        // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
         this.distanceMap.tensor = isotropicDistanceProgram(this.occupancyMap.tensor, 255)
+        const tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
+        console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
@@ -344,11 +344,9 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
-        // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
-        // const tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
-        // console.log(tf.equal(this.anisotropicDistanceMap.tensor, tensor).all().dataSync())
-
-        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 255)
+        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
+        const tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        console.log(this.anisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
@@ -377,11 +375,11 @@ export default class ISOComputes extends EventEmitter
 
         this.extendedAnisotropicDistanceMap = {}
 
-        // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
-        this.extendedAnisotropicDistanceMap.tensor = extendedDistanceProgram(this.occupancyMap.tensor, 31)
-        // console.log(this.extendedAnisotropicDistanceMap.tensor.dataSync())
-        // console.log(tensor.dataSync())
+        this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor)
+        // const tensor = extendedDistanceProgram(this.occupancyMap.tensor, 31)
+        // console.log(this.extendedAnisotropicDistanceMap.tensor.sub(tensor).dataSync())
         // console.log(tf.equal(this.extendedAnisotropicDistanceMap.tensor, tensor).all().dataSync())
+        // this.extendedAnisotropicDistanceMap.tensor = tensor
 
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)

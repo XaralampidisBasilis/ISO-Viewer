@@ -12,6 +12,7 @@
         "bcoeffs",
         "Berstein",
         "bitpack",
+        "bitpacked",
         "boundsdim",
         "boundsmax",
         "boxdim",
