@@ -499,7 +499,17 @@ export async function computeExtendedAnisotropicDistanceMap(occupancyMap)
     }
 
     // compute anisotropic distance map by concatenating octant distance maps in depth dimensions
-    let distanceMap = tf.concat(packedDistances, 0)
+    // let distanceMap = tf.concat(packedDistances, 0)
+    let distanceMap = tf.concat([
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+        packedDistances[1],
+    ], 0)
     tf.dispose(packedDistances)
 
     return distanceMap

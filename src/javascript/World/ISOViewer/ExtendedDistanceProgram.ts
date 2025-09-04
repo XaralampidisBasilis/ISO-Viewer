@@ -2,9 +2,9 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-class ExtendedDistancePass implements GPGPUProgram 
+class AnisotropicDistancePass implements GPGPUProgram 
 {
-    variableNames = ['InputVariable']
+    variableNames = ['Input']
     outputShape: number[]
     userCode: string
     packedInputs = false
@@ -13,31 +13,25 @@ class ExtendedDistancePass implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number, number], 
-        inputVariable: 'Distance' | 'Occupancy',
-        inputDirection: '-X' | '+X' | '-Y' | '+Y' | '-Z' | '+Z',     
-        maxDistance: number
+        inputVariable: 'occupancy' | 'distance',
+        inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z' ,     
+        inputDistance: number,
     ) 
     {
-        const [inSign, inAxis] = inputDirection.toLowerCase()
+        const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
-
         this.userCode = `
-        const ivec3 maxCoords = ivec3(${inWidth - 1}, ${inHeight - 1}, ${inDepth - 1});
-        const int maxSteps = clamp(${maxDistance}, 0, maxCoords.${inAxis}); 
+        const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
+        const int maxDistance = min(${inputDistance}, maxCoords.${inAxis}); 
 
-        float getDistanceFromOccupancy(float occupancy) { 
-            return (occupancy > 0.0) ? 0.0 : ${maxDistance}.0 ; 
-        }
+        ${inputVariable == 'occupancy' ? `
+        int getDistance(ivec3 coords) { return bool(getInput(coords.z, coords.y, coords.x, 0)) ? 0 : ${inputDistance}; }` : `
+        int getDistance(ivec3 coords) { return  int(getInput(coords.z, coords.y, coords.x, 0)); }`}
 
-        float getDistance(ivec3 coords) {
-            float var = getInputVariable(coords.z, coords.y, coords.x, 0)
-            return ${inputVariable == 'Occupancy' ? `getDistanceFromOccupancy(var)` : `var`};
-        }
-            
-        bool outOfBounds(int coord) { 
-            return ${inSign == '-' ? `coord < 0` : `coord > maxCoords.${inAxis}`};
-        }
+        ${inSign == '-' ? `
+        bool outBounds(int coord) { return coord < 0; }` : `
+        bool outBounds(int coord) { return coord > maxCoords.${inAxis}; }`}
 
         void main() 
         {
@@ -45,30 +39,93 @@ class ExtendedDistancePass implements GPGPUProgram
             ivec3 blockCoords = outputCoords.zyx;
             ivec3 neighborCoords = blockCoords;
 
-            float blockDistance = ${maxDistance}.0;
-            for (int step = 0; step <= maxSteps; step++) 
+            int blockDistance = getDistance(blockCoords);
+            if (blockDistance == 0) 
             {
-                neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} step;
-                if (outOfBounds(neighborCoords.${inAxis}))
-                {
-                    break;
-                }
-
-                float neighborDistanceY = float(step);
-                float neighborDistanceX = getDistance(neighborCoords);
-                if (neighborDistanceY >= neighborDistanceX) 
-                {
-                    blockDistance = neighborDistanceY;
-                    break;
-                }
+                setOutput(0.0);
+                return;
             }
 
-            setOutput(blockDistance);
+            int neighborDistance;
+
+            for (int distance = 1; distance <= maxDistance; distance++) 
+            {
+                neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} distance;
+                if (outBounds(neighborCoords.${inAxis})) break;
+
+                neighborDistance = max(getDistance(neighborCoords), distance);
+                blockDistance = min(blockDistance, neighborDistance);
+                if (distance >= blockDistance) break;
+            }
+
+            setOutput(float(blockDistance));
         }
         `
     }
 }
 
+class ExtendedDistancePass implements GPGPUProgram 
+{
+    variableNames = ['Distance']
+    outputShape: number[]
+    userCode: string
+    packedInputs = false
+    packedOutput = false
+
+    constructor
+    (
+        inputShape: [number, number, number, number], 
+        inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z',     
+        inputDistance: number
+    ) 
+    {
+        const [inSign, inAxis] = inputDirection
+        const [inDepth, inHeight, inWidth] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 1]
+
+        this.userCode = `
+        const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
+        const int maxDistance = min(${inputDistance}, maxCoords.${inAxis}); 
+        
+        ${inSign == '-' ? `
+        bool outBounds(int coord) { return coord < 0; }` : `
+        bool outBounds(int coord) { return coord > maxCoords.${inAxis}; }`}
+        int getDistance(ivec3 coords) { return  int(getDistance(coords.z, coords.y, coords.x, 0)); }
+
+        void main() 
+        {
+            ivec4 outputCoords = getOutputCoords();
+            ivec3 blockCoords = outputCoords.zyx;
+            ivec3 neighborCoords = blockCoords;
+
+            int blockDistance = getDistance(blockCoords);
+            if (blockDistance == 0) 
+            {
+                setOutput(0.0);
+                return;
+            }
+
+            int neighborDistance;
+            blockDistance = maxDistance;
+
+            for (int distance = 1; distance <= maxDistance; distance++) 
+            {
+                neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} distance;
+                if (outBounds(neighborCoords.${inAxis})) break;
+
+                neighborDistance = getDistance(neighborCoords);
+                if (distance >= neighborDistance)
+                {
+                    blockDistance = distance;
+                    break;
+                }
+            }
+
+            setOutput(float(blockDistance));
+        }
+        `
+    }
+}
 class ExtendedDistanceBitpack implements GPGPUProgram 
 {
     variableNames = ['DistanceX', 'DistanceY', 'DistanceZ', 'Occupancy']
@@ -105,7 +162,7 @@ class ExtendedDistanceBitpack implements GPGPUProgram
     }
 }
 
-function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
+function runGpgpuProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
 {
     const backend = tf.backend() as MathBackendWebGL
     return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs)) as tf.Tensor4D
@@ -113,106 +170,106 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D
 
 export function extendedDistanceProgram(inputOccupancy: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
 {
-    const shape = inputOccupancy.shape as [number, number, number, number]
+    const shape = inputOccupancy.shape
 
     // Programs
-    const getDistanceBitpack = new ExtendedDistanceBitpack(shape)
+    const getBitpacked = new ExtendedDistanceBitpack(shape)
 
-    const getDistanceX0FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '-X', maxDistance)
-    const getDistanceX1FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '+X', maxDistance)
-    const getDistanceY0FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '-Y', maxDistance)
-    const getDistanceY1FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '+Y', maxDistance)
-    const getDistanceZ0FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '-Z', maxDistance)
-    const getDistanceZ1FromOccupancy = new ExtendedDistancePass(shape, 'Occupancy', '+Z', maxDistance)
+    const getDistanceOrthantX0 = new AnisotropicDistancePass(shape, 'occupancy', '-x', maxDistance)
+    const getDistanceOrthantX1 = new AnisotropicDistancePass(shape, 'occupancy', '+x', maxDistance)
+    const getDistanceOrthantY0 = new AnisotropicDistancePass(shape, 'occupancy', '-y', maxDistance)
+    const getDistanceOrthantY1 = new AnisotropicDistancePass(shape, 'occupancy', '+y', maxDistance)
     
-    const getDistanceX0FromDistance = new ExtendedDistancePass(shape, 'Distance', '-X', maxDistance)
-    const getDistanceX1FromDistance = new ExtendedDistancePass(shape, 'Distance', '+X', maxDistance)
-    const getDistanceY0FromDistance = new ExtendedDistancePass(shape, 'Distance', '-Y', maxDistance)
-    const getDistanceY1FromDistance = new ExtendedDistancePass(shape, 'Distance', '+Y', maxDistance)
-    const getDistanceZ0FromDistance = new ExtendedDistancePass(shape, 'Distance', '-Z', maxDistance)
-    const getDistanceZ1FromDistance = new ExtendedDistancePass(shape, 'Distance', '+Z', maxDistance)
+    const getDistanceQuadrantWithY0  = new AnisotropicDistancePass(shape, 'distance',  '-y', maxDistance)
+    const getDistanceQuadrantWithY1  = new AnisotropicDistancePass(shape, 'distance',  '+y', maxDistance)
+    const getDistanceQuadrantWithZ0  = new AnisotropicDistancePass(shape, 'distance',  '-z', maxDistance)
+    const getDistanceQuadrantWithZ1  = new AnisotropicDistancePass(shape, 'distance',  '+z', maxDistance)
+    
+    const getDistanceXOctantWithX0 = new ExtendedDistancePass(shape, '-x', maxDistance)
+    const getDistanceXOctantWithX1 = new ExtendedDistancePass(shape, '+x', maxDistance)
+    const getDistanceYOctantWithY0 = new ExtendedDistancePass(shape, '-y', maxDistance)
+    const getDistanceYOctantWithY1 = new ExtendedDistancePass(shape, '+y', maxDistance)
+    const getDistanceZOctantWithZ0 = new ExtendedDistancePass(shape, '-z', maxDistance)
+    const getDistanceZOctantWithZ1 = new ExtendedDistancePass(shape, '+z', maxDistance)
 
     // 1D
-    const distanceXDyadX0 = runProgram(getDistanceX0FromOccupancy, [inputOccupancy])
-    const distanceXDyadX1 = runProgram(getDistanceX1FromOccupancy, [inputOccupancy])
-    const distanceYDyadY0 = runProgram(getDistanceY0FromOccupancy, [inputOccupancy])
-    const distanceYDyadY1 = runProgram(getDistanceY1FromOccupancy, [inputOccupancy])
-    const distanceZDyadZ0 = runProgram(getDistanceZ0FromOccupancy, [inputOccupancy])
-    const distanceZDyadZ1 = runProgram(getDistanceZ1FromOccupancy, [inputOccupancy])
+    const distanceOrthantX0 = runGpgpuProgram(getDistanceOrthantX0, [inputOccupancy])
+    const distanceOrthantX1 = runGpgpuProgram(getDistanceOrthantX1, [inputOccupancy])
+    const distanceOrthantY0 = runGpgpuProgram(getDistanceOrthantY0, [inputOccupancy])
+    const distanceOrthantY1 = runGpgpuProgram(getDistanceOrthantY1, [inputOccupancy])
 
     // 2D
-    const distanceYQuadrantXY00 = runProgram(getDistanceY0FromDistance, [distanceXDyadX0]);
-    const distanceYQuadrantXY01 = runProgram(getDistanceY1FromDistance, [distanceXDyadX0]); tf.dispose(distanceXDyadX0)  
-    const distanceYQuadrantXY10 = runProgram(getDistanceY0FromDistance, [distanceXDyadX1]);
-    const distanceYQuadrantXY11 = runProgram(getDistanceY1FromDistance, [distanceXDyadX1]); tf.dispose(distanceXDyadX1)
-    const distanceZQuadrantYZ00 = runProgram(getDistanceZ0FromDistance, [distanceYDyadY0]);
-    const distanceZQuadrantYZ01 = runProgram(getDistanceZ1FromDistance, [distanceYDyadY0]); tf.dispose(distanceYDyadY0)
-    const distanceZQuadrantYZ10 = runProgram(getDistanceZ0FromDistance, [distanceYDyadY1]);
-    const distanceZQuadrantYZ11 = runProgram(getDistanceZ1FromDistance, [distanceYDyadY1]); tf.dispose(distanceYDyadY1)
-    const distanceXQuadrantXZ00 = runProgram(getDistanceX0FromDistance, [distanceZDyadZ0]);
-    const distanceXQuadrantXZ10 = runProgram(getDistanceX1FromDistance, [distanceZDyadZ0]); tf.dispose(distanceZDyadZ0)
-    const distanceXQuadrantXZ01 = runProgram(getDistanceX0FromDistance, [distanceZDyadZ1]);
-    const distanceXQuadrantXZ11 = runProgram(getDistanceX1FromDistance, [distanceZDyadZ1]); tf.dispose(distanceZDyadZ1)
+    const distanceQuadrantXY00 = runGpgpuProgram(getDistanceQuadrantWithY0, [distanceOrthantX0]);
+    const distanceQuadrantXY01 = runGpgpuProgram(getDistanceQuadrantWithY1, [distanceOrthantX0]); 
+    const distanceQuadrantXZ00 = runGpgpuProgram(getDistanceQuadrantWithZ0, [distanceOrthantX0]);
+    const distanceQuadrantXZ01 = runGpgpuProgram(getDistanceQuadrantWithZ1, [distanceOrthantX0]); tf.dispose(distanceOrthantX0)
+    const distanceQuadrantXY10 = runGpgpuProgram(getDistanceQuadrantWithY0, [distanceOrthantX1]);
+    const distanceQuadrantXY11 = runGpgpuProgram(getDistanceQuadrantWithY1, [distanceOrthantX1]); 
+    const distanceQuadrantXZ10 = runGpgpuProgram(getDistanceQuadrantWithZ0, [distanceOrthantX1]);
+    const distanceQuadrantXZ11 = runGpgpuProgram(getDistanceQuadrantWithZ1, [distanceOrthantX1]); tf.dispose(distanceOrthantX1)
+    const distanceQuadrantYZ00 = runGpgpuProgram(getDistanceQuadrantWithZ0, [distanceOrthantY0]);
+    const distanceQuadrantYZ01 = runGpgpuProgram(getDistanceQuadrantWithZ1, [distanceOrthantY0]); tf.dispose(distanceOrthantY0)
+    const distanceQuadrantYZ10 = runGpgpuProgram(getDistanceQuadrantWithZ0, [distanceOrthantY1]);
+    const distanceQuadrantYZ11 = runGpgpuProgram(getDistanceQuadrantWithZ1, [distanceOrthantY1]); tf.dispose(distanceOrthantY1)
 
     // 3D
-    const distanceZOctantXYZ000 = runProgram(getDistanceZ0FromDistance, [distanceYQuadrantXY00]);
-    const distanceZOctantXYZ001 = runProgram(getDistanceZ1FromDistance, [distanceYQuadrantXY00]); tf.dispose(distanceYQuadrantXY00)
-    const distanceZOctantXYZ010 = runProgram(getDistanceZ0FromDistance, [distanceYQuadrantXY01]);
-    const distanceZOctantXYZ011 = runProgram(getDistanceZ1FromDistance, [distanceYQuadrantXY01]); tf.dispose(distanceYQuadrantXY01)
-    const distanceZOctantXYZ100 = runProgram(getDistanceZ0FromDistance, [distanceYQuadrantXY10]);
-    const distanceZOctantXYZ101 = runProgram(getDistanceZ1FromDistance, [distanceYQuadrantXY10]); tf.dispose(distanceYQuadrantXY10)
-    const distanceZOctantXYZ110 = runProgram(getDistanceZ0FromDistance, [distanceYQuadrantXY11]);
-    const distanceZOctantXYZ111 = runProgram(getDistanceZ1FromDistance, [distanceYQuadrantXY11]); tf.dispose(distanceYQuadrantXY11)
-
-    const distanceXOctantXYZ000 = runProgram(getDistanceX0FromDistance, [distanceZQuadrantYZ00]);
-    const distanceXOctantXYZ100 = runProgram(getDistanceX1FromDistance, [distanceZQuadrantYZ00]); tf.dispose(distanceZQuadrantYZ00)
-    const distanceXOctantXYZ001 = runProgram(getDistanceX0FromDistance, [distanceZQuadrantYZ01]);
-    const distanceXOctantXYZ101 = runProgram(getDistanceX1FromDistance, [distanceZQuadrantYZ01]); tf.dispose(distanceZQuadrantYZ01)
-    const distanceXOctantXYZ010 = runProgram(getDistanceX0FromDistance, [distanceZQuadrantYZ10]);
-    const distanceXOctantXYZ110 = runProgram(getDistanceX1FromDistance, [distanceZQuadrantYZ10]); tf.dispose(distanceZQuadrantYZ10)
-    const distanceXOctantXYZ011 = runProgram(getDistanceX0FromDistance, [distanceZQuadrantYZ11]);
-    const distanceXOctantXYZ111 = runProgram(getDistanceX1FromDistance, [distanceZQuadrantYZ11]); tf.dispose(distanceZQuadrantYZ11)
-    const distanceYOctantXYZ000 = runProgram(getDistanceY0FromDistance, [distanceXQuadrantXZ00]);
-    const distanceYOctantXYZ010 = runProgram(getDistanceY1FromDistance, [distanceXQuadrantXZ00]); tf.dispose(distanceXQuadrantXZ00)
-    const distanceYOctantXYZ100 = runProgram(getDistanceY0FromDistance, [distanceXQuadrantXZ10]);
-    const distanceYOctantXYZ110 = runProgram(getDistanceY1FromDistance, [distanceXQuadrantXZ10]); tf.dispose(distanceXQuadrantXZ10)
-    const distanceYOctantXYZ001 = runProgram(getDistanceY0FromDistance, [distanceXQuadrantXZ01]);
-    const distanceYOctantXYZ011 = runProgram(getDistanceY1FromDistance, [distanceXQuadrantXZ01]); tf.dispose(distanceXQuadrantXZ01)
-    const distanceYOctantXYZ101 = runProgram(getDistanceY0FromDistance, [distanceXQuadrantXZ11]);
-    const distanceYOctantXYZ111 = runProgram(getDistanceY1FromDistance, [distanceXQuadrantXZ11]); tf.dispose(distanceXQuadrantXZ11)
+    const distanceXOctantXYZ000 = runGpgpuProgram(getDistanceXOctantWithX0, [distanceQuadrantYZ00]);
+    const distanceXOctantXYZ001 = runGpgpuProgram(getDistanceXOctantWithX1, [distanceQuadrantYZ00]); tf.dispose(distanceQuadrantYZ00)
+    const distanceXOctantXYZ010 = runGpgpuProgram(getDistanceXOctantWithX0, [distanceQuadrantYZ01]);
+    const distanceXOctantXYZ011 = runGpgpuProgram(getDistanceXOctantWithX1, [distanceQuadrantYZ01]); tf.dispose(distanceQuadrantYZ01)
+    const distanceXOctantXYZ100 = runGpgpuProgram(getDistanceXOctantWithX0, [distanceQuadrantYZ10]);
+    const distanceXOctantXYZ101 = runGpgpuProgram(getDistanceXOctantWithX1, [distanceQuadrantYZ10]); tf.dispose(distanceQuadrantYZ10)
+    const distanceXOctantXYZ110 = runGpgpuProgram(getDistanceXOctantWithX0, [distanceQuadrantYZ11]);
+    const distanceXOctantXYZ111 = runGpgpuProgram(getDistanceXOctantWithX1, [distanceQuadrantYZ11]); tf.dispose(distanceQuadrantYZ11)
+    const distanceYOctantXYZ000 = runGpgpuProgram(getDistanceYOctantWithY0, [distanceQuadrantXZ00]);
+    const distanceYOctantXYZ001 = runGpgpuProgram(getDistanceYOctantWithY1, [distanceQuadrantXZ00]); tf.dispose(distanceQuadrantXZ00)
+    const distanceYOctantXYZ010 = runGpgpuProgram(getDistanceYOctantWithY0, [distanceQuadrantXZ01]);
+    const distanceYOctantXYZ011 = runGpgpuProgram(getDistanceYOctantWithY1, [distanceQuadrantXZ01]); tf.dispose(distanceQuadrantXZ01)
+    const distanceYOctantXYZ100 = runGpgpuProgram(getDistanceYOctantWithY0, [distanceQuadrantXZ10]);
+    const distanceYOctantXYZ101 = runGpgpuProgram(getDistanceYOctantWithY1, [distanceQuadrantXZ10]); tf.dispose(distanceQuadrantXZ10)
+    const distanceYOctantXYZ110 = runGpgpuProgram(getDistanceYOctantWithY0, [distanceQuadrantXZ11]);
+    const distanceYOctantXYZ111 = runGpgpuProgram(getDistanceYOctantWithY1, [distanceQuadrantXZ11]); tf.dispose(distanceQuadrantXZ11)
+    const distanceZOctantXYZ000 = runGpgpuProgram(getDistanceZOctantWithZ0, [distanceQuadrantXY00]);
+    const distanceZOctantXYZ001 = runGpgpuProgram(getDistanceZOctantWithZ1, [distanceQuadrantXY00]); tf.dispose(distanceQuadrantXY00)
+    const distanceZOctantXYZ010 = runGpgpuProgram(getDistanceZOctantWithZ0, [distanceQuadrantXY01]);
+    const distanceZOctantXYZ011 = runGpgpuProgram(getDistanceZOctantWithZ1, [distanceQuadrantXY01]); tf.dispose(distanceQuadrantXY01)
+    const distanceZOctantXYZ100 = runGpgpuProgram(getDistanceZOctantWithZ0, [distanceQuadrantXY10]);
+    const distanceZOctantXYZ101 = runGpgpuProgram(getDistanceZOctantWithZ1, [distanceQuadrantXY10]); tf.dispose(distanceQuadrantXY10)
+    const distanceZOctantXYZ110 = runGpgpuProgram(getDistanceZOctantWithZ0, [distanceQuadrantXY11]);
+    const distanceZOctantXYZ111 = runGpgpuProgram(getDistanceZOctantWithZ1, [distanceQuadrantXY11]); tf.dispose(distanceQuadrantXY11)
 
     // Packing
-    const bitpackedDistancesOctantXYZ000 = runProgram(getDistanceBitpack, [distanceXOctantXYZ000, distanceYOctantXYZ000, distanceZOctantXYZ000, inputOccupancy]); tf.dispose([distanceXOctantXYZ000, distanceYOctantXYZ000, distanceZOctantXYZ000])
-    const bitpackedDistancesOctantXYZ001 = runProgram(getDistanceBitpack, [distanceXOctantXYZ001, distanceYOctantXYZ001, distanceZOctantXYZ001, inputOccupancy]); tf.dispose([distanceXOctantXYZ001, distanceYOctantXYZ001, distanceZOctantXYZ001])
-    const bitpackedDistancesOctantXYZ010 = runProgram(getDistanceBitpack, [distanceXOctantXYZ010, distanceYOctantXYZ010, distanceZOctantXYZ010, inputOccupancy]); tf.dispose([distanceXOctantXYZ010, distanceYOctantXYZ010, distanceZOctantXYZ010])
-    const bitpackedDistancesOctantXYZ011 = runProgram(getDistanceBitpack, [distanceXOctantXYZ011, distanceYOctantXYZ011, distanceZOctantXYZ011, inputOccupancy]); tf.dispose([distanceXOctantXYZ011, distanceYOctantXYZ011, distanceZOctantXYZ011])
-    const bitpackedDistancesOctantXYZ100 = runProgram(getDistanceBitpack, [distanceXOctantXYZ100, distanceYOctantXYZ100, distanceZOctantXYZ100, inputOccupancy]); tf.dispose([distanceXOctantXYZ100, distanceYOctantXYZ100, distanceZOctantXYZ100])
-    const bitpackedDistancesOctantXYZ101 = runProgram(getDistanceBitpack, [distanceXOctantXYZ101, distanceYOctantXYZ101, distanceZOctantXYZ101, inputOccupancy]); tf.dispose([distanceXOctantXYZ101, distanceYOctantXYZ101, distanceZOctantXYZ101])
-    const bitpackedDistancesOctantXYZ110 = runProgram(getDistanceBitpack, [distanceXOctantXYZ110, distanceYOctantXYZ110, distanceZOctantXYZ110, inputOccupancy]); tf.dispose([distanceXOctantXYZ110, distanceYOctantXYZ110, distanceZOctantXYZ110])
-    const bitpackedDistancesOctantXYZ111 = runProgram(getDistanceBitpack, [distanceXOctantXYZ111, distanceYOctantXYZ111, distanceZOctantXYZ111, inputOccupancy]); tf.dispose([distanceXOctantXYZ111, distanceYOctantXYZ111, distanceZOctantXYZ111])
+    const distancesOctantXYZ000 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ000, distanceYOctantXYZ000, distanceZOctantXYZ000, inputOccupancy]);  tf.dispose([distanceXOctantXYZ000, distanceYOctantXYZ000, distanceZOctantXYZ000])
+    const distancesOctantXYZ001 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ001, distanceYOctantXYZ001, distanceZOctantXYZ001, inputOccupancy]);  tf.dispose([distanceXOctantXYZ001, distanceYOctantXYZ001, distanceZOctantXYZ001])
+    const distancesOctantXYZ010 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ010, distanceYOctantXYZ010, distanceZOctantXYZ010, inputOccupancy]);  tf.dispose([distanceXOctantXYZ010, distanceYOctantXYZ010, distanceZOctantXYZ010])
+    const distancesOctantXYZ011 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ011, distanceYOctantXYZ011, distanceZOctantXYZ011, inputOccupancy]);  tf.dispose([distanceXOctantXYZ011, distanceYOctantXYZ011, distanceZOctantXYZ011])
+    const distancesOctantXYZ100 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ100, distanceYOctantXYZ100, distanceZOctantXYZ100, inputOccupancy]);  tf.dispose([distanceXOctantXYZ100, distanceYOctantXYZ100, distanceZOctantXYZ100])
+    const distancesOctantXYZ101 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ101, distanceYOctantXYZ101, distanceZOctantXYZ101, inputOccupancy]);  tf.dispose([distanceXOctantXYZ101, distanceYOctantXYZ101, distanceZOctantXYZ101])
+    const distancesOctantXYZ110 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ110, distanceYOctantXYZ110, distanceZOctantXYZ110, inputOccupancy]);  tf.dispose([distanceXOctantXYZ110, distanceYOctantXYZ110, distanceZOctantXYZ110])
+    const distancesOctantXYZ111 = runGpgpuProgram(getBitpacked, [distanceXOctantXYZ111, distanceYOctantXYZ111, distanceZOctantXYZ111, inputOccupancy]);  tf.dispose([distanceXOctantXYZ111, distanceYOctantXYZ111, distanceZOctantXYZ111])
 
-    // Concatenate
-    const bitpackedDistances = tf.concat([
-        bitpackedDistancesOctantXYZ000,
-        bitpackedDistancesOctantXYZ001,
-        bitpackedDistancesOctantXYZ010,
-        bitpackedDistancesOctantXYZ011,
-        bitpackedDistancesOctantXYZ100,
-        bitpackedDistancesOctantXYZ101,
-        bitpackedDistancesOctantXYZ110,
-        bitpackedDistancesOctantXYZ111,
+    // Concatenate 
+    const distancesOctants = tf.concat([
+        distancesOctantXYZ100, //distancesOctantXYZ000,
+        distancesOctantXYZ100, //distancesOctantXYZ100,
+        distancesOctantXYZ100, //distancesOctantXYZ010,
+        distancesOctantXYZ100, //distancesOctantXYZ110,
+        distancesOctantXYZ100, //distancesOctantXYZ001,
+        distancesOctantXYZ100, //distancesOctantXYZ101,
+        distancesOctantXYZ100, //distancesOctantXYZ011,
+        distancesOctantXYZ100, //distancesOctantXYZ111,
     ], 0)
 
     tf.dispose([
-        bitpackedDistancesOctantXYZ000,
-        bitpackedDistancesOctantXYZ001,
-        bitpackedDistancesOctantXYZ010,
-        bitpackedDistancesOctantXYZ011,
-        bitpackedDistancesOctantXYZ100,
-        bitpackedDistancesOctantXYZ101,
-        bitpackedDistancesOctantXYZ110,
-        bitpackedDistancesOctantXYZ111,
+        distancesOctantXYZ000,
+        distancesOctantXYZ100,
+        distancesOctantXYZ010,
+        distancesOctantXYZ110,
+        distancesOctantXYZ001,
+        distancesOctantXYZ101,
+        distancesOctantXYZ011,
+        distancesOctantXYZ111,
     ])
             
-    return bitpackedDistances as tf.Tensor4D
+    return distancesOctants
 }

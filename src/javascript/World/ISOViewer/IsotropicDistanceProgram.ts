@@ -32,6 +32,7 @@ class IsotropicDistancePass implements GPGPUProgram
         {
             ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
+            ivec3 neighborCoords = blockCoords;
 
             int blockDistance = getDistance(blockCoords);
             if (blockDistance == 0) 
@@ -40,7 +41,6 @@ class IsotropicDistancePass implements GPGPUProgram
                 return;
             }
 
-            ivec3 neighborCoords = blockCoords;
             int neighborDistance;
 
             for (int distance = 1; distance <= maxDistance; distance++) 
