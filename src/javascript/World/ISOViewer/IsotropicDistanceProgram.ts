@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-class IsotropicDistancePass implements GPGPUProgram 
+class IsotropicChessDistancePass implements GPGPUProgram 
 {
     variableNames = ['Input']
     outputShape: number[]
@@ -37,28 +37,35 @@ class IsotropicDistancePass implements GPGPUProgram
             int blockDistance = getDistance(blockCoords);
             if (blockDistance == 0) 
             {
-                setOutput(float(blockDistance));
+                setOutput(0.0);
                 return;
             }
 
             int neighborDistance;
-
-            for (int distance = 1; distance <= maxDistance; distance++) 
+            for (int stepDistance = 1; stepDistance <= maxDistance; stepDistance++) 
             {
-                neighborCoords.${inputAxis} = blockCoords.${inputAxis} - distance;
+                neighborCoords.${inputAxis} = blockCoords.${inputAxis} - stepDistance;
                 if (neighborCoords.${inputAxis} >= 0) 
                 {
-                    neighborDistance = max(getDistance(neighborCoords), distance);
+                    neighborDistance = max(getDistance(neighborCoords), stepDistance);
                     blockDistance = min(blockDistance, neighborDistance);
-                    if (distance >= blockDistance) break;
+
+                    if (stepDistance >= blockDistance) 
+                    {
+                        break;
+                    }
                 }
 
-                neighborCoords.${inputAxis} = blockCoords.${inputAxis} + distance;
+                neighborCoords.${inputAxis} = blockCoords.${inputAxis} + stepDistance;
                 if (neighborCoords.${inputAxis} <= maxCoords.${inputAxis}) 
                 {
-                    neighborDistance = max(getDistance(neighborCoords), distance);
+                    neighborDistance = max(getDistance(neighborCoords), stepDistance);
                     blockDistance = min(blockDistance, neighborDistance);
-                    if (distance >= blockDistance) break;
+                    
+                    if (stepDistance >= blockDistance) 
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -68,25 +75,25 @@ class IsotropicDistancePass implements GPGPUProgram
     }
 }
 
-function runGpgpuProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
 {
     const backend = tf.backend() as MathBackendWebGL
     const info = backend.compileAndRun(prog, inputs)
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor4D
 }
 
-export function isotropicDistanceProgram(inputOccupancy: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
+export function isotropicChessDistanceProgram(inputOccupancy: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
 {
     const shape = inputOccupancy.shape
 
-    const passX = new IsotropicDistancePass(shape, 'occupancy', 'x', maxDistance)
-    const passY = new IsotropicDistancePass(shape, 'distance',  'y', maxDistance)
-    const passZ = new IsotropicDistancePass(shape, 'distance',  'z', maxDistance)
+    const getChessDistanceAlongX = new IsotropicChessDistancePass(shape, 'occupancy', 'x', maxDistance)
+    const getChessDistanceAlongYFromX = new IsotropicChessDistancePass(shape, 'distance',  'y', maxDistance)
+    const getChessDistanceAlongZFromXY = new IsotropicChessDistancePass(shape, 'distance',  'z', maxDistance)
  
-    const tensorX = runGpgpuProgram(passX, [inputOccupancy]);
-    const tensorY = runGpgpuProgram(passY, [tensorX]); tf.dispose(tensorX)
-    const tensorZ = runGpgpuProgram(passZ, [tensorY]); tf.dispose(tensorY)
+    const chessDistanceOverX = runProgram(getChessDistanceAlongX, [inputOccupancy]);
+    const chessDistanceOverXY = runProgram(getChessDistanceAlongYFromX, [chessDistanceOverX]); tf.dispose(chessDistanceOverX)
+    const chessDistanceOverXYZ = runProgram(getChessDistanceAlongZFromXY, [chessDistanceOverXY]); tf.dispose(chessDistanceOverXY)
 
-    return tensorZ
+    return chessDistanceOverXYZ
     
 }

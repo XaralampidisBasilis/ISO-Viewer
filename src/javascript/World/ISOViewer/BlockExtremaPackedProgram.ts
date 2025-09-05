@@ -96,15 +96,15 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int coeffZ = 0; coeffZ < 4; ++coeffZ) {
-        for (int coeffX = 0; coeffX < 4; ++coeffX) {
-        for (int coeffY = 0; coeffY < 4; ++coeffY) {
+        for (int coeffZ = 0; coeffZ < 4; coeffZ++) {
+        for (int coeffX = 0; coeffX < 4; coeffX++) {
+        for (int coeffY = 0; coeffY < 4; coeffY++) {
 
             float bernsteinCoeff = 0.0;
 
-            for (int localZ = 0; localZ < 2; ++localZ) {
-            for (int localX = 0; localX < 2; ++localX) {
-            for (int localY = 0; localY < 2; ++localY) {
+            for (int localZ = 0; localZ < 2; localZ++) {
+            for (int localX = 0; localX < 2; localX++) {
+            for (int localY = 0; localY < 2; localY++) {
 
                 int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[0] - 1});
                 int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
@@ -150,9 +150,9 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
-        for (int cellY = startY; cellY < endY; ++cellY) {
-        for (int cellX = startX; cellX < endX; ++cellX) {
+        for (int cellZ = startZ; cellZ < endZ; cellZ++) {
+        for (int cellY = startY; cellY < endY; cellY++) {
+        for (int cellX = startX; cellX < endX; cellX++) {
 
             vec2 cellExtrema = computeCellExtrema(cellZ, cellY, cellX);
 

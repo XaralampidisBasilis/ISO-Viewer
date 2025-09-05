@@ -11,9 +11,9 @@ import { occupancyProgram } from './OccupancyProgram'
 import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
 import { occupancyPackedProgram } from './OccupancyPackedProgram'
-import { isotropicDistanceProgram } from './IsotropicDistanceProgram'
-import { anisotropicDistanceProgram } from './AnisotropicDistanceProgram'
-import { extendedDistanceProgram } from './ExtendedDistanceProgram'
+import { isotropicChessDistanceProgram } from './IsotropicDistanceProgram'
+import { anisotropicChessDistanceProgram } from './AnisotropicDistanceProgram'
+import { extendedAnisotropicChessDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -149,7 +149,7 @@ export default class ISOComputes extends EventEmitter
         this.intensityMap.tensor = tf.tidy(() => 
         {
             const data = new Float32Array(intensityMap.data)
-            const tensor = tf.tensor4d(data, this.intensityMap.shape)
+            const tensor = tf.tensor(data, this.intensityMap.shape)
 
             return TFUtils.map(intensityMap.min, intensityMap.max, tensor)
         })
@@ -314,9 +314,9 @@ export default class ISOComputes extends EventEmitter
 
         this.distanceMap = {}
 
-        this.distanceMap.tensor = isotropicDistanceProgram(this.occupancyMap.tensor, 255)
-        const tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
+        this.distanceMap.tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
+        // console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
@@ -344,9 +344,9 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
-        this.anisotropicDistanceMap.tensor = anisotropicDistanceProgram(this.occupancyMap.tensor, 63)
-        const tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
-        console.log(this.anisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
+        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
+        // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        // console.log(this.anisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
@@ -375,9 +375,9 @@ export default class ISOComputes extends EventEmitter
 
         this.extendedAnisotropicDistanceMap = {}
 
-        this.extendedAnisotropicDistanceMap.tensor = extendedDistanceProgram(this.occupancyMap.tensor, 31)
-        const tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, 31)
-        console.log(this.extendedAnisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
+        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, 31)
+        // console.log(this.extendedAnisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)
@@ -409,7 +409,7 @@ export default class ISOComputes extends EventEmitter
                 array[i] = fromHalfFloat(this.intensityMap.array[i])
             }
 
-            this.intensityMap.tensor = tf.tensor4d(array, this.intensityMap.shape)
+            this.intensityMap.tensor = tf.tensor(array, this.intensityMap.shape)
 
             console.timeEnd('uploadIntensityMap') 
         }
@@ -431,7 +431,7 @@ export default class ISOComputes extends EventEmitter
                 array[i] = fromHalfFloat(this.trilaplacianIntensityMap.array[i])
             }
 
-            this.trilaplacianIntensityMap.tensor = tf.tensor4d(array, this.trilaplacianIntensityMap.shape)
+            this.trilaplacianIntensityMap.tensor = tf.tensor(array, this.trilaplacianIntensityMap.shape)
 
             console.timeEnd('uploadTrilaplacianIntensityMap') 
         }

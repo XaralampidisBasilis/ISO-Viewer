@@ -4,7 +4,7 @@ import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 export class OccupancyProgram implements GPGPUProgram 
 {
-    variableNames = ['A']
+    variableNames = ['Extrema']
     outputShape: number[]
     userCode: string
     packedInputs = false
@@ -22,12 +22,13 @@ export class OccupancyProgram implements GPGPUProgram
             int blockY = coords[1];
             int blockX = coords[2];
 
-            float blockMinVal = getA(blockZ, blockY, blockX, 0);
-            float blockMaxVal = getA(blockZ, blockY, blockX, 1);
-            bool blockOccupied = (blockMinMaxValue.x <= ${inputThreshold} && ${inputThreshold} <= blockMinMaxValue.y);
-            float occupancyValue = blockOccupied ? 255.0 : 0.0;
+            float blockMinVal = getExtrema(blockZ, blockY, blockX, 0);
+            float blockMaxVal = getExtrema(blockZ, blockY, blockX, 1);
+            bool blockOccupied = 
+                ${inputThreshold} >= blockMinMaxValue.x && 
+                ${inputThreshold} <= blockMinMaxValue.y;
 
-            setOutput(occupancyValue);
+            setOutput(blockOccupied ? 255.0 : 0.0);
         }
         `;
     }
