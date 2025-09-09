@@ -32,7 +32,7 @@ class IsotropicChessDistancePass implements GPGPUProgram
         {
             ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
-            ivec3 neighborCoords = blockCoords;
+            ivec3 candidateCoords = blockCoords;
 
             int blockDistance = getDistance(blockCoords);
             if (blockDistance == 0) 
@@ -41,14 +41,14 @@ class IsotropicChessDistancePass implements GPGPUProgram
                 return;
             }
 
-            int neighborDistance;
+            int candidateDistance;
             for (int stepDistance = 1; stepDistance <= maxDistance; stepDistance++) 
             {
-                neighborCoords.${inputAxis} = blockCoords.${inputAxis} - stepDistance;
-                if (neighborCoords.${inputAxis} >= 0) 
+                candidateCoords.${inputAxis} = blockCoords.${inputAxis} - stepDistance;
+                if (candidateCoords.${inputAxis} >= 0) 
                 {
-                    neighborDistance = max(getDistance(neighborCoords), stepDistance);
-                    blockDistance = min(blockDistance, neighborDistance);
+                    candidateDistance = max(getDistance(candidateCoords), stepDistance);
+                    blockDistance = min(blockDistance, candidateDistance);
 
                     if (stepDistance >= blockDistance) 
                     {
@@ -56,11 +56,11 @@ class IsotropicChessDistancePass implements GPGPUProgram
                     }
                 }
 
-                neighborCoords.${inputAxis} = blockCoords.${inputAxis} + stepDistance;
-                if (neighborCoords.${inputAxis} <= maxCoords.${inputAxis}) 
+                candidateCoords.${inputAxis} = blockCoords.${inputAxis} + stepDistance;
+                if (candidateCoords.${inputAxis} <= maxCoords.${inputAxis}) 
                 {
-                    neighborDistance = max(getDistance(neighborCoords), stepDistance);
-                    blockDistance = min(blockDistance, neighborDistance);
+                    candidateDistance = max(getDistance(candidateCoords), stepDistance);
+                    blockDistance = min(blockDistance, candidateDistance);
                     
                     if (stepDistance >= blockDistance) 
                     {

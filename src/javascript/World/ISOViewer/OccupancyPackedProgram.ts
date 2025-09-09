@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class OccupancyPackedProgram implements GPGPUProgram 
+class OccupancyPackedProgram implements GPGPUProgram 
 {
     variableNames = ['ExtremaPacked']
     outputShape: number[]
@@ -33,11 +33,15 @@ export class OccupancyPackedProgram implements GPGPUProgram
     }
 }
 
-
-export function occupancyPackedProgram(input: tf.Tensor5D, inputValue: number): tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
 {
-  const backend = tf.backend() as MathBackendWebGL
-  const program = new OccupancyPackedProgram(input.shape, inputValue)
-  const output = backend.compileAndRun(program, [input])
-  return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D
+    const backend = tf.backend() as MathBackendWebGL
+    const info = backend.compileAndRun(prog, inputs)
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor4D
+}
+
+export function occupancyPackedProgram(inputTensor: tf.Tensor5D, inputValue: number): tf.Tensor4D 
+{
+  const program = new OccupancyPackedProgram(inputTensor.shape, inputValue)
+  return runProgram(program, [inputTensor]) as tf.Tensor4D
 }

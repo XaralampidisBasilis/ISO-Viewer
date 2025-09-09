@@ -37,7 +37,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
         {
             ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
-            ivec3 neighborCoords = blockCoords;
+            ivec3 candidateCoords = blockCoords;
 
             int blockDistance = getDistance(blockCoords);
             if (blockDistance == 0) 
@@ -46,17 +46,17 @@ class AnisotropicChessDistancePass implements GPGPUProgram
                 return;
             }
 
-            int neighborDistance;
+            int candidateDistance;
             for (int stepDistance = 1; stepDistance <= maxDistance; stepDistance++) 
             {
-                neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} stepDistance;
-                if (outBounds(neighborCoords.${inAxis})) 
+                candidateCoords.${inAxis} = blockCoords.${inAxis} ${inSign} stepDistance;
+                if (outBounds(candidateCoords.${inAxis})) 
                 {
                     break;
                 }
 
-                neighborDistance = max(getDistance(neighborCoords), stepDistance);
-                blockDistance = min(blockDistance, neighborDistance);
+                candidateDistance = max(getDistance(candidateCoords), stepDistance);
+                blockDistance = min(blockDistance, candidateDistance);
 
                 if (stepDistance >= blockDistance)
                 {
@@ -104,7 +104,7 @@ class ExtendedAnisotropicChessDistancePass implements GPGPUProgram
         {
             ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
-            ivec3 neighborCoords = blockCoords;
+            ivec3 candidateCoords = blockCoords;
 
             int blockDistance = getDistance(blockCoords);
             if (blockDistance == 0) 
@@ -113,18 +113,18 @@ class ExtendedAnisotropicChessDistancePass implements GPGPUProgram
                 return;
             }
 
-            int neighborDistance;
+            int candidateDistance;
             blockDistance = maxDistance;
             for (int stepDistance = 1; stepDistance <= maxDistance; stepDistance++) 
             {
-                neighborCoords.${inAxis} = blockCoords.${inAxis} ${inSign} stepDistance;
-                if (outBounds(neighborCoords.${inAxis})) 
+                candidateCoords.${inAxis} = blockCoords.${inAxis} ${inSign} stepDistance;
+                if (outBounds(candidateCoords.${inAxis})) 
                 {
                     break;
                 }
 
-                neighborDistance = getDistance(neighborCoords);
-                if (stepDistance >= neighborDistance)
+                candidateDistance = getDistance(candidateCoords);
+                if (stepDistance >= candidateDistance)
                 {
                     blockDistance = stepDistance;
                     break;

@@ -8,10 +8,12 @@ import { blockExtremaProgram } from './BlockExtremaProgram'
 import { resizeProgram } from './ResizeProgram'
 import { trilaplacianProgram } from './TrilaplacianProgram'
 import { occupancyProgram } from './OccupancyProgram'
+import { occupancyPackedProgram } from './OccupancyPackedProgram'
+import { occupancyPackedProgram2 } from './OccupancyPackedProgram2'
 import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
-import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { isotropicChessDistanceProgram } from './IsotropicDistanceProgram'
+import { isotropicChessDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
 import { anisotropicChessDistanceProgram } from './AnisotropicDistanceProgram'
 import { extendedAnisotropicChessDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
@@ -261,7 +263,10 @@ export default class ISOComputes extends EventEmitter
         this.occupancyMap = {}
         // this.occupancyMap.tensor = await TF.computeOccupancyMap(this.blockExtremaMap.tensor, this.threshold)
         // this.occupancyMap.tensor = occupancyProgram(this.blockExtremaMap.tensor, this.threshold)
-        this.occupancyMap.tensor = occupancyPackedProgram(this.blockExtremaMap.tensor, this.threshold)
+
+        this.occupancyMap.tensor = occupancyPackedProgram2(this.blockExtremaMap.tensor, this.threshold)
+
+
         this.occupancyMap.array = new Uint8Array(this.occupancyMap.tensor.dataSync())
        
         this.occupancyMap.threshold     = this.threshold
@@ -314,9 +319,10 @@ export default class ISOComputes extends EventEmitter
 
         this.distanceMap = {}
 
-        this.distanceMap.tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
         // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        // console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
+        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
+        console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
