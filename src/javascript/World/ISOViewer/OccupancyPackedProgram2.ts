@@ -22,30 +22,35 @@ class OccupancyPackedProgram implements GPGPUProgram
 
         float getOccupancy(ivec3 blockCoords, int innerX, int innerY) 
         {
-            int blockCoordsZ = blockCoords.z;
-            int blockCoordsY = blockCoords.y + innerY;
-            int blockCoordsX = blockCoords.x + innerX;
-
-            vec4 minMaxValue = getExtremaPacked(blockCoordsZ, blockCoordsY, blockCoordsX, 0, 0);
+            vec4 minMaxValue = getExtremaPacked(blockCoords.z, blockCoords.y + innerY, blockCoords.x + innerX, 0, 0);
             bool blockOccupied = ${inputValue} >= minMaxValue.x && ${inputValue} <= minMaxValue.y;
+            return blockOccupied ? 1.0 : 0.0;
+        }
 
-            return blockOccupied ? 255.0 : 0.0;
+        vec4 sanitizeOccupancies(vec4 occupancies, ivec3 coords)
+        {
+            bool insideHeight = coords.y < ${inHeight-1};
+            bool insideWidth = coords.x < ${inWidth-1};
+
+            occupancies.g = insideHeight ? occupancies.g : 0.0;
+            occupancies.b = insideWidth ? occupancies.b : 0.0;
+            occupancies.a = insideHeight && insideWidth ? occupancies.a : 0.0;
+            return occupancies;
         }
 
         void main() 
         {
             ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
-    
-            bool insideWidth  = blockCoords.x + 1 < ${inWidth};
-            bool insideHeight = blockCoords.y + 1 < ${inHeight};
 
-            float occupancy00 = getOccupancy(blockCoords, 0, 0);
-            float occupancy01 = insideHeight ? getOccupancy(blockCoords, 0, 1) : 0.0;
-            float occupancy10 = insideWidth  ? getOccupancy(blockCoords, 1, 0) : 0.0;  
-            float occupancy11 = insideHeight && insideWidth ? getOccupancy(blockCoords, 1, 1) : 0.0;
+            vec4 blockOccupancies = vec4(
+                getOccupancy(blockCoords, 0, 0),
+                getOccupancy(blockCoords, 0, 1),
+                getOccupancy(blockCoords, 1, 0),
+                getOccupancy(blockCoords, 1, 1)
+            );
 
-            setOutput(vec4(occupancy00, occupancy01, occupancy10, occupancy11));
+            setOutput(sanitizeOccupancies(blockOccupancies, blockCoords));
         }
         `
     }

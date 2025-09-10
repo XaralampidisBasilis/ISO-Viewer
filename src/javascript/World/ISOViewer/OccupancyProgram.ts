@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class OccupancyProgram implements GPGPUProgram 
+class OccupancyProgram implements GPGPUProgram 
 {
     variableNames = ['Extrema']
     outputShape: number[]
@@ -10,7 +10,7 @@ export class OccupancyProgram implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number], inputThreshold: number) 
+    constructor(inputShape: [number, number, number, number], inputValue: number) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1]
@@ -18,22 +18,99 @@ export class OccupancyProgram implements GPGPUProgram
         void main() 
         {
             ivec4 coords = getOutputCoords();
-            int blockZ = coords[0];
-            int blockY = coords[1];
-            int blockX = coords[2];
+            ivec3 blockCoords = outputCoords.zyx;
 
-            float blockMinVal = getExtrema(blockZ, blockY, blockX, 0);
-            float blockMaxVal = getExtrema(blockZ, blockY, blockX, 1);
-            bool blockOccupied = 
-                ${inputThreshold} >= blockMinMaxValue.x && 
-                ${inputThreshold} <= blockMinMaxValue.y;
+            float minValue = getExtrema(blockCoords.z, blockCoords.y, blockCoords.x, 0);
+            float maxValue = getExtrema(blockCoords.z, blockCoords.y, blockCoords.x, 1);
+            bool blockOccupied = ${inputValue} >= minValue && ${inputValue} <= maxValue;
 
-            setOutput(blockOccupied ? 255.0 : 0.0);
+            setOutput(blockOccupied ? 1.0 : 0.0);
         }
         `;
     }
 }
 
+class OccupancyProgramPackInputs implements GPGPUProgram 
+{
+    variableNames = ['Extrema']
+    outputShape: number[]
+    userCode: string
+    packedInputs = true
+    packedOutput = false
+
+    constructor(inputShape: [number, number, number, number, number], inputValue: number) 
+    {
+        const [inDepth, inHeight, inWidth] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.userCode = `
+        void main() 
+        {
+            ivec4 outputCoords = getOutputCoords();
+            ivec3 blockCoords = outputCoords.zyx;
+
+            vec4 minMaxValue = getExtrema(blockCoords.z, blockCoords.y, blockCoords.x, 0, 0);
+            bool blockOccupied = ${inputValue} >= minMaxValue.x && ${inputValue} <= minMaxValue.y;
+
+            setOutput(blockOccupied ? 1.0 : 0.0);
+        }
+        `
+    }
+}
+
+class OccupancyProgramPackInputsOutputs implements GPGPUProgram 
+{
+    variableNames = ['Extrema']
+    outputShape: number[]
+    userCode: string
+    packedInputs = true
+    packedOutput = true  
+
+    constructor
+    (
+        inputShape: [number, number, number, number, number], 
+        inputValue: number
+    ) 
+    {
+        const [inDepth, inHeight, inWidth] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 1] // Logical output shape stays the same; packing is a storage optimization.
+        this.userCode = `
+
+        float getOccupancy(ivec3 blockCoords, int innerX, int innerY) 
+        {
+            vec4 minMaxValue = getExtrema(blockCoords.z, blockCoords.y + innerY, blockCoords.x + innerX, 0, 0);
+            bool blockOccupied = ${inputValue} >= minMaxValue.x && ${inputValue} <= minMaxValue.y;
+            return blockOccupied ? 1.0 : 0.0;
+        }
+
+        vec4 sanitizeOccupancies(vec4 occupancies, ivec3 coords)
+        {
+            float insideHeight = float(coords.y < ${inHeight-1});
+            float insideWidth = float(coords.x < ${inWidth-1});
+
+            occupancies.g *= insideHeight;
+            occupancies.b *= insideWidth;
+            occupancies.a *= insideHeight * insideWidth;
+
+            return occupancies;
+        }
+
+        void main() 
+        {
+            ivec4 outputCoords = getOutputCoords();
+            ivec3 blockCoords = outputCoords.zyx;
+
+            vec4 blockOccupancies = vec4(
+                getOccupancy(blockCoords, 0, 0),
+                getOccupancy(blockCoords, 0, 1),
+                getOccupancy(blockCoords, 1, 0),
+                getOccupancy(blockCoords, 1, 1)
+            );
+
+            setOutput(sanitizeOccupancies(blockOccupancies, blockCoords));
+        }
+        `
+    }
+}
 
 export function occupancyProgram(input: tf.Tensor4D, inputThreshold: number): tf.Tensor4D 
 {

@@ -46,6 +46,7 @@ export default class ISOComputes extends EventEmitter
         console.time('setTensorflow') 
 
         tf.enableProdMode()
+        // tf.enableDebugMode()
         await tf.ready()
         await tf.setBackend('webgl')
         // console.log('tf', tf)
@@ -320,10 +321,14 @@ export default class ISOComputes extends EventEmitter
         this.distanceMap = {}
 
         // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
         this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
-        console.log(this.distanceMap.tensor.squaredDifference(tensor).mean().dataSync())
-
+        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        const error = tensor.sub(this.distanceMap.tensor).abs()
+        const coords = await tf.whereAsync(error.greater(0));
+        console.log(error.mean().dataSync())
+        console.log(error.dataSync())
+        console.log(coords.arraySync())
+        
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
 
@@ -351,7 +356,7 @@ export default class ISOComputes extends EventEmitter
 
         this.anisotropicDistanceMap = {}
         this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
-        // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        // const tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
         // console.log(this.anisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
@@ -382,7 +387,7 @@ export default class ISOComputes extends EventEmitter
         this.extendedAnisotropicDistanceMap = {}
 
         this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
-        // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, 31)
+        // const tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, 31)
         // console.log(this.extendedAnisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
 
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
