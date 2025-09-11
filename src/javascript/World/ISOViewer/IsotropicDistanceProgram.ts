@@ -24,16 +24,18 @@ class IsotropicChessDistancePass implements GPGPUProgram
         const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
         const int maxDistance = min(${inputDistance}, maxCoords.${inputAxis}); 
 
+        float getInputVariable(ivec3 coords) { return floor(getInputVariable(coords.z, coords.y, coords.x, 0) + 0.5); }
+
         ${inputVariable == 'occupancy' ? `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0) < 0.5) * ${inputDistance}; }` : `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0)); }` }
+        int getInputDistance(ivec3 coords) { return int(getInputVariable(coords) < 0.5) * ${inputDistance}; }` : `
+        int getInputDistance(ivec3 coords) { return int(getInputVariable(coords)); }` }
 
         void main() 
         {
             ivec4 outputCoords = getOutputCoords();
 
             ivec3 blockCoords = outputCoords.zyx;
-            int blockDistance = getDistance(blockCoords);
+            int blockDistance = getInputDistance(blockCoords);
 
             ivec3 candidateCoords = blockCoords;
             int candidateDistance = blockDistance;
@@ -49,7 +51,7 @@ class IsotropicChessDistancePass implements GPGPUProgram
                 candidateCoords.${inputAxis} = blockCoords.${inputAxis} - stepDistance;
                 if (candidateCoords.${inputAxis} >= 0) 
                 {
-                    candidateDistance = max(getDistance(candidateCoords), stepDistance);
+                    candidateDistance = max(getInputDistance(candidateCoords), stepDistance);
                     blockDistance = min(blockDistance, candidateDistance);
 
                     if (blockDistance <= stepDistance) 
@@ -61,7 +63,7 @@ class IsotropicChessDistancePass implements GPGPUProgram
                 candidateCoords.${inputAxis} = blockCoords.${inputAxis} + stepDistance;
                 if (candidateCoords.${inputAxis} <= maxCoords.${inputAxis}) 
                 {
-                    candidateDistance = max(getDistance(candidateCoords), stepDistance);
+                    candidateDistance = max(getInputDistance(candidateCoords), stepDistance);
                     blockDistance = min(blockDistance, candidateDistance);
                     
                     if (blockDistance <= stepDistance) 
@@ -70,6 +72,8 @@ class IsotropicChessDistancePass implements GPGPUProgram
                     }
                 }
             }
+
+            blockDistance = clamp(blockDistance, 0, ${inputDistance});
 
             setOutput(float(blockDistance));
         }
@@ -88,9 +92,9 @@ export function isotropicChessDistanceProgram(inputOccupancy: tf.Tensor4D, maxDi
 {
     const shape = inputOccupancy.shape
 
-    const getChessDistanceAlongX = new IsotropicChessDistancePass(shape, 'occupancy', 'x', maxDistance)
-    const getChessDistanceAlongYFromX = new IsotropicChessDistancePass(shape, 'distance',  'y', maxDistance)
-    const getChessDistanceAlongZFromXY = new IsotropicChessDistancePass(shape, 'distance',  'z', maxDistance)
+    const getChessDistanceAlongX = new IsotropicChessDistancePass(shape, 'occupancy', 'y', maxDistance)
+    // const getChessDistanceAlongYFromX = new IsotropicChessDistancePass(shape, 'distance',  'y', maxDistance)
+    // const getChessDistanceAlongZFromXY = new IsotropicChessDistancePass(shape, 'distance',  'z', maxDistance)
  
     const chessDistanceOverX = runProgram(getChessDistanceAlongX, [inputOccupancy]);
     // const chessDistanceOverXY = runProgram(getChessDistanceAlongYFromX, [chessDistanceOverX]); tf.dispose(chessDistanceOverX)

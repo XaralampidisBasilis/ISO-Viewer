@@ -28,7 +28,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
 
         ${inputVariable == 'occupancy' ? `
         int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0) < 0.5) * ${inputDistance}; }` : `
-        int getDistance(ivec3 coords) { return  int(getInputVariable(coords.z, coords.y, coords.x, 0)); }`}
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0)); }`}
 
         ${inSign == '-' ? `
         bool outBounds(int coord) { return coord < 0; }` : `

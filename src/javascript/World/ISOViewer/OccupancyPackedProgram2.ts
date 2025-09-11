@@ -19,11 +19,12 @@ class OccupancyPackedProgram implements GPGPUProgram
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 1] // Logical output shape stays the same; packing is a storage optimization.
         this.userCode = `
+        const float inputValue = float(${inputValue});
 
         float getOccupancy(ivec3 blockCoords, int innerX, int innerY) 
         {
             vec4 minMaxValue = getExtremaPacked(blockCoords.z, blockCoords.y + innerY, blockCoords.x + innerX, 0, 0);
-            bool blockOccupied = ${inputValue} >= minMaxValue.x && ${inputValue} <= minMaxValue.y;
+            bool blockOccupied = inputValue >= minMaxValue.x && inputValue <= minMaxValue.y;
             return blockOccupied ? 1.0 : 0.0;
         }
 

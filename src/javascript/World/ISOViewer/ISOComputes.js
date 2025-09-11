@@ -321,13 +321,16 @@ export default class ISOComputes extends EventEmitter
         this.distanceMap = {}
 
         // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
-        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
-        const error = tensor.sub(this.distanceMap.tensor).abs()
-        const coords = await tf.whereAsync(error.greater(0));
-        console.log(error.mean().dataSync())
-        console.log(error.dataSync())
+        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 2)
+        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 2)
+        const error = tensor.sub(this.distanceMap.tensor)
+        console.log(error.abs().mean().dataSync())
+
+        const coords = await tf.whereAsync(error.abs().greater(0));
         console.log(coords.arraySync())
+        console.log(tf.gatherND(error, coords).arraySync())
+        console.log(tf.gatherND(tensor, coords).arraySync())
+        console.log(tf.gatherND(this.distanceMap.tensor, coords).arraySync())
         
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
