@@ -16,6 +16,7 @@ import { isotropicChessDistanceProgram } from './IsotropicDistanceProgram'
 import { isotropicChessDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
 import { anisotropicChessDistanceProgram } from './AnisotropicDistanceProgram'
 import { anisotropicChessDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
+import { anisotropicChessDistanceProgramPackedFused } from './AnisotropicDistanceProgramPackedFused'
 import { extendedAnisotropicChessDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
 {
@@ -45,6 +46,11 @@ export default class ISOComputes extends EventEmitter
     async setTensorflow()
     {
         console.time('setTensorflow') 
+
+        tf.env().set('WEBGL_FORCE_F16_TEXTURES', true)       // halves bandwidth on many GPUs
+        tf.env().set('WEBGL_PACK', true)                     // ensure packing is on
+        tf.env().set('WEBGL_CPU_FORWARD', false)             // be strict about staying on GPU
+        tf.env().set('WEBGL_LAZILY_UNPACK', true)            // Optional: if you see shader compiles dominating, enable persisting programs
 
         tf.enableProdMode()
         // tf.enableDebugMode()
@@ -357,11 +363,12 @@ export default class ISOComputes extends EventEmitter
         
         // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
         // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
-        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
+        // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
+        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPackedFused(this.occupancyMap.tensor, 63)
 
-        // const tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
-        // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
-        // console.log(error.abs().mean().dataSync())
+        const tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
+        const error = tensor.sub(this.anisotropicDistanceMap.tensor)
+        console.log(error.abs().mean().dataSync())
         
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
