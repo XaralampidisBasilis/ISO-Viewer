@@ -15,6 +15,7 @@ import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
 import { isotropicChessDistanceProgram } from './IsotropicDistanceProgram'
 import { isotropicChessDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
 import { anisotropicChessDistanceProgram } from './AnisotropicDistanceProgram'
+import { anisotropicChessDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
 import { extendedAnisotropicChessDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
 export default class ISOComputes extends EventEmitter
 {
@@ -321,24 +322,11 @@ export default class ISOComputes extends EventEmitter
 
         // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
         // this.distanceMap.tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
-        
-        // const shape = this.occupancyMap.tensor.shape
-        // const point = [Math.floor(shape[0]/2), shape[1]-1, Math.floor(shape[2]/2)]
-        // const buffer = tf.zerosLike(this.occupancyMap.tensor).bufferSync()
-        // buffer.set(1, ...point)
-        // const occupancy = buffer.toTensor()
-        // console.log(shape, point)
-
         this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
+
         // const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
         // const error = tensor.sub(this.distanceMap.tensor)
         // console.log(error.abs().mean().dataSync())
-
-        // const coords = await tf.whereAsync(error.abs().greater(0));
-        // console.log(coords.arraySync())
-        // console.log(tf.gatherND(error, coords).arraySync())
-        // console.log(tf.gatherND(tensor, coords).arraySync())
-        // console.log(tf.gatherND(this.distanceMap.tensor, coords).arraySync())
         
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)
@@ -366,10 +354,15 @@ export default class ISOComputes extends EventEmitter
         console.time('computeAnisotropicDistanceMap') 
 
         this.anisotropicDistanceMap = {}
-        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
-        // const tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
-        // console.log(this.anisotropicDistanceMap.tensor.squaredDifference(tensor).mean().dataSync())
+        
+        // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
+        // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
+        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
 
+        // const tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
+        // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
+        // console.log(error.abs().mean().dataSync())
+        
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
 

@@ -26,9 +26,11 @@ class AnisotropicChessDistancePass implements GPGPUProgram
         const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
         const int maxDistance = min(${inputDistance}, maxCoords.${inAxis}); 
 
+        float getInputVariable(ivec3 coords) { return floor(getInputVariable(coords.z, coords.y, coords.x) + 0.5); }
+
         ${inputVariable == 'occupancy' ? `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x) < 0.5) * ${inputDistance}; }` : `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x)); }`}
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords) < 0.5) * ${inputDistance}; }` : `
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords)); }`}
 
         ${inSign == '-' ? `
         bool outBounds(int coord) { return coord < 0; }` : `
