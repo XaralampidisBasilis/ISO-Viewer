@@ -267,7 +267,6 @@ export default class ISOComputes extends EventEmitter
 
         this.occupancyMap.tensor = occupancyPackedProgram2(this.blockExtremaMap.tensor, this.threshold)
 
-
         this.occupancyMap.array = new Uint8Array(this.occupancyMap.tensor.dataSync())
        
         this.occupancyMap.threshold     = this.threshold
@@ -321,16 +320,25 @@ export default class ISOComputes extends EventEmitter
         this.distanceMap = {}
 
         // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 2)
-        const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 2)
-        const error = tensor.sub(this.distanceMap.tensor)
-        console.log(error.abs().mean().dataSync())
+        // this.distanceMap.tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        
+        // const shape = this.occupancyMap.tensor.shape
+        // const point = [Math.floor(shape[0]/2), shape[1]-1, Math.floor(shape[2]/2)]
+        // const buffer = tf.zerosLike(this.occupancyMap.tensor).bufferSync()
+        // buffer.set(1, ...point)
+        // const occupancy = buffer.toTensor()
+        // console.log(shape, point)
 
-        const coords = await tf.whereAsync(error.abs().greater(0));
-        console.log(coords.arraySync())
-        console.log(tf.gatherND(error, coords).arraySync())
-        console.log(tf.gatherND(tensor, coords).arraySync())
-        console.log(tf.gatherND(this.distanceMap.tensor, coords).arraySync())
+        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
+        // const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        // const error = tensor.sub(this.distanceMap.tensor)
+        // console.log(error.abs().mean().dataSync())
+
+        // const coords = await tf.whereAsync(error.abs().greater(0));
+        // console.log(coords.arraySync())
+        // console.log(tf.gatherND(error, coords).arraySync())
+        // console.log(tf.gatherND(tensor, coords).arraySync())
+        // console.log(tf.gatherND(this.distanceMap.tensor, coords).arraySync())
         
         this.distanceMap.array = new Uint8Array(this.distanceMap.tensor.dataSync())
         tf.dispose(this.distanceMap.tensor)

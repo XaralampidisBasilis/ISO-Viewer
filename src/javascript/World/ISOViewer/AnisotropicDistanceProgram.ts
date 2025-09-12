@@ -13,7 +13,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
 
     constructor
     (
-        inputShape: [number, number, number, number], 
+        inputShape: [number, number, number], 
         inputVariable: 'occupancy' | 'distance',
         inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z' ,     
         inputDistance: number,
@@ -21,14 +21,14 @@ class AnisotropicChessDistancePass implements GPGPUProgram
     {
         const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
         const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
         const int maxDistance = min(${inputDistance}, maxCoords.${inAxis}); 
 
         ${inputVariable == 'occupancy' ? `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0) < 0.5) * ${inputDistance}; }` : `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0)); }`}
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x) < 0.5) * ${inputDistance}; }` : `
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x)); }`}
 
         ${inSign == '-' ? `
         bool outBounds(int coord) { return coord < 0; }` : `
@@ -36,7 +36,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
 
             ivec3 blockCoords = outputCoords.zyx;
             int blockDistance = getDistance(blockCoords);
@@ -74,14 +74,14 @@ class AnisotropicChessDistancePass implements GPGPUProgram
     }
 }
 
-function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor3D 
 {
     const backend = tf.backend() as MathBackendWebGL
     const info = backend.compileAndRun(prog, inputs)
-    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor4D
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor3D
 }
 
-export function anisotropicChessDistanceProgram(inputOccupancy: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
+export function anisotropicChessDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor3D 
 {
     const shape = inputOccupancy.shape
 

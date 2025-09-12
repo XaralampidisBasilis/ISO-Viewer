@@ -12,7 +12,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
 
     constructor
     (
-        inputShape: [number, number, number, number], 
+        inputShape: [number, number, number], 
         inputVariable: 'occupancy' | 'distance',
         inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z' ,     
         inputDistance: number,
@@ -20,14 +20,14 @@ class AnisotropicChessDistancePass implements GPGPUProgram
     {
         const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
         const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
         const int maxDistance = min(${inputDistance}, maxCoords.${inAxis}); 
 
         ${inputVariable == 'occupancy' ? `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0) < 0.5) * ${inputDistance}; }` : `
-        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x, 0)); }`}
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x) < 0.5) * ${inputDistance}; }` : `
+        int getDistance(ivec3 coords) { return int(getInputVariable(coords.z, coords.y, coords.x)); }`}
 
         ${inSign == '-' ? `
         bool outBounds(int coord) { return coord < 0; }` : `
@@ -35,7 +35,7 @@ class AnisotropicChessDistancePass implements GPGPUProgram
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
 
             ivec3 blockCoords = outputCoords.zyx;
             int blockDistance = getDistance(blockCoords);
@@ -83,14 +83,14 @@ class ExtendedAnisotropicChessDistancePass implements GPGPUProgram
 
     constructor
     (
-        inputShape: [number, number, number, number], 
+        inputShape: [number, number, number], 
         inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z',     
         inputDistance: number
     ) 
     {
         const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.outputShape = [inDepth, inHeight, inWidth]
 
         this.userCode = `
         const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
@@ -100,11 +100,11 @@ class ExtendedAnisotropicChessDistancePass implements GPGPUProgram
         bool outBounds(int coord) { return coord < 0; }` : `
         bool outBounds(int coord) { return coord > maxCoords.${inAxis}; }`}
         
-        int getDistance(ivec3 coords) { return int(getDistance(coords.z, coords.y, coords.x, 0)); }
+        int getDistance(ivec3 coords) { return int(getDistance(coords.z, coords.y, coords.x)); }
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
 
             ivec3 blockCoords = outputCoords.zyx;
             int blockDistance = getDistance(blockCoords);
@@ -149,20 +149,20 @@ class ExtendedAnisotropicChessDistancesBitpack implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number]) 
+    constructor(inputShape: [number, number, number]) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
 
-        int getDistanceX(ivec3 coords) { return int(getDistanceX(coords.z, coords.y, coords.x, 0)); }
-        int getDistanceY(ivec3 coords) { return int(getDistanceY(coords.z, coords.y, coords.x, 0)); }
-        int getDistanceZ(ivec3 coords) { return int(getDistanceZ(coords.z, coords.y, coords.x, 0)); }
-        int getOccupancy(ivec3 coords) { return int(getOccupancy(coords.z, coords.y, coords.x, 0)); }
+        int getDistanceX(ivec3 coords) { return int(getDistanceX(coords.z, coords.y, coords.x)); }
+        int getDistanceY(ivec3 coords) { return int(getDistanceY(coords.z, coords.y, coords.x)); }
+        int getDistanceZ(ivec3 coords) { return int(getDistanceZ(coords.z, coords.y, coords.x)); }
+        int getOccupancy(ivec3 coords) { return int(getOccupancy(coords.z, coords.y, coords.x)); }
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
             ivec4 blockDistances;
 
@@ -183,13 +183,13 @@ class ExtendedAnisotropicChessDistancesBitpack implements GPGPUProgram
     }
 }
 
-function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor3D 
 {
     const backend = tf.backend() as MathBackendWebGL
-    return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs)) as tf.Tensor4D
+    return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs)) as tf.Tensor3D
 }
 
-export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tensor4D, maxDistance: number): tf.Tensor4D 
+export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor3D 
 {
     const shape = inputOccupancy.shape
 

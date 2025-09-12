@@ -13,11 +13,11 @@ class OccupancyPackedProgram implements GPGPUProgram
     constructor(inputShape: [number, number, number, number, number], inputValue: number) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1]
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
             int blockZ = outputCoords.x;
             int blockY = outputCoords.y;
             int blockX = outputCoords.z;
@@ -33,15 +33,15 @@ class OccupancyPackedProgram implements GPGPUProgram
     }
 }
 
-function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor3D 
 {
     const backend = tf.backend() as MathBackendWebGL
     const info = backend.compileAndRun(prog, inputs)
-    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor4D
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor3D
 }
 
-export function occupancyPackedProgram(inputTensor: tf.Tensor5D, inputValue: number): tf.Tensor4D 
+export function occupancyPackedProgram(inputTensor: tf.Tensor5D, inputValue: number): tf.Tensor3D 
 {
   const program = new OccupancyPackedProgram(inputTensor.shape, inputValue)
-  return runProgram(program, [inputTensor]) as tf.Tensor4D
+  return runProgram(program, [inputTensor]) as tf.Tensor3D
 }

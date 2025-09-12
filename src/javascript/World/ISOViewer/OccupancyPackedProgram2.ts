@@ -4,7 +4,7 @@ import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 class OccupancyPackedProgram implements GPGPUProgram 
 {
-    variableNames = ['ExtremaPacked']
+    variableNames = ['InputExtrema']
     outputShape: number[]
     userCode: string
     packedInputs = true
@@ -17,55 +17,50 @@ class OccupancyPackedProgram implements GPGPUProgram
     ) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth, 1] // Logical output shape stays the same; packing is a storage optimization.
+        this.outputShape = [inDepth, inHeight, inWidth] // Logical output shape stays the same; packing is a storage optimization.
         this.userCode = `
         const float inputValue = float(${inputValue});
 
-        float getOccupancy(ivec3 blockCoords, int innerX, int innerY) 
-        {
-            vec4 minMaxValue = getExtremaPacked(blockCoords.z, blockCoords.y + innerY, blockCoords.x + innerX, 0, 0);
-            bool blockOccupied = inputValue >= minMaxValue.x && inputValue <= minMaxValue.y;
-            return blockOccupied ? 1.0 : 0.0;
-        }
+        vec2 getInputExtrema(ivec3 coords) { return getInputExtrema(coords.z, coords.y, coords.x, 0, 0).rg; }
 
-        vec4 sanitizeOccupancies(vec4 occupancies, ivec3 coords)
+        bool getOccupancy(ivec3 coords, int innerX, int innerY) 
         {
-            bool insideHeight = coords.y < ${inHeight-1};
-            bool insideWidth = coords.x < ${inWidth-1};
-
-            occupancies.g = insideHeight ? occupancies.g : 0.0;
-            occupancies.b = insideWidth ? occupancies.b : 0.0;
-            occupancies.a = insideHeight && insideWidth ? occupancies.a : 0.0;
-            return occupancies;
+            coords.x += innerX;
+            coords.y += innerY;
+            vec2 minMax = getInputExtrema(coords);
+            return (inputValue >= minMax.x) && (inputValue <= minMax.y);
         }
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords();
+            ivec3 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
 
-            vec4 blockOccupancies = vec4(
+            bool insideHeight = blockCoords.y < ${inHeight-1};
+            bool insideWidth = blockCoords.x < ${inWidth-1};
+
+            bvec4 blockOccupancies = bvec4(
                 getOccupancy(blockCoords, 0, 0),
-                getOccupancy(blockCoords, 0, 1),
-                getOccupancy(blockCoords, 1, 0),
-                getOccupancy(blockCoords, 1, 1)
+                (insideWidth) ? getOccupancy(blockCoords, 1, 0) : false,
+                (insideHeight) ? getOccupancy(blockCoords, 0, 1) : false,
+                (insideWidth && insideHeight) ? getOccupancy(blockCoords, 1, 1) : false
             );
 
-            setOutput(sanitizeOccupancies(blockOccupancies, blockCoords));
+            setOutput(vec4(blockOccupancies));
         }
         `
     }
 }
 
-function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor4D 
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor3D 
 {
     const backend = tf.backend() as MathBackendWebGL
     const info = backend.compileAndRun(prog, inputs)
-    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor4D
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor3D
 }
 
-export function occupancyPackedProgram2(inputTensor: tf.Tensor5D, inputValue: number): tf.Tensor4D 
+export function occupancyPackedProgram2(inputTensor: tf.Tensor5D, inputValue: number): tf.Tensor3D 
 {
   const program = new OccupancyPackedProgram(inputTensor.shape as any, inputValue)
-  return runProgram(program, [inputTensor]) as tf.Tensor4D
+  return runProgram(program, [inputTensor]) as tf.Tensor3D
 }
