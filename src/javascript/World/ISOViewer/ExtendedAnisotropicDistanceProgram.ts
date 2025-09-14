@@ -189,7 +189,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor3D
     return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs)) as tf.Tensor3D
 }
 
-export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor3D 
+export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor4D 
 {
     const shape = inputOccupancy.shape
 
@@ -270,7 +270,7 @@ export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tenso
     const chessDistancesXYZOverXYZ111 = runProgram(getChessDistancesBitpacked, [chessDistanceXOverXYZ111, chessDistanceYOverXYZ111, chessDistanceZOverXYZ111, inputOccupancy]);  tf.dispose([chessDistanceXOverXYZ111, chessDistanceYOverXYZ111, chessDistanceZOverXYZ111])
 
     // Concatenate 
-    const chessDistancesXYZOverXYZ = tf.concat([
+    const chessDistancesXYZOverXYZ = tf.stack([
         chessDistancesXYZOverXYZ000,
         chessDistancesXYZOverXYZ100,
         chessDistancesXYZOverXYZ010,
@@ -292,5 +292,5 @@ export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tenso
         chessDistancesXYZOverXYZ111,
     ])
             
-    return chessDistancesXYZOverXYZ
+    return chessDistancesXYZOverXYZ as tf.Tensor4D
 }
