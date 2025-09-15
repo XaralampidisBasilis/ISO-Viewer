@@ -4,7 +4,7 @@ import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram 
 {
-    variableNames = ['InputVariables']
+    variableNames = ['InputOccupancies']
     outputShape: number[]
     userCode: string
     packedInputs = true
@@ -13,70 +13,91 @@ class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number], 
-        inputVariable: 'occupancy' | 'distance',
         maxDistance: number,
     ) 
     {
+        const ceilToEven = (x: number) => Math.ceil(x / 2) * 2
+
         const [inDepth, inHeight, inWidth] = inputShape
         this.outputShape = [2, inDepth, inHeight, inWidth]
         this.userCode = `
-        const int maxSteps = ${Math.ceil(Math.min(maxDistance, inWidth-1) / 2) * 2};
-
-        vec4 getInputVariables(ivec3 coords) { return floor(getInputVariables(coords.z, coords.y, coords.x) + 0.5); }
+        const int maxSteps = ${ceilToEven(Math.min(maxDistance, inWidth-1))};
         
-        ${inputVariable == 'occupancy' ? `            
-        ivec4 getInputDistances(ivec3 coords) { return ivec4(lessThan(getInputVariables(coords), vec4(0.5))) * ${maxDistance}; }` : `
-        ivec4 getInputDistances(ivec3 coords) { return ivec4(getInputVariables(coords)); }` }
+        vec4 getInputOccupancies(ivec3 coords) { return getInputOccupancies(coords.z, coords.y, coords.x); }
 
-        bool insideWidth(int coord) { return coord >= 0 && coord <= ${inWidth-1}; }
+        vec4 getInputDistances(ivec3 coords) { return step(getInputOccupancies(coords), vec4(0.5)) * vec4(${maxDistance}); }
+
+        bool insideWidth(int x) { return x >= 0 && x <= ${inWidth-1}; }
+
+        float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
+            vec4 stepDistances, neighborDistances, candidateDistances;
+
             ivec4 outputCoords = getOutputCoords().wzyx;
-            int sign = (outputCoords.w < 1) ? -1 : 1;
+            ivec3 inputCoords = outputCoords.xyz;
 
-            ivec3 blockCoords = outputCoords.xyz;
-            ivec4 blockDistances = getInputDistances(blockCoords);
+            vec4 inputDistances = getInputDistances(inputCoords);
+            vec4 outputDistances = inputDistances;
             
-            ivec3 candidateCoords = blockCoords;    
-            ivec4 candidateDistances = max(blockDistances.grab, ivec4(1));
-    
-            if (sign < 0) blockDistances.ga = min(blockDistances.ga, candidateDistances.ga);
-            if (sign > 0) blockDistances.rb = min(blockDistances.rb, candidateDistances.rb);
-
-            if (all(lessThanEqual(blockDistances, ivec4(1)))) 
+            int sign = (outputCoords.w < 1) ? -1 : 1;
+            if (sign < 0)
             {
-                setOutput(vec4(blockDistances));
-                return;
+                stepDistances.rb = vec2(0 - sign);
+                stepDistances.ga = vec2(0);
+
+                neighborDistances = max(inputDistances, stepDistances);
+                candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
+                candidateDistances.rb = neighborDistances.rb;
+            }
+            else
+            {
+                stepDistances.rb = vec2(0);
+                stepDistances.ga = vec2(0 + sign);
+
+                neighborDistances = max(inputDistances, stepDistances);
+                candidateDistances.ga = neighborDistances.ga;
+                candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
             }
 
-            ivec4 inputDistances, neighborDistances;
-
+            outputDistances = min(outputDistances, candidateDistances);
+            if (mmax(outputDistances) < 2.0) 
+            {
+                setOutput(outputDistances);
+                return;
+            }
+            
             for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
             {
-                candidateCoords.x = blockCoords.x + sign * stepDistance ;
-                if (insideWidth(candidateCoords.x)) 
+                inputCoords.x = outputCoords.x + stepDistance * sign;
+                if (insideWidth(inputCoords.x)) 
                 {                    
-                    inputDistances = getInputDistances(candidateCoords);
+                    inputDistances = getInputDistances(inputCoords);
 
-                    neighborDistances = max(inputDistances, stepDistance + sign * ivec4(0,1,0,1));
-                    candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
+                    stepDistances.rb = vec2(stepDistance - sign);
+                    stepDistances.ga = vec2(stepDistance);
 
-                    neighborDistances = max(inputDistances, stepDistance - sign * ivec4(1,0,1,0));
+                    neighborDistances = max(inputDistances, stepDistances);
                     candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga); 
 
-                    blockDistances = min(blockDistances, candidateDistances);
+                    stepDistances.rb = vec2(stepDistance);
+                    stepDistances.ga = vec2(stepDistance + sign);
 
-                    if (all(lessThanEqual(blockDistances, ivec4(stepDistance + 1)))) 
+                    neighborDistances = max(inputDistances, stepDistances);
+                    candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
+
+                    outputDistances = min(outputDistances, candidateDistances);
+                    if (mmax(outputDistances) < float(stepDistance + 2)) 
                     {
                         break;
                     }
                 }
             }
 
-            blockDistances = clamp(blockDistances, ivec4(0), ivec4(${maxDistance}));
+            outputDistances = clamp(outputDistances, vec4(0), vec4(${maxDistance}));
 
-            setOutput(vec4(blockDistances));
+            setOutput(outputDistances);
         }
         `
     }
@@ -84,7 +105,7 @@ class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram
 
 class SecondAnisotropicChebyshevDistancePassY implements GPGPUProgram 
 {
-    variableNames = ['InputVariables']
+    variableNames = ['InputDistances']
     outputShape: number[]
     userCode: string
     packedInputs = true
@@ -93,72 +114,89 @@ class SecondAnisotropicChebyshevDistancePassY implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number, number], 
-        inputVariable: 'occupancy' | 'distance',
         maxDistance: number,
     ) 
     {
-        const [inBatches, inDepth, inHeight, inWidth] = inputShape
-        if (inBatches != 2) throw new Error('Input batch needs to be 2');
+        const ceilToEven = (x: number) => Math.ceil(x / 2) * 2
 
+        const [inBatches, inDepth, inHeight, inWidth] = inputShape;  if (inBatches != 2) throw new Error('Batch dimension needs to be 2');
         this.outputShape = [4, inDepth, inHeight, inWidth]
         this.userCode = `
-        const int maxSteps = ${Math.ceil(Math.min(maxDistance, inHeight-1) / 2) * 2};
-
-        vec4 getInputVariables(ivec4 coords) { return floor(getInputVariables(coords.w, coords.z, coords.y, coords.x) + 0.5); }
+        const int maxSteps = ${ceilToEven(Math.min(maxDistance, inHeight-1))};
         
-        ${inputVariable == 'occupancy' ? `            
-        ivec4 getInputDistances(ivec4 coords) { return ivec4(lessThan(getInputVariables(coords), vec4(0.5))) * ${maxDistance}; }` : `
-        ivec4 getInputDistances(ivec4 coords) { return ivec4(getInputVariables(coords)); }` }
+        vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideHeight(int coord) { return coord >= 0 && coord <= ${inHeight-1}; }
+        bool insideHeight(int y) { return y >= 0 && y <= ${inHeight-1}; }
+
+        float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            int sign = (outputCoords.w < 2) ? -1 : 1;
-            
-            ivec4 blockCoords = ivec4(outputCoords.xyz, outputCoords.w % 2);
-            ivec4 blockDistances = getInputDistances(blockCoords);
-            
-            ivec4 candidateCoords = blockCoords;    
-            ivec4 candidateDistances = max(blockDistances.barg, ivec4(1));
-        
-            if (sign < 0) blockDistances.ba = min(blockDistances.ba, candidateDistances.ba);
-            if (sign > 0) blockDistances.rg = min(blockDistances.rg, candidateDistances.rg);
+            vec4 stepDistances, neighborDistances, candidateDistances;
 
-            if (all(lessThanEqual(blockDistances, ivec4(1)))) 
+            ivec4 outputCoords = getOutputCoords().wzyx;
+            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 2);    
+
+            vec4 inputDistances = getInputDistances(inputCoords);
+            vec4 outputDistances = inputDistances;
+
+            int sign = (outputCoords.w < 2) ? -1 : 1;
+            if (sign < 0)
             {
-                setOutput(vec4(blockDistances));
+                stepDistances.rg = vec2(0 - sign);
+                stepDistances.ba = vec2(0);
+
+                neighborDistances = max(inputDistances, stepDistances);
+                candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
+                candidateDistances.rg = neighborDistances.rg;
+            }
+            else
+            {
+                stepDistances.rg = vec2(0);
+                stepDistances.ba = vec2(0 + sign);
+
+                neighborDistances = max(inputDistances, stepDistances);
+                candidateDistances.ba = neighborDistances.ba;
+                candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
+            }
+
+            outputDistances = min(outputDistances, candidateDistances);
+            if (mmax(outputDistances) < 2.0) 
+            {
+                setOutput(outputDistances);
                 return;
             }
 
-            ivec4 inputDistances, neighborDistances;
-
             for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
             {
-                candidateCoords.y = blockCoords.y + sign * stepDistance;
-                if (insideHeight(candidateCoords.y)) 
+                inputCoords.y = outputCoords.y + stepDistance * sign;
+                if (insideHeight(inputCoords.y)) 
                 {   
-                    inputDistances = getInputDistances(candidateCoords);
+                    inputDistances = getInputDistances(inputCoords);
 
-                    neighborDistances = max(inputDistances, stepDistance + sign * ivec4(0,0,1,1));
-                    candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
+                    stepDistances.rg = vec2(stepDistance - sign);
+                    stepDistances.ba = vec2(stepDistance);
 
-                    neighborDistances = max(inputDistances, stepDistance - sign * ivec4(1,1,0,0));
+                    neighborDistances = max(inputDistances, stepDistances);
                     candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
-                    
-                    blockDistances = min(blockDistances, candidateDistances);
 
-                    if (all(lessThanEqual(blockDistances, ivec4(stepDistance + 1)))) 
+                    stepDistances.rg = vec2(stepDistance);
+                    stepDistances.ba = vec2(stepDistance + sign);
+
+                    neighborDistances = max(inputDistances, stepDistances);
+                    candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
+                    
+                    outputDistances = min(outputDistances, candidateDistances);
+                    if (mmax(outputDistances) < float(stepDistance + 2)) 
                     {
                         break;
                     }
                 }
             }
 
-            blockDistances = clamp(blockDistances, ivec4(0), ivec4(${maxDistance}));
+            outputDistances = clamp(outputDistances, vec4(0), vec4(${maxDistance}));
 
-            setOutput(vec4(blockDistances));
+            setOutput(outputDistances);
         }
         `
     }
@@ -166,7 +204,7 @@ class SecondAnisotropicChebyshevDistancePassY implements GPGPUProgram
 
 class ThirdAnisotropicChebyshevDistancePassZ implements GPGPUProgram 
 {
-    variableNames = ['InputVariables']
+    variableNames = ['InputDistances']
     outputShape: number[]
     userCode: string
     packedInputs = true
@@ -175,60 +213,52 @@ class ThirdAnisotropicChebyshevDistancePassZ implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number, number], 
-        inputVariable: 'occupancy' | 'distance',
         maxDistance: number,
     ) 
     {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape
-        if (inBatch != 4) throw new Error('Batch dimension needs to be 2');
-
+        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 4) throw new Error('Batch dimension needs to be 4');
         this.outputShape = [8, inDepth, inHeight, inWidth]
         this.userCode = `
         const int maxSteps = ${Math.min(maxDistance, inDepth-1)};
 
-        vec4 getInputVariables(ivec4 coords) { return floor(getInputVariables(coords.w, coords.z, coords.y, coords.x) + 0.5); }
+        vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        ${inputVariable == 'occupancy' ? `            
-        ivec4 getInputDistances(ivec4 coords) { return ivec4(lessThan(getInputVariables(coords), vec4(0.5))) * ${maxDistance}; }` : `
-        ivec4 getInputDistances(ivec4 coords) { return ivec4(getInputVariables(coords)); }` }
+        bool insideDepth(int z) { return z >= 0 && z <= ${inDepth-1}; }
 
-        bool insideDepth(int coord) { return coord >= 0 && coord <= ${inDepth-1}; }
+        float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
+            vec4 candidateDistances;
+
             ivec4 outputCoords = getOutputCoords().wzyx;
+            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 4);
+
+            vec4 inputDistances = getInputDistances(inputCoords);
+            vec4 outputDistances = inputDistances;
+
             int sign = (outputCoords.w < 4) ? -1 : 1;
 
-            ivec4 blockCoords = ivec4(outputCoords.xyz, outputCoords.w % 4);
-            ivec4 blockDistances = getInputDistances(blockCoords);
-
-            ivec4 candidateCoords = blockCoords;
-            ivec4 candidateDistances = blockDistances;
-
-            if (all(equal(blockDistances, ivec4(0)))) 
+            for (int stepDistance = 0; stepDistance <= maxSteps; stepDistance++) 
             {
-                setOutput(vec4(blockDistances));
-                return;
-            }
-
-            for (int stepDistance = 1; stepDistance <= maxSteps; stepDistance++) 
-            {
-                candidateCoords.z = blockCoords.z + sign * stepDistance;
-                if (insideDepth(candidateCoords.z))
+                inputCoords.z = outputCoords.z + stepDistance * sign;
+                if (insideDepth(inputCoords.z))
                 {
-                    candidateDistances = max(getInputDistances(candidateCoords), ivec4(stepDistance));
-                    blockDistances = min(blockDistances, candidateDistances);
+                    inputDistances = getInputDistances(inputCoords);
 
-                    if (all(lessThanEqual(blockDistances, ivec4(stepDistance)))) 
+                    candidateDistances = max(inputDistances, vec4(stepDistance));
+                    outputDistances = min(outputDistances, candidateDistances);
+
+                    if (mmax(outputDistances) < float(stepDistance + 1)) 
                     {
                         break;
                     }
                 }
             }
 
-            blockDistances = clamp(blockDistances, ivec4(0), ivec4(${maxDistance}));
+            outputDistances = clamp(outputDistances, vec4(0), vec4(${maxDistance}));
 
-            setOutput(vec4(blockDistances));
+            setOutput(outputDistances);
         }
         `
     }
@@ -245,19 +275,20 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor
 export function anisotropicChessDistanceProgramPackedFused(inputOccupancy: tf.Tensor3D, maxDistance: number) : tf.Tensor4D
 {
     // 1D 
-    const getChessDistanceAlongX = new FirstAnisotropicChebyshevDistancePassX(inputOccupancy.shape, 'occupancy', maxDistance)
-    const distances_X0_X1 = runProgram(getChessDistanceAlongX, [inputOccupancy]) as tf.Tensor4D
+    const firstPassX = new FirstAnisotropicChebyshevDistancePassX(inputOccupancy.shape, maxDistance)
+    const distance_X0_X1 = runProgram(firstPassX, [inputOccupancy]) as tf.Tensor4D
 
     // 2D
-    const getChessDistanceAlongY = new SecondAnisotropicChebyshevDistancePassY(distances_X0_X1.shape, 'distance',  maxDistance)
-    const distances_XY00_XY10_XY01_XY11 = runProgram(getChessDistanceAlongY, [distances_X0_X1]) as tf.Tensor4D
-    tf.dispose(distances_X0_X1)
+    const secondPassY = new SecondAnisotropicChebyshevDistancePassY(distance_X0_X1.shape,  maxDistance)
+    const distance_XY00_XY10_XY01_XY11 = runProgram(secondPassY, [distance_X0_X1]) as tf.Tensor4D
+    tf.dispose(distance_X0_X1)
 
     // 3D
-    const getChessDistanceAlongZ = new ThirdAnisotropicChebyshevDistancePassZ(distances_XY00_XY10_XY01_XY11.shape, 'distance',  maxDistance)
-    const distances_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(getChessDistanceAlongZ, [distances_XY00_XY10_XY01_XY11]) as tf.Tensor4D
-    tf.dispose(distances_XY00_XY10_XY01_XY11)
+    const thirdPassZ = new ThirdAnisotropicChebyshevDistancePassZ(distance_XY00_XY10_XY01_XY11.shape, maxDistance)
+    const distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(thirdPassZ, [distance_XY00_XY10_XY01_XY11]) as tf.Tensor4D
+    tf.dispose(distance_XY00_XY10_XY01_XY11)
 
 
-    return distances_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 
+    return distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 
 }
+
