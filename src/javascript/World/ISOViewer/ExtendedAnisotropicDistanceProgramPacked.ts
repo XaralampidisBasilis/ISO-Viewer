@@ -28,13 +28,13 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
 
         vec4 getInputDistances(ivec3 coords) { return step(getInputOccupancies(coords), vec4(0.5)) * vec4(${maxDistance}); }
 
-        bool insideWidth(int x) { return x >= 0 && x <= ${inWidth-1}; }
+        bool insideWidth(int xCoord) { return xCoord >= 0 && xCoord <= ${inWidth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborDistances, candidateDistances;
+            vec4 xDistances, neighborDistances, candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
             ivec3 inputCoords = outputCoords.xyz;
@@ -42,22 +42,22 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
             vec4 inputDistances = getInputDistances(inputCoords);
             vec4 outputDistances = inputDistances;
             
-            int sign = (outputCoords.w < 1) ? -1 : 1;
+            int sign = (outputCoords.w == 0) ? -1 : 1;
             if (sign < 0)
             {
-                stepDistances.rb = vec2(0 - sign);
-                stepDistances.ga = vec2(0);
+                xDistances.rb = vec2(0 - sign);
+                xDistances.ga = vec2(0);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, xDistances);
                 candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
                 candidateDistances.rb = neighborDistances.rb;
             }
             else
             {
-                stepDistances.rb = vec2(0);
-                stepDistances.ga = vec2(0 + sign);
+                xDistances.rb = vec2(0);
+                xDistances.ga = vec2(0 + sign);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, xDistances);
                 candidateDistances.ga = neighborDistances.ga;
                 candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
             }
@@ -69,27 +69,27 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
                 return;
             }
             
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
+            for (int xDistance = 2; xDistance <= maxSteps; xDistance += 2) 
             {
-                inputCoords.x = outputCoords.x + stepDistance * sign;
+                inputCoords.x = outputCoords.x + xDistance * sign;
                 if (insideWidth(inputCoords.x)) 
                 {                    
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rb = vec2(stepDistance - sign);
-                    stepDistances.ga = vec2(stepDistance);
+                    xDistances.rb = vec2(xDistance - sign);
+                    xDistances.ga = vec2(xDistance);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, xDistances);
                     candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga); 
 
-                    stepDistances.rb = vec2(stepDistance);
-                    stepDistances.ga = vec2(stepDistance + sign);
+                    xDistances.rb = vec2(xDistance);
+                    xDistances.ga = vec2(xDistance + sign);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, xDistances);
                     candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
 
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    if (mmax(outputDistances) < float(xDistance + 2)) 
                     {
                         break;
                     }
@@ -129,13 +129,13 @@ class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
 
         vec4 getInputDistances(ivec3 coords) { return step(getInputOccupancies(coords), vec4(0.5)) * vec4(${maxDistance}); }
 
-        bool insideHeight(int y) { return y >= 0 && y <= ${inHeight-1}; }
+        bool insideHeight(int yCoord) { return yCoord >= 0 && yCoord <= ${inHeight-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborDistances, candidateDistances;
+            vec4 yDistances, neighborDistances, candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
             ivec3 inputCoords = outputCoords.xyz;    
@@ -146,19 +146,19 @@ class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
             int sign = (outputCoords.w < 1) ? -1 : 1;
             if (sign < 0)
             {
-                stepDistances.rg = vec2(0 - sign);
-                stepDistances.ba = vec2(0);
+                yDistances.rg = vec2(0 - sign);
+                yDistances.ba = vec2(0);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, yDistances);
                 candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
                 candidateDistances.rg = neighborDistances.rg;
             }
             else
             {
-                stepDistances.rg = vec2(0);
-                stepDistances.ba = vec2(0 + sign);
+                yDistances.rg = vec2(0);
+                yDistances.ba = vec2(0 + sign);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, yDistances);
                 candidateDistances.ba = neighborDistances.ba;
                 candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
             }
@@ -170,27 +170,27 @@ class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
                 return;
             }
 
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
+            for (int yDistance = 2; yDistance <= maxSteps; yDistance += 2) 
             {
-                inputCoords.y = outputCoords.y + stepDistance * sign;
+                inputCoords.y = outputCoords.y + yDistance * sign;
                 if (insideHeight(inputCoords.y)) 
                 {   
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rg = vec2(stepDistance - sign);
-                    stepDistances.ba = vec2(stepDistance);
+                    yDistances.rg = vec2(yDistance - sign);
+                    yDistances.ba = vec2(yDistance);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, yDistances);
                     candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
 
-                    stepDistances.rg = vec2(stepDistance);
-                    stepDistances.ba = vec2(stepDistance + sign);
+                    yDistances.rg = vec2(yDistance);
+                    yDistances.ba = vec2(yDistance + sign);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, yDistances);
                     candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
                     
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    if (mmax(outputDistances) < float(yDistance + 2)) 
                     {
                         break;
                     }
@@ -228,7 +228,7 @@ class FirstExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram
 
         vec4 getInputDistances(ivec3 coords) { return step(getInputOccupancies(coords), vec4(0.5)) * vec4(${maxDistance}); }
 
-        bool insideDepth(int z) { return z >= 0 && z <= ${inDepth-1}; }
+        bool insideDepth(int zCoord) { return zCoord >= 0 && zCoord <= ${inDepth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
@@ -244,17 +244,17 @@ class FirstExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram
 
             int sign = (outputCoords.w < 1) ? -1 : 1;
 
-            for (int stepDistance = 0; stepDistance <= maxSteps; stepDistance++) 
+            for (int zDistance = 0; zDistance <= maxSteps; zDistance++) 
             {
-                inputCoords.z = outputCoords.z + stepDistance * sign;
+                inputCoords.z = outputCoords.z + zDistance * sign;
                 if (insideDepth(inputCoords.z))
                 {
                     inputDistances = getInputDistances(inputCoords);
 
-                    candidateDistances = max(inputDistances, vec4(stepDistance));
+                    candidateDistances = max(inputDistances, vec4(zDistance));
                     outputDistances = min(outputDistances, candidateDistances);
 
-                    if (mmax(outputDistances) < float(stepDistance + 1)) 
+                    if (mmax(outputDistances) < float(zDistance + 1)) 
                     {
                         break;
                     }
@@ -292,13 +292,13 @@ class SecondExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
         
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideWidth(int x) { return x >= 0 && x <= ${inWidth-1}; }
+        bool insideWidth(int xCoord) { return xCoord >= 0 && xCoord <= ${inWidth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborDistances, candidateDistances;
+            vec4 xDistances, neighborDistances, candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
             ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 2);    
@@ -309,19 +309,19 @@ class SecondExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
             int sign = (outputCoords.w < 2) ? -1 : 1;
             if (sign < 0)
             {
-                stepDistances.rb = vec2(0 - sign);
-                stepDistances.ga = vec2(0);
+                xDistances.rb = vec2(0 - sign);
+                xDistances.ga = vec2(0);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, xDistances);
                 candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
                 candidateDistances.rb = neighborDistances.rb;
             }
             else
             {
-                stepDistances.rb = vec2(0);
-                stepDistances.ga = vec2(0 + sign);
+                xDistances.rb = vec2(0);
+                xDistances.ga = vec2(0 + sign);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, xDistances);
                 candidateDistances.ga = neighborDistances.ga;
                 candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
             }
@@ -333,27 +333,27 @@ class SecondExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
                 return;
             }
 
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
+            for (int xDistance = 2; xDistance <= maxSteps; xDistance += 2) 
             {
-                inputCoords.x = outputCoords.x + stepDistance * sign;
+                inputCoords.x = outputCoords.x + xDistance * sign;
                 if (insideWidth(inputCoords.x)) 
                 {   
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rb = vec2(stepDistance - sign);
-                    stepDistances.ga = vec2(stepDistance);
+                    xDistances.rb = vec2(xDistance - sign);
+                    xDistances.ga = vec2(xDistance);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, xDistances);
                     candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
 
-                    stepDistances.rb = vec2(stepDistance);
-                    stepDistances.ga = vec2(stepDistance + sign);
+                    xDistances.rb = vec2(xDistance);
+                    xDistances.ga = vec2(xDistance + sign);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, xDistances);
                     candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
                     
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    if (mmax(outputDistances) < float(xDistance + 2)) 
                     {
                         break;
                     }
@@ -391,16 +391,17 @@ class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
         
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideHeight(int y) { return y >= 0 && y <= ${inHeight-1}; }
+        bool insideHeight(int yCoord) { return yCoord >= 0 && yCoord <= ${inHeight-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborDistances, candidateDistances;
+            vec4 yDistances, neighborDistances, candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 2);    
+            ivec4 inputCoords = outputCoords;    
+            inputCoords.w = outputCoords.w % 2;    
 
             vec4 inputDistances = getInputDistances(inputCoords);
             vec4 outputDistances = inputDistances;
@@ -408,19 +409,19 @@ class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
             int sign = (outputCoords.w < 2) ? -1 : 1;
             if (sign < 0)
             {
-                stepDistances.rg = vec2(0 - sign);
-                stepDistances.ba = vec2(0);
+                yDistances.rg = vec2(0 - sign);
+                yDistances.ba = vec2(0);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, yDistances);
                 candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
                 candidateDistances.rg = neighborDistances.rg;
             }
             else
             {
-                stepDistances.rg = vec2(0);
-                stepDistances.ba = vec2(0 + sign);
+                yDistances.rg = vec2(0);
+                yDistances.ba = vec2(0 + sign);
 
-                neighborDistances = max(inputDistances, stepDistances);
+                neighborDistances = max(inputDistances, yDistances);
                 candidateDistances.ba = neighborDistances.ba;
                 candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
             }
@@ -432,27 +433,27 @@ class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
                 return;
             }
 
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
+            for (int yDistance = 2; yDistance <= maxSteps; yDistance += 2) 
             {
-                inputCoords.y = outputCoords.y + stepDistance * sign;
+                inputCoords.y = outputCoords.y + yDistance * sign;
                 if (insideHeight(inputCoords.y)) 
                 {   
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rg = vec2(stepDistance - sign);
-                    stepDistances.ba = vec2(stepDistance);
+                    yDistances.rg = vec2(yDistance - sign);
+                    yDistances.ba = vec2(yDistance);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, yDistances);
                     candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
 
-                    stepDistances.rg = vec2(stepDistance);
-                    stepDistances.ba = vec2(stepDistance + sign);
+                    yDistances.rg = vec2(yDistance);
+                    yDistances.ba = vec2(yDistance + sign);
 
-                    neighborDistances = max(inputDistances, stepDistances);
+                    neighborDistances = max(inputDistances, yDistances);
                     candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
                     
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    if (mmax(outputDistances) < float(yDistance + 2)) 
                     {
                         break;
                     }
@@ -488,34 +489,32 @@ class SecondExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram
 
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideDepth(int z) { return z >= 0 && z <= ${inDepth-1}; }
+        bool insideDepth(int zCoord) { return zCoord >= 0 && zCoord <= ${inDepth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, candidateDistances;
+            vec4 candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 2);    
+            ivec4 inputCoords = outputCoords;    
+            inputCoords.w = outputCoords.w % 2;    
 
             vec4 inputDistances = getInputDistances(inputCoords);
             vec4 outputDistances = inputDistances;
 
             int sign = (outputCoords.w < 2) ? -1 : 1;
-
-            for (int stepDistance = 0; stepDistance <= maxSteps; stepDistance++) 
+            for (int zDistance = 0; zDistance <= maxSteps; zDistance++) 
             {
-                inputCoords.z = outputCoords.z + stepDistance * sign;
+                inputCoords.z = outputCoords.z + zDistance * sign;
                 if (insideDepth(inputCoords.z))
                 {
                     inputDistances = getInputDistances(inputCoords);
-                    stepDistances = vec4(stepDistance);
+                    candidateDistances = max(inputDistances, vec4(zDistance));
 
-                    candidateDistances = max(inputDistances, stepDistances);
-                    
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 1)) 
+                    if (mmax(outputDistances) < float(zDistance + 1)) 
                     {
                         break;
                     }
@@ -553,75 +552,47 @@ class ThirdExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
 
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideWidth(int x) { return x >= 0 && x <= ${inWidth-1}; }
+        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) { return ivec4(coords.xyz, coords.w / 2); }
+
+        int getSignFromOutputCoords(ivec4 coords) { return ((coords.w % 2) == 0) ? -1 : 1; }
+
+        bool insideWidth(int xCoord) { return xCoord >= 0 && xCoord <= ${inWidth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborOccupancies, neighborDistances, candidateDistances;
+            vec4 xDistances, neighborDistances, candidateDistances;
             
             ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 4);
+            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
 
             vec4 inputDistances = getInputDistances(inputCoords);
             vec4 outputDistances = vec4(${maxDistance});
             
-            int sign = ((outputCoords.w % 2) < 1) ? -1 : 1;
-            if (sign < 0)
+            int xSign = getSignFromOutputCoords(outputCoords);
+
+            for (int xDistance = 0; xDistance <= maxSteps; xDistance += 2) 
             {
-                stepDistances.rb = vec2(0 - sign);
-                stepDistances.ga = vec2(0);
-
-                neighborOccupancies = step(inputDistances, stepDistances);
-                neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-
-                candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
-                candidateDistances.rb = neighborDistances.rb;
-            }
-            else
-            {
-                stepDistances.rb = vec2(0);
-                stepDistances.ga = vec2(0 + sign);
-
-                neighborOccupancies = step(inputDistances, stepDistances);
-                neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-
-                candidateDistances.ga = neighborDistances.ga;
-                candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
-            }
-
-            outputDistances = min(outputDistances, candidateDistances);
-            if (mmax(outputDistances) < 2.0) 
-            {
-                setOutput(outputDistances);
-                return;
-            }
-
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
-            {
-                inputCoords.x = outputCoords.x + stepDistance * sign;
+                inputCoords.x = outputCoords.x + xDistance * xSign;
                 if (insideWidth(inputCoords.x))
                 {
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rb = vec2(stepDistance - sign);
-                    stepDistances.ga = vec2(stepDistance);
+                    xDistances.ga = vec2(xDistance);
+                    xDistances.rb = vec2(xDistance - xSign);
 
-                    neighborOccupancies = step(inputDistances, stepDistances);
-                    neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-                    candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
-
-                    stepDistances.rb = vec2(stepDistance);
-                    stepDistances.ga = vec2(stepDistance + sign);
-
-                    neighborOccupancies = step(inputDistances, stepDistances);
-                    neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
+                    neighborDistances = mix(vec4(${maxDistance}), xDistances, step(inputDistances, xDistances));
                     candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
 
-                    outputDistances = min(outputDistances, candidateDistances);
+                    xDistances.ga = vec2(xDistance + xSign);
+                    xDistances.rb = vec2(xDistance);
 
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    neighborDistances = mix(vec4(${maxDistance}), xDistances, step(inputDistances, xDistances));
+                    candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
+
+                    outputDistances = min(outputDistances, candidateDistances);
+                    if (mmax(outputDistances) < float(xDistance + 2)) 
                     {
                         break;
                     }
@@ -659,75 +630,46 @@ class ThirdExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
 
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideHeight(int y) { return y >= 0 && y <= ${inHeight-1}; }
+        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) { return ivec4(coords.xyz, (coords.w % 2) + 2 * (coords.w / 4)); }
+
+        int getSignFromOutputCoords(ivec4 coords) { return ((coords.w % 4) / 2) == 0 ? -1 : 1; }
+
+        bool insideHeight(int yCoord) { return yCoord >= 0 && yCoord <= ${inHeight-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, neighborOccupancies, neighborDistances, candidateDistances;
-            
             ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 4);
+            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
 
             vec4 inputDistances = getInputDistances(inputCoords);
             vec4 outputDistances = vec4(${maxDistance});
             
-            int sign = ((outputCoords.w % 4) < 2) ? -1 : 1;
-            if (sign < 0)
+            int ySign = getSignFromOutputCoords(outputCoords);
+            vec4 yDistances, neighborAcceptance, neighborDistances, candidateDistances;
+
+            for (int yDistance = 0; yDistance <= maxSteps; yDistance += 2) 
             {
-                stepDistances.rg = vec2(0 - sign);
-                stepDistances.ba = vec2(0);
-
-                neighborOccupancies = step(inputDistances, stepDistances);
-                neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-                
-                candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
-                candidateDistances.rg = neighborDistances.rg;
-            }
-            else
-            {
-                stepDistances.rg = vec2(0);
-                stepDistances.ba = vec2(0 + sign);
-
-                neighborOccupancies = step(inputDistances, stepDistances);
-                neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-
-                candidateDistances.ba = neighborDistances.ba;
-                candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
-            }
-
-            outputDistances = min(outputDistances, candidateDistances);
-            if (mmax(outputDistances) < 2.0) 
-            {
-                setOutput(outputDistances);
-                return;
-            }
-
-            for (int stepDistance = 2; stepDistance <= maxSteps; stepDistance += 2) 
-            {
-                inputCoords.y = outputCoords.y + stepDistance * sign;
+                inputCoords.y = outputCoords.y + yDistance * ySign;
                 if (insideHeight(inputCoords.y))
                 {
                     inputDistances = getInputDistances(inputCoords);
 
-                    stepDistances.rg = vec2(stepDistance - sign);
-                    stepDistances.ba = vec2(stepDistance);
+                    yDistances.ba = vec2(yDistance);
+                    yDistances.rg = vec2(yDistance - ySign);
 
-                    neighborOccupancies = step(inputDistances, stepDistances);
-                    neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
-                    candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
-
-                    stepDistances.rg = vec2(stepDistance);
-                    stepDistances.ba = vec2(stepDistance + sign);
-
-                    neighborOccupancies = step(inputDistances, stepDistances);
-                    neighborDistances = mix(outputDistances, stepDistances, neighborOccupancies);
+                    neighborDistances = mix(vec4(${maxDistance}), yDistances, step(inputDistances, yDistances));
                     candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
 
-                    outputDistances = min(outputDistances, candidateDistances);
+                    yDistances.ba = vec2(yDistance + ySign);
+                    yDistances.rg = vec2(yDistance);
 
-                    if (mmax(outputDistances) < float(stepDistance + 2)) 
+                    neighborDistances = mix(vec4(${maxDistance}), yDistances, step(inputDistances, yDistances));
+                    candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
+
+                    outputDistances = min(outputDistances, candidateDistances);
+                    if (mmax(outputDistances) < float(yDistance + 2)) 
                     {
                         break;
                     }
@@ -763,35 +705,37 @@ class ThirdExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram
 
         vec4 getInputDistances(ivec4 coords) { return getInputDistances(coords.w, coords.z, coords.y, coords.x); }
 
-        bool insideDepth(int z) { return z >= 0 && z <= ${inDepth-1}; }
+        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) { return ivec4(coords.xyz, coords.w % 4); }
+
+        int getSignFromOutputCoords(ivec4 coords) { return ((coords.w % 8) < 4) ? -1 : 1; }
+
+        bool insideDepth(int zCoord) { return zCoord >= 0 && zCoord <= ${inDepth-1}; }
 
         float mmax(vec4 v) { return max(max(v.x, v.y), max(v.z, v.w)); }
 
         void main() 
         {
-            vec4 stepDistances, candidateOccupancies, candidateDistances;
 
             ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = ivec4(outputCoords.xyz, outputCoords.w % 4);    
+            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
 
             vec4 outputDistances = vec4(${maxDistance});
-            vec4 inputDistances;
+            vec4 inputDistances = outputDistances;
 
-            int sign = ((outputCoords.w % 8) < 4) ? -1 : 1;
-            
-            for (int stepDistance = 0; stepDistance <= maxSteps; stepDistance++) 
+            int zSign = getSignFromOutputCoords(outputCoords);
+
+            for (int zDistance = 0; zDistance <= maxSteps; zDistance++) 
             {
-                inputCoords.z = outputCoords.z + stepDistance * sign;
+                inputCoords.z = outputCoords.z + zDistance * zSign;
                 if (insideDepth(inputCoords.z))
                 {
-                    inputDistances = getInputDistances(inputCoords);
-                    stepDistances = vec4(stepDistance);
+                    vec4 inputDistances = getInputDistances(inputCoords);
+                    vec4 zDistances = vec4(zDistance);
 
-                    candidateOccupancies = step(inputDistances, stepDistances);
-                    candidateDistances = mix(outputDistances, stepDistances, candidateOccupancies);
+                    vec4 candidateDistances = mix(outputDistances, zDistances, step(inputDistances, zDistances));
 
                     outputDistances = min(outputDistances, candidateDistances);
-                    if (mmax(outputDistances) < float(stepDistance + 1)) 
+                    if (mmax(outputDistances) < float(zDistance + 1)) 
                     {
                         break;
                     }
@@ -820,9 +764,9 @@ class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram
         this.outputShape = [8, inDepth, inHeight, inWidth]
         this.userCode = `
 
-        vec4 getInputDistancesX(ivec4 coords) { return floor(getInputDistancesX(coords.w, coords.z, coords.y, coords.x) + 0.5); }
-        vec4 getInputDistancesY(ivec4 coords) { return floor(getInputDistancesY(coords.w, coords.z, coords.y, coords.x) + 0.5); }
-        vec4 getInputDistancesZ(ivec4 coords) { return floor(getInputDistancesZ(coords.w, coords.z, coords.y, coords.x) + 0.5); }
+        vec4 getInputDistancesX(ivec4 coords) { return getInputDistancesX(coords.w, coords.z, coords.y, coords.x); }
+        vec4 getInputDistancesY(ivec4 coords) { return getInputDistancesY(coords.w, coords.z, coords.y, coords.x); }
+        vec4 getInputDistancesZ(ivec4 coords) { return getInputDistancesZ(coords.w, coords.z, coords.y, coords.x); }
 
         ivec4 mmin(ivec4 x, ivec4 y, ivec4 z) { return min(min(x, y), z); }
 
@@ -839,10 +783,10 @@ class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram
             ivec4 inputOccupancies = ivec4(lessThan(inputDistances, ivec4(1)));
     
             ivec4 outputDistances = 
-                0 * clamp(inputDistancesX,  0, 31) * 2048 + 
-                0 * clamp(inputDistancesY,  0, 31) * 64   + 
-                1 * clamp(inputDistancesZ,  0, 31) * 2    + 
-                0 * clamp(inputOccupancies, 0,  1) * 1;
+                clamp(inputDistancesX,  0, 31) * 2048 + 
+                clamp(inputDistancesY,  0, 31) * 64   + 
+                clamp(inputDistancesZ,  0, 31) * 2    + 
+                clamp(inputOccupancies, 0,  1);
 
             setOutput(vec4(outputDistances));
         }

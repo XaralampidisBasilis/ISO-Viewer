@@ -181,7 +181,7 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('downscaleIntensityMap') 
 
-        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.5))
+        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.8))
         const intensityMap = resizeProgram(this.intensityMap.tensor, newShape[0], newShape[1], newShape[2], false, true)  
         tf.dispose(this.intensityMap.tensor)
 
@@ -365,7 +365,7 @@ export default class ISOComputes extends EventEmitter
         // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
         // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
         // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
-        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPackedFused(this.occupancyMap.tensor, 255)
+        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPackedFused(this.occupancyMap.tensor, 31)
 
         // const tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
         // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
@@ -407,9 +407,9 @@ export default class ISOComputes extends EventEmitter
         // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
         this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 31)
 
-        const tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
-        const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)
-        console.log(error.abs().mean().dataSync())
+        // const tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
+        // const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)
+        // console.log(error.abs().mean().dataSync())
         // const indices = await tf.whereAsync(error.abs().greater(0))
         // console.log(indices.arraySync())
         // console.log(tf.gatherND(error, indices).dataSync())

@@ -172,10 +172,10 @@ class ExtendedAnisotropicChessDistancesBitpack implements GPGPUProgram
             blockDistances.a = getOccupancy(blockCoords);
 
             int packedDistances = 
-                0 * clamp(blockDistances.r, 0, 31) * 2048 + 
-                0 * clamp(blockDistances.g, 0, 31) * 64 + 
-                1 * clamp(blockDistances.b, 0, 31) * 2 + 
-                0 * clamp(blockDistances.a, 0,  1) * 1;
+                clamp(blockDistances.r, 0, 31) * 2048 + 
+                clamp(blockDistances.g, 0, 31) * 64 + 
+                clamp(blockDistances.b, 0, 31) * 2 + 
+                clamp(blockDistances.a, 0,  1);
 
             setOutput(float(packedDistances));
         }
