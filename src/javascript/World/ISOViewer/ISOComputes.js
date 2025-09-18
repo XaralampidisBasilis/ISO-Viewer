@@ -17,7 +17,8 @@ import { isotropicChebyshevDistanceProgram } from './IsotropicDistanceProgram'
 import { isotropicChebyshevDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
 
 import { anisotropicChebyshevDistanceProgram } from './AnisotropicDistanceProgram'
-import { anisotropicChebyshevDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
+import { anisotropicChebyshevDistanceProgramFused } from './AnisotropicDistanceProgramFused'
+import { anisotropicChebyshevDistanceProgramFusedPacked } from './AnisotropicDistanceProgramFusedPacked'
 
 import { extendedAnisotropicChebyshevDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
 import { extendedAnisotropicChebyshevDistanceProgramPacked } from './ExtendedAnisotropicDistanceProgramPacked'
@@ -364,17 +365,18 @@ export default class ISOComputes extends EventEmitter
         this.anisotropicDistanceMap = {}
         
         // this.anisotropicDistanceMap.tensor =  (await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 127)).squeeze()
-        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
-        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
+        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 127)
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
 
-        // const tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
-        // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
-        // console.log(error.abs().mean().dataSync())
-        // const indices = await tf.whereAsync(error.abs().greater(0))
-        // console.log(indices.arraySync())
-        // console.log(tf.gatherND(error, indices).dataSync())
-        // console.log(tf.gatherND(tensor, indices).dataSync())
-        // console.log(tf.gatherND(this.anisotropicDistanceMap.tensor, indices).dataSync())
+        const tensor = anisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 127)
+        const error = tensor.sub(this.anisotropicDistanceMap.tensor)
+        console.log(error.abs().mean().dataSync())
+        const indices = await tf.whereAsync(error.abs().greater(0))
+        console.log(indices.arraySync())
+        console.log(tf.gatherND(error, indices).dataSync())
+        console.log(tf.gatherND(tensor, indices).dataSync())
+        console.log(tf.gatherND(this.anisotropicDistanceMap.tensor, indices).dataSync())
         
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
@@ -404,8 +406,18 @@ export default class ISOComputes extends EventEmitter
         this.extendedAnisotropicDistanceMap = {}
 
         // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 31)
-        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
-        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+
+        // const tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        // const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)
+        // console.log(error.abs().mean().dataSync())
+        // const indices = await tf.whereAsync(error.abs().greater(0))
+        // console.log(indices.arraySync())
+        // console.log(tf.gatherND(error, indices).dataSync())
+        // console.log(tf.gatherND(tensor, indices).dataSync())
+        // console.log(tf.gatherND(this.extendedAnisotropicDistanceMap.tensor, indices).dataSync())
+        
 
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)
