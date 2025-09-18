@@ -12,13 +12,15 @@ import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { occupancyPackedProgram2 } from './OccupancyPackedProgram2'
 import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
-import { isotropicChessDistanceProgram } from './IsotropicDistanceProgram'
-import { isotropicChessDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
-import { anisotropicChessDistanceProgram } from './AnisotropicDistanceProgram'
-import { anisotropicChessDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
-import { anisotropicChessDistanceProgramPackedFused } from './AnisotropicDistanceProgramPackedFused'
-import { extendedAnisotropicChessDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
-import { extendedAnisotropicChessDistanceProgramPacked } from './ExtendedAnisotropicDistanceProgramPacked'
+
+import { isotropicChebyshevDistanceProgram } from './IsotropicDistanceProgram'
+import { isotropicChebyshevDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
+
+import { anisotropicChebyshevDistanceProgram } from './AnisotropicDistanceProgram'
+import { anisotropicChebyshevDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
+
+import { extendedAnisotropicChebyshevDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
+import { extendedAnisotropicChebyshevDistanceProgramPacked } from './ExtendedAnisotropicDistanceProgramPacked'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -73,7 +75,7 @@ export default class ISOComputes extends EventEmitter
         await this.computeBlockExtremaMap()
         tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
-        await this.computeDistanceMap()
+        await this.computeIsotropicDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
@@ -91,7 +93,7 @@ export default class ISOComputes extends EventEmitter
         this.threshold = this.uniforms.u_rendering.value.isovalue
         
         await this.computeOccupancyMap()
-        await this.computeDistanceMap()
+        await this.computeIsotropicDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
@@ -109,7 +111,7 @@ export default class ISOComputes extends EventEmitter
         await this.computeBlockExtremaMap()
         tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
-        await this.computeDistanceMap()
+        await this.computeIsotropicDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
@@ -127,8 +129,7 @@ export default class ISOComputes extends EventEmitter
         await this.computeBlockExtremaMap()
         tf.dispose(this.trilaplacianIntensityMap.tensor)
         await this.computeOccupancyMap()
-        await this.computeBoundingBox()
-        await this.computeDistanceMap()
+        await this.computeIsotropicDistanceMap()
         await this.computeAnisotropicDistanceMap()
         await this.computeExtendedAnisotropicDistanceMap()
         tf.dispose(this.occupancyMap.tensor)
@@ -181,7 +182,7 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('downscaleIntensityMap') 
 
-        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.8))
+        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.7))
         const intensityMap = resizeProgram(this.intensityMap.tensor, newShape[0], newShape[1], newShape[2], false, true)  
         tf.dispose(this.intensityMap.tensor)
 
@@ -321,17 +322,17 @@ export default class ISOComputes extends EventEmitter
         console.timeEnd('computeBoundingBox') 
     }
 
-    async computeDistanceMap()
+    async computeIsotropicDistanceMap()
     {
         console.time('computeDistanceMap') 
 
         this.distanceMap = {}
 
-        // this.distanceMap.tensor = await TFUtils.computeDistanceMap(this.occupancyMap.tensor, 255)
-        // this.distanceMap.tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
-        this.distanceMap.tensor = isotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
+        // this.distanceMap.tensor = (await TFUtils.computeDistanceMap(this.occupancyMap.tensor.expandDims(-1), 255)).squeeze()
+        // this.distanceMap.tensor = isotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 255)
+        this.distanceMap.tensor = isotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 255)
 
-        // const tensor = isotropicChessDistanceProgram(this.occupancyMap.tensor, 255)
+        // const tensor = isotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 255)
         // const error = tensor.sub(this.distanceMap.tensor)
         // console.log(error.abs().mean().dataSync())
         
@@ -362,12 +363,11 @@ export default class ISOComputes extends EventEmitter
 
         this.anisotropicDistanceMap = {}
         
-        // this.anisotropicDistanceMap.tensor = await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor, 63)
-        // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgram(this.occupancyMap.tensor, 63)
-        // this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 63)
-        this.anisotropicDistanceMap.tensor = anisotropicChessDistanceProgramPackedFused(this.occupancyMap.tensor, 31)
+        // this.anisotropicDistanceMap.tensor =  (await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 127)).squeeze()
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
+        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
 
-        // const tensor = anisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 255)
+        // const tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
         // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
         // console.log(error.abs().mean().dataSync())
         // const indices = await tf.whereAsync(error.abs().greater(0))
@@ -404,18 +404,8 @@ export default class ISOComputes extends EventEmitter
         this.extendedAnisotropicDistanceMap = {}
 
         // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 31)
-        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
-        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChessDistanceProgramPacked(this.occupancyMap.tensor, 31)
-
-        // const tensor = extendedAnisotropicChessDistanceProgram(this.occupancyMap.tensor, 31)
-        // const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)
-        // console.log(error.abs().mean().dataSync())
-        // const indices = await tf.whereAsync(error.abs().greater(0))
-        // console.log(indices.arraySync())
-        // console.log(tf.gatherND(error, indices).dataSync())
-        // console.log(tf.gatherND(tensor, indices).dataSync())
-        // console.log(tf.gatherND(this.extendedAnisotropicDistanceMap.tensor, indices).dataSync())
-        
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
+        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
 
         this.extendedAnisotropicDistanceMap.array = new Uint16Array(this.extendedAnisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.extendedAnisotropicDistanceMap.tensor)

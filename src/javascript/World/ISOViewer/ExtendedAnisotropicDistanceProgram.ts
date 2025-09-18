@@ -189,7 +189,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor3D
     return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs)) as tf.Tensor3D
 }
 
-export function extendedAnisotropicChessDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor4D 
+export function extendedAnisotropicChebyshevDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor4D 
 {
     const shape = inputOccupancy.shape
 
