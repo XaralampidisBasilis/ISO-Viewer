@@ -13,13 +13,14 @@ class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number], 
+        inputSign: '-' | '+',
         maxDistance: number,
     ) 
     {
         const [inDepth, inHeight, inWidth] = inputShape
         const ceilToEven = (x: number) => Math.ceil(x / 2) * 2
-        const maxSteps = ceilToEven(Math.min(maxDistance, inWidth-1))
-        this.outputShape = [2, inDepth, inHeight, inWidth]
+        const maxSteps = ceilToEven(Math.min(maxDistance, inWidth - 1))
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `        
         ivec4 getDistancesFromOccupancies(vec4 occupancies)
         {
@@ -29,16 +30,6 @@ class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram
         ivec4 getInputDistances(ivec3 coords)
         {
             return getDistancesFromOccupancies(getInputOccupancies(coords.z, coords.y, coords.x));
-        }
-
-        ivec3 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec3(coords.xyz); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 1) ? -1 : 1; 
         }
 
         bool outsideWidth(ivec3 coords)
@@ -51,34 +42,34 @@ class FirstAnisotropicChebyshevDistancePassX implements GPGPUProgram
             return max(max(distances.x, distances.y), max(distances.z, distances.w)); 
         }
 
+        const int xSign = ${inputSign} 1;
+
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec3 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
+            ivec3 outputCoords = getOutputCoords().zyx;
+            ivec3 inputCoords = outputCoords;
 
             ivec4 inputDistances = getInputDistances(inputCoords);
             ivec4 outputDistances = inputDistances;
-            ivec4 xSteps, neighborDistances, candidateDistances;
+            ivec4 neighborDistances, candidateDistances, xSteps;
 
-            int xSign = getSignFromOutputCoords(outputCoords);
-            if (xSign < 0)
-            {
+            ${inputSign == '-' ? 
+            `
                 xSteps.rb = ivec2(0 - xSign);
                 xSteps.ga = ivec2(0);
 
                 neighborDistances = max(inputDistances, xSteps);
                 candidateDistances.ga = min(neighborDistances.rb, neighborDistances.ga);
                 candidateDistances.rb = neighborDistances.rb;
-            }
-            else
-            {
+
+            `:`
                 xSteps.rb = ivec2(0);
                 xSteps.ga = ivec2(0 + xSign);
 
                 neighborDistances = max(inputDistances, xSteps);
                 candidateDistances.ga = neighborDistances.ga;
                 candidateDistances.rb = min(neighborDistances.rb, neighborDistances.ga);
-            }
+            `}
 
             outputDistances = min(outputDistances, candidateDistances);
             if (mmax(outputDistances) <= 1) 
@@ -133,31 +124,22 @@ class SecondAnisotropicChebyshevDistancePassY implements GPGPUProgram
 
     constructor
     (
-        inputShape: [number, number, number, number], 
+        inputShape: [number, number, number], 
+        inputSign: '-' | '+',
         maxDistance: number,
     ) 
     {
-        const [inBatches, inDepth, inHeight, inWidth] = inputShape;  if (inBatches != 2) throw new Error('Batch dimension needs to be 2')
+        const [inDepth, inHeight, inWidth] = inputShape; 
         const ceilToEven = (x: number) => Math.ceil(x / 2) * 2
-        const maxSteps = ceilToEven(Math.min(maxDistance, inHeight-1))
-        this.outputShape = [4, inDepth, inHeight, inWidth]
+        const maxSteps = ceilToEven(Math.min(maxDistance, inHeight - 1))
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `        
-        ivec4 getInputDistances(ivec4 coords) 
+        ivec4 getInputDistances(ivec3 coords) 
         { 
-            return ivec4(getInputDistances(coords.w, coords.z, coords.y, coords.x)); 
+            return ivec4(getInputDistances(coords.z, coords.y, coords.x)); 
         }
 
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w % 2); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 2) ? -1 : 1; 
-        }
-
-        bool outsideHeight(ivec4 coords)
+        bool outsideHeight(ivec3 coords)
         {
             return (coords.y < 0) || (coords.y > ${inHeight-1});
         }
@@ -167,34 +149,33 @@ class SecondAnisotropicChebyshevDistancePassY implements GPGPUProgram
             return max(max(distances.x, distances.y), max(distances.z, distances.w)); 
         }
 
+        const int ySign = ${inputSign} 1;
+
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);    
+            ivec3 outputCoords = getOutputCoords().zyx;
+            ivec3 inputCoords = outputCoords;    
 
             ivec4 inputDistances = getInputDistances(inputCoords);
             ivec4 outputDistances = inputDistances;
-            ivec4 ySteps, neighborDistances, candidateDistances;
+            ivec4 neighborDistances, candidateDistances, ySteps;
 
-            int ySign = getSignFromOutputCoords(outputCoords);
-            if (ySign < 0)
-            {
+            ${inputSign == '-' ? 
+            `   
                 ySteps.rg = ivec2(0 - ySign);
                 ySteps.ba = ivec2(0);
 
                 neighborDistances = max(inputDistances, ySteps);
                 candidateDistances.ba = min(neighborDistances.rg, neighborDistances.ba);
                 candidateDistances.rg = neighborDistances.rg;
-            }
-            else
-            {
+            `:`
                 ySteps.rg = ivec2(0);
                 ySteps.ba = ivec2(0 + ySign);
 
                 neighborDistances = max(inputDistances, ySteps);
                 candidateDistances.ba = neighborDistances.ba;
                 candidateDistances.rg = min(neighborDistances.rg, neighborDistances.ba);
-            }
+            `}
 
             outputDistances = min(outputDistances, candidateDistances);
             if (mmax(outputDistances) <= 1) 
@@ -249,30 +230,21 @@ class ThirdAnisotropicChebyshevDistancePassZ implements GPGPUProgram
 
     constructor
     (
-        inputShape: [number, number, number, number], 
+        inputShape: [number, number, number], 
+        inputSign: '-' | '+',
         maxDistance: number,
     ) 
     {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 4) throw new Error('Batch dimension needs to be 4')
-        const maxSteps = Math.min(maxDistance, inDepth-1)
-        this.outputShape = [8, inDepth, inHeight, inWidth]
+        const [inDepth, inHeight, inWidth] = inputShape
+        const maxSteps = Math.min(maxDistance, inDepth - 1)
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
-        ivec4 getInputDistances(ivec4 coords) 
+        ivec4 getInputDistances(ivec3 coords) 
         { 
-            return ivec4(getInputDistances(coords.w, coords.z, coords.y, coords.x)); 
+            return ivec4(getInputDistances(coords.z, coords.y, coords.x)); 
         }
 
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w % 4); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 4) ? -1 : 1; 
-        }
-
-        bool outsideDepth(ivec4 coords)
+        bool outsideDepth(ivec3 coords)
         {
             return (coords.z < 0) || (coords.z > ${inDepth-1});
         }
@@ -282,16 +254,16 @@ class ThirdAnisotropicChebyshevDistancePassZ implements GPGPUProgram
             return max(max(distances.x, distances.y), max(distances.z, distances.w)); 
         }
 
+        const int zSign = ${inputSign} 1;
+
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
+            ivec3 outputCoords = getOutputCoords().zyx;
+            ivec3 inputCoords = outputCoords;
 
             ivec4 inputDistances = getInputDistances(inputCoords);
             ivec4 outputDistances = inputDistances;
             ivec4 candidateDistances;
-
-            int zSign = getSignFromOutputCoords(outputCoords);
 
             if (mmax(outputDistances) <= 1) 
             {
@@ -310,7 +282,7 @@ class ThirdAnisotropicChebyshevDistancePassZ implements GPGPUProgram
                 inputDistances = getInputDistances(inputCoords);
                 candidateDistances = max(inputDistances, zStep);
 
-                outputDistances = min(outputDistances, candidateDistances);
+                outputDistances = min(outputDistances, candidateDistances); 
                 if (mmax(outputDistances) <= zStep + 1) 
                 {
                     break;
@@ -332,23 +304,59 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function anisotropicChebyshevDistanceProgramFusedPacked(inputOccupancy: tf.Tensor3D, maxDistance: number) : tf.Tensor4D
+
+export function anisotropicChebyshevDistanceProgramPacked(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor4D 
 {
+    const shape = inputOccupancy.shape
+
     // 1D 
-    const firstPassX = new FirstAnisotropicChebyshevDistancePassX(inputOccupancy.shape, maxDistance)
-    const distance_X0_X1 = runProgram(firstPassX, [inputOccupancy]) as tf.Tensor4D
+    const firstPassX0 = new FirstAnisotropicChebyshevDistancePassX(shape, '-', maxDistance)
+    const firstPassX1 = new FirstAnisotropicChebyshevDistancePassX(shape, '+', maxDistance)
+    const distanceX0 = runProgram(firstPassX0, [inputOccupancy])
+    const distanceX1 = runProgram(firstPassX1, [inputOccupancy])
 
     // 2D
-    const secondPassY = new SecondAnisotropicChebyshevDistancePassY(distance_X0_X1.shape,  maxDistance)
-    const distance_XY00_XY10_XY01_XY11 = runProgram(secondPassY, [distance_X0_X1]) as tf.Tensor4D
-    tf.dispose(distance_X0_X1)
+    const secondPassY0 = new SecondAnisotropicChebyshevDistancePassY(shape, '-', maxDistance)
+    const secondPassY1 = new SecondAnisotropicChebyshevDistancePassY(shape, '+', maxDistance)
+    const distanceXY00 = runProgram(secondPassY0, [distanceX0]);
+    const distanceXY01 = runProgram(secondPassY1, [distanceX0]); tf.dispose(distanceX0)
+    const distanceXY10 = runProgram(secondPassY0, [distanceX1]);
+    const distanceXY11 = runProgram(secondPassY1, [distanceX1]); tf.dispose(distanceX1)
 
     // 3D
-    const thirdPassZ = new ThirdAnisotropicChebyshevDistancePassZ(distance_XY00_XY10_XY01_XY11.shape, maxDistance)
-    const distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(thirdPassZ, [distance_XY00_XY10_XY01_XY11]) as tf.Tensor4D
-    tf.dispose(distance_XY00_XY10_XY01_XY11)
+    const thirdPassZ0 = new ThirdAnisotropicChebyshevDistancePassZ(shape, '-', maxDistance)
+    const thirdPassZ1 = new ThirdAnisotropicChebyshevDistancePassZ(shape, '+', maxDistance)
+    const distanceXYZ000 = runProgram(thirdPassZ0, [distanceXY00]);
+    const distanceXYZ001 = runProgram(thirdPassZ1, [distanceXY00]); tf.dispose(distanceXY00)
+    const distanceXYZ010 = runProgram(thirdPassZ0, [distanceXY01]);
+    const distanceXYZ011 = runProgram(thirdPassZ1, [distanceXY01]); tf.dispose(distanceXY01)
+    const distanceXYZ100 = runProgram(thirdPassZ0, [distanceXY10]);
+    const distanceXYZ101 = runProgram(thirdPassZ1, [distanceXY10]); tf.dispose(distanceXY10)
+    const distanceXYZ110 = runProgram(thirdPassZ0, [distanceXY11]);
+    const distanceXYZ111 = runProgram(thirdPassZ1, [distanceXY11]); tf.dispose(distanceXY11)
+    
+    // Stack
+    const distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = tf.stack([
+        distanceXYZ000,
+        distanceXYZ100,
+        distanceXYZ010,
+        distanceXYZ110,
+        distanceXYZ001,
+        distanceXYZ101,
+        distanceXYZ011,
+        distanceXYZ111,
+    ], 0)
 
+    tf.dispose([
+        distanceXYZ000,
+        distanceXYZ100,
+        distanceXYZ010,
+        distanceXYZ110,
+        distanceXYZ001,
+        distanceXYZ101,
+        distanceXYZ011,
+        distanceXYZ111,
+    ])
 
-    return distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 
+    return distance_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 as tf.Tensor4D
 }
-

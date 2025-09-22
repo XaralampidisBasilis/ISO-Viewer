@@ -3,7 +3,7 @@ import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 
-class AnisotropicChessDistancePass implements GPGPUProgram 
+class AnisotropicChebyshevDistancePass implements GPGPUProgram 
 {
     variableNames = ['InputVariable']
     outputShape: number[]
@@ -87,22 +87,22 @@ export function anisotropicChebyshevDistanceProgram(inputOccupancy: tf.Tensor3D,
     const shape = inputOccupancy.shape
 
     // 1D 
-    const firstPassX0  = new AnisotropicChessDistancePass(shape, 'occupancy', '-x', maxDistance)
-    const firstPassX1  = new AnisotropicChessDistancePass(shape, 'occupancy', '+x', maxDistance)
+    const firstPassX0  = new AnisotropicChebyshevDistancePass(shape, 'occupancy', '-x', maxDistance)
+    const firstPassX1  = new AnisotropicChebyshevDistancePass(shape, 'occupancy', '+x', maxDistance)
     const distanceX0 = runProgram(firstPassX0, [inputOccupancy])
     const distanceX1 = runProgram(firstPassX1, [inputOccupancy])
 
     // 2D
-    const secondPassY0 = new AnisotropicChessDistancePass(shape, 'distance', '-y', maxDistance)
-    const secondPassY1 = new AnisotropicChessDistancePass(shape, 'distance', '+y', maxDistance)
+    const secondPassY0 = new AnisotropicChebyshevDistancePass(shape, 'distance', '-y', maxDistance)
+    const secondPassY1 = new AnisotropicChebyshevDistancePass(shape, 'distance', '+y', maxDistance)
     const distanceXY00 = runProgram(secondPassY0, [distanceX0]);
     const distanceXY01 = runProgram(secondPassY1, [distanceX0]); tf.dispose(distanceX0)
     const distanceXY10 = runProgram(secondPassY0, [distanceX1]);
     const distanceXY11 = runProgram(secondPassY1, [distanceX1]); tf.dispose(distanceX1)
 
     // 3D
-    const thirdPassZ0  = new AnisotropicChessDistancePass(shape, 'distance', '-z', maxDistance)
-    const thirdPassZ1  = new AnisotropicChessDistancePass(shape, 'distance', '+z', maxDistance)
+    const thirdPassZ0  = new AnisotropicChebyshevDistancePass(shape, 'distance', '-z', maxDistance)
+    const thirdPassZ1  = new AnisotropicChebyshevDistancePass(shape, 'distance', '+z', maxDistance)
     const distanceXYZ000 = runProgram(thirdPassZ0, [distanceXY00]);
     const distanceXYZ001 = runProgram(thirdPassZ1, [distanceXY00]); tf.dispose(distanceXY00)
     const distanceXYZ010 = runProgram(thirdPassZ0, [distanceXY01]);

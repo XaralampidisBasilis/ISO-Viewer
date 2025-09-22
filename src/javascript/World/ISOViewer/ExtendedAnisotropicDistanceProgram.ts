@@ -3,9 +3,9 @@ import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 
-class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram 
+class ExtendedAnisotropicChessDistancePass0 implements GPGPUProgram 
 {
-    variableNames = ['InputOccupancy']
+    variableNames = ['InputVariable']
     outputShape: number[]
     userCode: string
     packedInputs = false
@@ -14,61 +14,57 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number], 
+        inputVariable: 'occupancy' | 'distance',
+        inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z' ,     
         maxDistance: number,
     ) 
     {
+        const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
-        const maxSteps = Math.min(maxDistance, inWidth-1)
-        this.outputShape = [2, inDepth, inHeight, inWidth]
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
-        bool getInputOccupancy(ivec3 coords) 
-        {
-            return (getInputOccupancy(coords.z, coords.y, coords.x) > 0.5); 
-        }
+        const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
+        const int maxSteps = min(${maxDistance}, maxCoords.${inAxis}); 
 
-        ivec3 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec3(coords.xyz); 
-        }
+        float getInputVariable(ivec3 coords) { return getInputVariable(coords.z, coords.y, coords.x); }
 
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 1) ? -1 : 1; 
-        }
+        ${inputVariable == 'occupancy' ? `
+        int getInputDistance(ivec3 coords) { return int(getInputVariable(coords) < 0.5) * ${maxDistance}; }` : `
+        int getInputDistance(ivec3 coords) { return int(getInputVariable(coords)); }`}
 
-        bool outsideWidth(ivec3 coords)
-        {
-            return (coords.x < 0) || (coords.x > ${inWidth-1});
-        }
+        ${inSign == '-' ? `
+        bool outsideBounds(ivec3 coords) { return (coords.${inAxis} < 0); }` : `
+        bool outsideBounds(ivec3 coords) { return (coords.${inAxis} > maxCoords.${inAxis}); }`}
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec3 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
+            ivec3 outputCoords = getOutputCoords().zyx;
+            ivec3 inputCoords = outputCoords;
 
-            bool inputOccupied = getInputOccupancy(inputCoords);
-            int outputDistance = ${maxDistance};
+            int inputDistance = getInputDistance(outputCoords);
+            int outputDistance = inputDistance;
+            int candidateDistance;
 
-            int xSign = getSignFromOutputCoords(outputCoords);
-
-            if (inputOccupied)
+            if (outputDistance <= 1) 
             {
-                setOutput(0.0);
+                setOutput(float(outputDistance));
                 return;
             }
 
-            for (int xStep = 1; xStep <= ${maxSteps}; xStep++) 
+            for (int nStep = 1; nStep <= maxSteps; nStep++) 
             {
-                inputCoords.x = outputCoords.x + xStep * xSign;
-                if (outsideWidth(inputCoords))
+                inputCoords.${inAxis} = outputCoords.${inAxis} ${inSign} nStep;
+                if (outsideBounds(inputCoords)) 
                 {
                     break;
                 }
 
-                inputOccupied = getInputOccupancy(inputCoords);
-                if (inputOccupied)
+                inputDistance = getInputDistance(inputCoords);
+                candidateDistance = max(inputDistance, nStep);
+
+                outputDistance = min(outputDistance, candidateDistance);
+                if (outputDistance <= nStep)
                 {
-                    outputDistance = xStep;
                     break;
                 }
             }
@@ -79,9 +75,9 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
     }
 }
 
-class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
+class ExtendedAnisotropicChessDistancePass1 implements GPGPUProgram 
 {
-    variableNames = ['InputOccupancy']
+    variableNames = ['InputDistance']
     outputShape: number[]
     userCode: string
     packedInputs = false
@@ -90,140 +86,50 @@ class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
     constructor
     (
         inputShape: [number, number, number], 
-        maxDistance: number,
+        inputDirection: '-x' | '+x' | '-y' | '+y' | '-z' | '+z',     
+        maxDistance: number
     ) 
     {
+        const [inSign, inAxis] = inputDirection
         const [inDepth, inHeight, inWidth] = inputShape
-        const maxSteps = Math.min(maxDistance, inWidth-1)
-        this.outputShape = [2, inDepth, inHeight, inWidth]
+        this.outputShape = [inDepth, inHeight, inWidth]
+
         this.userCode = `
-        bool getInputOccupancy(ivec3 coords) 
-        {
-            return (getInputOccupancy(coords.z, coords.y, coords.x) > 0.5); 
-        }
-
-        ivec3 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec3(coords.xyz); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 1) ? -1 : 1; 
-        }
-
-        bool outsideHeight(ivec3 coords)
-        {
-            return (coords.y < 0) || (coords.y > ${inWidth-1});
-        }
+        const ivec3 maxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
+        const int maxSteps = min(${maxDistance}, maxCoords.${inAxis}); 
+        
+        ${inSign == '-' ? `
+        bool outsideBounds(ivec3 coords) { return coords.${inAxis} < 0; }` : `
+        bool outsideBounds(ivec3 coords) { return coords.${inAxis} > maxCoords.${inAxis}; }`}
+        
+        int getInputDistance(ivec3 coords) { return int(getInputDistance(coords.z, coords.y, coords.x)); }
 
         void main() 
         {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec3 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
+            ivec3 outputCoords = getOutputCoords().zyx;
+            ivec3 inputCoords = outputCoords;
 
-            bool inputOccupied = getInputOccupancy(inputCoords);
+            int inputDistance = getInputDistance(outputCoords);
             int outputDistance = ${maxDistance};
 
-            int ySign = getSignFromOutputCoords(outputCoords);
-
-            if (inputOccupied)
+            if (inputDistance == 0) 
             {
                 setOutput(0.0);
                 return;
             }
-
-            for (int yStep = 1; yStep <= ${maxSteps}; yStep++) 
-            {
-                inputCoords.y = outputCoords.y + yStep * ySign;
-                if (outsideHeight(inputCoords))
-                {
-                    break;
-                }
-
-                inputOccupied = getInputOccupancy(inputCoords);
-                if (inputOccupied)
-                {
-                    outputDistance = yStep;
-                    break;
-                }
-            }
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
-
-class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
-{
-    variableNames = ['InputDistance']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
-
-    constructor
-    (
-        inputShape: [number, number, number, number], 
-        maxDistance: number,
-    ) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 2) throw new Error('Batch dimension needs to be 2');
-        const maxSteps = Math.min(maxDistance, inHeight-1)
-        this.outputShape = [4, inDepth, inHeight, inWidth]
-        this.userCode = `
-        int getInputDistance(ivec4 coords) 
-        { 
-            return int(getInputDistance(coords.w, coords.z, coords.y, coords.x)); 
-        }
-
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w % 2); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 2) ? -1 : 1; 
-        }
-
-        bool outsideHeight(ivec4 coords)
-        {
-            return (coords.y < 0) || (coords.y > ${inHeight-1});
-        }
-
-        void main() 
-        {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
             
-            int inputDistance = getInputDistance(inputCoords);
-            int outputDistance = inputDistance;
-            int candidateDistance;
-
-            int ySign = getSignFromOutputCoords(outputCoords);
-
-            if (outputDistance <= 1)
+            for (int nStep = 1; nStep <= maxSteps; nStep++) 
             {
-                setOutput(float(outputDistance));
-                return;
-            }
-
-            for (int yStep = 1; yStep <= ${maxSteps}; yStep++) 
-            {
-                inputCoords.y = outputCoords.y + yStep * ySign;
-                if (outsideHeight(inputCoords))
+                inputCoords.${inAxis} = outputCoords.${inAxis} ${inSign} nStep;
+                if (outsideBounds(inputCoords)) 
                 {
                     break;
                 }
 
                 inputDistance = getInputDistance(inputCoords);
-                candidateDistance = max(inputDistance, yStep);
-
-                outputDistance = min(outputDistance, candidateDistance);
-                if (outputDistance <= yStep)
+                if (inputDistance <= nStep)
                 {
+                    outputDistance = nStep;
                     break;
                 }
             }
@@ -233,315 +139,7 @@ class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
         `
     }
 }
-
-class SecondExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram 
-{
-    variableNames = ['InputDistance']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
-
-    constructor
-    (
-        inputShape: [number, number, number, number], 
-        maxDistance: number,
-    ) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 2) throw new Error('Batch dimension needs to be 2');
-        const maxSteps = Math.min(maxDistance, inDepth-1)
-        this.outputShape = [4, inDepth, inHeight, inWidth]
-        this.userCode = `
-        int getInputDistance(ivec4 coords) 
-        { 
-            return int(getInputDistance(coords.w, coords.z, coords.y, coords.x)); 
-        }
-
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w % 2); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return (coords.w < 2) ? -1 : 1; 
-        }
-
-        bool outsideDepth(ivec4 coords)
-        {
-            return (coords.z < 0) || (coords.z > ${inDepth-1});
-        }
-
-        void main() 
-        {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
-            
-            int inputDistance = getInputDistance(inputCoords);
-            int outputDistance = inputDistance;
-            int candidateDistance;
-
-            int zSign = getSignFromOutputCoords(outputCoords);
-
-            if (outputDistance <= 1)
-            {
-                setOutput(float(outputDistance));
-                return;
-            }
-
-            for (int zStep = 1; zStep <= ${maxSteps}; zStep++) 
-            {
-                inputCoords.z = outputCoords.z + zStep * zSign;
-                if (outsideDepth(inputCoords))
-                {
-                    break;
-                }
-
-                inputDistance = getInputDistance(inputCoords);
-                candidateDistance = max(inputDistance, zStep);
-
-                outputDistance = min(outputDistance, candidateDistance);
-                if (outputDistance <= zStep)
-                {
-                    break;
-                }
-            }
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
-
-class ThirdExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram 
-{
-    variableNames = ['InputDistance']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
-
-    constructor
-    (
-        inputShape: [number, number, number, number], 
-        maxDistance: number,
-    ) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 4) throw new Error('Batch dimension needs to be 4');
-        const maxSteps = Math.min(maxDistance, inWidth-1)
-        this.outputShape = [8, inDepth, inHeight, inWidth]
-        this.userCode = `
-        int getInputDistance(ivec4 coords) 
-        { 
-            return int(getInputDistance(coords.w, coords.z, coords.y, coords.x)); 
-        }
-
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w / 2); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return ((coords.w % 2) == 0) ? -1 : 1; 
-        }
-
-        bool outsideWidth(ivec4 coords)
-        {
-            return (coords.x < 0) || (coords.x > ${inWidth-1});
-        }
-
-        void main() 
-        {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
-            
-            int inputDistance = getInputDistance(inputCoords);
-            int outputDistance = ${maxDistance};
-
-            int xSign = getSignFromOutputCoords(outputCoords);
-
-            if (inputDistance == 0)
-            {
-                setOutput(0.0);
-                return;
-            }
-
-            for (int xStep = 1; xStep <= ${maxSteps}; xStep++) 
-            {
-                inputCoords.x = outputCoords.x + xStep * xSign;
-                if (outsideWidth(inputCoords))
-                {
-                    break;
-                }
-
-                inputDistance = getInputDistance(inputCoords);
-                if (inputDistance <= xStep)
-                {
-                    outputDistance = xStep;
-                    break;
-                }
-            }
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
-
-class ThirdExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
-{
-    variableNames = ['InputDistance']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
-
-    constructor
-    (
-        inputShape: [number, number, number, number], 
-        maxDistance: number,
-    ) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 4) throw new Error('Batch dimension needs to be 4');
-        const maxSteps = Math.min(maxDistance, inHeight-1)
-        this.outputShape = [8, inDepth, inHeight, inWidth]
-        this.userCode = `
-        int getInputDistance(ivec4 coords) 
-        { 
-            return int(getInputDistance(coords.w, coords.z, coords.y, coords.x)); 
-        }
-
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, (coords.w % 2) + 2 * (coords.w / 4)); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return ((coords.w % 4) / 2) == 0 ? -1 : 1;
-        }
-
-        bool outsideHeight(ivec4 coords)
-        {
-            return (coords.y < 0) || (coords.y > ${inHeight-1});
-        }
-
-        void main() 
-        {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
-            
-            int inputDistance = getInputDistance(inputCoords);
-            int outputDistance = ${maxDistance};
-
-            int ySign = getSignFromOutputCoords(outputCoords);
-
-            if (inputDistance == 0)
-            {
-                setOutput(0.0);
-                return;
-            }
-
-            for (int yStep = 1; yStep <= ${maxSteps}; yStep++) 
-            {
-                inputCoords.y = outputCoords.y + yStep * ySign;
-                if (outsideHeight(inputCoords))
-                {
-                    break;
-                }
-
-                inputDistance = getInputDistance(inputCoords);
-                if (inputDistance <= yStep)
-                {
-                    outputDistance = yStep;
-                    break;
-                }
-            }
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
-
-class ThirdExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram 
-{
-    variableNames = ['InputDistance']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
-
-    constructor
-    (
-        inputShape: [number, number, number, number], 
-        maxDistance: number,
-    ) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 4) throw new Error('Batch dimension needs to be 4');
-        const maxSteps = Math.min(maxDistance, inDepth-1)
-        this.outputShape = [8, inDepth, inHeight, inWidth]
-        this.userCode = `
-        int getInputDistance(ivec4 coords) 
-        { 
-            return int(getInputDistance(coords.w, coords.z, coords.y, coords.x)); 
-        }
-
-        ivec4 getInputCoordsFromOutputCoords(ivec4 coords) 
-        { 
-            return ivec4(coords.xyz, coords.w % 4); 
-        }
-
-        int getSignFromOutputCoords(ivec4 coords) 
-        { 
-            return ((coords.w % 8) < 4) ? -1 : 1;
-        }
-
-        bool outsideDepth(ivec4 coords)
-        {
-            return (coords.z < 0) || (coords.z > ${inDepth-1});
-        }
-
-        void main() 
-        {
-            ivec4 outputCoords = getOutputCoords().wzyx;
-            ivec4 inputCoords = getInputCoordsFromOutputCoords(outputCoords);
-            
-            int inputDistance = getInputDistance(inputCoords);
-            int outputDistance = ${maxDistance};
-
-            int zSign = getSignFromOutputCoords(outputCoords);
-
-            if (inputDistance == 0)
-            {
-                setOutput(0.0);
-                return;
-            }
-
-            for (int zStep = 1; zStep <= ${maxSteps}; zStep++) 
-            {
-                inputCoords.z = outputCoords.z + zStep * zSign;
-                if (outsideDepth(inputCoords))
-                {
-                    break;
-                }
-
-                inputDistance = getInputDistance(inputCoords);
-                if (inputDistance <= zStep)
-                {
-                    outputDistance = zStep;
-                    break;
-                }
-            }
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
-
-class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram 
+class ExtendedAnisotropicChessDistancePass2 implements GPGPUProgram 
 {
     variableNames = ['InputXDistance', 'InputYDistance', 'InputZDistance', 'InputOccupancy']
     outputShape: number[]
@@ -549,10 +147,10 @@ class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram
     packedInputs = false
     packedOutput = false
 
-    constructor(inputShape: [number, number, number, number]) 
+    constructor(inputShape: [number, number, number]) 
     {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 8) throw new Error('Batch dimension needs to be 8')
-        this.outputShape = [8, inDepth, inHeight, inWidth]
+        const [inDepth, inHeight, inWidth] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth]
         this.userCode = `
         void main() 
         {
@@ -576,55 +174,109 @@ class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor 
 {
     const backend = tf.backend() as MathBackendWebGL
-    return tf.engine().makeTensorFromTensorInfo(backend.compileAndRun(prog, inputs))
+    const info = backend.compileAndRun(prog, inputs)
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
-
 
 export function extendedAnisotropicChebyshevDistanceProgram(inputOccupancy: tf.Tensor3D, maxDistance: number): tf.Tensor4D 
 {
-    // 1D 
-    const firstPassX = new FirstExtendedAnisotropicChebyshevDistancePassX(inputOccupancy.shape, maxDistance)
-    const firstPassY = new FirstExtendedAnisotropicChebyshevDistancePassY(inputOccupancy.shape, maxDistance)
-    const distance_X0_X1 = runProgram(firstPassX, [inputOccupancy]) as tf.Tensor4D
-    const distance_Y0_Y1 = runProgram(firstPassY, [inputOccupancy]) as tf.Tensor4D
+    const shape = inputOccupancy.shape
+
+    // Programs
+    const firstPassX0  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '-x', maxDistance)
+    const firstPassX1  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '+x', maxDistance)
+    const firstPassY0  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '-y', maxDistance)
+    const firstPassY1  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '+y', maxDistance)
+    const secondPassY0 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '-y', maxDistance)
+    const secondPassY1 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '+y', maxDistance)
+    const secondPassZ0 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '-z', maxDistance)
+    const secondPassZ1 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '+z', maxDistance)
+    const thirdPassX0  = new ExtendedAnisotropicChessDistancePass1(shape, '-x', maxDistance)
+    const thirdPassX1  = new ExtendedAnisotropicChessDistancePass1(shape, '+x', maxDistance)
+    const thirdPassY0  = new ExtendedAnisotropicChessDistancePass1(shape, '-y', maxDistance)
+    const thirdPassY1  = new ExtendedAnisotropicChessDistancePass1(shape, '+y', maxDistance)
+    const thirdPassZ0  = new ExtendedAnisotropicChessDistancePass1(shape, '-z', maxDistance)
+    const thirdPassZ1  = new ExtendedAnisotropicChessDistancePass1(shape, '+z', maxDistance)
+    const fourthPass   = new ExtendedAnisotropicChessDistancePass2(shape)
+
+    // 1D
+    const distance_X0 = runProgram(firstPassX0, [inputOccupancy])
+    const distance_X1 = runProgram(firstPassX1, [inputOccupancy])
+    const distance_Y0 = runProgram(firstPassY0, [inputOccupancy])
+    const distance_Y1 = runProgram(firstPassY1, [inputOccupancy])
 
     // 2D
-    const secondPassY = new SecondExtendedAnisotropicChebyshevDistancePassY(distance_X0_X1.shape, maxDistance)
-    const distance_XY00_XY10_XY01_XY11 = runProgram(secondPassY, [distance_X0_X1]) as tf.Tensor4D; 
-    
-    const secondPassZ = new SecondExtendedAnisotropicChebyshevDistancePassZ(distance_Y0_Y1.shape, maxDistance)
-    const distance_XZ00_XZ10_XZ01_XZ11 = runProgram(secondPassZ, [distance_X0_X1]) as tf.Tensor4D
-    tf.dispose(distance_X0_X1)
-    
-    const distance_YZ00_YZ10_YZ01_YZ11 = runProgram(secondPassZ, [distance_Y0_Y1]) as tf.Tensor4D
-    tf.dispose(distance_Y0_Y1)
+    const distance_XY00 = runProgram(secondPassY0, [distance_X0]);
+    const distance_XY01 = runProgram(secondPassY1, [distance_X0]); 
+    const distance_XZ00 = runProgram(secondPassZ0, [distance_X0]);
+    const distance_XZ01 = runProgram(secondPassZ1, [distance_X0]); tf.dispose(distance_X0)
+    const distance_XY10 = runProgram(secondPassY0, [distance_X1]);
+    const distance_XY11 = runProgram(secondPassY1, [distance_X1]); 
+    const distance_XZ10 = runProgram(secondPassZ0, [distance_X1]);
+    const distance_XZ11 = runProgram(secondPassZ1, [distance_X1]); tf.dispose(distance_X1)
+    const distance_YZ00 = runProgram(secondPassZ0, [distance_Y0]);
+    const distance_YZ01 = runProgram(secondPassZ1, [distance_Y0]); tf.dispose(distance_Y0)
+    const distance_YZ10 = runProgram(secondPassZ0, [distance_Y1]);
+    const distance_YZ11 = runProgram(secondPassZ1, [distance_Y1]); tf.dispose(distance_Y1)
 
     // 3D
-    const thirdPassX = new ThirdExtendedAnisotropicChebyshevDistancePassX(distance_YZ00_YZ10_YZ01_YZ11.shape, maxDistance)
-    const distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(thirdPassX, [distance_YZ00_YZ10_YZ01_YZ11]) as tf.Tensor4D
-    tf.dispose(distance_YZ00_YZ10_YZ01_YZ11)
+    const distanceX_XYZ000 = runProgram(thirdPassX0, [distance_YZ00]);
+    const distanceX_XYZ100 = runProgram(thirdPassX1, [distance_YZ00]); tf.dispose(distance_YZ00)
+    const distanceX_XYZ001 = runProgram(thirdPassX0, [distance_YZ01]);
+    const distanceX_XYZ101 = runProgram(thirdPassX1, [distance_YZ01]); tf.dispose(distance_YZ01)
+    const distanceX_XYZ010 = runProgram(thirdPassX0, [distance_YZ10]);
+    const distanceX_XYZ110 = runProgram(thirdPassX1, [distance_YZ10]); tf.dispose(distance_YZ10)
+    const distanceX_XYZ011 = runProgram(thirdPassX0, [distance_YZ11]);
+    const distanceX_XYZ111 = runProgram(thirdPassX1, [distance_YZ11]); tf.dispose(distance_YZ11)
+    const distanceY_XYZ000 = runProgram(thirdPassY0, [distance_XZ00]);
+    const distanceY_XYZ010 = runProgram(thirdPassY1, [distance_XZ00]); tf.dispose(distance_XZ00)
+    const distanceY_XYZ001 = runProgram(thirdPassY0, [distance_XZ01]);
+    const distanceY_XYZ011 = runProgram(thirdPassY1, [distance_XZ01]); tf.dispose(distance_XZ01)
+    const distanceY_XYZ100 = runProgram(thirdPassY0, [distance_XZ10]);
+    const distanceY_XYZ110 = runProgram(thirdPassY1, [distance_XZ10]); tf.dispose(distance_XZ10)
+    const distanceY_XYZ101 = runProgram(thirdPassY0, [distance_XZ11]);
+    const distanceY_XYZ111 = runProgram(thirdPassY1, [distance_XZ11]); tf.dispose(distance_XZ11)
+    const distanceZ_XYZ000 = runProgram(thirdPassZ0, [distance_XY00]);
+    const distanceZ_XYZ001 = runProgram(thirdPassZ1, [distance_XY00]); tf.dispose(distance_XY00)
+    const distanceZ_XYZ010 = runProgram(thirdPassZ0, [distance_XY01]);
+    const distanceZ_XYZ011 = runProgram(thirdPassZ1, [distance_XY01]); tf.dispose(distance_XY01)
+    const distanceZ_XYZ100 = runProgram(thirdPassZ0, [distance_XY10]);
+    const distanceZ_XYZ101 = runProgram(thirdPassZ1, [distance_XY10]); tf.dispose(distance_XY10)
+    const distanceZ_XYZ110 = runProgram(thirdPassZ0, [distance_XY11]);
+    const distanceZ_XYZ111 = runProgram(thirdPassZ1, [distance_XY11]); tf.dispose(distance_XY11)
 
-    const thirdPassY = new ThirdExtendedAnisotropicChebyshevDistancePassY(distance_XZ00_XZ10_XZ01_XZ11.shape, maxDistance)
-    const distanceY_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(thirdPassY, [distance_XZ00_XZ10_XZ01_XZ11]) as tf.Tensor4D 
-    tf.dispose(distance_XZ00_XZ10_XZ01_XZ11)
-    
-    const thirdPassZ = new ThirdExtendedAnisotropicChebyshevDistancePassZ(distance_XY00_XY10_XY01_XY11.shape, maxDistance)
-    const distanceZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(thirdPassZ, [distance_XY00_XY10_XY01_XY11]) as tf.Tensor4D
-    tf.dispose(distance_XY00_XY10_XY01_XY11)
+    // Packing
+    const distancesXYZ_XYZ000 = runProgram(fourthPass, [distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000, inputOccupancy]);  tf.dispose([distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000])
+    const distancesXYZ_XYZ001 = runProgram(fourthPass, [distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001, inputOccupancy]);  tf.dispose([distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001])
+    const distancesXYZ_XYZ010 = runProgram(fourthPass, [distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010, inputOccupancy]);  tf.dispose([distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010])
+    const distancesXYZ_XYZ011 = runProgram(fourthPass, [distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011, inputOccupancy]);  tf.dispose([distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011])
+    const distancesXYZ_XYZ100 = runProgram(fourthPass, [distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100, inputOccupancy]);  tf.dispose([distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100])
+    const distancesXYZ_XYZ101 = runProgram(fourthPass, [distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101, inputOccupancy]);  tf.dispose([distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101])
+    const distancesXYZ_XYZ110 = runProgram(fourthPass, [distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110, inputOccupancy]);  tf.dispose([distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110])
+    const distancesXYZ_XYZ111 = runProgram(fourthPass, [distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111, inputOccupancy]);  tf.dispose([distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111])
 
-    // Pack
-    const fourthPassXYZ = new FourthExtendedAnisotropicChessDistancePassXYZ(distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111.shape)
-    const distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(fourthPassXYZ, [
-        distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
-        distanceY_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
-        distanceZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
-        inputOccupancy
-    ]) 
+    // Concatenate 
+    const distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = tf.stack([
+        distancesXYZ_XYZ000,
+        distancesXYZ_XYZ100,
+        distancesXYZ_XYZ010,
+        distancesXYZ_XYZ110,
+        distancesXYZ_XYZ001,
+        distancesXYZ_XYZ101,
+        distancesXYZ_XYZ011,
+        distancesXYZ_XYZ111,
+    ], 0)
+
     tf.dispose([
-        distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
-        distanceY_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
-        distanceZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
+        distancesXYZ_XYZ000,
+        distancesXYZ_XYZ100,
+        distancesXYZ_XYZ010,
+        distancesXYZ_XYZ110,
+        distancesXYZ_XYZ001,
+        distancesXYZ_XYZ101,
+        distancesXYZ_XYZ011,
+        distancesXYZ_XYZ111,
     ])
-
+            
     return distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 as tf.Tensor4D
 }

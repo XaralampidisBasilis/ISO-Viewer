@@ -18,10 +18,13 @@ import { isotropicChebyshevDistanceProgramPacked } from './IsotropicDistanceProg
 
 import { anisotropicChebyshevDistanceProgram } from './AnisotropicDistanceProgram'
 import { anisotropicChebyshevDistanceProgramFused } from './AnisotropicDistanceProgramFused'
+import { anisotropicChebyshevDistanceProgramPacked } from './AnisotropicDistanceProgramPacked'
 import { anisotropicChebyshevDistanceProgramFusedPacked } from './AnisotropicDistanceProgramFusedPacked'
 
 import { extendedAnisotropicChebyshevDistanceProgram } from './ExtendedAnisotropicDistanceProgram'
+import { extendedAnisotropicChebyshevDistanceProgramFused } from './ExtendedAnisotropicDistanceProgramFused'
 import { extendedAnisotropicChebyshevDistanceProgramPacked } from './ExtendedAnisotropicDistanceProgramPacked'
+import { extendedAnisotropicChebyshevDistanceProgramFusedPacked } from './ExtendedAnisotropicDistanceProgramFusedPacked'
 export default class ISOComputes extends EventEmitter
 {
     constructor()
@@ -365,18 +368,19 @@ export default class ISOComputes extends EventEmitter
         this.anisotropicDistanceMap = {}
         
         // this.anisotropicDistanceMap.tensor =  (await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 127)).squeeze()
-        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
         // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 127)
-        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
+        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 127)
 
-        const tensor = anisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 127)
-        const error = tensor.sub(this.anisotropicDistanceMap.tensor)
-        console.log(error.abs().mean().dataSync())
-        const indices = await tf.whereAsync(error.abs().greater(0))
-        console.log(indices.arraySync())
-        console.log(tf.gatherND(error, indices).dataSync())
-        console.log(tf.gatherND(tensor, indices).dataSync())
-        console.log(tf.gatherND(this.anisotropicDistanceMap.tensor, indices).dataSync())
+        // const tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
+        // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
+        // console.log(error.abs().mean().dataSync())
+        // const indices = await tf.whereAsync(error.abs().greater(0))
+        // console.log(indices.arraySync())
+        // console.log(tf.gatherND(error, indices).dataSync())
+        // console.log(tf.gatherND(tensor, indices).dataSync())
+        // console.log(tf.gatherND(this.anisotropicDistanceMap.tensor, indices).dataSync())
         
         this.anisotropicDistanceMap.array = new Uint8Array(this.anisotropicDistanceMap.tensor.dataSync())
         tf.dispose(this.anisotropicDistanceMap.tensor)
@@ -406,10 +410,12 @@ export default class ISOComputes extends EventEmitter
         this.extendedAnisotropicDistanceMap = {}
 
         // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 31)
-        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
-        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 31)
+        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 31)
 
-        // const tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        // const tensor = extendedAnisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 31)
         // const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)
         // console.log(error.abs().mean().dataSync())
         // const indices = await tf.whereAsync(error.abs().greater(0))
