@@ -78,7 +78,7 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
     vec2 computeCellExtrema(int cellZ, int cellY, int cellX)
     {
         // Bernstein elevation coefficients (order 1 → order 3)
-        const vec2 BernsteinElevations[4] = vec2[4](
+        const vec2 BerElevations[4] = vec2[4](
             vec2(1.0, 0.0),
             vec2(2.0 / 3.0, 1.0 / 3.0),
             vec2(1.0 / 3.0, 2.0 / 3.0),
@@ -86,7 +86,7 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
         );
 
         // Bernstein correction coefficients for mixed-order derivatives
-        const vec2 BernsteinCorrections[4] = vec2[4](
+        const vec2 BerCorrections[4] = vec2[4](
             vec2(0.0, 0.0),
             vec2(-1.0 / 4.0, 0.0),
             vec2(0.0, -1.0 / 4.0),
@@ -110,13 +110,13 @@ const tricubicCode = (inputShape: [number, number, number, number, number], inpu
                 int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
                 int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[1] - 1});
 
-                float elevateZ = BernsteinElevations[coeffZ][localZ];
-                float elevateX = BernsteinElevations[coeffX][localX];
-                float elevateY = BernsteinElevations[coeffY][localY];
+                float elevateZ = BerElevations[coeffZ][localZ];
+                float elevateX = BerElevations[coeffX][localX];
+                float elevateY = BerElevations[coeffY][localY];
 
-                float correctZ = BernsteinCorrections[coeffZ][localZ];
-                float correctX = BernsteinCorrections[coeffX][localX];
-                float correctY = BernsteinCorrections[coeffY][localY];
+                float correctZ = BerCorrections[coeffZ][localZ];
+                float correctX = BerCorrections[coeffX][localX];
+                float correctY = BerCorrections[coeffY][localY];
 
                 vec4 voxelFeatures = getA(voxelZ, voxelY, voxelX, 0, 0); // Fxx Fyy Fzz F
          

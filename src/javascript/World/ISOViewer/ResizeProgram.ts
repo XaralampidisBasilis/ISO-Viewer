@@ -38,7 +38,7 @@ export class ResizeProgram implements GPGPUProgram
 
         this.userCode = `
         const vec3 scaleFactors = vec3(${scaleFactors[0]}, ${scaleFactors[1]}, ${scaleFactors[2]});
-        const vec3 inputShape = vec3(${inDepth}.0, ${inHeight}.0, ${inWidth}.0);
+        const vec3 inputShape = vec3(${inDepth}, ${inHeight}, ${inWidth});
 
         void main() 
         {

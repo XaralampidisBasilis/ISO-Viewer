@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import Config from './Utils/Config'
+import Configs from './Utils/Configs'
 import Debug from './Utils/Debug'
 import Sizes from './Utils/Sizes'
 import Time from './Utils/Time'
@@ -32,7 +32,7 @@ export default class Experience
         this.context = context
 
         // Setup
-        this.config = new Config()
+        this.configs = new Configs()
         this.debug = new Debug()
         this.sizes = new Sizes()
         this.time = new Time()
@@ -57,7 +57,7 @@ export default class Experience
         })
 
         // Config change event
-        this.config.on('change', () =>
+        this.configs.on('change', () =>
         {
             this.change()
         })
@@ -97,11 +97,11 @@ export default class Experience
     {
         this.sizes.off('resize')
         this.time.off('tick')
-        this.config.off('change')
+        this.configs.off('change')
 
         // destroy components
-        if (this.config) 
-            this.config.destroy()
+        if (this.configs) 
+            this.configs.destroy()
 
         if (this.debug)
             this.debug.destroy()
@@ -126,7 +126,7 @@ export default class Experience
 
 
         // Nullify properties for cleanup
-        this.config = null
+        this.configs = null
         this.debug = null
         this.sizes = null
         this.time = null

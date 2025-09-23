@@ -19,8 +19,8 @@ export default class Processor extends EventEmitter
         Processor.instance = this
 
         this.experience = new Experience()
-        this.config = this.experience.config
-        this.settings = this.experience.config.settings
+        this.config = this.experience.configs
+        this.settings = this.experience.configs.settings
         this.resources = this.experience.resources
     }
 
