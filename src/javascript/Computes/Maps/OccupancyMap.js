@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
-import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
 import { computeOccupancyMap } from '../Programs/GPGPUOccupancyMapPacked'
 
 export default class OccupancyMap extends EventEmitter
@@ -14,14 +13,15 @@ export default class OccupancyMap extends EventEmitter
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.extremaMap = this.computes.extremaMap
-
+        this.isosurfaceValue = this.configs.isosurfaceValue
+        
         this.dimensions = this.extremaMap.dimensions
         this.spacing = this.extremaMap.spacing
     }
 
     setTensor()
     {
-        this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.configs.isosurfaceValue)
+        this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.isosurfaceValue)
     }
 
     setTexture()

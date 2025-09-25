@@ -3,7 +3,7 @@ import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
 
-const trilinearCode = (inputShape: number[], inputStride: number) => `
+const trilinearCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
 
     // Compute the min and max values of the trilinear interpolation inside a single cell
     vec2 computeCellExtrema(int cellX, int cellY, int cellZ)
@@ -11,15 +11,15 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int localZ = 0; localZ < 2; ++localZ) {
-        for (int localY = 0; localY < 2; ++localY) {
         for (int localX = 0; localX < 2; ++localX) {
-        
-            int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
-            int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
-            int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+        for (int localY = 0; localY < 2; ++localY) {
+        for (int localZ = 0; localZ < 2; ++localZ) {
             
-            float voxelValue = getA(voxelX, voxelY, voxelZ, 3); // raw scalar value
+            int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[0] - 1});
+            int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
+            int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[2] - 1});
+            
+            float voxelValue = getA(voxelX, voxelY, voxelZ, 0, 0).a; // F
 
             minValue = min(minValue, voxelValue);
             maxValue = max(maxValue, voxelValue);
@@ -43,9 +43,9 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         float minValue = 1.0;
         float maxValue = 0.0;
 
-        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
-        for (int cellY = startY; cellY < endY; ++cellY) {
         for (int cellX = startX; cellX < endX; ++cellX) {
+        for (int cellY = startY; cellY < endY; ++cellY) {
+        for (int cellZ = startZ; cellZ < endZ; ++cellZ) {
             
             vec2 cellExtrema = computeCellExtrema(cellX, cellY, cellZ);
 
@@ -69,21 +69,13 @@ const trilinearCode = (inputShape: number[], inputStride: number) => `
         int blockZ = outputCoords.z;
 
         vec2 blockExtrema = computeBlockExtrema(blockX, blockY, blockZ);
-
-        int outputChannel = outputCoords.w;
-        if (outputChannel == 0) 
-        {
-            setOutput(blockExtrema.x); // min value
-        } 
-        else 
-        {
-            setOutput(blockExtrema.y); // max value
-        }
+        setOutput(vec4(blockExtrema, 0.0, 0.0));
     }
 `
-const tricubicCode = (inputShape: number[], inputStride: number) => `
+const tricubicCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
     
-    const ivec3 maxVoxelCoords = ivec3(${inputShape[2]-1}, ${inputShape[1]-1}, ${inputShape[0]-1});
+    const ivec3 voxelMinCoords = ivec3(0);
+    const ivec3 voxelMaxCoords = ivec3(${inputShape[2]-1}, ${inputShape[1]-1}, ${inputShape[0]-1});
 
     const mat2x4 Elevations = mat2x4(
         1.0, 2.0/3.0, 1.0/3.0, 0.0,   
@@ -95,19 +87,26 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
         0.0,  0.0, -0.25,  0.0
     );
 
-    vec4 getVoxelSample(ivec3 voxelCoords)
+    vec4 getVoxelSample(in ivec3 voxelCoords)
     {
-        voxelCoords = clamp(voxelCoords, ivec3(0), maxVoxelCoords);
-        
-        return vec4(
-            getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0), // fxx
-            getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 1), // fyy
-            getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 2), // fzz
-            getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 3)  // f
-        );
+        voxelCoords = clamp(voxelCoords, voxelMinCoords, voxelMaxCoords);
+        return getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
+    }
+
+    void getVoxelSamplesAtCell(in ivec3 cellCoords, out vec4[8] voxelSamplesAtCell)
+    {
+        for (int r = 0; r < 2; r++) {
+        for (int q = 0; q < 2; q++) {
+        for (int p = 0; p < 2; p++) {
+
+            int pqr = p + q*2 + r*4;
+            ivec3 voxelCoords = cellCoords + ivec3(p, q, r) - 1;
+            voxelSamplesAtCell[pqr] = getVoxelSample(voxelCoords);
+
+        }}}
     }
     
-    float getBernsteinCoeff(ivec3 cellCoords, ivec3 coeffIndices)
+    float getBernsteinCoeffAtCell(in ivec3 coeffIndices, in vec4[8] voxelSamplesAtCell)
     {
         float bernsteinCoeff = 0.0;
 
@@ -115,42 +114,47 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
         int v = coeffIndices.y;
         int w = coeffIndices.z;
 
-        for (int r = 0; r < 2; r++) {
-        for (int q = 0; q < 2; q++) {
-        for (int p = 0; p < 2; p++) {
-
-            ivec3 localCoords = ivec3(p, q, r) - 1;
-            ivec3 voxelCoords = cellCoords + localCoords;
-
-            vec4 voxelSample = getVoxelSample(voxelCoords);
-
-            float Wx = Elevations[p][u];
-            float Wy = Elevations[q][v];
-            float Wz = Elevations[r][w];
-            float W = Wx * Wy * Wz;
-
-            float Mx = Contributions[p][u];
-            float My = Contributions[q][v];
+        for (int r = 0; r < 2; r++) 
+        {
             float Mz = Contributions[r][w];
-            vec4 M = vec4(Mx, My, Mz, 1.0);
+            float Wz = Elevations[r][w];
 
-            bernsteinCoeff += dot(voxelSample, M) * W;
+        for (int q = 0; q < 2; q++) 
+        {
+            float My = Contributions[q][v];
+            float Wy = Elevations[q][v];
+
+        for (int p = 0; p < 2; p++) 
+        {
+            float Mx = Contributions[p][u];
+            float Wx = Elevations[p][u];
+
+            int pqr = p + q*2 + r*4;
+            
+            vec4  V = voxelSamplesAtCell[pqr];
+            vec4  M = vec4(Mx, My, Mz, 1.0);
+            float W = Wx * Wy * Wz; 
+
+            bernsteinCoeff += dot(V, M) * W;
 
         }}} 
 
         return bernsteinCoeff;
     }
 
-    vec2 getCellExtrema(ivec3 cellCoords)
+    vec2 getCellExtrema(in ivec3 cellCoords)
     {
+        vec4[8] voxelSamplesAtCell;
         vec2 cellMinMax = vec2(1.0, 0.0);
+
+        getVoxelSamplesAtCell(cellCoords, voxelSamplesAtCell);
         
         for (int w = 0; w < 4; w++) {
         for (int v = 0; v < 4; v++) {
         for (int u = 0; u < 4; u++) {
 
             ivec3 coeffIndices = ivec3(u, v, w);
-            float bernsteinCoeff = getBernsteinCoeff(cellCoords, coeffIndices);
+            float bernsteinCoeff = getBernsteinCoeffAtCell(coeffIndices, voxelSamplesAtCell);
             
             cellMinMax.x = min(cellMinMax.x, bernsteinCoeff);
             cellMinMax.y = max(cellMinMax.y, bernsteinCoeff);
@@ -170,9 +174,8 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
         for (int j = 0; j < ${inputStride}; j++) {
         for (int i = 0; i < ${inputStride}; i++) {
 
-            ivec3 cellIndices = ivec3(i, j, j);
+            ivec3 cellIndices = ivec3(i, j, k);
             ivec3 cellCoords = cellMinCoords + cellIndices;
-
             vec2 cellMinMax = getCellExtrema(cellCoords);
 
             blockMinMax.x = min(blockMinMax.x, cellMinMax.x);
@@ -185,39 +188,38 @@ const tricubicCode = (inputShape: number[], inputStride: number) => `
 
     void main()
     {
-        ivec4 outputCoords = getOutputCoords();
-        ivec3 blockCoords = outputCoords.zyx;
-        
-        vec2 blockMinMax = getBlockExtrema(blockCoords);
-        blockMinMax = clamp(blockMinMax, 0.0, 1.0);
+        ivec5 outputCoords = getOutputCoords();
 
-        setOutput((outputCoords.w == 0) ? blockMinMax.x : blockMinMax.y);
+        ivec3 blockCoords = ivec3(outputCoords.z, outputCoords.y, outputCoords.x);
+        vec2 blockMinMax = getBlockExtrema(blockCoords);
+
+        blockMinMax = clamp(blockMinMax, 0.0, 1.0);
+        setOutput(vec4(blockMinMax, 0.0, 0.0));
     }
 `
 
-
-class BlockExtremaProgram implements GPGPUProgram 
+class BlockExtremaPackedProgram implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
     userCode: string
-    packedInputs = false
-    packedOutput = false
+    packedInputs = true
+    packedOutput = true
 
-    constructor(inputShape: number[], inputStride: number, inputMethod: number) 
+    constructor(inputShape: [number, number, number, number, number], inputStride: number, inputMethod: number) 
     {
-        this.outputShape = inputShape.map((inputDim) => Math.ceil((inputDim + 1) / inputStride))
-        this.outputShape[3] = 2        
-        this.userCode = (inputMethod == 0) 
-        ? trilinearCode(inputShape, inputStride) 
-        : tricubicCode(inputShape, inputStride) 
+        const [inDepth, inHeight, inWidth] = inputShape
+        const [outDepth, outHeight, outWidth] = [inDepth, inHeight, inWidth].map((inDimension) => Math.ceil((inDimension + 1) / inputStride))
+        this.outputShape = [outDepth, outHeight, outWidth, 2, 2]
+        this.userCode = (inputMethod == 0) ? trilinearCode(inputShape, inputStride) : tricubicCode(inputShape, inputStride) 
     }
 }
 
-export function blockExtremaProgram(inputTensor: tf.Tensor, inputStride: number, inputMethod = 1) : tf.Tensor4D
+export function blockExtremaPackedProgram(inputPackedTensor: tf.Tensor5D, inputStride: number, inputMethod = 1) : tf.Tensor5D
 {
-    const program = new BlockExtremaProgram(inputTensor.shape, inputStride, inputMethod)
+    const inputShape = inputPackedTensor.shape
+    const program = new BlockExtremaPackedProgram(inputShape, inputStride, inputMethod)
     const backend = tf.backend() as MathBackendWebGL
-    const result = backend.compileAndRun(program, [inputTensor])
-    return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor4D
+    const result = backend.compileAndRun(program, [inputPackedTensor])
+    return tf.engine().makeTensorFromTensorInfo(result) as tf.Tensor5D
 }

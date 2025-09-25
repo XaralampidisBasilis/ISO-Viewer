@@ -74,109 +74,108 @@ const trilinearCode = (inputShape: [number, number, number, number, number], inp
 `
 const tricubicCode = (inputShape: [number, number, number, number, number], inputStride: number) => `
     
-    // Compute the extrema of the tricubic interpolation in a single cell
-    vec2 computeCellExtrema(int cellZ, int cellY, int cellX)
+    const ivec3 voxelMinCoords = ivec3(0);
+    const ivec3 voxelMaxCoords = ivec3(${inputShape[2]-1}, ${inputShape[1]-1}, ${inputShape[0]-1});
+
+    const mat2x4 Elevations = mat2x4(
+        1.0, 2.0/3.0, 1.0/3.0, 0.0,   
+        0.0, 1.0/3.0, 2.0/3.0, 1.0
+    );
+
+    const mat2x4 Contributions = mat2x4(
+        0.0, -0.25,  0.0,  0.0,  
+        0.0,  0.0, -0.25,  0.0
+    );
+
+    vec4 getVoxelSample(ivec3 voxelCoords)
     {
-        // Bernstein elevation coefficients (order 1 → order 3)
-        const vec2 BerElevations[4] = vec2[4](
-            vec2(1.0, 0.0),
-            vec2(2.0 / 3.0, 1.0 / 3.0),
-            vec2(1.0 / 3.0, 2.0 / 3.0),
-            vec2(0.0, 1.0)
-        );
+        voxelCoords = clamp(voxelCoords, voxelMinCoords, voxelMaxCoords);
+        return getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
+    }
+    
+    float getBernsteinCoeffAtCell(ivec3 coeffIndices, ivec3 cellCoords)
+    {
+        float bernsteinCoeff = 0.0;
 
-        // Bernstein correction coefficients for mixed-order derivatives
-        const vec2 BerCorrections[4] = vec2[4](
-            vec2(0.0, 0.0),
-            vec2(-1.0 / 4.0, 0.0),
-            vec2(0.0, -1.0 / 4.0),
-            vec2(0.0, 0.0)
-        );
+        int u = coeffIndices.x;
+        int v = coeffIndices.y;
+        int w = coeffIndices.z;
 
-        float minValue = 1.0;
-        float maxValue = 0.0;
+        for (int r = 0; r < 2; r++) {
+        for (int q = 0; q < 2; q++) {
+        for (int p = 0; p < 2; p++) {
 
-        for (int coeffZ = 0; coeffZ < 4; coeffZ++) {
-        for (int coeffX = 0; coeffX < 4; coeffX++) {
-        for (int coeffY = 0; coeffY < 4; coeffY++) {
+            float Wx = Elevations[p][u];
+            float Wy = Elevations[q][v];
+            float Wz = Elevations[r][w];
+            float W = Wx * Wy * Wz;
 
-            float bernsteinCoeff = 0.0;
+            float Mx = Contributions[p][u];
+            float My = Contributions[q][v];
+            float Mz = Contributions[r][w];
+            vec4 M = vec4(Mx, My, Mz, 1.0);
 
-            for (int localZ = 0; localZ < 2; localZ++) {
-            for (int localX = 0; localX < 2; localX++) {
-            for (int localY = 0; localY < 2; localY++) {
+            ivec3 voxelIndices = ivec3(p, q, r) - 1;
+            ivec3 voxelCoords = cellCoords + voxelIndices;
+            vec4 voxelSample = getVoxelSample(voxelCoords);
 
-                int voxelZ = clamp(cellZ - 1 + localZ, 0, ${inputShape[0] - 1});
-                int voxelY = clamp(cellY - 1 + localY, 0, ${inputShape[1] - 1});
-                int voxelX = clamp(cellX - 1 + localX, 0, ${inputShape[1] - 1});
-
-                float elevateZ = BerElevations[coeffZ][localZ];
-                float elevateX = BerElevations[coeffX][localX];
-                float elevateY = BerElevations[coeffY][localY];
-
-                float correctZ = BerCorrections[coeffZ][localZ];
-                float correctX = BerCorrections[coeffX][localX];
-                float correctY = BerCorrections[coeffY][localY];
-
-                vec4 voxelFeatures = getA(voxelZ, voxelY, voxelX, 0, 0); // Fxx Fyy Fzz F
-         
-                vec4 corrections = vec4(correctX, correctY, correctZ, 1.0);
-                float elevation = elevateX * elevateY * elevateZ;
-
-                float voxelContribution = dot(voxelFeatures, corrections) * elevation;
-                bernsteinCoeff += voxelContribution;
-
-            }}} 
-
-            minValue = min(minValue, bernsteinCoeff);
-            maxValue = max(maxValue, bernsteinCoeff);
+            bernsteinCoeff += dot(voxelSample, M) * W;
 
         }}} 
 
-        return vec2(minValue, maxValue);
+        return bernsteinCoeff;
+    }
+
+    vec2 getCellExtrema(ivec3 cellCoords)
+    {
+        vec2 cellMinMax = vec2(1.0, 0.0);
+        
+        for (int w = 0; w < 4; w++) {
+        for (int v = 0; v < 4; v++) {
+        for (int u = 0; u < 4; u++) {
+
+            ivec3 coeffIndices = ivec3(u, v, w);
+            float bernsteinCoeff = getBernsteinCoeffAtCell(coeffIndices, cellCoords);
+            
+            cellMinMax.x = min(cellMinMax.x, bernsteinCoeff);
+            cellMinMax.y = max(cellMinMax.y, bernsteinCoeff);
+
+        }}} 
+
+        return cellMinMax;
     }
 
     // Compute extrema over all cells in the block
-    vec2 computeBlockExtrema(int blockZ, int blockY, int blockX)
+    vec2 getBlockExtrema(ivec3 blockCoords)
     {
-        int startZ = blockZ * ${inputStride};
-        int startY = blockY * ${inputStride};
-        int startX = blockX * ${inputStride};
+        vec2 blockMinMax = vec2(1.0, 0.0);
+        ivec3 cellMinCoords = blockCoords * ${inputStride};
 
-        int endZ = startZ + ${inputStride};
-        int endY = startY + ${inputStride};
-        int endX = startX + ${inputStride};
+        for (int k = 0; k < ${inputStride}; k++) {
+        for (int j = 0; j < ${inputStride}; j++) {
+        for (int i = 0; i < ${inputStride}; i++) {
 
-        float minValue = 1.0;
-        float maxValue = 0.0;
+            ivec3 cellIndices = ivec3(i, j, k);
+            ivec3 cellCoords = cellMinCoords + cellIndices;
+            vec2 cellMinMax = getCellExtrema(cellCoords);
 
-        for (int cellZ = startZ; cellZ < endZ; cellZ++) {
-        for (int cellY = startY; cellY < endY; cellY++) {
-        for (int cellX = startX; cellX < endX; cellX++) {
-
-            vec2 cellExtrema = computeCellExtrema(cellZ, cellY, cellX);
-
-            minValue = min(minValue, cellExtrema.x);
-            maxValue = max(maxValue, cellExtrema.y);
+            blockMinMax.x = min(blockMinMax.x, cellMinMax.x);
+            blockMinMax.y = max(blockMinMax.y, cellMinMax.y);
 
         }}}
 
-        minValue = clamp(minValue, 0.0, 1.0);
-        maxValue = clamp(maxValue, 0.0, 1.0);
-
-        return vec2(minValue, maxValue);
+        return blockMinMax;
     }
 
     void main()
     {
         ivec5 outputCoords = getOutputCoords();
 
-        int blockZ = outputCoords.x;
-        int blockY = outputCoords.y;
-        int blockX = outputCoords.z;
-        
-        vec2 blockExtrema = computeBlockExtrema(blockZ, blockY, blockX);
-        setOutput(vec4(blockExtrema, 0.0, 0.0));
+        ivec3 blockCoords = ivec3(outputCoords.z, outputCoords.y, outputCoords.x);
+        vec2 blockMinMax = getBlockExtrema(blockCoords);
+
+        blockMinMax = clamp(blockMinMax, 0.0, 1.0);
+        setOutput(vec4(clamp(blockMinMax, 0.0, 1.0), 0.0, 0.0));
     }
 `
 

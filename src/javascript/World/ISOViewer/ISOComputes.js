@@ -4,13 +4,14 @@ import * as TFUtils from '../../Utils/TensorUtils'
 import EventEmitter from '../../Utils/EventEmitter'
 import ISOViewer from './ISOViewer'
 import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
-import { blockExtremaProgram } from './BlockExtremaProgram'
 import { resizeProgram } from './ResizeProgram'
 import { trilaplacianProgram } from './TrilaplacianProgram'
 import { occupancyProgram } from './OccupancyProgram'
 import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { occupancyPackedProgram2 } from './OccupancyPackedProgram2'
 import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
+
+import { blockExtremaProgram } from './BlockExtremaProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
 
 import { isotropicChebyshevDistanceProgram } from './IsotropicDistanceProgram'
@@ -256,6 +257,10 @@ export default class ISOComputes extends EventEmitter
         this.blockExtremaMap.tensor = blockExtremaPackedProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
         // this.blockExtremaMap.tensor = blockExtremaProgram(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
         this.blockExtremaMap.array = new Float32Array(this.blockExtremaMap.tensor.size)
+
+        // const tensor = blockExtremaPackedProgram2(this.trilaplacianIntensityMap.tensor, this.stride, this.interpolationMethod)
+        // const error = tensor.sub(this.blockExtremaMap.tensor)
+        // console.log(error.abs().mean().dataSync())
 
         this.blockExtremaMap.stride        = this.stride
         this.blockExtremaMap.invStride     = 1 / this.blockExtremaMap.stride
