@@ -2,8 +2,7 @@ import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
-import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
-import { computeExtremaMap } from '../Programs/GPGPUExtremaMapPacked'
+import { computeExtremaMap, toHalfFloat } from '../Programs/GPGPUExtremaMapPacked'
 
 export default class ExtremaMap extends EventEmitter
 {
@@ -18,14 +17,17 @@ export default class ExtremaMap extends EventEmitter
         this.isosurfaceValue = this.configs.isosurfaceValue
     }
 
-    setTensor()
+    compute()
     {
+        this.tensor?.dispose()
         this.tensor = computeExtremaMap(this.interpolationMap.tensor, this.interpolationMethod, this.isosurfaceValue)
+        this.dimensions = new THREE.Vector3().fromArray(this.tensor.shape.slice(0, 3).toReversed())
     }
 
-    setTexture()
+    textureSync()
     {
-        this.texture = new THREE.Data3DTexture(this.getData16F(), ...this.dimensions)
+        this.texture?.dispose()
+        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
         this.texture.format = THREE.RGFormat
         this.texture.type = THREE.HalfFloatType
         this.texture.internalFormat = 'RG16F'
@@ -34,18 +36,22 @@ export default class ExtremaMap extends EventEmitter
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 2
+
+        return this.texture
     }   
 
-    getData16F()
+    textureDataSync()
     {
-        const dataFloat = this.tensor.dataSync()
-        const dataHalfFloat = new Uint16Array(this.tensor.size)
+        const tensor = toHalfFloat(this.tensor)
+        const dataHalfFloat = tensor.dataSync()
+        tensor.dispose()
+        
+        return new Uint16Array(dataHalfFloat.buffer)
+    }
 
-        for (let i = 0; i < dataFloat.length; ++i) 
-        {
-            dataHalfFloat[i] = toHalfFloat(dataFloat[i])
-        }
-
-        return dataHalfFloat
+    destroy()
+    {
+        this.tensor?.dispose()
+        this.texture?.dispose()
     }
 }

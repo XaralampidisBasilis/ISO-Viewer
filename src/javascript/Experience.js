@@ -57,15 +57,15 @@ export default class Experience
         })
 
         // Config change event
-        this.configs.on('change', () =>
+        this.configs.on('change', (event) =>
         {
-            this.change()
+            this.change(event)
         })
 
         // Resources ready event
         this.resources.on('ready', () =>
         {
-            
+            this.start()
         })
 
         // Window refresh event
@@ -88,9 +88,14 @@ export default class Experience
         this.renderer.update()
     }
 
-    change()
+    start()
     {
+        this.world.start()
+    }
 
+    change(event)
+    {
+        
     }
 
     destroy()

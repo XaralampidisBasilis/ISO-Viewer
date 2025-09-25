@@ -16,19 +16,18 @@ export default class OccupancyMap extends EventEmitter
         this.isosurfaceValue = this.configs.isosurfaceValue
         
         this.dimensions = this.extremaMap.dimensions
-        this.spacing = this.extremaMap.spacing
     }
 
-    setTensor()
+    compute()
     {
+        this.tensor?.dispose()
         this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.isosurfaceValue)
     }
 
-    setTexture()
+    textureSync()
     {
-        const data = Uint8Array(this.tensor.dataSync())
-
-        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
+        this.texture?.dispose()
+        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
         this.texture.internalFormat = 'R8UI'
@@ -37,5 +36,18 @@ export default class OccupancyMap extends EventEmitter
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
+
+        return this.texture
     }   
+
+    textureDataSync()
+    {
+        return new Uint8Array(this.tensor.dataSync())
+    }
+
+    destroy()
+    {
+        this.tensor?.dispose()
+        this.texture?.dispose()
+    }
 }

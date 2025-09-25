@@ -7,7 +7,7 @@ class GPGPUExtremaMap implements GPGPUProgram
     variableNames = ['A']
     outputShape: number[]
     userCode: string
-    packedInputs = true
+    packedInputs = false
     packedOutput = true
 
     constructor
@@ -73,7 +73,7 @@ class GPGPUExtremaMap implements GPGPUProgram
                 float Mx = Contributions[p][u];
                 float My = Contributions[q][v];
                 float Mz = Contributions[r][w];
-                vec4 M = vec4(Mx, My, Mz, 1.0);
+                vec4  M = vec4(Mx, My, Mz, 1.0);
 
                 float Wx = Elevations[p][u];
                 float Wy = Elevations[q][v];
@@ -170,13 +170,8 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function computeExtremaMap
-(
-    inputTensor: tf.Tensor4D, 
-    interpolationMethod: 'trilinear' | 'tricubic', 
-    inputStride: number
-) : tf.Tensor
+export function getExtremaMap(interpolationMap: tf.Tensor4D, interpolationMethod: 'trilinear' | 'tricubic', inputStride: number) : tf.Tensor
 {
-    const program = new GPGPUExtremaMap(inputTensor.shape, interpolationMethod, inputStride)
-    return runProgram(program, [inputTensor]) as tf.Tensor4D
+    const program = new GPGPUExtremaMap(interpolationMap.shape, interpolationMethod, inputStride)
+    return runProgram(program, [interpolationMap]) as tf.Tensor4D
 }

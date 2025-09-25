@@ -68,7 +68,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function computeInterpolationMap(inputTensor: tf.Tensor3D): tf.Tensor 
+export function interpolationMap(inputTensor: tf.Tensor3D): tf.Tensor 
 {
   const program = new GPGPUInterpolationMap(inputTensor.shape)
   return runProgram(program, [inputTensor]) as tf.Tensor4D

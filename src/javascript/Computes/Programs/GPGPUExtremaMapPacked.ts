@@ -157,6 +157,41 @@ class GPGPUExtremaMap implements GPGPUProgram
     }
 }
 
+
+class GPGPUToHalfFloat implements GPGPUProgram 
+{
+    variableNames = ['ExtremaMap']
+    outputShape: number[]
+    userCode: string
+    packedInputs = true
+    packedOutput = false
+
+    constructor(inputShape: [number, number, number, number, number]) 
+    {
+        const [inDepth, inHeight, inWidth, , ] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth]
+        this.userCode = `   
+        vec4 clampToHalfRange(vec4 values) 
+        {
+            return clamp(values, -65504.0, 65504.0);
+        }
+
+        void main() 
+        {
+            ivec3 outputCoords = getOutputCoords();
+            ivec3 blockCoords = outputCoords.zyx;
+
+            vec4 blockMinMax = getExtremaMap(blockCoords.z, blockCoords.y, blockCoords.x, 0, 0);
+            blockMinMax = clampToHalfRange(blockMinMax);
+
+            uint packed = packHalf2x16(vec2(blockMinMax.r, blockMinMax.g)
+            setOutput(uintBitsToFloat(packed));
+        }
+    `
+    }
+}
+
+
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
 {
     const backend = tf.backend() as MathBackendWebGL
@@ -164,13 +199,14 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function computeExtremaMap
-(
-    inputTensor: tf.Tensor5D, 
-    interpolationMethod: 'trilinear' | 'tricubic', 
-    inputStride: number
-) : tf.Tensor
+export function computeExtremaMap(interpolationMap: tf.Tensor5D, interpolationMethod: 'trilinear' | 'tricubic', inputStride: number) : tf.Tensor
 {
-    const program = new GPGPUExtremaMap(inputTensor.shape, interpolationMethod, inputStride)
-    return runProgram(program, [inputTensor]) as tf.Tensor4D
+    const program = new GPGPUExtremaMap(interpolationMap.shape, interpolationMethod, inputStride)
+    return runProgram(program, [interpolationMap]) as tf.Tensor4D
+}
+
+export function toHalfFloat(extremaMap: tf.Tensor5D): tf.Tensor 
+{
+  const program = new GPGPUToHalfFloat(extremaMap.shape)
+  return runProgram(program, [extremaMap]) as tf.Tensor3D
 }

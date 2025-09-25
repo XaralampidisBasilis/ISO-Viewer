@@ -2,10 +2,9 @@ import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
-import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
-import { computeNormalizedMap } from '../Programs/GPGPUNormalizeMap'
-import { computeResizedMap } from '../Programs/GPGPUResizeMap'
-import { computeInterpolationMap } from '../Programs/GPGPUInterpolationMap'
+import { resizeMap } from '../Programs/GPGPUResizeMap'
+import { normalizeMap } from '../Programs/GPGPUNormalizeMapPacked'
+import { computeInterpolationMap, toHalfFloat } from '../Programs/GPGPUInterpolationMapPacked'
 
 export default class InterpolationMap extends EventEmitter
 {
@@ -23,7 +22,7 @@ export default class InterpolationMap extends EventEmitter
         this.spacing = new THREE.Vector3().fromArray(this.volume.spacing)
     }
 
-    setTensor()
+    compute()
     {
         const downscale = (x) => Math.ceil(x * this.downscaleFactor)
         const shape = this.dimensions.toArray()
@@ -33,14 +32,22 @@ export default class InterpolationMap extends EventEmitter
 
         const data = new Float32Array(this.volume.data)
         const volume = tf.tensor3d(data, shape)
-        const resized = computeResizedMap(volume, newShape, false, true); volume.dispose()
-        const normalized = computeNormalizedMap(resized); resized.dispose()
-        this.tensor = computeInterpolationMap(normalized); normalized.dispose() 
+
+        const resizedVolume = resizeMap(volume, newShape, false, true)
+        volume.dispose()
+
+        const normalizedVolume = normalizeMap(resizedVolume)
+        resizedVolume.dispose()
+
+        this.tensor?.dispose()
+        this.tensor = computeInterpolationMap(normalizedVolume) 
+        normalizedVolume.dispose() 
     }
 
-    setTexture()
+    textureSync()
     {
-        this.texture = new THREE.Data3DTexture(this.getData16F(), ...this.dimensions)
+        this.texture?.dispose()
+        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
         this.texture.format = THREE.RGBAFormat
         this.texture.type = THREE.HalfFloatType
         this.texture.internalFormat = 'RGBA16F'
@@ -49,18 +56,22 @@ export default class InterpolationMap extends EventEmitter
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 4
+
+        return this.texture
     }
 
-    getData16F()
+    textureDataSync()
     {
-        const dataFloat = this.tensor.dataSync()
-        const dataHalfFloat = new Uint16Array(this.tensor.size)
+        const tensor = toHalfFloat(this.tensor)
+        const dataHalfFloat = tensor.dataSync()
+        tensor.dispose()
+        
+        return new Uint16Array(dataHalfFloat.buffer)
+    }
 
-        for (let i = 0; i < dataFloat.length; ++i) 
-        {
-            dataHalfFloat[i] = toHalfFloat(dataFloat[i])
-        }
-
-        return dataHalfFloat
+    destroy()
+    {
+        this.tensor?.dispose()
+        this.texture?.dispose()
     }
 }

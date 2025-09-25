@@ -57,11 +57,6 @@ class GPGPUToHalfFloat implements GPGPUProgram
         const [inDepth, inHeight, inWidth, , ] = inputShape
         this.outputShape = [inDepth, inHeight, inWidth, 2]
         this.userCode = `   
-        vec4 getInterpolationMap(ivec3 voxelCoords)
-        {
-            return getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
-        }
-
         vec4 clampToHalfRange(vec4 values) 
         {
             return clamp(values, -65504.0, 65504.0);
@@ -73,7 +68,7 @@ class GPGPUToHalfFloat implements GPGPUProgram
             ivec3 voxelCoords = outputCoords.zyx;
             int lane = outputCoords.w;
 
-            vec4 voxelSamples = getInterpolationMap(voxelCoords);
+            vec4 voxelSamples = getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
             voxelSamples = clampToHalfRange(voxelSamples);
 
             uint packed = (lane == 0)

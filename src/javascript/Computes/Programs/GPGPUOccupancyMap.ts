@@ -46,8 +46,8 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function computeOccupancyMap(inputTensor: tf.Tensor4D, inputValue: number): tf.Tensor
+export function computeOccupancyMap(extremaMap: tf.Tensor4D, inputValue: number): tf.Tensor
 {
-  const program = new GPGPUOccupancyMap(inputTensor.shape as any, inputValue)
-  return runProgram(program, [inputTensor]) as tf.Tensor3D
+  const program = new GPGPUOccupancyMap(extremaMap.shape as any, inputValue)
+  return runProgram(program, [extremaMap]) as tf.Tensor3D
 }

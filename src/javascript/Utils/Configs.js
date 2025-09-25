@@ -93,10 +93,11 @@ export default class Configs extends EventEmitter
 
         if (key in this) 
         { 
+            const newValue = value
             const oldValue = this[key] 
-            this[key] = value 
+            this[key] = newValue 
 
-            this.trigger('change', { key, oldValue, newValue: value, }) 
+            this.trigger('change', { key, oldValue, newValue }) 
         } 
         else 
         { 
