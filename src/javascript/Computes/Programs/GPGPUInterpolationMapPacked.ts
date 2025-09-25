@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class GPGPUInterpolationMap implements GPGPUProgram 
+class GPGPUInterpolationMap implements GPGPUProgram 
 {
     variableNames = ['InputVolume']
     outputShape: number[]
@@ -44,6 +44,48 @@ export class GPGPUInterpolationMap implements GPGPUProgram
     }
 }
 
+class GPGPUToHalfFloat implements GPGPUProgram 
+{
+    variableNames = ['InterpolationMap']
+    outputShape: number[]
+    userCode: string
+    packedInputs = true
+    packedOutput = false
+
+    constructor(inputShape: [number, number, number, number, number]) 
+    {
+        const [inDepth, inHeight, inWidth, , ] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 2]
+        this.userCode = `   
+        vec4 getInterpolationMap(ivec3 voxelCoords)
+        {
+            return getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
+        }
+
+        vec4 clampToHalfRange(vec4 values) 
+        {
+            return clamp(values, -65504.0, 65504.0);
+        }
+
+        void main() 
+        {
+            ivec4 outputCoords = getOutputCoords();
+            ivec3 voxelCoords = outputCoords.zyx;
+            int lane = outputCoords.w;
+
+            vec4 voxelSamples = getInterpolationMap(voxelCoords);
+            voxelSamples = clampToHalfRange(voxelSamples);
+
+            uint packed = (lane == 0)
+            ? packHalf2x16(vec2(voxelSamples.r, voxelSamples.g))  
+            : packHalf2x16(vec2(voxelSamples.b, voxelSamples.a)); 
+
+            setOutput(uintBitsToFloat(packed));
+        }
+    `
+    }
+}
+
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
 {
     const backend = tf.backend() as MathBackendWebGL
@@ -55,4 +97,10 @@ export function computeInterpolationMap(inputTensor: tf.Tensor3D) : tf.Tensor
 {
     const program = new GPGPUInterpolationMap(inputTensor.shape)
     return runProgram(program, [inputTensor]) as tf.Tensor5D
+}
+
+export function toHalfFloat(InterpolationMap: tf.Tensor5D): tf.Tensor 
+{
+  const program = new GPGPUToHalfFloat(InterpolationMap.shape)
+  return runProgram(program, [InterpolationMap]) as tf.Tensor4D
 }

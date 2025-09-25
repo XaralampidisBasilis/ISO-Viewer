@@ -9,7 +9,7 @@ import { trilaplacianProgram } from './TrilaplacianProgram'
 import { occupancyProgram } from './OccupancyProgram'
 import { occupancyPackedProgram } from './OccupancyPackedProgram'
 import { occupancyPackedProgram2 } from './OccupancyPackedProgram2'
-import { trilaplacianPackedProgram } from './TrilaplacianPackedProgram'
+import { trilaplacianPackedProgram, computeInterpolationMapToHalfFloat } from './TrilaplacianPackedProgram'
 
 import { blockExtremaProgram } from './BlockExtremaProgram'
 import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
@@ -224,14 +224,18 @@ export default class ISOComputes extends EventEmitter
         this.trilaplacianIntensityMap = {}
         this.trilaplacianIntensityMap.tensor = trilaplacianPackedProgram(this.intensityMap.tensor);
         // this.trilaplacianIntensityMap.tensor = trilaplacianProgram(this.intensityMap.tensor)
-        this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
 
         // convert data to half float type
-        const array = this.trilaplacianIntensityMap.tensor.dataSync()
-        for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
-        {
-            this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
-        }
+        const array = computeInterpolationMapToHalfFloat(this.trilaplacianIntensityMap.tensor)
+        this.trilaplacianIntensityMap.array = new Uint16Array(array.dataSync().buffer)
+        array.dispose()
+
+        // this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
+        // const array = this.trilaplacianIntensityMap.tensor.dataSync()
+        // for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
+        // {
+        //     this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
+        // }
 
         // copy parameters from intensity map
         this.trilaplacianIntensityMap.shape         = this.trilaplacianIntensityMap.tensor.shape

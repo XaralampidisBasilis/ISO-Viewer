@@ -32,9 +32,9 @@ export default class InterpolationMap extends EventEmitter
         this.dimensions = newDimensions
 
         const data = new Float32Array(this.volume.data)
-        let volume = tf.tensor3d(data, shape)
-        let resized = computeResizedMap(volume, newShape, false, true); volume.dispose()
-        let normalized = computeNormalizedMap(resized); resized.dispose()
+        const volume = tf.tensor3d(data, shape)
+        const resized = computeResizedMap(volume, newShape, false, true); volume.dispose()
+        const normalized = computeNormalizedMap(resized); resized.dispose()
         this.tensor = computeInterpolationMap(normalized); normalized.dispose() 
     }
 

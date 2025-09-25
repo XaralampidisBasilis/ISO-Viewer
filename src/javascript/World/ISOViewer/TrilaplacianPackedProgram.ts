@@ -44,6 +44,42 @@ export class TrilaplacianPackedProgram implements GPGPUProgram
     }
 }
 
+class GPGPUInterpolationMapToHalfFloat implements GPGPUProgram 
+{
+    variableNames = ['InterpolationMap']
+    outputShape: number[]
+    userCode: string
+    packedInputs = true
+    packedOutput = false
+
+    constructor(inputShape: [number, number, number, number, number]) 
+    {
+        const [inDepth, inHeight, inWidth, , ] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 2]
+        this.userCode = `   
+        vec4 clampToHalfRange(vec4 values) 
+        {
+            return clamp(values, -65504.0, 65504.0);
+        }
+
+        void main() 
+        {
+            ivec4 outputCoords = getOutputCoords();
+            ivec3 voxelCoords = outputCoords.zyx;
+            int lane = outputCoords.w;
+
+            vec4 voxelSamples = getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);
+            voxelSamples = clampToHalfRange(voxelSamples) ;
+
+            uint packed = (lane == 0)
+            ? packHalf2x16(vec2(voxelSamples.r, voxelSamples.g))  
+            : packHalf2x16(vec2(voxelSamples.b, voxelSamples.a)); 
+
+            setOutput(uintBitsToFloat(packed));
+        }
+    `
+    }
+}
 
 export function trilaplacianPackedProgram(inputTensor: tf.Tensor4D): tf.Tensor4D 
 {
@@ -53,4 +89,17 @@ export function trilaplacianPackedProgram(inputTensor: tf.Tensor4D): tf.Tensor4D
     const output = backend.compileAndRun(program, [inputTensor])
 
     return tf.engine().makeTensorFromTensorInfo(output) as tf.Tensor4D
+}
+
+function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
+{
+    const backend = tf.backend() as MathBackendWebGL
+    const info = backend.compileAndRun(prog, inputs)
+    return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
+}
+
+export function computeInterpolationMapToHalfFloat(InterpolationMap: tf.Tensor5D): tf.Tensor 
+{
+  const program = new GPGPUInterpolationMapToHalfFloat(InterpolationMap.shape)
+  return runProgram(program, [InterpolationMap]) as tf.Tensor4D
 }

@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
 
-export class GPGPUInterpolationMap implements GPGPUProgram 
+class GPGPUInterpolationMap implements GPGPUProgram 
 {
     variableNames = ['A'];
     outputShape: number[];
