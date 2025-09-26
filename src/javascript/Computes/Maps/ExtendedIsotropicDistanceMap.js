@@ -1,27 +1,23 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
 import { computeExtendedIsotropicDistanceMap } from '../Programs/GPGPUExtendedIsotropicDistanceMapPacked'
 
-export default class ExtendedIsotropicDistanceMap extends EventEmitter
+export default class ExtendedIsotropicDistanceMap
 {
     constructor()
     {
-        super()
-
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.occupancyMap = this.computes.occupancyMap
         this.maxDistance = 31
-        
-        this.dimensions = this.occupancyMap.dimensions
     }
 
     compute()
     {
         this.texture?.dispose()
         this.tensor = computeExtendedIsotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
+        this.dimensions = this.occupancyMap.dimensions
     }
 
     textureSync()

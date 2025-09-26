@@ -21,7 +21,7 @@ class GPGPUNormalizeMap implements GPGPUProgram
         this.userCode = `
         void main() 
         {
-            setOutput((getInputAtOutputCoords() - ${globalMin}) / ${globalMax - globalMin});
+            setOutput((getInputAtOutCoords() - ${globalMin}) / ${globalMax - globalMin});
         }
         `
     }
@@ -34,7 +34,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function normalizeMap(inputTensor: tf.Tensor3D): tf.Tensor3D 
+export function computeNormalizedMap(inputTensor: tf.Tensor3D): tf.Tensor3D 
 {
     const globalMin = tf.min(inputTensor).arraySync() as number
     const globalMax = tf.max(inputTensor).arraySync() as number

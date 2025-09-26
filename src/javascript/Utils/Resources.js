@@ -30,7 +30,7 @@ export default class Resources extends EventEmitter
 
     startLoading()
     {
-        console.time('Resources')
+        console.time('setResources')
 
         // Load each source
         for(const source of this.sources)
@@ -86,8 +86,8 @@ export default class Resources extends EventEmitter
 
         if(this.loaded === this.toLoad)
         {
+            console.timeEnd('setResources')
             this.trigger('ready')
-            console.timeEnd('Resources')
         }
     }
 }

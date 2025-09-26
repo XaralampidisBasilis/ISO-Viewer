@@ -45,28 +45,9 @@ export default class ISOComputes extends EventEmitter
         // Wait for resources
         this.resources.on('ready', async () =>
         {
-            await this.setTensorflow()
             await this.setComputes()
             this.trigger('ready')
         })
-    }
-
-    async setTensorflow()
-    {
-        console.time('setTensorflow') 
-
-        tf.env().set('WEBGL_FORCE_F16_TEXTURES', true)       // halves bandwidth on many GPUs
-        tf.env().set('WEBGL_PACK', true)                     // ensure packing is on
-        tf.env().set('WEBGL_CPU_FORWARD', false)             // be strict about staying on GPU
-        tf.env().set('WEBGL_LAZILY_UNPACK', true)            // Optional: if you see shader compiles dominating, enable persisting programs
-
-        tf.enableProdMode()
-        // tf.enableDebugMode()
-        await tf.ready()
-        await tf.setBackend('webgl')
-        // console.log('tf', tf)
-
-        console.timeEnd('setTensorflow') 
     }
 
     async setComputes()
@@ -187,7 +168,7 @@ export default class ISOComputes extends EventEmitter
     {
         console.time('downscaleIntensityMap') 
 
-        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.7))
+        const newShape = this.intensityMap.tensor.shape.map((x) => Math.ceil(x * 0.8))
         const intensityMap = resizeProgram(this.intensityMap.tensor, newShape[0], newShape[1], newShape[2], false, true)  
         tf.dispose(this.intensityMap.tensor)
 
@@ -226,16 +207,16 @@ export default class ISOComputes extends EventEmitter
         // this.trilaplacianIntensityMap.tensor = trilaplacianProgram(this.intensityMap.tensor)
 
         // convert data to half float type
-        const array = computeInterpolationMapToHalfFloat(this.trilaplacianIntensityMap.tensor)
-        this.trilaplacianIntensityMap.array = new Uint16Array(array.dataSync().buffer)
-        array.dispose()
+        // const array = computeInterpolationMapToHalfFloat(this.trilaplacianIntensityMap.tensor)
+        // this.trilaplacianIntensityMap.array = new Uint16Array(array.dataSync().buffer)
+        // array.dispose()
 
-        // this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
-        // const array = this.trilaplacianIntensityMap.tensor.dataSync()
-        // for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
-        // {
-        //     this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
-        // }
+        this.trilaplacianIntensityMap.array = new Uint16Array(this.trilaplacianIntensityMap.tensor.size)
+        const array = this.trilaplacianIntensityMap.tensor.dataSync()
+        for (let i = 0; i < this.trilaplacianIntensityMap.array.length; ++i) 
+        {
+            this.trilaplacianIntensityMap.array[i] = toHalfFloat(array[i])
+        }
 
         // copy parameters from intensity map
         this.trilaplacianIntensityMap.shape         = this.trilaplacianIntensityMap.tensor.shape
@@ -379,8 +360,8 @@ export default class ISOComputes extends EventEmitter
         // this.anisotropicDistanceMap.tensor =  (await TFUtils.computeAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 127)).squeeze()
         // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
         // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 127)
-        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
-        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 127)
+        // this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 127)
+        this.anisotropicDistanceMap.tensor = anisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 127)
 
         // const tensor = anisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 127)
         // const error = tensor.sub(this.anisotropicDistanceMap.tensor)
@@ -421,8 +402,8 @@ export default class ISOComputes extends EventEmitter
         // this.extendedAnisotropicDistanceMap.tensor = await TFUtils.computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor.expandDims(-1), 31)
         // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgram(this.occupancyMap.tensor, 31)
         // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 31)
-        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
-        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 31)
+        // this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramPacked(this.occupancyMap.tensor, 31)
+        this.extendedAnisotropicDistanceMap.tensor = extendedAnisotropicChebyshevDistanceProgramFusedPacked(this.occupancyMap.tensor, 31)
 
         // const tensor = extendedAnisotropicChebyshevDistanceProgramFused(this.occupancyMap.tensor, 31)
         // const error = tensor.sub(this.extendedAnisotropicDistanceMap.tensor)

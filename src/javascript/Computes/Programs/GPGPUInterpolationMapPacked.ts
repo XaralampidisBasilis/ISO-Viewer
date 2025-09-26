@@ -81,6 +81,48 @@ class GPGPUToHalfFloat implements GPGPUProgram
     }
 }
 
+
+class GPGPUFromHalfFloat implements GPGPUProgram 
+{
+    variableNames = ['InterpolationMap']
+    outputShape: number[]
+    userCode: string
+    packedInputs = false
+    packedOutput = true
+
+    constructor(inputShape: [number, number, number, number]) 
+    {
+        const [inDepth, inHeight, inWidth, ] = inputShape
+        this.outputShape = [inDepth, inHeight, inWidth, 2, 2]
+        this.userCode = `   
+        vec4 clampToHalfRange(vec4 values) 
+        {
+            return clamp(values, -65504.0, 65504.0);
+        }
+
+        void main() 
+        {
+            ivec5 outputCoords = getOutputCoords();
+            ivec3 voxelCoords = ivec3(outputCoords.z, outputCoords.y, outputCoords.x);
+            int lane = outputCoords.w;
+
+            float packedRG = getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0);
+            float packedHalfFloats = getInterpolationMap(voxelCoords.z, voxelCoords.y, voxelCoords.x, 1);
+
+            uint packed = floatBitsToUInt(packedHalfFloats);
+
+            vec4(unpackHalf2x16())
+
+            uint packed = (lane == 0)
+            ? packHalf2x16(vec2(voxelSamples.r, voxelSamples.g))  
+            : packHalf2x16(vec2(voxelSamples.b, voxelSamples.a)); 
+
+            setOutput(uintBitsToFloat(packed));
+        }
+    `
+    }
+}
+
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
 {
     const backend = tf.backend() as MathBackendWebGL

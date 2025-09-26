@@ -1,3 +1,4 @@
+import * as tf from '@tensorflow/tfjs'
 import EventEmitter from '../Utils/EventEmitter'
 import Experience from '../Experience'
 import InterpolationMap from './Maps/InterpolationMap'
@@ -25,42 +26,41 @@ export default class Computes extends EventEmitter
         this.experience = new Experience()
         this.configs = this.experience.configs
         this.resources = this.experience.resources
+        this.skippingMethod = this.configs.skippingMethod
+        this.setMaps()
+    }
 
+    setMaps()
+    {
         this.interpolationMap = new InterpolationMap()
         this.extremaMap = new ExtremaMap()
         this.occupancyMap = new OccupancyMap()
         this.isotropicDistanceMap = new IsotropicDistanceMap()
         this.anisotropicDistanceMap = new AnisotropicDistanceMap()
         this.extendedAnisotropicDistanceMap = new ExtendedAnisotropicDistanceMap()
-
-        tf.enableProdMode() // or tf.enableDebugMode() 
-        tf.env().set('WEBGL_FORCE_F16_TEXTURES', true) // halves bandwidth on many GPUs
-        tf.env().set('WEBGL_PACK', true)               // ensure packing is on
-        tf.env().set('WEBGL_CPU_FORWARD', false)       // be strict about staying on GPU
-        tf.env().set('WEBGL_LAZILY_UNPACK', true)      // Optional: if you see shader compiles dominating, enable persisting programs
     }
 
     start()
     {
+        console.time('startComputes') 
+
         this.interpolationMap.compute()
         this.extremaMap.compute()
         this.occupancyMap.compute()
-
-        if (this.configs.skippingMethod === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.compute()
-
-        if (this.configs.skippingMethod === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.compute()
-
-        if (this.configs.skippingMethod === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.compute()
         
+        if (this.skippingMethod.endsWith('DistanceMap'))
+        {
+            const distanceMap = this.skippingMethod
+            this[distanceMap].compute()
+        }
+
+        console.timeEnd('startComputes') 
     }
 
     change(event)
     {
         if (event.key === 'isosurfaceValue') this.onChangeIsosurfaceValue(event)
-        if (event.key === 'blockSize') this.onChangeBlockSize(event)
+        if (event.key === 'blockSize')  this.onChangeBlockSize(event)
         if (event.key === 'interpolationMethod') this.onChangeInterpolationMethod(event)
         if (event.key === 'skippingMethod') this.onChangeSkippingMethod(event)
     }
@@ -69,14 +69,11 @@ export default class Computes extends EventEmitter
     {
         this.occupancyMap.compute()
 
-        if (event.newValue === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.compute()
-
-        if (event.newValue === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.compute()
-
-        if (event.newValue === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.compute()
+        if (this.skippingMethod.endsWith('DistanceMap'))
+        {
+            const distanceMap = this.skippingMethod
+            this[distanceMap].compute()
+        }
     }
 
     onChangeBlockSize(event)
@@ -84,15 +81,11 @@ export default class Computes extends EventEmitter
         this.extremaMap.compute()
         this.occupancyMap.compute()
 
-        if (this.configs.skippingMethod === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.compute()
-
-        if (this.configs.skippingMethod === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.compute()
-        
-        if (this.configs.skippingMethod === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.compute()
-        
+        if (this.skippingMethod.endsWith('DistanceMap'))
+        {
+            const distanceMap = this.skippingMethod
+            this[distanceMap].compute()
+        }
     }
 
     onChangeInterpolationMethod(event)
@@ -100,37 +93,24 @@ export default class Computes extends EventEmitter
         this.extremaMap.compute()
         this.occupancyMap.compute()
 
-        if (this.configs.skippingMethod === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.compute()
-
-        if (this.configs.skippingMethod === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.compute()
-
-        if (this.configs.skippingMethod === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.compute()
+        if (this.skippingMethod.endsWith('DistanceMap'))
+        {
+            const distanceMap = this.skippingMethod
+            this[distanceMap].compute()
+        }
     }
 
     onChangeSkippingMethod(event)
     {
-        if (event.oldValue === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.tensor.dispose()
-
-        if (event.oldValue === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.tensor.dispose()
-
-        if (event.oldValue === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.tensor.dispose()
-
-        
-        if (event.newValue === 'isotropicDistanceMap')
-            this.isotropicDistanceMap.compute()
-
-        if (event.newValue === 'anisotropicDistanceMap')
-            this.anisotropicDistanceMap.compute()
-
-        if (event.newValue === 'extendedAnisotropicDistanceMap')
-            this.extendedAnisotropicDistanceMap.compute()
-        
+        if (this.skippingMethod === 'occupancyMap')
+        {
+            this.occupancyMap.compute()
+        }
+        else if (this.skippingMethod.endsWith('DistanceMap'))
+        {
+            const distanceMap = this.skippingMethod
+            this[distanceMap].compute()
+        }
     }
 
 }

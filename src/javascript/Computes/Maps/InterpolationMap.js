@@ -1,47 +1,48 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
-import { resizeMap } from '../Programs/GPGPUResizeMap'
-import { normalizeMap } from '../Programs/GPGPUNormalizeMapPacked'
+import { computeResizedMap } from '../Programs/GPGPUResizeMap'
+import { computeNormalizedMap } from '../Programs/GPGPUNormalizeMapPacked'
 import { computeInterpolationMap, toHalfFloat } from '../Programs/GPGPUInterpolationMapPacked'
 
-export default class InterpolationMap extends EventEmitter
+export default class InterpolationMap
 {
     constructor()
     {
-        super()
-
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.resources = this.computes.resources
-        this.volume = this.resources.items.intensityMap
         this.downscaleFactor = this.configs.downscaleFactor
+    }
 
+    setVolume()
+    {
+        this.volume = this.resources.items.intensityMap
         this.dimensions = new THREE.Vector3().fromArray(this.volume.dimensions)
         this.spacing = new THREE.Vector3().fromArray(this.volume.spacing)
+        this.size = new THREE.Vector3().multiplyVectors(this.spacing, this.dimensions)
     }
 
     compute()
     {
-        const downscale = (x) => Math.ceil(x * this.downscaleFactor)
-        const shape = this.dimensions.toArray()
-        const newShape = this.dimensions.toArray().map(downscale)
-        const newDimensions = new THREE.Vector3().fromArray(newShape.toReversed())
-        this.dimensions = newDimensions
+        console.time('computeInterpolationMap') 
+        
+        this.setVolume()
+        const shape = this.volume.dimensions.toReversed()
+        const newShape = shape.map((x) => Math.ceil(this.downscaleFactor * x))
+        const newSpacing = this.volume.spacing.toReversed().map((x, i) => shape[i]/newShape[i] * x)
+        this.dimensions.copy(newShape.toReversed())
+        this.spacing.copy(newSpacing.toReversed())
 
-        const data = new Float32Array(this.volume.data)
-        const volume = tf.tensor3d(data, shape)
-
-        const resizedVolume = resizeMap(volume, newShape, false, true)
-        volume.dispose()
-
-        const normalizedVolume = normalizeMap(resizedVolume)
-        resizedVolume.dispose()
+        const volume = tf.tensor3d(new Float32Array(this.volume.data), shape)
+        const resizedVolume = computeResizedMap(volume, newShape, false, true); volume.dispose()
+        const normalizedVolume = computeNormalizedMap(resizedVolume); resizedVolume.dispose()
 
         this.tensor?.dispose()
-        this.tensor = computeInterpolationMap(normalizedVolume) 
-        normalizedVolume.dispose() 
+        this.tensor = computeInterpolationMap(normalizedVolume); normalizedVolume.dispose() 
+        // this.data = this.tensor.dataSync()
+
+        console.timeEnd('computeInterpolationMap') 
     }
 
     textureSync()
@@ -63,9 +64,7 @@ export default class InterpolationMap extends EventEmitter
     textureDataSync()
     {
         const tensor = toHalfFloat(this.tensor)
-        const dataHalfFloat = tensor.dataSync()
-        tensor.dispose()
-        
+        const dataHalfFloat = tensor.dataSync(); tensor.dispose()
         return new Uint16Array(dataHalfFloat.buffer)
     }
 

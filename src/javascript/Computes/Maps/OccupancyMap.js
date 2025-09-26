@@ -1,27 +1,27 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
 import { computeOccupancyMap } from '../Programs/GPGPUOccupancyMapPacked'
 
-export default class OccupancyMap extends EventEmitter
+export default class OccupancyMap
 {
     constructor()
     {
-        super()
-
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.extremaMap = this.computes.extremaMap
         this.isosurfaceValue = this.configs.isosurfaceValue
-        
-        this.dimensions = this.extremaMap.dimensions
     }
 
     compute()
     {
+        console.time('computeOccupancyMap') 
+
         this.tensor?.dispose()
         this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.isosurfaceValue)
+        this.dimensions = this.extremaMap.dimensions
+
+        console.timeEnd('computeOccupancyMap') 
     }
 
     textureSync()

@@ -9,6 +9,7 @@ import Camera from './Camera'
 import Renderer from './Renderer'
 import World from './World/World'
 import Resources from './Utils/Resources'
+import Computes from './Computes/Computes'
 import sources from './sources'
 
 export default class Experience
@@ -43,6 +44,7 @@ export default class Experience
         this.renderer = new Renderer()
         this.world = new World()
         this.stats = new Stats(true)
+        // this.computes = new Computes()
 
         // Size resize event
         this.sizes.on('resize', () => 
@@ -56,16 +58,16 @@ export default class Experience
             this.update()
         })
 
-        // Config change event
-        this.configs.on('change', (event) =>
-        {
-            this.change(event)
-        })
-
         // Resources ready event
         this.resources.on('ready', () =>
         {
             this.start()
+        })
+
+        // Config change event
+        this.configs.on('change', (event) =>
+        {
+            this.change(event)
         })
 
         // Window refresh event
@@ -90,7 +92,8 @@ export default class Experience
 
     start()
     {
-        this.world.start()
+        // this.computes.start()
+        // this.world.start()
     }
 
     change(event)

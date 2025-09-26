@@ -28,6 +28,16 @@ export default class World extends EventEmitter
         })
     }
 
+    start()
+    {
+        
+    }
+
+    change(event)
+    {
+
+    }
+
     destroy()
     {
         this.disposeScene()

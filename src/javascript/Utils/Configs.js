@@ -35,10 +35,10 @@ export default class Configs extends EventEmitter
         this.downscaleFactor = 0.5
         this.isosurfaceValue = 0.69
 
-        this.interpolationMethod = 'trilinear'
+        this.interpolationMethod = 'tricubic'
         this.gradientsMethod = 'bspline'
         this.marchingMethod = 'analytic'
-        this.skippingMethod = 'anisotropicDistanceMap'
+        this.skippingMethod = 'extendedAnisotropicDistanceMap'
 
         this.bernsteinEnabled = true
         this.skippingEnabled = true

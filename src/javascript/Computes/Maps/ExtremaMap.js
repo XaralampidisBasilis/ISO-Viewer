@@ -1,27 +1,30 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import EventEmitter from '../Utils/EventEmitter'
 import Computes from '../Computes'
 import { computeExtremaMap, toHalfFloat } from '../Programs/GPGPUExtremaMapPacked'
 
-export default class ExtremaMap extends EventEmitter
+export default class ExtremaMap
 {
     constructor()
     {
-        super()
-
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.interpolationMap = this.computes.interpolationMap
         this.interpolationMethod = this.configs.interpolationMethod
-        this.isosurfaceValue = this.configs.isosurfaceValue
+        this.blockSize = this.configs.blockSize
     }
 
     compute()
     {
+        console.time('computeExtremaMap') 
+
         this.tensor?.dispose()
-        this.tensor = computeExtremaMap(this.interpolationMap.tensor, this.interpolationMethod, this.isosurfaceValue)
-        this.dimensions = new THREE.Vector3().fromArray(this.tensor.shape.slice(0, 3).toReversed())
+        this.tensor = computeExtremaMap(this.interpolationMap.tensor, this.interpolationMethod, this.blockSize)
+
+        const dimensions = this.tensor.shape.slice(0, 3).toReversed()
+        this.dimensions = new THREE.Vector3().fromArray(dimensions)
+
+        console.timeEnd('computeExtremaMap') 
     }
 
     textureSync()
