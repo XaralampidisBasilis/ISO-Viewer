@@ -12,7 +12,7 @@ import { occupancyPackedProgram2 } from './OccupancyPackedProgram2'
 import { trilaplacianPackedProgram, computeInterpolationMapToHalfFloat } from './TrilaplacianPackedProgram'
 
 import { blockExtremaProgram } from './BlockExtremaProgram'
-import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram'
+import { blockExtremaPackedProgram } from './BlockExtremaPackedProgram2'
 
 import { isotropicChebyshevDistanceProgram } from './IsotropicDistanceProgram'
 import { isotropicChebyshevDistanceProgramPacked } from './IsotropicDistanceProgramPacked'
