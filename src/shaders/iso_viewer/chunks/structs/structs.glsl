@@ -13,6 +13,6 @@
 #include "./struct_debug"
 #endif
 
-#if STATS_ENABLED == 1
+#if DEBUG_ENABLED == 1
 #include "./struct_stats"
 #endif

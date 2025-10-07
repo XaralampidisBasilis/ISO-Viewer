@@ -15,14 +15,14 @@ if (sign_change(quintic.bernstein_coeffs))
     cell.intersected = sign_change(quintic.residuals) || split_bernstein_sign_change(quintic.bernstein_coeffs);
 
     // Update tests counters for performance statistics
-    #if STATS_ENABLED == 1
-    stats.num_tests += 1;
+    #if DEBUG_ENABLED == 1
+    stats.num_intersection_tests += 1;
     #endif
 }
 
 // Update fetch counters for performance statistics
-#if STATS_ENABLED == 1
-stats.num_fetches += 3;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 3;
 #endif
 
 

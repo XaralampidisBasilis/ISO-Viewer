@@ -17,14 +17,14 @@ if (sign_change(quintic.bernstein_coeffs))
     // Compute quintic intersection by evaluating sign changes
     cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
 
-    #if STATS_ENABLED == 1
-    stats.num_tests += 1;
+    #if DEBUG_ENABLED == 1
+    stats.num_intersection_tests += 1;
     #endif
 }
 
 // update stats
-#if STATS_ENABLED == 1
-stats.num_fetches += 3;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 3;
 #endif
 
 

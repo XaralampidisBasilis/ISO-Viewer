@@ -74,7 +74,6 @@ export default function()
         SKIPPING_ENABLED : 1,
         BBOX_ENABLED     : 1,
 
-        STATS_ENABLED     : 1,
         DEBUG_ENABLED     : 1,
         DISCARDING_ENABLED: 1,
 

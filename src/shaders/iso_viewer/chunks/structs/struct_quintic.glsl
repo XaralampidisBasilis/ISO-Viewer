@@ -7,6 +7,7 @@ struct Quintic
     float coeffs[6];  
     float bernstein_coeffs[6];  
     float roots[6];
+    int num_roots;
     mat4 features;
     mat3x4 biases;
     float root;
@@ -23,6 +24,7 @@ void set_quintic()
     quintic.biases = mat3x4(0);
     quintic.features = mat4(0);
     quintic.root = 0.0;
+    quintic.num_roots = 0;
 }
 
 #endif 

@@ -28,7 +28,7 @@ block.coords += block.exit_normal * ray.signs;
 block.terminated = block.exit_distance > ray.end_distance;
 
 // update stats
-#if STATS_ENABLED == 1
-stats.num_fetches += 1;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 1;
 stats.num_blocks += 1;
 #endif

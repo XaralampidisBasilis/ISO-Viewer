@@ -186,37 +186,7 @@ export default class Controls
 
         this.controllers.debug = 
         {
-            maxGroups: folder.add(uniforms, 'max_groups').min(0).max(defines.MAX_GROUPS).step(1),
-            maxBlocks: folder.add(uniforms, 'max_blocks').min(0).max(defines.MAX_BLOCKS_PER_GROUP).step(1),
-            maxCells : folder.add(uniforms, 'max_cells').min(0).max(defines.MAX_CELLS_PER_BLOCK).step(1),
-            variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(0.001),
-            // variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(0.001),
-            // variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.001),
-            // variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(0.001),
-            // variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(0.001),
-            
-            discardingEnabled: folder.add(objects, 'discardingEnabled')
-            .onFinishChange((value) => 
-            { 
-                defines.DISCARDING_ENABLED = Number(value)
-                material.needsUpdate = true 
-            }),
-
-            statsEnabled: folder.add(objects, 'statsEnabled')
-            .onFinishChange((value) => 
-            { 
-                defines.STATS_ENABLED = Number(value)
-                material.needsUpdate = true 
-            }),
-
-            debugEnabled: folder.add(objects, 'debugEnabled')
-            .onFinishChange((value) => 
-            { 
-                defines.DEBUG_ENABLED = Number(value)
-                material.needsUpdate = true 
-            }),
-
-              option: folder.add(uniforms, 'option').options(
+            option: folder.add(uniforms, 'option').options(
             { 
                 default                 : 0,
                  
@@ -230,10 +200,10 @@ export default class Controls
                 ray_start_position      : 108,
                 ray_end_position        : 109,
 
-                block_skip_coords       : 401,
                 block_occupied          : 402,
                 block_terminated        : 403,
                 block_coords            : 404,
+                block_skip_coords       : 401,
                 block_exit_normal       : 405,
                 block_entry_distance    : 406,
                 block_exit_distance     : 407,
@@ -256,7 +226,7 @@ export default class Controls
                 trace_distance          : 303,
                 trace_position          : 304,
                 trace_residue           : 305,
-                trace_span_residue      : 306,
+                // trace_span_residue      : 306,
 
                 hit_discarded           : 451,
                 hit_escaped             : 452,
@@ -288,26 +258,57 @@ export default class Controls
                 camera_position         : 701,
                 camera_direction        : 702,
 
-                cubic_distances         : 801,
-                cubic_intensities       : 802,
-                cubic_coefficients      : 803,
+                cubic_coeffs          : 801,
+                cubic_bernstein_coeffs: 802,
+                cubic_num_roots       : 803,
+                cubic_root            : 804,
 
-                stats_num_fetches       : 901,
-                stats_num_cells         : 902,
-                stats_num_blocks        : 903,
-                stats_num_checks        : 904,
+                quintic_coeffs          : 851,
+                quintic_bernstein_coeffs: 852,
+                quintic_num_roots       : 853,
+                quintic_root            : 854,
+
+                stats_num_cells             : 901,
+                stats_num_traces            : 902,
+                stats_num_blocks            : 903,
+                stats_num_groups            : 904,
+                stats_num_texture_fetches   : 905,
+                stats_num_intersection_tests: 906,
                 
-                debug_variable0         : 1000,
-                debug_variable1         : 1001,
-                debug_variable2         : 1002,
-                debug_variable3         : 1003,
-                debug_variable4         : 1004,
-                debug_variable5         : 1005,
-                debug_variable6         : 1006,
-                debug_variable7         : 1007,
-                debug_variable8         : 1008,
-                debug_variable9         : 1009,
+                // debug_variable0         : 1000,
+                // debug_variable1         : 1001,
+                // debug_variable2         : 1002,
+                // debug_variable3         : 1003,
+                // debug_variable4         : 1004,
+                // debug_variable5         : 1005,
+                // debug_variable6         : 1006,
+                // debug_variable7         : 1007,
+                // debug_variable8         : 1008,
+                // debug_variable9         : 1009,
             }),       
+
+            debugEnabled: folder.add(objects, 'debugEnabled')
+            .onFinishChange((value) => 
+            { 
+                defines.DEBUG_ENABLED = Number(value)
+                material.needsUpdate = true 
+            }),
+
+            discardingEnabled: folder.add(objects, 'discardingEnabled')
+            .onFinishChange((value) => 
+            { 
+                defines.DISCARDING_ENABLED = Number(value)
+                material.needsUpdate = true 
+            }),
+
+            // maxGroups: folder.add(uniforms, 'max_groups').min(0).max(defines.MAX_GROUPS).step(1),
+            // maxBlocks: folder.add(uniforms, 'max_blocks').min(0).max(defines.MAX_BLOCKS_PER_GROUP).step(1),
+            // maxCells : folder.add(uniforms, 'max_cells').min(0).max(defines.MAX_CELLS_PER_BLOCK).step(1),
+            // variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(0.001),
+            // variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(0.001),
+            // variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.001),
+            // variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(0.001),
+            // variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(0.001),
         }
     }
     

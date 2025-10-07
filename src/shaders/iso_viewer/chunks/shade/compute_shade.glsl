@@ -42,7 +42,3 @@ frag.color_ambient *= modulate_curvature;
 // Compose colors
 frag.color = frag.color_ambient + frag.color_directional;
 fragColor = vec4(frag.color, 1.0);
-
-#if DISCARDING_ENABLED == 1
-fragColor.a *= hit.discarded ? 0.0 : 1.0;
-#endif

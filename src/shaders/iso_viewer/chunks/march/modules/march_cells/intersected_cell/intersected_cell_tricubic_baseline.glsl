@@ -14,7 +14,7 @@ sum_anti_diags(coeffs, quintic.coeffs);
 cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
 
 // Update fetch/test counters for performance statistics
-#if STATS_ENABLED == 1
-stats.num_fetches += 3;
-stats.num_tests += 1;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 3;
+stats.num_intersection_tests += 1;
 #endif

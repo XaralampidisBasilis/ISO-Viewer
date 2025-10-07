@@ -8,7 +8,7 @@ cubic.coeffs = cubic.residuals * cubic_inv_vander;
 cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, sampling_points.xw, cubic.residuals.xw);
 
 // update stats
-#if STATS_ENABLED == 1
-stats.num_fetches += 3;
-stats.num_tests += 1;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 3;
+stats.num_intersection_tests += 1;
 #endif

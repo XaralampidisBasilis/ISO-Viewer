@@ -78,6 +78,9 @@ struct ColorConstants {
     // Metallics
     vec3 GOLD;
     vec3 SILVER;
+
+    // Distinct
+    vec3 BREWER_SET1[9];
 };
 
 const ColorConstants COLOR = ColorConstants(
@@ -158,7 +161,20 @@ const ColorConstants COLOR = ColorConstants(
 
     // Metallics
     vec3(1.0, 0.84, 0.0),      // GOLD
-    vec3(0.75, 0.75, 0.75)     // SILVER
+    vec3(0.75, 0.75, 0.75),     // SILVER
+
+    // Color brewer set1
+    vec3[9](
+    vec3(228.0/255.0,  26.0/255.0,  28.0/255.0),  // #e41a1c
+    vec3( 55.0/255.0, 126.0/255.0, 184.0/255.0),  // #377eb8
+    vec3( 77.0/255.0, 175.0/255.0,  74.0/255.0),  // #4daf4a
+    vec3(152.0/255.0,  78.0/255.0, 163.0/255.0),  // #984ea3
+    vec3(255.0/255.0, 127.0/255.0,   0.0/255.0),  // #ff7f00
+    vec3(255.0/255.0, 255.0/255.0,  51.0/255.0),  // #ffff33
+    vec3(166.0/255.0,  86.0/255.0,  40.0/255.0),  // #a65628
+    vec3(247.0/255.0, 129.0/255.0, 191.0/255.0),  // #f781bf
+    vec3(153.0/255.0, 153.0/255.0, 153.0/255.0)   // #999999
+    )
 );
 
 #endif // COLOR_CONSTANTS

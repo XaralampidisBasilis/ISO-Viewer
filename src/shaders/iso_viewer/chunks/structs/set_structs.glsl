@@ -13,6 +13,6 @@ set_quintic();
 set_debug();
 #endif
 
-#if STATS_ENABLED == 1
+#if DEBUG_ENABLED == 1
 set_stats();
 #endif

@@ -24,7 +24,7 @@ for (int k = 0; k < MAX_GROUPS; k++)
 
     if (trace.intersected || trace.terminated) break; 
 
-    #if STATS_ENABLED == 1
+    #if DEBUG_ENABLED == 1
     stats.num_groups += 1;
     #endif
 }

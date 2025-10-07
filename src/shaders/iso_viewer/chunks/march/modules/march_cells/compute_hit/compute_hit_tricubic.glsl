@@ -8,6 +8,11 @@
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 quintic.root = mmin(quintic.roots);
 
+// Count roots
+quintic.num_roots = 0;
+for (int n = 0; n < 6; ++n) 
+    quintic.num_roots += int(quintic.roots[n] != quintic.roots[5]);
+
 // Compute derivative at root
 eval_poly(quintic.coeffs, quintic.root, hit.derivative);
 

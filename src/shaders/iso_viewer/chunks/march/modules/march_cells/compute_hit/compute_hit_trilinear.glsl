@@ -6,6 +6,11 @@
 poly3_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
 cubic.root = mmin(cubic.roots);
 
+// Count roots
+cubic.num_roots = 0;
+for (int n = 0; n < 4; ++n) 
+    cubic.num_roots += int(cubic.roots[n] != cubic.roots[3]);
+
 // Compute cubic derivative at min root
 eval_poly(cubic.coeffs, cubic.root, hit.derivative);
 

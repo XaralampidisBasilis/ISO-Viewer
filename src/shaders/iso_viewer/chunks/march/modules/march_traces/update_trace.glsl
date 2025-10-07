@@ -12,6 +12,6 @@ trace.position = camera.position + ray.direction * trace.distance;
 trace.terminated = trace.distance > ray.end_distance; 
 
 // update stats
-#if STATS_ENABLED == 1
+#if DEBUG_ENABLED == 1
 stats.num_traces += 1;
 #endif

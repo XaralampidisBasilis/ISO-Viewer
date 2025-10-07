@@ -17,7 +17,7 @@ trace.residue = sample_residue_trilinear(trace.position);
 trace.residue = sample_residue_tricubic(trace.position);
 #endif
 
-#if STATS_ENABLED == 1
-stats.num_fetches += 1;
+#if DEBUG_ENABLED == 1
+stats.num_texture_fetches += 1;
 #endif
 
