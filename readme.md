@@ -5,6 +5,9 @@ Download [Node.js](https://nodejs.org/en/download/).
 Run this followed commands:
 
 ``` bash
+# Online demo on cardiac CT
+https://xaralampidisbasilis.github.io/ISO-Viewer/
+
 # Install dependencies (only the first time)
 npm install
 

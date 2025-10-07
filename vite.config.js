@@ -12,7 +12,7 @@ export default ({
     },
     build:
     {
-        outDir: '../dist', // Output in the dist/ folder
+        outDir: '../docs', // Output in the docs/ folder
         emptyOutDir: true, // Empty the folder first
         sourcemap: true // Add sourcemap
     },
