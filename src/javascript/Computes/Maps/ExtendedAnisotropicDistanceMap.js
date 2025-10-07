@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeExtendedAnisotropicDistanceMap } from '../Programs/GPGPUExtendedAnisotropicDistanceMapPacked'
+import { computeExtendedAnisotropicDistanceMap } from '../Programs/GPGPUExtendedAnisotropicDistanceMapFusedPacked'
 
 export default class ExtendedAnisotropicDistanceMap 
 {
@@ -13,39 +13,42 @@ export default class ExtendedAnisotropicDistanceMap
         this.maxDistance = 31
     }
 
-    compute()
+    computeTensor()
     {
-        console.time('computeExtendedAnisotropicDistanceMap') 
-
-        this.tensor?.dispose()
+        console.time('computeTensor@ExtendedAnisotropicDistanceMap') 
         this.tensor = computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
-        this.dimensions = this.occupancyMap.dimensions
-
-        console.timeEnd('computeExtendedAnisotropicDistanceMap') 
+        this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
+        this.dimensions.z *= 8
+        console.timeEnd('computeTensor@ExtendedAnisotropicDistanceMap') 
     }
 
-    textureSync()
+    computeTexture()
     {
-        this.texture?.dispose()
-        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
+        console.time('computeTexture@ExtendedAnisotropicDistanceMap') 
+        this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
-        this.texture.type = THREE.UnsignedByteType
-        this.texture.internalFormat = 'R8UI'
+        this.texture.type = THREE.UnsignedShortType
+        this.texture.internalFormat = 'R16UI'
         this.texture.minFilter = THREE.NearestFilter
         this.texture.magFilter = THREE.NearestFilter
         this.texture.generateMipmaps = false
-        this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
-
-        return this.texture
+        this.texture.needsUpdate = true
+        console.timeEnd('computeTexture@ExtendedAnisotropicDistanceMap') 
     }   
 
-    textureDataSync()
+    updateTexture()
     {
-        return new Uint8Array(this.tensor.dataSync())
+        this.texture.image.data.set(this.getTextureData())
+        this.texture.needsUpdate = true
     }
 
-    destroy()
+    getTextureData()
+    {
+        return new Uint16Array(this.tensor.dataSync())
+    }
+
+    dispose()
     {
         this.tensor?.dispose()
         this.texture?.dispose()

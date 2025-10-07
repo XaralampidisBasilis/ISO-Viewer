@@ -1,15 +1,8 @@
 export default [     
     
-    // Colormaps
-    {
-        name: 'colorMaps',
-        type: 'texture',
-        path: 'textures/colormaps/colormaps.png',
-    },
-
     // NIFTI    
     {
-        name: 'intensityMap',
+        name: 'volume',
         type: 'niftiFile',
         // path: 'nifti/colon/volume.nii.gz',
         // path: 'nifti/cardiac/mr_train_1001_image.nii.gz',

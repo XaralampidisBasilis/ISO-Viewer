@@ -3,7 +3,10 @@
 
 struct UniformsDebug
 {
-    int option;    
+    int option;
+    int max_groups;         
+    int max_blocks;         
+    int max_cells;             
     float variable1; 
     float variable2; 
     float variable3; 

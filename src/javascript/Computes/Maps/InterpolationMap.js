@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeResizedMap } from '../Programs/GPGPUResizeMap'
-import { computeNormalizedMap } from '../Programs/GPGPUNormalizeMapPacked'
-import { computeInterpolationMap, toHalfFloat } from '../Programs/GPGPUInterpolationMapPacked'
+import { computeInterpolationMap } from '../Programs/GPGPUInterpolationMapPacked'
+import { toHalfFloat } from '../Programs/GPGPUToHalfFloatPacked'
+// import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
 
 export default class InterpolationMap
 {
@@ -11,64 +11,74 @@ export default class InterpolationMap
     {
         this.computes = new Computes()
         this.configs = this.computes.configs
-        this.resources = this.computes.resources
-        this.downscaleFactor = this.configs.downscaleFactor
+        this.volumeMap = this.computes.volumeMap
     }
 
-    setVolume()
+    computeTensor()
     {
-        this.volume = this.resources.items.intensityMap
-        this.dimensions = new THREE.Vector3().fromArray(this.volume.dimensions)
-        this.spacing = new THREE.Vector3().fromArray(this.volume.spacing)
-        this.size = new THREE.Vector3().multiplyVectors(this.spacing, this.dimensions)
+        console.time('computeTensor@InterpolationMap') 
+        this.tensor = computeInterpolationMap(this.volumeMap.tensor)
+        this.tensorData = this.tensor.dataSync()
+        this.dimensions = new THREE.Vector3(...this.volumeMap.dimensions)
+        console.timeEnd('computeTensor@InterpolationMap') 
     }
 
-    compute()
+    restoreTensor()
     {
-        console.time('computeInterpolationMap') 
-        
-        this.setVolume()
-        const shape = this.volume.dimensions.toReversed()
-        const newShape = shape.map((x) => Math.ceil(this.downscaleFactor * x))
-        const newSpacing = this.volume.spacing.toReversed().map((x, i) => shape[i]/newShape[i] * x)
-        this.dimensions.copy(newShape.toReversed())
-        this.spacing.copy(newSpacing.toReversed())
-
-        const volume = tf.tensor3d(new Float32Array(this.volume.data), shape)
-        const resizedVolume = computeResizedMap(volume, newShape, false, true); volume.dispose()
-        const normalizedVolume = computeNormalizedMap(resizedVolume); resizedVolume.dispose()
-
-        this.tensor?.dispose()
-        this.tensor = computeInterpolationMap(normalizedVolume); normalizedVolume.dispose() 
-        // this.data = this.tensor.dataSync()
-
-        console.timeEnd('computeInterpolationMap') 
+        this.tensor = tf.tensor5d(this.tensorData, this.tensor.shape)
     }
 
-    textureSync()
+    computeTexture()
     {
-        this.texture?.dispose()
-        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
+        console.time('computeTexture@InterpolationMap') 
+        this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RGBAFormat
         this.texture.type = THREE.HalfFloatType
         this.texture.internalFormat = 'RGBA16F'
         this.texture.minFilter = THREE.LinearFilter
         this.texture.magFilter = THREE.LinearFilter
         this.texture.generateMipmaps = false
-        this.texture.needsUpdate = true
         this.texture.unpackAlignment = 4
-
-        return this.texture
+        this.texture.needsUpdate = true
+        console.timeEnd('computeTexture@InterpolationMap') 
     }
 
-    textureDataSync()
+    updateTexture()
+    {
+        this.texture.image.data.set(this.getTextureData())
+        this.texture.needsUpdate = true
+    }
+    
+    /*
+        Really fast but produces small artifacts due to numeral instabilities 
+    */
+    getTextureData()
     {
         const tensor = toHalfFloat(this.tensor)
-        const dataHalfFloat = tensor.dataSync(); tensor.dispose()
-        return new Uint16Array(dataHalfFloat.buffer)
+        const dataFloat = tensor.dataSync()
+        const dataHalfFloat = new Uint16Array(dataFloat)
+        tensor.dispose()
+
+        return dataHalfFloat
     }
 
-    destroy()
+    /*
+        More numerically stable, but significantly slower
+    */
+    // getTextureData()
+    // {
+    //     const dataFloat = this.tensor.dataSync()
+    //     const dataHalfFloat = new Uint16Array(this.tensor.size)
+
+    //     for (let i = 0; i < dataFloat.length; ++i) 
+    //     {
+    //         dataHalfFloat[i] = toHalfFloat(dataFloat[i])
+    //     }
+
+    //     return dataHalfFloat
+    // }
+
+    dispose()
     {
         this.tensor?.dispose()
         this.texture?.dispose()

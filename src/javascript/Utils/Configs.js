@@ -6,6 +6,8 @@ import EventEmitter from './EventEmitter'
  */
 export default class Configs extends EventEmitter 
 {
+    static Colormaps = Object.freeze([ 'parula', 'turbo', 'hsv', 'hot', 'cool', 'spring', 'summer', 'autumn', 'winter', 'gray', 'bone', 'copper', 'pink', 'jet', 'pasteljet', 'viridis', 'plasma', 'inferno', 'magma', 'cividis' ])
+
     static InterpolationMethods = Object.freeze([
         'trilinear',
         'tricubic',
@@ -16,32 +18,35 @@ export default class Configs extends EventEmitter
         'bspline',
     ])
     static MarchingMethods = Object.freeze([
-        'analytic',
-        'approximate',
+        'cells',
+        'traces',
     ])
     static SkippingMethods = Object.freeze([
-        'occupancyMap',
-        'isotropicDistanceMap',
-        'anisotropicDistanceMap',
-        'extendedIsotropicDistanceMap',
-        'extendedAnisotropicDistanceMap',
+        'occupancy',
+        'isotropicDistance',
+        'anisotropicDistance',
+        'extendedIsotropicDistance',
+        'extendedAnisotropicDistance',
     ])
 
     constructor() 
     {
         super()
 
-        this.blockSize = 4
-        this.downscaleFactor = 0.5
-        this.isosurfaceValue = 0.69
-
+        this.blockSize = 2
+        this.downscaleFactor = 0.8
+        this.isosurfaceValue = 0.7
+        
         this.interpolationMethod = 'tricubic'
         this.gradientsMethod = 'bspline'
-        this.marchingMethod = 'analytic'
-        this.skippingMethod = 'extendedAnisotropicDistanceMap'
+        this.marchingMethod = 'cells'
+        this.skippingMethod = 'anisotropicDistance'
+        this.colormap = 'pasteljet'
 
         this.bernsteinEnabled = true
         this.skippingEnabled = true
+        this.boundingBoxEnabled = true
+
         this.debugEnabled = true
         this.statsEnabled = true
         this.discardingEnabled = true
@@ -49,6 +54,30 @@ export default class Configs extends EventEmitter
 
     set(key, value) 
     {
+        this.check(key, value)
+
+        if (key in this) 
+        { 
+            const newValue = value
+            const oldValue = this[key] 
+            this[key] = newValue 
+
+            this.trigger('change', [{ key, oldValue, newValue }]) 
+        } 
+        else 
+        { 
+            console.warn(`Unknown config key: ${key}`)
+        }
+    }
+
+    check(key, value)
+    {
+        if (key === 'colormap' && !Configs.Colormaps.includes(value)) 
+        {
+            console.warn(`Invalid Colormap: "${value}"`)
+            return
+        }
+
         if (key === 'interpolationMethod' && !Configs.InterpolationMethods.includes(value)) 
         {
             console.warn(`Invalid InterpolationMethod: "${value}"`)
@@ -90,19 +119,6 @@ export default class Configs extends EventEmitter
             console.warn(`${key} must be boolean (got ${typeof value})`)
             return
         }
-
-        if (key in this) 
-        { 
-            const newValue = value
-            const oldValue = this[key] 
-            this[key] = newValue 
-
-            this.trigger('change', { key, oldValue, newValue }) 
-        } 
-        else 
-        { 
-            console.warn(`Unknown config key: ${key}`)
-        }
     }
 
     get(key) 
@@ -112,5 +128,6 @@ export default class Configs extends EventEmitter
 
     destroy() 
     {
+        console.log('Configs destroyed')
     }
 }

@@ -14,10 +14,10 @@ class GPGPUExtremaMap implements GPGPUProgram
     (
         inputShape: [number, number, number, number, number], 
         interpolationMethod: 'trilinear' | 'tricubic',
-        inputStride: number
+        blockSize: number
     ) 
     {
-        const ceilDiv = (x: number) => Math.ceil((x + 1) / inputStride)
+        const ceilDiv = (x: number) => Math.ceil((x + 1) / blockSize)
         const [inDepth, inHeight, inWidth, , ] = inputShape
         const [outDepth, outHeight, outWidth] = [inDepth, inHeight, inWidth].map(ceilDiv)
         this.outputShape = [outDepth, outHeight, outWidth, 2, 2]     
@@ -119,17 +119,17 @@ class GPGPUExtremaMap implements GPGPUProgram
 
         ${interpolationMethod === 'trilinear' 
         ? getCellExtremaTrilinear 
-        : getCellExtremaTrilinear}
+        : getCellExtremaTricubic}
 
         // Compute extrema over all cells in the block
         vec2 getBlockExtrema(ivec3 blockCoords)
         {
             vec2 blockMinMax = vec2(1.0, 0.0);
-            ivec3 cellMinCoords = blockCoords * ${inputStride};
+            ivec3 cellMinCoords = blockCoords * ${blockSize};
 
-            for (int k = 0; k < ${inputStride}; k++) {
-            for (int j = 0; j < ${inputStride}; j++) {
-            for (int i = 0; i < ${inputStride}; i++) {
+            for (int k = 0; k < ${blockSize}; k++) {
+            for (int j = 0; j < ${blockSize}; j++) {
+            for (int i = 0; i < ${blockSize}; i++) {
 
                 ivec3 cellIndices = ivec3(i, j, k);
                 ivec3 cellCoords = cellMinCoords + cellIndices;
@@ -169,8 +169,15 @@ class GPGPUToHalfFloat implements GPGPUProgram
     constructor(inputShape: [number, number, number, number, number]) 
     {
         const [inDepth, inHeight, inWidth, , ] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth]
+        this.outputShape = [inDepth, inHeight, inWidth, 2]
         this.userCode = `   
+        // Returns the IEEE-754 half-float bit pattern (lower 16 bits of the uint).
+        float toHalfFloat(float x) 
+        {
+            uint packed = packHalf2x16(vec2(x, 0.0));
+            return float(packed & 0xFFFFu); 
+        }
+
         vec4 clampToHalfRange(vec4 values) 
         {
             return clamp(values, -65504.0, 65504.0);
@@ -178,14 +185,16 @@ class GPGPUToHalfFloat implements GPGPUProgram
 
         void main() 
         {
-            ivec3 outputCoords = getOutputCoords();
+            ivec4 outputCoords = getOutputCoords();
             ivec3 blockCoords = outputCoords.zyx;
 
             vec4 blockMinMax = getExtremaMap(blockCoords.z, blockCoords.y, blockCoords.x, 0, 0);
             blockMinMax = clampToHalfRange(blockMinMax);
 
-            uint packed = packHalf2x16(vec2(blockMinMax.r, blockMinMax.g)
-            setOutput(uintBitsToFloat(packed));
+            setOutput(outputCoords.w == 0 
+                ? toHalfFloat(blockMinMax.r) 
+                : toHalfFloat(blockMinMax.g)
+            );
         }
     `
     }
@@ -199,14 +208,14 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function computeExtremaMap(interpolationMap: tf.Tensor5D, interpolationMethod: 'trilinear' | 'tricubic', inputStride: number) : tf.Tensor
+export function computeExtremaMap(interpolationMap: tf.Tensor5D, interpolationMethod: 'trilinear' | 'tricubic', blockSize: number) : tf.Tensor
 {
-    const program = new GPGPUExtremaMap(interpolationMap.shape, interpolationMethod, inputStride)
+    const program = new GPGPUExtremaMap(interpolationMap.shape, interpolationMethod, blockSize)
     return runProgram(program, [interpolationMap]) as tf.Tensor4D
 }
 
 export function toHalfFloat(extremaMap: tf.Tensor5D): tf.Tensor 
 {
   const program = new GPGPUToHalfFloat(extremaMap.shape)
-  return runProgram(program, [extremaMap]) as tf.Tensor3D
+  return runProgram(program, [extremaMap]) as tf.Tensor4D
 }

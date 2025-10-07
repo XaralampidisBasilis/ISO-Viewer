@@ -1,9 +1,9 @@
 import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
+import { packUnsignedShort5551 } from './GPGPUToUnsignedShort5551'
 
-
-class ExtendedAnisotropicChessDistancePass0 implements GPGPUProgram 
+class ExtendedAnisotropicChebyshevDistancePass0 implements GPGPUProgram 
 {
     variableNames = ['InputVariable']
     outputShape: number[]
@@ -75,7 +75,7 @@ class ExtendedAnisotropicChessDistancePass0 implements GPGPUProgram
     }
 }
 
-class ExtendedAnisotropicChessDistancePass1 implements GPGPUProgram 
+class ExtendedAnisotropicChebyshevDistancePass1 implements GPGPUProgram 
 {
     variableNames = ['InputDistance']
     outputShape: number[]
@@ -139,37 +139,7 @@ class ExtendedAnisotropicChessDistancePass1 implements GPGPUProgram
         `
     }
 }
-class ExtendedAnisotropicChessDistancePass2 implements GPGPUProgram 
-{
-    variableNames = ['InputXDistance', 'InputYDistance', 'InputZDistance', 'InputOccupancy']
-    outputShape: number[]
-    userCode: string
-    packedInputs = false
-    packedOutput = false
 
-    constructor(inputShape: [number, number, number]) 
-    {
-        const [inDepth, inHeight, inWidth] = inputShape
-        this.outputShape = [inDepth, inHeight, inWidth]
-        this.userCode = `
-        void main() 
-        {
-            int xDistance = int(getInputXDistanceAtOutCoords());
-            int yDistance = int(getInputYDistanceAtOutCoords());
-            int zDistance = int(getInputZDistanceAtOutCoords());
-            int occupancy = int(getInputOccupancyAtOutCoords());
-            
-            int outputDistance = 
-                clamp(xDistance, 0, 31) * 2048 + 
-                clamp(yDistance, 0, 31) * 64   + 
-                clamp(zDistance, 0, 31) * 2    + 
-                clamp(occupancy, 0,  1);
-
-            setOutput(float(outputDistance));
-        }
-        `
-    }
-}
 
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor 
 {
@@ -183,21 +153,20 @@ export function computeExtendedAnisotropicDistanceMap(inputOccupancy: tf.Tensor3
     const shape = inputOccupancy.shape
 
     // Programs
-    const firstPassX0  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '-x', maxDistance)
-    const firstPassX1  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '+x', maxDistance)
-    const firstPassY0  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '-y', maxDistance)
-    const firstPassY1  = new ExtendedAnisotropicChessDistancePass0(shape, 'occupancy', '+y', maxDistance)
-    const secondPassY0 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '-y', maxDistance)
-    const secondPassY1 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '+y', maxDistance)
-    const secondPassZ0 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '-z', maxDistance)
-    const secondPassZ1 = new ExtendedAnisotropicChessDistancePass0(shape, 'distance',  '+z', maxDistance)
-    const thirdPassX0  = new ExtendedAnisotropicChessDistancePass1(shape, '-x', maxDistance)
-    const thirdPassX1  = new ExtendedAnisotropicChessDistancePass1(shape, '+x', maxDistance)
-    const thirdPassY0  = new ExtendedAnisotropicChessDistancePass1(shape, '-y', maxDistance)
-    const thirdPassY1  = new ExtendedAnisotropicChessDistancePass1(shape, '+y', maxDistance)
-    const thirdPassZ0  = new ExtendedAnisotropicChessDistancePass1(shape, '-z', maxDistance)
-    const thirdPassZ1  = new ExtendedAnisotropicChessDistancePass1(shape, '+z', maxDistance)
-    const fourthPass   = new ExtendedAnisotropicChessDistancePass2(shape)
+    const firstPassX0  = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'occupancy', '-x', maxDistance)
+    const firstPassX1  = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'occupancy', '+x', maxDistance)
+    const firstPassY0  = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'occupancy', '-y', maxDistance)
+    const firstPassY1  = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'occupancy', '+y', maxDistance)
+    const secondPassY0 = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'distance',  '-y', maxDistance)
+    const secondPassY1 = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'distance',  '+y', maxDistance)
+    const secondPassZ0 = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'distance',  '-z', maxDistance)
+    const secondPassZ1 = new ExtendedAnisotropicChebyshevDistancePass0(shape, 'distance',  '+z', maxDistance)
+    const thirdPassX0  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '-x', maxDistance)
+    const thirdPassX1  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '+x', maxDistance)
+    const thirdPassY0  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '-y', maxDistance)
+    const thirdPassY1  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '+y', maxDistance)
+    const thirdPassZ0  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '-z', maxDistance)
+    const thirdPassZ1  = new ExtendedAnisotropicChebyshevDistancePass1(shape, '+z', maxDistance)
 
     // 1D
     const distance_X0 = runProgram(firstPassX0, [inputOccupancy])
@@ -246,14 +215,14 @@ export function computeExtendedAnisotropicDistanceMap(inputOccupancy: tf.Tensor3
     const distanceZ_XYZ111 = runProgram(thirdPassZ1, [distance_XY11]); tf.dispose(distance_XY11)
 
     // Packing
-    const distancesXYZ_XYZ000 = runProgram(fourthPass, [distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000, inputOccupancy]);  tf.dispose([distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000])
-    const distancesXYZ_XYZ001 = runProgram(fourthPass, [distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001, inputOccupancy]);  tf.dispose([distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001])
-    const distancesXYZ_XYZ010 = runProgram(fourthPass, [distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010, inputOccupancy]);  tf.dispose([distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010])
-    const distancesXYZ_XYZ011 = runProgram(fourthPass, [distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011, inputOccupancy]);  tf.dispose([distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011])
-    const distancesXYZ_XYZ100 = runProgram(fourthPass, [distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100, inputOccupancy]);  tf.dispose([distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100])
-    const distancesXYZ_XYZ101 = runProgram(fourthPass, [distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101, inputOccupancy]);  tf.dispose([distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101])
-    const distancesXYZ_XYZ110 = runProgram(fourthPass, [distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110, inputOccupancy]);  tf.dispose([distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110])
-    const distancesXYZ_XYZ111 = runProgram(fourthPass, [distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111, inputOccupancy]);  tf.dispose([distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111])
+    const distancesXYZ_XYZ000 = packUnsignedShort5551(distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000, inputOccupancy);  tf.dispose([distanceX_XYZ000, distanceY_XYZ000, distanceZ_XYZ000])
+    const distancesXYZ_XYZ001 = packUnsignedShort5551(distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001, inputOccupancy);  tf.dispose([distanceX_XYZ001, distanceY_XYZ001, distanceZ_XYZ001])
+    const distancesXYZ_XYZ010 = packUnsignedShort5551(distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010, inputOccupancy);  tf.dispose([distanceX_XYZ010, distanceY_XYZ010, distanceZ_XYZ010])
+    const distancesXYZ_XYZ011 = packUnsignedShort5551(distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011, inputOccupancy);  tf.dispose([distanceX_XYZ011, distanceY_XYZ011, distanceZ_XYZ011])
+    const distancesXYZ_XYZ100 = packUnsignedShort5551(distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100, inputOccupancy);  tf.dispose([distanceX_XYZ100, distanceY_XYZ100, distanceZ_XYZ100])
+    const distancesXYZ_XYZ101 = packUnsignedShort5551(distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101, inputOccupancy);  tf.dispose([distanceX_XYZ101, distanceY_XYZ101, distanceZ_XYZ101])
+    const distancesXYZ_XYZ110 = packUnsignedShort5551(distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110, inputOccupancy);  tf.dispose([distanceX_XYZ110, distanceY_XYZ110, distanceZ_XYZ110])
+    const distancesXYZ_XYZ111 = packUnsignedShort5551(distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111, inputOccupancy);  tf.dispose([distanceX_XYZ111, distanceY_XYZ111, distanceZ_XYZ111])
 
     // Concatenate 
     const distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = tf.stack([

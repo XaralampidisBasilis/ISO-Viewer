@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
 import { computeOccupancyMap } from '../Programs/GPGPUOccupancyMapPacked'
+import { computeBoundingBox as getBoundingBox } from '../Programs/GPGPUBoundingBox'
 
 export default class OccupancyMap
 {
@@ -10,42 +11,52 @@ export default class OccupancyMap
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.extremaMap = this.computes.extremaMap
+    }
+
+    computeTensor()
+    {
+        console.time('computeTensor@OccupancyMap') 
         this.isosurfaceValue = this.configs.isosurfaceValue
-    }
-
-    compute()
-    {
-        console.time('computeOccupancyMap') 
-
-        this.tensor?.dispose()
-        this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.isosurfaceValue)
+        this.interpolationMethod = this.configs.interpolationMethod
+        this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.interpolationMethod, this.isosurfaceValue)
         this.dimensions = this.extremaMap.dimensions
-
-        console.timeEnd('computeOccupancyMap') 
+        console.timeEnd('computeTensor@OccupancyMap') 
     }
 
-    textureSync()
+    computeBoundingBox()
     {
-        this.texture?.dispose()
-        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
+        console.time('computeBoundingBox@OccupancyMap') 
+        this.boundingBox = getBoundingBox(this.tensor)
+        console.timeEnd('computeBoundingBox@OccupancyMap') 
+    }
+
+    computeTexture()
+    {
+        console.time('computeTexture@OccupancyMap') 
+        this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
         this.texture.internalFormat = 'R8UI'
         this.texture.minFilter = THREE.NearestFilter
         this.texture.magFilter = THREE.NearestFilter
         this.texture.generateMipmaps = false
-        this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
-
-        return this.texture
+        this.texture.needsUpdate = true
+        console.timeEnd('computeTexture@OccupancyMap') 
     }   
 
-    textureDataSync()
+    updateTexture()
+    {
+        this.texture.image.data.set(this.getTextureData())
+        this.texture.needsUpdate = true
+    }
+
+    getTextureData()
     {
         return new Uint8Array(this.tensor.dataSync())
     }
 
-    destroy()
+    dispose()
     {
         this.tensor?.dispose()
         this.texture?.dispose()

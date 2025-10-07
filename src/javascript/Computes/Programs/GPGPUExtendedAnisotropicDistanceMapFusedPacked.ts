@@ -1,6 +1,7 @@
 import * as tf from '@tensorflow/tfjs'
 import { GPGPUProgram } from '@tensorflow/tfjs-backend-webgl'
 import { MathBackendWebGL } from '@tensorflow/tfjs-backend-webgl'
+import { packUnsignedShort5551 } from './GPGPUToUnsignedShort5551Packed'
 
 
 class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram 
@@ -123,6 +124,7 @@ class FirstExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
         `
     }
 }
+
 class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
 {
     variableNames = ['InputOccupancies']
@@ -243,6 +245,7 @@ class FirstExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
         `
     }
 }
+
 class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
 {
     variableNames = ['InputDistances']
@@ -358,6 +361,7 @@ class SecondExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram
         `
     }
 }
+
 class SecondExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram 
 {
     variableNames = ['InputDistances']
@@ -540,7 +544,6 @@ class ThirdExtendedAnisotropicChebyshevDistancePassX implements GPGPUProgram
         `
     }
 }
-
 
 class ThirdExtendedAnisotropicChebyshevDistancePassY implements GPGPUProgram 
 {
@@ -725,37 +728,6 @@ class ThirdExtendedAnisotropicChebyshevDistancePassZ implements GPGPUProgram
     }
 }
 
-class FourthExtendedAnisotropicChessDistancePassXYZ implements GPGPUProgram 
-{
-    variableNames = ['InputXDistances', 'InputYDistances', 'InputZDistances', 'InputOccupancies']
-    outputShape: number[]
-    userCode: string
-    packedInputs = true
-    packedOutput = true
-
-    constructor(inputShape: [number, number, number, number]) 
-    {
-        const [inBatch, inDepth, inHeight, inWidth] = inputShape; if (inBatch != 8) throw new Error('Batch dimension needs to be 8')
-        this.outputShape = [8, inDepth, inHeight, inWidth]
-        this.userCode = `
-        void main() 
-        {
-            ivec4 xDistances  = ivec4(getInputXDistancesAtOutCoords());
-            ivec4 yDistances  = ivec4(getInputYDistancesAtOutCoords());
-            ivec4 zDistances  = ivec4(getInputZDistancesAtOutCoords());
-            ivec4 occupancies = ivec4(getInputOccupanciesAtOutCoords());
-    
-            ivec4 outputDistances = 
-                clamp(xDistances,  0, 31) * 2048 + 
-                clamp(yDistances,  0, 31) * 64   + 
-                clamp(zDistances,  0, 31) * 2    + 
-                clamp(occupancies, 0,  1);
-
-            setOutput(vec4(outputDistances));
-        }
-        `
-    }
-}
 
 function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]) : tf.Tensor 
 {
@@ -796,13 +768,12 @@ export function computeExtendedAnisotropicDistanceMap(inputOccupancy: tf.Tensor3
     tf.dispose(distance_XY00_XY10_XY01_XY11)
 
     // Pack
-    const fourthPassXYZ = new FourthExtendedAnisotropicChessDistancePassXYZ(distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111.shape)
-    const distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = runProgram(fourthPassXYZ, [
+    const distancesXYZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111 = packUnsignedShort5551(
         distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
         distanceY_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
         distanceZ_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
         inputOccupancy
-    ]) 
+    ) 
     tf.dispose([
         distanceX_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,
         distanceY_XYZ000_XYZ100_XYZ010_XYZ110_XYZ001_XYZ101_XYZ011_XYZ111,

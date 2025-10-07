@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeAnisotropicDistanceMap } from '../Programs/GPGPUAnisotropicDistanceMapPacked'
+import { computeAnisotropicDistanceMap } from '../Programs/GPGPUAnisotropicDistanceMapFusedPacked'
 
 export default class AnisotropicDistanceMap
 {
@@ -13,39 +13,42 @@ export default class AnisotropicDistanceMap
         this.maxDistance = 127
     }
 
-    compute()
+    computeTensor()
     {
-        console.time('computeAnisotropicDistanceMap') 
-
-        this.tensor?.dispose()
+        console.time('computeTensor@AnisotropicDistanceMap') 
         this.tensor = computeAnisotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
-        this.dimensions = this.occupancyMap.dimensions
-
-        console.timeEnd('computeAnisotropicDistanceMap') 
+        this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
+        this.dimensions.z *= 8
+        console.timeEnd('computeTensor@AnisotropicDistanceMap') 
     }
 
-    textureSync()
+    computeTexture()
     {
-        this.texture?.dispose()
-        this.texture = new THREE.Data3DTexture(this.textureDataSync(), ...this.dimensions)
+        console.time('computeTexture@AnisotropicDistanceMap') 
+        this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
         this.texture.internalFormat = 'R8UI'
         this.texture.minFilter = THREE.NearestFilter
         this.texture.magFilter = THREE.NearestFilter
         this.texture.generateMipmaps = false
-        this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
-
-        return this.texture
+        this.texture.needsUpdate = true
+        console.timeEnd('computeTexture@AnisotropicDistanceMap') 
     }   
 
-    textureDataSync()
+    updateTexture()
+    {
+        this.texture.image.data.set(this.getTextureData())
+        this.texture.needsUpdate = true
+    }
+
+    getTextureData()
     {
         return new Uint8Array(this.tensor.dataSync())
     }
 
-    destroy()
+    dispose()
     {
         this.tensor?.dispose()
         this.texture?.dispose()
