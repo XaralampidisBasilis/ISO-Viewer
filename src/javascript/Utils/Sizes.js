@@ -8,6 +8,10 @@ import EventEmitter from './EventEmitter'
  */
 export default class Sizes extends EventEmitter 
 {
+    targetPixels = 2000000
+    minPixelRatio = 0.5
+    maxPixelRatio = 1.0
+
     constructor() 
     {
         super()
@@ -15,19 +19,33 @@ export default class Sizes extends EventEmitter
         // Setup initial dimensions
         this.width = window.innerWidth
         this.height = window.innerHeight
-        this.pixelRatio = Math.min(window.devicePixelRatio, 1) // Cap pixel ratio at 1 for performance
+        this.pixelRatio = this.computePixelRatio(this.width, this.height) 
 
         // Bind resize event
         this.onResize = this.onResize.bind(this)
         window.addEventListener('resize', this.onResize)
     }
 
+    computePixelRatio(width, height)
+    {
+        const devicePR = window.devicePixelRatio || 1
+
+        // Pixel-budget-based DPR so: width*height*(dpr^2) ~= targetPixels
+        const budgetPR = Math.sqrt(this.targetPixels / Math.max(1, width * height))
+
+        // Respect both device DPR and quality bounds
+        const capped = Math.min(devicePR, this.maxPixelRatio, budgetPR)
+        return Math.max(this.minPixelRatio, capped)
+    }
+
+
     onResize() 
     {
         // Update dimensions
         this.width = window.innerWidth
         this.height = window.innerHeight
-        this.pixelRatio = Math.min(window.devicePixelRatio, 1)
+        this.pixelRatio = this.computePixelRatio(this.width, this.height)
+        console.log(this.pixelRatio)
 
         // Emit the `resize` event with updated values
         this.trigger('resize', 

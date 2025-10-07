@@ -5,9 +5,6 @@ Download [Node.js](https://nodejs.org/en/download/).
 Run this followed commands:
 
 ``` bash
-# Online demo on cardiac CT
-https://xaralampidisbasilis.github.io/ISO-Viewer/
-
 # Install dependencies (only the first time)
 npm install
 
@@ -16,5 +13,8 @@ npm run dev
 
 # Build for production in the dist/ directory
 npm run build
+
+# Demo on cardiac CT data
+https://xaralampidisbasilis.github.io/ISO-Viewer/
 ```
-![iso_volume_normals](https://raw.githubusercontent.com/XaralampidisBasilis/volume-rendering/iso_viewer/static/images/iso_volume_normals.png)
+![iso_volume_normals](https://raw.githubusercontent.com/XaralampidisBasilis/volume-rendering/iso_viewer/static/images/iso_viewer_base_normals_curvatures_samples.png)
