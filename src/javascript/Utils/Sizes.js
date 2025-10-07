@@ -8,7 +8,7 @@ import EventEmitter from './EventEmitter'
  */
 export default class Sizes extends EventEmitter 
 {
-    targetPixels = 2000000
+    targetPixels = 1500000
     minPixelRatio = 0.5
     maxPixelRatio = 1.0
 
