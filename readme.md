@@ -17,4 +17,4 @@ npm run build
 # Demo on cardiac CT data
 https://xaralampidisbasilis.github.io/ISO-Viewer/
 ```
-![iso_volume_normals](https://raw.githubusercontent.com/XaralampidisBasilis/volume-rendering/iso_viewer/static/images/iso_viewer_base_normals_curvatures_samples.png)
+<img width="1413" height="3990" alt="Cardiac-ReadMe-lowres" src="https://github.com/user-attachments/assets/cf7c23ee-a211-4fb9-a551-c5b3c6b11a81" />
