@@ -11,7 +11,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #define POLY_ROOTS
 
 // The degree of the polynomials for which we compute roots
-#define POLY_MAX_DEGREE 5
+#define POLY_MAX_DEGREE 12
 
 // When there are fewer intersections/roots than theoretically possible, some
 // array entries are set to this value

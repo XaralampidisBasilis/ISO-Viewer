@@ -12,6 +12,8 @@
 #include "./geometry/principal_curvatures"
 #include "./geometry/directional_curvature"
 #include "./colors/colormap"
+#include "./colors/rgb2hsv"
+#include "./colors/hsv2rgb"
 
 
 

@@ -91,11 +91,11 @@ export default class Controls
             }),
 
             // DANGEROUS for WebGL Context Loss
-            downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(1).step(0.01)
-            .onFinishChange((value) => 
-            { 
-                this.configs.set('downscaleFactor', value) 
-            }),
+            // downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(1).step(0.01)
+            // .onFinishChange((value) => 
+            // { 
+            //     this.configs.set('downscaleFactor', value) 
+            // }),
             
             marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
             .onFinishChange((option) => 
@@ -226,7 +226,6 @@ export default class Controls
                 trace_distance          : 303,
                 trace_position          : 304,
                 trace_residue           : 305,
-                // trace_span_residue      : 306,
 
                 hit_discarded           : 451,
                 hit_escaped             : 452,
@@ -258,15 +257,17 @@ export default class Controls
                 camera_position         : 701,
                 camera_direction        : 702,
 
-                cubic_coeffs          : 801,
-                cubic_bernstein_coeffs: 802,
-                cubic_num_roots       : 803,
-                cubic_root            : 804,
+                cubic_root:              801,
+                cubic_num_roots:         802,
+                cubic_coeffs:            803,
+                cubic_bernstein_coeffs:  804,
+                cubic_bernstein_spread:  805,
 
-                quintic_coeffs          : 851,
-                quintic_bernstein_coeffs: 852,
-                quintic_num_roots       : 853,
-                quintic_root            : 854,
+                quintic_root:              851,
+                quintic_num_roots:         852,
+                quintic_coeffs:            853,
+                quintic_bernstein_coeffs:  854,
+                quintic_bernstein_spread:  855,
 
                 stats_num_cells             : 901,
                 stats_num_traces            : 902,
