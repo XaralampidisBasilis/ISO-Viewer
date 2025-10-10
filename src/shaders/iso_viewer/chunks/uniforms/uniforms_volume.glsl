@@ -6,6 +6,7 @@ struct UniformsVolume
     float isovalue;
     ivec3 dimensions;    
     vec3  spacing;           
+    vec3  spacing_normalized;           
     vec3  inv_dimensions;   
     int   block_size;
     ivec3 blocked_dimensions;

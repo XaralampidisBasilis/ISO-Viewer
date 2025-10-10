@@ -12,11 +12,11 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_TRILINEAR_VOLUME
 #include "../sample_value_trilinear"
 #endif
-#ifndef SAMPLE_SECOND_DERIVATIVES
-#include "../sample_second_derivatives"
+#ifndef COMPUTE_SECOND_DERIVATIVES
+#include "./compute_second_derivatives"
 #endif
 
-vec3 compute_gradient_trilinear_sobel(in vec3 p)
+vec3 compute_gradient(in vec3 p)
 {
     // 1D B-spline filter normalized positions for each axis
     vec3 p0 = p - 0.5;
@@ -77,12 +77,12 @@ vec3 compute_gradient_trilinear_sobel(in vec3 p)
     vec3 gradient = vec3(s_dxyz_xdyz, s_xydz);
 
     // Account for anisotropy in physical space
-    gradient /= u_volume.spacing;
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }
 
-vec3 compute_gradient_trilinear_sobel(in vec3 p, out mat3 hessian)
+vec3 compute_gradient(in vec3 p, out mat3 hessian)
 {
     // 1D B-spline filter normalized positions for each axis
     vec3 p0 = p - 0.5;
@@ -140,7 +140,7 @@ vec3 compute_gradient_trilinear_sobel(in vec3 p, out mat3 hessian)
     );
 
     // Pure derivatives
-    vec3 s_d2x_d2y_d2z = sample_second_derivatives(p);
+    vec3 s_d2x_d2y_d2z = compute_second_derivatives(p);
 
     // Gradient
     vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
@@ -153,8 +153,8 @@ vec3 compute_gradient_trilinear_sobel(in vec3 p, out mat3 hessian)
     );
 
     // Account for anisotropy in physical space
-    hessian /= outerProduct(u_volume.spacing, u_volume.spacing);
-    gradient /= u_volume.spacing;
+    hessian /= outerProduct(u_volume.spacing_normalized, u_volume.spacing_normalized);
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }

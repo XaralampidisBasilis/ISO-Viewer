@@ -16,14 +16,14 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_TRICUBIC_VOLUME
 #include "../sample_value_tricubic"
 #endif
-#ifndef SAMPLE_SECOND_DERIVATIVES
-#include "../sample_second_derivatives"
+#ifndef COMPUTE_SECOND_DERIVATIVES
+#include "./compute_second_derivatives"
 #endif
 
 /*
     The gradients produced are C^1 continuous
 */
-vec3 compute_gradient_triquadratic_bspline(in vec3 p)
+vec3 compute_gradient(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -94,12 +94,12 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p)
     vec3 gradient = vec3(s_dxyz_xdyz, s_xydz);
 
     // Account for anisotropy in physical space
-    gradient /= u_volume.spacing;
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }
  
-vec3 compute_gradient_triquadratic_bspline(in vec3 p, out mat3 hessian)
+vec3 compute_gradient(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;
@@ -167,7 +167,7 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p, out mat3 hessian)
     ) * 2.0;
 
     // Pure second derivatives
-    vec3 s_d2x_d2y_d2z = sample_second_derivatives(p);
+    vec3 s_d2x_d2y_d2z = compute_second_derivatives(p);
 
     // Gradient
     vec3 gradient = vec3(s_dxyz_xdyz_dxdyz.xy, s_xydz_dxydz_xdydz.x);
@@ -180,8 +180,8 @@ vec3 compute_gradient_triquadratic_bspline(in vec3 p, out mat3 hessian)
     );
 
     // Account for anisotropy in physical space
-    hessian /= outerProduct(u_volume.spacing, u_volume.spacing);
-    gradient /= u_volume.spacing;
+    hessian /= outerProduct(u_volume.spacing_normalized, u_volume.spacing_normalized);
+    gradient /= u_volume.spacing_normalized;
 
     // Return Gradient
     return gradient;

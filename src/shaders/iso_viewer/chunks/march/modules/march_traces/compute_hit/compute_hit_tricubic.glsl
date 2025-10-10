@@ -42,4 +42,4 @@ hit.hessian *= hit.orientation;
 hit.normal = normalize(hit.gradient);
 
 // Compute principal curvatures
-hit.curvatures = principal_curvatures(hit.gradient, hit.hessian);
+hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);

@@ -1,4 +1,6 @@
 
+trace.spacing = ray.spacing / 5.0;
+
 // start trace
 #if SKIPPING_ENABLED == 1
 trace.distance = block.entry_distance - trace.spacing * random(block.entry_position);

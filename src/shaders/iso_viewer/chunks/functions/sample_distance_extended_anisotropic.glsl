@@ -1,30 +1,19 @@
 #ifndef SAMPLE_DISTANCE_EXTENDED
 #define SAMPLE_DISTANCE_EXTENDED
 
-#ifndef UNPACK_UINT_5551
-#include "./unpack_uint_5551"
+#ifndef UNPACK_UINT5551
+#include "./unpack_uint5551"
 #endif
 
 // Samples the extended distance texture at given coordinates and octant.
 // Returns 3-component distance vector and sets occupancy flag.
-ivec3 sample_distance_extended_anisotropic(in ivec3 block_coords, in int octant, out bool occupancy)
+ivec3 sample_distance_extended_anisotropic(in ivec3 block_coords, in int octant, out bool occupied)
 {
-    // Offset z to access the correct slab for the given octant.
-    ivec3 slab_coords = block_coords;
-    slab_coords.z += octant * u_volume.blocked_dimensions.z;
-
-    // Sample packed data from the 3D texture
-    uint packed_sample = texelFetch(u_textures.distance_map, slab_coords, 0).r;
-
-    // Unpack into 3 distances and 1 occupancy flag
-    uvec4 unpacked_sample = unpack_uint_5551(packed_sample);
-
-    // Get integer distances
-    ivec3 distances = ivec3(unpacked_sample.rgb);
-
-    // Get block occupancy
-    occupancy = bool(unpacked_sample.a);
-
+    ivec3 texel = block_coords + ivec3(0,0,octant * u_volume.blocked_dimensions.z);
+    uint  packed = texelFetch(u_textures.distance_map, texel, 0).r;
+    uvec4 unpacked = unpack_uint5551(packed);
+    ivec3 distances = ivec3(unpacked.xyz);
+    occupied = bool(unpacked.w);
     return distances;
 }
 

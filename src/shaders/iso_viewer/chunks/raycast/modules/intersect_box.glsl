@@ -4,7 +4,7 @@ box.min_position = vec3(0.0);
 box.max_position = vec3(u_volume.dimensions);
 
 // compute rays bound distances with the box
-vec2 box_min_max = point_box_bounds(box.min_position, box.max_position, camera.position);
+vec2 box_min_max = intersection_box_bounds(box.min_position, box.max_position, camera.position);
 
 // compute current ray intersection distances with the volume box
 vec2 box_entry_exit = intersect_box(box.min_position, box.max_position, camera.position, ray.inv_direction);
@@ -17,8 +17,8 @@ if (box_entry_exit.x < box_entry_exit.y)
 {
     // update camera box bounds
     box.min_entry_distance = box_min_max.x;
-    box.max_exit_distance = box_min_max.y;
-    box.max_span_distance = box_min_max.y - box_min_max.x;
+    box.max_exit_distance  = box_min_max.y;
+    box.max_span_distance  = box_min_max.y - box_min_max.x;
 
     // update ray box distances
     box.entry_distance = box_entry_exit.x;

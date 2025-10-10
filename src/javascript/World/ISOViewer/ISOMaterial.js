@@ -16,6 +16,7 @@ export default function()
             isovalue          : 0.69,
             dimensions        : new THREE.Vector3(),
             spacing           : new THREE.Vector3(),
+            spacing_normalized: new THREE.Vector3(),
             inv_dimensions    : new THREE.Vector3(),
             blocked_dimensions: new THREE.Vector3(),
             block_size        : 0,
@@ -40,12 +41,10 @@ export default function()
             shininess         : 40.0,
             reflect_ambient   : 0.2,
             reflect_diffuse   : 1.0,
-            reflect_specular  : 0.6,
+            reflect_specular  : 0.2,
             modulate_edges    : 1.0,
             modulate_gradient : 1.0,
             modulate_curvature: 1.0,
-            altitude_angle    : 0.0,
-            azimuth_angle     : 0.0,
         }),
 
         u_debug: new THREE.Uniform

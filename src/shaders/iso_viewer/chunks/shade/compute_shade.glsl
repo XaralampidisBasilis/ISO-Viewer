@@ -6,8 +6,8 @@ vec3 light_vector = light_position - hit.position;
 vec3 view_vector = camera.position - hit.position;
 
 // Compute shading directions
-vec3 light_direction = normalize(light_vector * u_volume.spacing);
-vec3 view_direction = normalize(view_vector * u_volume.spacing);
+vec3 light_direction = normalize(light_vector * u_volume.spacing_normalized);
+vec3 view_direction = normalize(view_vector * u_volume.spacing_normalized);
 vec3 halfway_direction = normalize(light_direction + view_direction);
 
 // Compute vector angles
@@ -33,12 +33,12 @@ modulate_curvature = mix(1.0, modulate_curvature, u_shading.modulate_curvature);
 frag.color_material = colormap(hit.value, u_shading.colormap);
 frag.color_ambient = frag.color_material * u_shading.reflect_ambient;
 frag.color_diffuse = frag.color_material * u_shading.reflect_diffuse  * lambertian;
-frag.color_specular = frag.color_material + (1.0 - frag.color_material) * u_shading.reflect_specular * specular;
-frag.color_directional = mix(frag.color_diffuse, frag.color_specular, specular);
+frag.color_specular = frag.color_material * u_shading.reflect_specular * specular;
+frag.color_directional = frag.color_diffuse + frag.color_specular;
 
-frag.color_directional *= mmin(modulate_edges, modulate_gradient);
+frag.color_directional *= min(modulate_edges, modulate_gradient);
 frag.color_ambient *= modulate_curvature;
+frag.color = frag.color_ambient + frag.color_directional;
 
 // Compose colors
-frag.color = frag.color_ambient + frag.color_directional;
 fragColor = vec4(frag.color, 1.0);

@@ -1,16 +1,21 @@
-// Mark hit as undefined when the trace has neither an intersection nor a termination point
-hit.undefined = !(trace.intersected || trace.terminated);
-hit.discarded = !trace.intersected;
-hit.escaped = false;
 
-if (trace.intersected) 
+if (trace.intersected)
 {
-    // Compute the hit details for the intersected trace
+    // Compute hit details
     #include "./compute_hit"
 
-    // Mark as escaped if the hit lies outside the ray's valid range
+    hit.undefined = false;
+
+    // Escaped if outside valid range
     hit.escaped = (hit.distance < ray.start_distance || hit.distance > ray.end_distance);
 
-    // Keep the hit only if it’s within the valid distance range
+    // Discard if escaped
     hit.discarded = hit.escaped;
+}
+else
+{
+    // Undefined when neither intersection nor termination
+    hit.undefined = !trace.terminated;
+    hit.discarded = true;
+    hit.escaped = false;
 }

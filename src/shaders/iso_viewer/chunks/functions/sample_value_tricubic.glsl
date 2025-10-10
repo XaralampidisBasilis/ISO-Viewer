@@ -7,9 +7,9 @@
 
 vec4 tricubic_bias(vec3 coords)
 {
-    vec3 r = fract(coords - 0.5);;
-    vec3 bias = r * (r - 1.0) * 0.5;
-    
+    vec3 pos = fract(coords - 0.5);;
+    vec3 bias = pos * (pos - 1.0) * 0.5;
+
     return vec4(bias, 1.0);
 }
 
@@ -31,10 +31,8 @@ float sample_value_tricubic(in vec3 coords)
     vec4 bias = tricubic_bias(coords);
 
     // Compute corrected sample using dot product of coefficients and weights
-    float value = dot(bias, features);
-
-    return value;
-}       
+    return dot(bias, features);
+}      
 
 float sample_value_tricubic(in vec3 coords, out vec4 features)
 {
@@ -45,10 +43,17 @@ float sample_value_tricubic(in vec3 coords, out vec4 features)
     vec4 bias = tricubic_bias(coords);
 
     // Compute corrected sample using dot product of coefficients and weights
-    float value = dot(bias, features);
+    return dot(bias, features);
+}     
 
-    return value;
-}    
+float sample_residue_tricubic(in vec3 coords) 
+{ 
+    return sample_value_tricubic(coords) - u_volume.isovalue; 
+}
 
+float sample_residue_tricubic(in vec3 coords, out vec4 features) 
+{ 
+    return sample_value_tricubic(coords, features) - u_volume.isovalue; 
+}
 
 #endif

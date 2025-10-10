@@ -14,8 +14,8 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #ifndef SAMPLE_TRICUBIC_VOLUME
 #include "../sample_value_tricubic"
 #endif
-#ifndef SAMPLE_SECOND_DERIVATIVES
-#include "../sample_second_derivatives"
+#ifndef COMPUTE_SECOND_DERIVATIVES
+#include "./compute_second_derivatives"
 #endif
 
 void tricubic_bspline_basis(in vec3 p, out vec3 p0, out vec3 p1, out vec3 g0, out vec3 dp0, out vec3 dp1, out vec3 dg0)
@@ -314,7 +314,7 @@ vec3 tricubic_bspline_xdydz_dxydz_dxdyz(in vec3 p0, in vec3 p1, in vec3 g0, in v
     return vec3(s_xdydz, s_dxydz, s_dxdyz);
 }
 
-vec3 compute_gradient_tricubic_bspline(in vec3 p)
+vec3 compute_gradient(in vec3 p)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(p, p0, p1, g0, dp0, dp1, dg0);
@@ -323,12 +323,12 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p)
     vec3 gradient = tricubic_bspline_dxyz_xdyz_xydz(p0, p1, g0, dp0, dp1, dg0);
 
     // Account for anisotropy in physical space
-    gradient /= u_volume.spacing;
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }
 
-vec3 compute_gradient_tricubic_bspline(in vec3 p, out mat3 hessian)
+vec3 compute_gradient(in vec3 p, out mat3 hessian)
 {
     vec3 p0; vec3 p1; vec3 g0; vec3 dp0; vec3 dp1; vec3 dg0;
     tricubic_bspline_basis(p, p0, p1, g0, dp0, dp1, dg0);
@@ -340,7 +340,7 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p, out mat3 hessian)
     vec3 s_xdydz_dxydz_dxdyz = tricubic_bspline_xdydz_dxydz_dxdyz(p0, p1, g0, dp0, dp1, dg0);
  
     // Pure second derivatives
-    vec3 s_d2x_d2y_d2z = sample_second_derivatives(p);
+    vec3 s_d2x_d2y_d2z = compute_second_derivatives(p);
 
     // Hessian
     hessian = mat3(
@@ -350,8 +350,8 @@ vec3 compute_gradient_tricubic_bspline(in vec3 p, out mat3 hessian)
    );
 
     // Account for anisotropy in physical space
-    hessian /= outerProduct(u_volume.spacing, u_volume.spacing);
-    gradient /= u_volume.spacing;
+    hessian /= outerProduct(u_volume.spacing_normalized, u_volume.spacing_normalized);
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }

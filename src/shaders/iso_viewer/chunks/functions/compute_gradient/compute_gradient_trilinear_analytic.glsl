@@ -5,7 +5,7 @@
 #include "../sample_value_trilinear"
 #endif
 
-vec3 compute_gradient_trilinear_analytic(in vec3 p)
+vec3 compute_gradient(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5;     // cell space
@@ -59,12 +59,12 @@ vec3 compute_gradient_trilinear_analytic(in vec3 p)
     vec3 gradient = vec3(f_dxyz, f_xdyz, f_xydz);
 
     // Account for anisotropy in physical space
-    gradient /= u_volume.spacing;
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }
 
-vec3 compute_gradient_trilinear_analytic(in vec3 p, out mat3 hessian)
+vec3 compute_gradient(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset
@@ -131,8 +131,8 @@ vec3 compute_gradient_trilinear_analytic(in vec3 p, out mat3 hessian)
     );
 
     // Account for anisotropy in physical space
-    hessian /= outerProduct(u_volume.spacing, u_volume.spacing);
-    gradient /= u_volume.spacing;
+    hessian /= outerProduct(u_volume.spacing_normalized, u_volume.spacing_normalized);
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }

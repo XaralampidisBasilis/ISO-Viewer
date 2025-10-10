@@ -14,7 +14,7 @@
     interpolation function described in "Beyond Trilinear Interpolation: Higher Quality for Free".
     There are some visible boundary artifacts between cells because gradients are C^0 piecewise continuous 
 */
-vec3 compute_gradient_tricubic_analytic(in vec3 p)
+vec3 compute_gradient(in vec3 p)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // to cell space
@@ -51,12 +51,12 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p)
     vec3 gradient = vec3(F_dx, F_dy, F_dz);
 
     // Account for anisotropy in physical space
-    gradient /= u_volume.spacing;
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }
 
-vec3 compute_gradient_tricubic_analytic(in vec3 p, out mat3 hessian)
+vec3 compute_gradient(in vec3 p, out mat3 hessian)
 {
     // Convert to voxel-space and compute local coordinates
     vec3 x = p - 0.5; // cell offset
@@ -141,8 +141,8 @@ vec3 compute_gradient_tricubic_analytic(in vec3 p, out mat3 hessian)
     );
 
     // Account for anisotropy in physical space
-    hessian /= outerProduct(u_volume.spacing, u_volume.spacing);
-    gradient /= u_volume.spacing;
+    hessian /= outerProduct(u_volume.spacing_normalized, u_volume.spacing_normalized);
+    gradient /= u_volume.spacing_normalized;
 
     return gradient;
 }

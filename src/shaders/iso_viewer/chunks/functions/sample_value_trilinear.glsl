@@ -5,12 +5,13 @@
 
 float sample_value_trilinear(in vec3 coords)
 {
-    // Normalize coordinates to texture space [0,1]
-    coords *= u_volume.inv_dimensions;
+    vec3 texture_coords = coords * u_volume.inv_dimensions;
+    return texture(u_textures.interpolation_map, texture_coords).a;
+}
 
-    float value = texture(u_textures.interpolation_map, coords).a;
-
-    return value;
+float sample_residue_trilinear(in vec3 coords) 
+{ 
+    return sample_value_trilinear(coords) - u_volume.isovalue; 
 }
 
 #endif

@@ -1,15 +1,7 @@
 
-// // Compute cubic coefficients
-// cubic.coeffs = cubic.residuals * cubic_inv_vander;
-
 // Compute cubic polynomial roots in [0, 1]
 poly3_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
 cubic.root = mmin(cubic.roots);
-
-// Count roots
-cubic.num_roots = 0;
-for (int n = 0; n < 4; ++n) 
-    cubic.num_roots += int(cubic.roots[n] != cubic.roots[3]);
 
 // Compute cubic derivative at min root
 eval_poly(cubic.coeffs, cubic.root, hit.derivative);
@@ -28,6 +20,8 @@ hit.residue = hit.value - u_volume.isovalue;
 
 // Compute gradients and hessian
 hit.gradient = compute_gradient(hit.position, hit.hessian);
+
+// Fix the orientation
 hit.gradient *= hit.orientation; 
 hit.hessian *= hit.orientation;
 
@@ -35,4 +29,9 @@ hit.hessian *= hit.orientation;
 hit.normal = normalize(hit.gradient);
 
 // Compute principal curvatures
-hit.curvatures = principal_curvatures(hit.gradient, hit.hessian);
+hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
+
+// Count roots
+for (int n = 0; n < 4; ++n) 
+    cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
+

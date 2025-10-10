@@ -102,7 +102,8 @@ export default class ISOViewer extends EventEmitter
         const uniforms = this.material.uniforms
         uniforms.u_volume.value.isovalue = this.configs.isosurfaceValue
         uniforms.u_volume.value.dimensions.copy(this.computes.volumeMap.dimensions)
-        uniforms.u_volume.value.spacing.copy(this.computes.volumeMap.spacing).normalize()
+        uniforms.u_volume.value.spacing.copy(this.computes.volumeMap.spacing)
+        uniforms.u_volume.value.spacing_normalized.copy(this.computes.volumeMap.spacing).normalize()
         uniforms.u_volume.value.block_size = this.configs.blockSize
         uniforms.u_volume.value.blocked_dimensions.copy(this.computes.occupancyMap.dimensions)
         uniforms.u_volume.value.inv_dimensions.fromArray(uniforms.u_volume.value.dimensions.toArray().map(x => 1/x))
@@ -126,10 +127,10 @@ export default class ISOViewer extends EventEmitter
     {
         const uniforms = this.material.uniforms
         uniforms.u_shading.value.colormap = Configs.Colormaps.findIndex((x) => x === this.configs.colormap)
-        uniforms.u_shading.value.shininess = 40.0,
+        uniforms.u_shading.value.shininess = 60.0,
         uniforms.u_shading.value.reflect_ambient = 0.2
         uniforms.u_shading.value.reflect_diffuse = 1.0
-        uniforms.u_shading.value.reflect_specular = 0.6
+        uniforms.u_shading.value.reflect_specular = 0.4
         uniforms.u_shading.value.modulate_edges = 1.0,
         uniforms.u_shading.value.modulate_gradient  = 1.0
         uniforms.u_shading.value.modulate_curvature = 1.0
@@ -173,8 +174,8 @@ export default class ISOViewer extends EventEmitter
         uniforms.u_volume.value.block_size = this.configs.blockSize
         uniforms.u_volume.value.blocked_dimensions.copy(this.computes.occupancyMap.dimensions)
         uniforms.u_textures.value.occupancy_map.dispose()
-        uniforms.u_textures.value.distance_map.dispose()
         uniforms.u_textures.value.occupancy_map = this.computes.occupancyMap.texture
+        uniforms.u_textures.value.distance_map.dispose()
         uniforms.u_textures.value.distance_map = this.computes.distanceMap.texture
         this.setUniformsBoundingBox()
         this.setDefinesIterators()
