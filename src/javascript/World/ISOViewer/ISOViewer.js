@@ -70,6 +70,7 @@ export default class ISOViewer extends EventEmitter
         const defines = this.material.defines
         defines.MARCHING_METHOD = Configs.MarchingMethods.findIndex((x) => x === configs.marchingMethod)
         defines.INTERPOLATION_METHOD = Configs.InterpolationMethods.findIndex((x) => x === configs.interpolationMethod)
+        defines.SKIPPING_STRATEGY = Configs.SkippingStrategies.findIndex((x) => x === configs.skippingStrategy)
         defines.SKIPPING_METHOD = Configs.SkippingMethods.findIndex((x) => x === configs.skippingMethod)
         defines.GRADIENTS_METHOD = Configs.GradientsMethods.findIndex((x) => x === configs.gradientsMethod)  
         this.material.needsUpdate = true
@@ -82,10 +83,10 @@ export default class ISOViewer extends EventEmitter
         defines.MAX_CELLS = this.computes.volumeMap.dimensions.toArray().reduce(sum, 0)
         defines.MAX_BLOCKS = this.computes.occupancyMap.dimensions.toArray().reduce(sum, 0)
         defines.MAX_TRACES = defines.MAX_CELLS * 5
-        defines.MAX_CELLS_PER_BLOCK = this.configs.blockSize * 3
-        defines.MAX_TRACES_PER_BLOCK = defines.MAX_CELLS_PER_BLOCK * 5
-        defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_PER_BLOCK)
-        defines.MAX_BLOCKS_PER_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
+        defines.MAX_CELLS_IN_BLOCK = this.configs.blockSize * 3
+        defines.MAX_TRACES_IN_BLOCK = defines.MAX_CELLS_IN_BLOCK * 5
+        defines.MAX_GROUPS = Math.ceil(defines.MAX_CELLS / defines.MAX_CELLS_IN_BLOCK)
+        defines.MAX_BLOCKS_IN_GROUP = Math.ceil(defines.MAX_BLOCKS / defines.MAX_GROUPS)
         this.material.needsUpdate = true
     }
 
@@ -140,8 +141,8 @@ export default class ISOViewer extends EventEmitter
     {
         const uniforms = this.material.uniforms
         uniforms.u_debug.value.max_groups = this.material.defines.MAX_GROUPS
-        uniforms.u_debug.value.max_blocks = this.material.defines.MAX_BLOCKS_PER_GROUP 
-        uniforms.u_debug.value.max_cells  = this.material.defines.MAX_CELLS_PER_BLOCK  
+        uniforms.u_debug.value.max_blocks = this.material.defines.MAX_BLOCKS_IN_GROUP 
+        uniforms.u_debug.value.max_cells  = this.material.defines.MAX_CELLS_IN_BLOCK  
     }
 
     change(event)
@@ -150,6 +151,7 @@ export default class ISOViewer extends EventEmitter
         else if (event.key === 'blockSize'          ) this.onChangeBlockSize(event)
         else if (event.key === 'downscaleFactor'    ) this.onChangeDownscaleFactor(event)
         else if (event.key === 'interpolationMethod') this.onChangeInterpolationMethod(event)
+        else if (event.key === 'skippingStrategy'   ) this.onChangeSkippingStrategy(event)
         else if (event.key === 'skippingMethod'     ) this.onChangeSkippingMethod(event)
         else if (event.key === 'gradientsMethod'    ) this.onChangeGradientsMethod(event)
         else if (event.key === 'marchingMethod'     ) this.onChangeMarchingMethod(event)
@@ -200,6 +202,12 @@ export default class ISOViewer extends EventEmitter
         this.setUniformsBoundingBox()
 
         this.material.defines.INTERPOLATION_METHOD = Configs.InterpolationMethods.findIndex((x) => x === this.configs.interpolationMethod)
+        this.material.needsUpdate = true
+    }
+
+    onChangeSkippingStrategy(event)
+    {
+        this.material.defines.SKIPPING_STRATEGY = Configs.SkippingStrategies.findIndex((x) => x === this.configs.skippingStrategy)
         this.material.needsUpdate = true
     }
 

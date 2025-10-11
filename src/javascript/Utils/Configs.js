@@ -21,6 +21,10 @@ export default class Configs extends EventEmitter
         'cells',
         'traces',
     ])
+    static SkippingStrategies = Object.freeze([
+        'blocks',
+        'groups',
+    ])
     static SkippingMethods = Object.freeze([
         'occupancy',
         'isotropicDistance',
@@ -40,6 +44,7 @@ export default class Configs extends EventEmitter
         this.interpolationMethod = 'tricubic'
         this.gradientsMethod = 'bspline'
         this.marchingMethod = 'cells'
+        this.skippingStrategy = 'groups'
         this.skippingMethod = 'anisotropicDistance'
         this.colormap = 'pasteljet'
 
@@ -91,6 +96,11 @@ export default class Configs extends EventEmitter
         if (key === 'marchingMethod' && !Configs.MarchingMethods.includes(value)) 
         {
             console.warn(`Invalid MarchingMethod: "${value}"`)
+            return
+        }
+        if (key === 'skippingStrategy' && !Configs.SkippingStrategies.includes(value)) 
+        {
+            console.warn(`Invalid SkippingStrategy: "${value}"`)
             return
         }
         if (key === 'skippingMethod' && !Configs.SkippingMethods.includes(value)) 

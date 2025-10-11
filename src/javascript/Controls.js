@@ -70,6 +70,7 @@ export default class Controls
             interpolationMethod : this.configs.interpolationMethod,
             gradientsMethod     : this.configs.gradientsMethod,
             marchingMethod      : this.configs.marchingMethod,
+            skippingStrategy    : this.configs.skippingStrategy,    
             skippingMethod      : this.configs.skippingMethod,    
             bernsteinEnabled    : this.configs.bernsteinEnabled,
             skippingEnabled     : this.configs.skippingEnabled,  
@@ -107,6 +108,12 @@ export default class Controls
             .onFinishChange((option) => 
             { 
                 this.configs.set('interpolationMethod', option) 
+            }),
+
+            skippingStrategy: folder.add(objects, 'skippingStrategy').options(Configs.SkippingStrategies)
+            .onFinishChange((option) => 
+            { 
+                this.configs.set('skippingStrategy', option) 
             }),
 
             skippingMethod: folder.add(objects, 'skippingMethod').options(Configs.SkippingMethods)
@@ -181,7 +188,7 @@ export default class Controls
         { 
             discardingEnabled: Boolean(defines.DISCARDING_ENABLED),
             debugEnabled     : Boolean(defines.DEBUG_ENABLED),
-            statsEnabled     : Boolean(defines.STATS_ENABLED),
+            variationEnabled : Boolean(defines.VARIATION_ENABLED),
         }
 
         this.controllers.debug = 
@@ -302,9 +309,16 @@ export default class Controls
                 material.needsUpdate = true 
             }),
 
+            variationEnabled: folder.add(objects, 'variationEnabled')
+            .onFinishChange((value) => 
+            { 
+                defines.VARIATION_ENABLED = Number(value)
+                material.needsUpdate = true 
+            }),
+
             // maxGroups: folder.add(uniforms, 'max_groups').min(0).max(defines.MAX_GROUPS).step(1),
-            // maxBlocks: folder.add(uniforms, 'max_blocks').min(0).max(defines.MAX_BLOCKS_PER_GROUP).step(1),
-            // maxCells : folder.add(uniforms, 'max_cells').min(0).max(defines.MAX_CELLS_PER_BLOCK).step(1),
+            // maxBlocks: folder.add(uniforms, 'max_blocks').min(0).max(defines.MAX_BLOCKS_IN_GROUP).step(1),
+            // maxCells : folder.add(uniforms, 'max_cells').min(0).max(defines.MAX_CELLS_IN_BLOCK).step(1),
             variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(0.001),
             variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(0.001),
             variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.001),
