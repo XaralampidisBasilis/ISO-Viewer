@@ -14,7 +14,6 @@
 #endif
 
 // Compute samples with non overlapping batches
-
 bool eval_poly_sign_change(vec3 coeffs)
 {
     const int batches = 2;
@@ -110,7 +109,5 @@ bool eval_poly_sign_change(float[6] coeffs)
 
     return change;
 }
-
-
 
 #endif

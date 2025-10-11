@@ -52,7 +52,7 @@ bool poly5_roots_newton_bisection
     out_end_value = out_end_value * end + poly5[0];
 
     // If the values at both ends have the same non-zero sign, there is no root
-    if (begin_value * out_end_value > 0.0) return false;
+    if ((begin_value > 0.0) == (out_end_value > 0.0)) return false;
 
     // Otherwise, we find the root iteratively using Newton bisection (with
     // bounded iteration count)
@@ -113,9 +113,9 @@ void poly5_roots
     // against overflow and makes it easier to avoid spilling below. The
     // factors happen to be binomial coefficients then.
     float derivative[6];
-    derivative[0] = poly5[3];
-    derivative[1] = poly5[4] * 4.0;
-    derivative[2] = poly5[5] * 10.0;
+    derivative[0] = poly5[3];        //   3*2 / 3!    
+    derivative[1] = poly5[4] * 4.0;  // 4*3*2 / 3!    
+    derivative[2] = poly5[5] * 10.0; // 5*4*3 / 3!
     derivative[3] = 0.0;
     derivative[4] = 0.0;
     derivative[5] = 0.0;
@@ -126,7 +126,7 @@ void poly5_roots
     if (discriminant >= 0.0) 
     {
         float sqrt_discriminant = sqrt(discriminant);
-        float scaled_root = derivative[1] + ((derivative[1] > 0.0) ? sqrt_discriminant : (-sqrt_discriminant));
+        float scaled_root = derivative[1] + (derivative[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
         float root_0 = clamp(-2.0 * derivative[0] / scaled_root, begin, end);
         float root_1 = clamp(-0.5 * scaled_root / derivative[2], begin, end);
         out_roots[3] = min(root_0, root_1);

@@ -111,16 +111,11 @@ bool poly3_has_root
     begin_value = begin_value * begin + derivative[0];
 
     // Iterate over the intervals where roots may be found
-    #pragma no_unroll
-    for (int i = 0; i != 3; ++i) 
-    {
-        // Try to find a sign change
-        if (poly3_has_root_sign_change(begin_value, derivative, critical_roots[i], critical_roots[i + 1], begin_value))
-        {
-            return true;
-        }
-    }
- 
+    if (poly3_has_root_sign_change(begin_value, derivative, critical_roots[0], critical_roots[1], begin_value)) return true;
+    if (poly3_has_root_sign_change(begin_value, derivative, critical_roots[1], critical_roots[2], begin_value)) return true;
+    if (poly3_has_root_sign_change(begin_value, derivative, critical_roots[2], critical_roots[3], begin_value)) return true;
+        
+
     return false;
 }
 
