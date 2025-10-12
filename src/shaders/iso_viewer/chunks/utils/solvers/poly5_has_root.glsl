@@ -149,28 +149,28 @@ bool poly5_has_root
     // coefficient can be copied directly from poly. That is a safeguard
     // against overflow and makes it easier to avoid spilling below. The
     // factors happen to be binomial coefficients then.
-    float derivative[6];
-    derivative[5] = 0.0;
-    derivative[4] = 0.0;
-    derivative[3] = 0.0;
-    derivative[2] = poly[5] * 10.0; // 5*4*3 / 3!
-    derivative[1] = poly[4] * 4.0;  // 4*3*2 / 3!
-    derivative[0] = poly[3];        //   3*2 / 3!
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = poly[5] * 10.0; // 5*4*3 / 3!
+    deriv_poly[1] = poly[4] * 4.0;  // 4*3*2 / 3!
+    deriv_poly[0] = poly[3];        //   3*2 / 3!
     
     // Compute its two roots using the quadratic formula
-    float discriminant = derivative[1] * derivative[1] - 4.0 * derivative[0] * derivative[2];
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
     if (discriminant >= 0.0) 
     {
         float sqrt_discriminant = sqrt(discriminant);
-        float scaled_root = derivative[1] + ((derivative[1] > 0.0) ? sqrt_discriminant : (-sqrt_discriminant));
+        float scaled_root = deriv_poly[1] + (deriv_poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
 
-        float root_0 = -2.0 * derivative[0] / scaled_root;
-        float root_1 = -0.5 * scaled_root / derivative[2];
-        root_0 = clamp(root_0, begin, end);
-        root_1 = clamp(root_1, begin, end);
+        float root0 = -2.0 * deriv_poly[0] / scaled_root;
+        float root1 = -0.5 * scaled_root / deriv_poly[2];
+        root0 = clamp(root0, begin, end);
+        root1 = clamp(root1, begin, end);
         
-        critical_roots[3] = min(root_0, root_1);
-        critical_roots[4] = max(root_0, root_1);
+        critical_roots[3] = min(root0, root1);
+        critical_roots[4] = max(root0, root1);
     }
     else 
     {
@@ -191,27 +191,27 @@ bool poly5_has_root
     // degree = 3
     // Take the integral of the previous derivative (scaled such that the
     // constant coefficient can still be copied directly from poly)
-    derivative[5] = 0.0;
-    derivative[4] = 0.0;
-    derivative[3] = derivative[2] * (3.0 / 3.0);
-    derivative[2] = derivative[1] * (3.0 / 2.0);
-    derivative[1] = derivative[0] * (3.0 / 1.0);
-    derivative[0] = poly[2];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = deriv_poly[2] * (3.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (3.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (3.0 / 1.0);
+    deriv_poly[0] = poly[2];
 
     // Determine the value of this derivative at begin
-    float begin_value = derivative[5];
-    begin_value = begin_value * begin + derivative[4];
-    begin_value = begin_value * begin + derivative[3];
-    begin_value = begin_value * begin + derivative[2];
-    begin_value = begin_value * begin + derivative[1];
-    begin_value = begin_value * begin + derivative[0];
+    float begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
     #pragma unroll
     for (int i = 2; i != 5; ++i) 
     {
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, derivative, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
@@ -225,20 +225,20 @@ bool poly5_has_root
     // degree = 4
     // Take the integral of the previous derivative (scaled such that the
     // constant coefficient can still be copied directly from poly)
-    derivative[5] = 0.0;
-    derivative[4] = derivative[3] * (2.0 / 4.0);
-    derivative[3] = derivative[2] * (2.0 / 3.0);
-    derivative[2] = derivative[1] * (2.0 / 2.0);
-    derivative[1] = derivative[0] * (2.0 / 1.0);
-    derivative[0] = poly[1];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = deriv_poly[3] * (2.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (2.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (2.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (2.0 / 1.0);
+    deriv_poly[0] = poly[1];
 
     // Determine the value of this derivative at begin
-    begin_value = derivative[5];
-    begin_value = begin_value * begin + derivative[4];
-    begin_value = begin_value * begin + derivative[3];
-    begin_value = begin_value * begin + derivative[2];
-    begin_value = begin_value * begin + derivative[1];
-    begin_value = begin_value * begin + derivative[0];
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
     #pragma unroll
@@ -246,7 +246,7 @@ bool poly5_has_root
     {
         // Try to find a root
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, derivative, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
@@ -303,28 +303,28 @@ bool poly5_has_root_v2
     // coefficient can be copied directly from poly. That is a safeguard
     // against overflow and makes it easier to avoid spilling below. The
     // factors happen to be binomial coefficients then.
-    float derivative[6];
-    derivative[5] = 0.0;
-    derivative[4] = 0.0;
-    derivative[3] = 0.0;
-    derivative[2] = poly[5] * 10.0; // 5*4*3 / 3!
-    derivative[1] = poly[4] * 4.0;  // 4*3*2 / 3!
-    derivative[0] = poly[3];        //   3*2 / 3!
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = poly[5] * 10.0; // 5*4*3 / 3!
+    deriv_poly[1] = poly[4] * 4.0;  // 4*3*2 / 3!
+    deriv_poly[0] = poly[3];        //   3*2 / 3!
 
     // Compute its two roots using the quadratic formula
-    float discriminant = derivative[1] * derivative[1] - 4.0 * derivative[0] * derivative[2];
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
     if (discriminant >= 0.0) 
     {
         float sqrt_discriminant = sqrt(discriminant);
-        float scaled_root = derivative[1] + ((derivative[1] > 0.0) ? sqrt_discriminant : (-sqrt_discriminant));
+        float scaled_root = deriv_poly[1] + (deriv_poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
 
-        float root_0 = -2.0 * derivative[0] / scaled_root;
-        float root_1 = -0.5 * scaled_root / derivative[2];
-        root_0 = clamp(root_0, begin, end);
-        root_1 = clamp(root_1, begin, end);
+        float root0 = -2.0 * deriv_poly[0] / scaled_root;
+        float root1 = -0.5 * scaled_root / deriv_poly[2];
+        root0 = clamp(root0, begin, end);
+        root1 = clamp(root1, begin, end);
         
-        critical_roots[3] = min(root_0, root_1);
-        critical_roots[4] = max(root_0, root_1);
+        critical_roots[3] = min(root0, root1);
+        critical_roots[4] = max(root0, root1);
     }
     else 
     {
@@ -345,60 +345,60 @@ bool poly5_has_root_v2
     // degree = 3
     // Take the integral of the previous derivative (scaled such that the
     // constant coefficient can still be copied directly from poly)
-    derivative[5] = 0.0;
-    derivative[4] = 0.0;
-    derivative[3] = derivative[2] * (3.0 / 3.0);
-    derivative[2] = derivative[1] * (3.0 / 2.0);
-    derivative[1] = derivative[0] * (3.0 / 1.0);
-    derivative[0] = poly[2];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = deriv_poly[2] * (3.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (3.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (3.0 / 1.0);
+    deriv_poly[0] = poly[2];
 
-    float begin_value = derivative[5];
-    begin_value = begin_value * begin + derivative[4];
-    begin_value = begin_value * begin + derivative[3];
-    begin_value = begin_value * begin + derivative[2];
-    begin_value = begin_value * begin + derivative[1];
-    begin_value = begin_value * begin + derivative[0];
+    float begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
-    float root_0;
-    if (poly5_has_root_newton_bisection(root_0, begin_value, derivative, critical_roots[3], critical_roots[4], begin_value, tolerance))
+    float root0;
+    if (poly5_has_root_newton_bisection(root0, begin_value, deriv_poly, critical_roots[3], critical_roots[4], begin_value, tolerance))
     {
         // If you find a root deflate the cubic to quadratic and solve analytically
-        derivative[4] = derivative[2] + root_0 * derivative[3];
-        derivative[5] = derivative[1] + root_0 * derivative[4];
+        deriv_poly[4] = deriv_poly[2] + root0 * deriv_poly[3];
+        deriv_poly[5] = deriv_poly[1] + root0 * deriv_poly[4];
 
         // Compute its two roots using the quadratic formula
-        float discriminant = derivative[4] * derivative[4] - 4.0 * derivative[5] * derivative[3];
+        float discriminant = deriv_poly[4] * deriv_poly[4] - 4.0 * deriv_poly[5] * deriv_poly[3];
         if (discriminant >= 0.0) 
         {
             float sqrt_discriminant = sqrt(discriminant);
-            float scaled_root = derivative[4] + ((derivative[4] > 0.0) ? sqrt_discriminant : (-sqrt_discriminant));
+            float scaled_root = deriv_poly[4] + (deriv_poly[4] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
 
-            float root_1 = -2.0 * derivative[5] / scaled_root;
-            float root_2 = -0.5 * scaled_root / derivative[3];
-            root_1 = clamp(root_1, begin, end);
-            root_2 = clamp(root_2, begin, end);
+            float root1 = -2.0 * deriv_poly[5] / scaled_root;
+            float root2 = -0.5 * scaled_root / deriv_poly[3];
+            root1 = clamp(root1, begin, end);
+            root2 = clamp(root2, begin, end);
             
             // 3-element sorting network
-            if (root_0 > root_1) { float t = root_0; root_0 = root_1; root_1 = t; }
-            if (root_0 > root_2) { float t = root_0; root_0 = root_2; root_2 = t; }
-            if (root_1 > root_2) { float t = root_1; root_1 = root_2; root_2 = t; }
+            if (root0 > root1) { float t = root0; root0 = root1; root1 = t; }
+            if (root0 > root2) { float t = root0; root0 = root2; root2 = t; }
+            if (root1 > root2) { float t = root1; root1 = root2; root2 = t; }
 
             // Indicate that the quartic derivative has three roots
-            critical_roots[2] = root_0;
-            critical_roots[3] = root_1;
-            critical_roots[4] = root_2;
+            critical_roots[2] = root0;
+            critical_roots[3] = root1;
+            critical_roots[4] = root2;
         }
-        else 
+        else
         {
             // Indicate that the quartic derivative has two roots
             critical_roots[2] = begin;
             critical_roots[3] = begin;
-            critical_roots[4] = root_0;
+            critical_roots[4] = root0;
         }
     }
     else
     {
-        // Indicate that the quartic derivative has one root
+        // Indicate that the quartic derivative has one  root
         critical_roots[2] = begin;
         critical_roots[3] = begin;
         critical_roots[4] = begin;
@@ -407,20 +407,20 @@ bool poly5_has_root_v2
     // degree = 4
     // Take the integral of the previous derivative (scaled such that the
     // constant coefficient can still be copied directly from poly)
-    derivative[5] = 0.0;
-    derivative[4] = derivative[3] * (2.0 / 4.0);
-    derivative[3] = derivative[2] * (2.0 / 3.0);
-    derivative[2] = derivative[1] * (2.0 / 2.0);
-    derivative[1] = derivative[0] * (2.0 / 1.0);
-    derivative[0] = poly[1];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = deriv_poly[3] * (2.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (2.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (2.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (2.0 / 1.0);
+    deriv_poly[0] = poly[1];
 
     // Determine the value of this derivative at begin
-    begin_value = derivative[5];
-    begin_value = begin_value * begin + derivative[4];
-    begin_value = begin_value * begin + derivative[3];
-    begin_value = begin_value * begin + derivative[2];
-    begin_value = begin_value * begin + derivative[1];
-    begin_value = begin_value * begin + derivative[0];
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
     #pragma unroll
@@ -428,7 +428,7 @@ bool poly5_has_root_v2
     {
         // Try to find a root
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, derivative, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }

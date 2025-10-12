@@ -2,6 +2,9 @@ import * as THREE from 'three'
 import vertexShader from '../../../shaders/iso_viewer/vertex.glsl'
 import fragmentShader from '../../../shaders/iso_viewer/fragment.glsl'
 
+// console.log('vertexShader: ', vertexShader)
+// console.log('fragmentShader: ', fragmentShader)
+
 export default function()
 {
     const uniforms = 
