@@ -38,29 +38,5 @@ float mmax(float v[6])
     r = max(r, v[5]);
     return r;
 }
-vec2 mmax(mat2 A)
-{
-    vec2 r;
-    r[0] = mmax(A[0]);
-    r[1] = mmax(A[1]);
-    return r;
-}
-vec3 mmax(mat3 A)
-{
-    vec3 r;
-    r[0] = mmax(A[0]);
-    r[1] = mmax(A[1]);
-    r[2] = mmax(A[2]);
-    return r;
-}
-vec4 mmax(mat4 A)
-{
-    vec4 r;
-    r[0] = mmax(A[0]);
-    r[1] = mmax(A[1]);
-    r[2] = mmax(A[2]);
-    r[3] = mmax(A[3]);
-    return r;
-}
 
 #endif // MMAX

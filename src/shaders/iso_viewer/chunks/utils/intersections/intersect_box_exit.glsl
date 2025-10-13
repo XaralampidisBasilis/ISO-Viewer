@@ -11,9 +11,6 @@
 #ifndef MMIN
 #include "../math/mmin"
 #endif
-#ifndef ARGMIN
-#include "../math/argmin"
-#endif
 
 float intersect_box_exit(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir) 
 {
@@ -21,16 +18,6 @@ float intersect_box_exit(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir)
     vec3 b_max = (box_max - start) * inv_dir;
     vec3 t_max = max(b_min, b_max);
     float t_exit = mmin(t_max);
-    return t_exit;
-}
-
-float intersect_box_exit(vec3 box_min, vec3 box_max, vec3 start, vec3 inv_dir, out int axis) 
-{
-    vec3 b_min = (box_min - start) * inv_dir;
-    vec3 b_max = (box_max - start) * inv_dir;
-    vec3 t_max = max(b_min, b_max);
-    float t_exit = mmin(t_max);
-    axis = argmin(t_max);
     return t_exit;
 }
 

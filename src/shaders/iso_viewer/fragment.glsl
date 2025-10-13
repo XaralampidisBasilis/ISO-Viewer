@@ -1,3 +1,5 @@
+precision highp float;
+precision highp int;
 
 in vec3 v_position;
 in vec3 v_camera_position;

@@ -163,12 +163,11 @@ bool poly5_has_root
     {
         float sqrt_discriminant = sqrt(discriminant);
         float scaled_root = deriv_poly[1] + (deriv_poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
-
         float root0 = -2.0 * deriv_poly[0] / scaled_root;
         float root1 = -0.5 * scaled_root / deriv_poly[2];
         root0 = clamp(root0, begin, end);
         root1 = clamp(root1, begin, end);
-        
+
         critical_roots[3] = min(root0, root1);
         critical_roots[4] = max(root0, root1);
     }
@@ -207,7 +206,6 @@ bool poly5_has_root
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
-    #pragma unroll
     for (int i = 2; i != 5; ++i) 
     {
         float root;
@@ -241,7 +239,6 @@ bool poly5_has_root
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
-    #pragma unroll
     for (int i = 1; i != 5; ++i) 
     {
         // Try to find a root
@@ -258,20 +255,28 @@ bool poly5_has_root
     }
     
     // degree = 5
+    // Take the integral of the previous derivative (scaled such that the
+    // constant coefficient can still be copied directly from poly)
+    deriv_poly[5] = deriv_poly[4] * (1.0 / 5.0);
+    deriv_poly[4] = deriv_poly[3] * (1.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (1.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (1.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (1.0 / 1.0);
+    deriv_poly[0] = poly[0];
+
     // Determine the value of this derivative at begin
-    begin_value = poly[5];
-    begin_value = begin_value * begin + poly[4];
-    begin_value = begin_value * begin + poly[3];
-    begin_value = begin_value * begin + poly[2];
-    begin_value = begin_value * begin + poly[1];
-    begin_value = begin_value * begin + poly[0];
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where sign change may be found
-    #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         // Try to find sign change
-        if (poly5_has_root_sign_change(begin_value, poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
         {
             return true;
         }
@@ -317,12 +322,11 @@ bool poly5_has_root_v2
     {
         float sqrt_discriminant = sqrt(discriminant);
         float scaled_root = deriv_poly[1] + (deriv_poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
-
         float root0 = -2.0 * deriv_poly[0] / scaled_root;
         float root1 = -0.5 * scaled_root / deriv_poly[2];
         root0 = clamp(root0, begin, end);
         root1 = clamp(root1, begin, end);
-        
+
         critical_roots[3] = min(root0, root1);
         critical_roots[4] = max(root0, root1);
     }
@@ -372,7 +376,6 @@ bool poly5_has_root_v2
         {
             float sqrt_discriminant = sqrt(discriminant);
             float scaled_root = deriv_poly[4] + (deriv_poly[4] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
-
             float root1 = -2.0 * deriv_poly[5] / scaled_root;
             float root2 = -0.5 * scaled_root / deriv_poly[3];
             root1 = clamp(root1, begin, end);
@@ -423,7 +426,6 @@ bool poly5_has_root_v2
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
-    #pragma unroll
     for (int i = 1; i != 5; ++i) 
     {
         // Try to find a root
@@ -440,20 +442,28 @@ bool poly5_has_root_v2
     }
     
     // degree = 5
+    // Take the integral of the previous derivative (scaled such that the
+    // constant coefficient can still be copied directly from poly)
+    deriv_poly[5] = deriv_poly[4] * (1.0 / 5.0);
+    deriv_poly[4] = deriv_poly[3] * (1.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (1.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (1.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (1.0 / 1.0);
+    deriv_poly[0] = poly[0];
+
     // Determine the value of this derivative at begin
-    begin_value = poly[5];
-    begin_value = begin_value * begin + poly[4];
-    begin_value = begin_value * begin + poly[3];
-    begin_value = begin_value * begin + poly[2];
-    begin_value = begin_value * begin + poly[1];
-    begin_value = begin_value * begin + poly[0];
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where sign change may be found
-    #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         // Try to find sign change
-        if (poly5_has_root_sign_change(begin_value, poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
         {
             return true;
         }
