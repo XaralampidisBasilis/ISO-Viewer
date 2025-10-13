@@ -1,3 +1,6 @@
+precision highp float;
+precision highp int;
+
 in vec3 v_position;
 in vec3 v_camera_position;
 in vec3 v_camera_direction;
@@ -41,16 +44,6 @@ vec3  cbrt(in vec3 v)
     ); 
 }
 
-vec4  cbrt(in vec4 v) 
-{ 
-    return sign(v) * vec4(
-        pow(abs(v.x), 1.0/3.0), 
-        pow(abs(v.y), 1.0/3.0), 
-        pow(abs(v.z), 1.0/3.0), 
-        pow(abs(v.w), 1.0/3.0)
-    ); 
-}
-
 #endif 
 #ifndef DIFF
 #define DIFF
@@ -70,14 +63,6 @@ vec4  map(in float a, in float b, in vec4  x) {return (x - a) / (b - a);}
 vec2  map(in vec2  a, in vec2  b, in vec2  x) {return (x - a) / (b - a);}
 vec3  map(in vec3  a, in vec3  b, in vec3  x) {return (x - a) / (b - a);}
 vec4  map(in vec4  a, in vec4  b, in vec4  x) {return (x - a) / (b - a);}
-
-int   map(in int   a, in int   b, in int   x) {return (x - a) / (b - a);}
-ivec2 map(in int   a, in int   b, in ivec2 x) {return (x - a) / (b - a);}
-ivec3 map(in int   a, in int   b, in ivec3 x) {return (x - a) / (b - a);}
-ivec4 map(in int   a, in int   b, in ivec4 x) {return (x - a) / (b - a);}
-ivec2 map(in ivec2 a, in ivec2 b, in ivec2 x) {return (x - a) / (b - a);}
-ivec3 map(in ivec3 a, in ivec3 b, in ivec3 x) {return (x - a) / (b - a);}
-ivec4 map(in ivec4 a, in ivec4 b, in ivec4 x) {return (x - a) / (b - a);}
 
 #endif 
 #ifndef MEAN
@@ -236,97 +221,6 @@ vec4 mmix(vec4 a, vec4 b, vec4 c, vec4 pct) {
     );
 }
 
-float mmix(in float a, in float b, in float c, in float d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in vec2 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in vec3 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in vec4 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
 #endif 
 #ifndef MMIX2
 #define MMIX2
@@ -404,97 +298,6 @@ vec4 mmix(vec4 a, vec4 b, vec4 c, vec4 pct) {
         mix(a, b, 2. * pct),
         mix(b, c, 2. * (max(pct, .5) - .5)),
         step(.5, pct)
-    );
-}
-
-float mmix(in float a, in float b, in float c, in float d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in vec2 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in vec3 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in vec4 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
     );
 }
 
@@ -1325,97 +1128,6 @@ vec4 mmix(vec4 a, vec4 b, vec4 c, vec4 pct) {
     );
 }
 
-float mmix(in float a, in float b, in float c, in float d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in vec2 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in vec3 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in vec4 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
 #endif
 #endif
 
@@ -1785,97 +1497,6 @@ vec4 mmix(vec4 a, vec4 b, vec4 c, vec4 pct) {
     );
 }
 
-float mmix(in float a, in float b, in float c, in float d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec2 mmix(in vec2 a, in vec2 b, in vec2 c, in vec2 d, in vec2 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec3 mmix(in vec3 a, in vec3 b, in vec3 c, in vec3 d, in vec3 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in float pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
-vec4 mmix(in vec4 a, in vec4 b, in vec4 c, in vec4 d, in vec4 pct) {
-    return mix(
-        mix(a, b, 3. * pct),
-        mix(b,
-            mix( c,
-                d,
-                3. * (max(pct, .66) - .66)),
-            3. * (clamp(pct, .33, .66) - .33)
-        ),
-        step(.33, pct)
-    );
-}
-
 #endif
 #endif
 
@@ -1925,294 +1546,6 @@ int eval_poly_sign_changes(float[6] coeffs)
     }
 
     return changes;
-}
-
-#endif
-#ifndef SPLIT_BERNSTEIN
-#define SPLIT_BERNSTEIN
-
-void split_bernstein(in vec3 b, out vec3 left, out vec3 right)
-{
-    
-    vec2 m = mix(b.xy, b.yz, 0.5); 
-
-    
-    float n = mix(m.x, m.y, 0.5); 
-
-    
-    left = vec3(b.x, m.x, n);
-
-    
-    right = vec3(n, m.y, b.z);
-}
-
-void split_bernstein(in vec4 b, out vec4 left, out vec4 right) 
-{
-    
-    vec3 m = mix(b.xyz, b.yzw, 0.5); 
-
-    
-    vec2 n = mix(m.xy, m.yz, 0.5);   
-
-    
-    float p = mix(n.x, n.y, 0.5);
-
-    
-    left = vec4(b.x, m.x, n.x, p);   
-
-    
-    right = vec4(p, n.y, m.z, b.w);  
-}
-
-void split_bernstein(in float b[5], out float left[5], out float right[5]) 
-{
-    
-    vec4 b0 = vec4(b[0], b[1], b[2], b[3]);
-    vec4 b1 = vec4(b[1], b[2], b[3], b[4]);
-
-    
-    vec4 m = mix(b0, b1, 0.5);
-
-    
-    vec3 n = mix(m.xyz, m.yzw, 0.5);
-
-    
-    vec2 o = mix(n.xy, n.yz, 0.5);
-
-    
-    float p = mix(o.x, o.y, 0.5);
-
-    
-    left[0] = b[0];
-    left[1] = m.x;
-    left[2] = n.x;
-    left[3] = o.x;
-    left[4] = p;
-
-    
-    right[0] = p;
-    right[1] = o.y;
-    right[2] = n.z;
-    right[3] = m.w;
-    right[4] = b[4];
-}
-
-void split_bernstein(in float b[6], out float left[6], out float right[6]) 
-{
-    
-    float m0 = (b[0] + b[1]) * 0.5;
-    float m1 = (b[1] + b[2]) * 0.5;
-    float m2 = (b[2] + b[3]) * 0.5;
-    float m3 = (b[3] + b[4]) * 0.5;
-    float m4 = (b[4] + b[5]) * 0.5;
-
-    
-    vec4 n = vec4(
-        (m0 + m1) * 0.5,
-        (m1 + m2) * 0.5,
-        (m2 + m3) * 0.5,
-        (m3 + m4) * 0.5
-    );  
-
-    
-    vec3 o = mix(n.xyz, n.yzw, 0.5);
-
-    
-    vec2 p = mix(o.xy, o.yz, 0.5);
-
-    
-    float q = mix(p.x, p.y, 0.5);
-
-    
-    left[0] = b[0];
-    left[1] = m0;
-    left[2] = n.x;
-    left[3] = o.x;
-    left[4] = p.x;
-    left[5] = q;
-
-    
-    right[0] = q;
-    right[1] = p.y;
-    right[2] = o.z;
-    right[3] = n.w;
-    right[4] = m4;
-    right[5] = b[5];
-}
-
-#endif
-#ifndef SPLIT_BERNSTEIN_SIGN_CHANGE
-#define SPLIT_BERNSTEIN_SIGN_CHANGE
-
-#ifndef SPLIT_BERNSTEIN
-#ifndef SPLIT_BERNSTEIN
-#define SPLIT_BERNSTEIN
-
-void split_bernstein(in vec3 b, out vec3 left, out vec3 right)
-{
-    
-    vec2 m = mix(b.xy, b.yz, 0.5); 
-
-    
-    float n = mix(m.x, m.y, 0.5); 
-
-    
-    left = vec3(b.x, m.x, n);
-
-    
-    right = vec3(n, m.y, b.z);
-}
-
-void split_bernstein(in vec4 b, out vec4 left, out vec4 right) 
-{
-    
-    vec3 m = mix(b.xyz, b.yzw, 0.5); 
-
-    
-    vec2 n = mix(m.xy, m.yz, 0.5);   
-
-    
-    float p = mix(n.x, n.y, 0.5);
-
-    
-    left = vec4(b.x, m.x, n.x, p);   
-
-    
-    right = vec4(p, n.y, m.z, b.w);  
-}
-
-void split_bernstein(in float b[5], out float left[5], out float right[5]) 
-{
-    
-    vec4 b0 = vec4(b[0], b[1], b[2], b[3]);
-    vec4 b1 = vec4(b[1], b[2], b[3], b[4]);
-
-    
-    vec4 m = mix(b0, b1, 0.5);
-
-    
-    vec3 n = mix(m.xyz, m.yzw, 0.5);
-
-    
-    vec2 o = mix(n.xy, n.yz, 0.5);
-
-    
-    float p = mix(o.x, o.y, 0.5);
-
-    
-    left[0] = b[0];
-    left[1] = m.x;
-    left[2] = n.x;
-    left[3] = o.x;
-    left[4] = p;
-
-    
-    right[0] = p;
-    right[1] = o.y;
-    right[2] = n.z;
-    right[3] = m.w;
-    right[4] = b[4];
-}
-
-void split_bernstein(in float b[6], out float left[6], out float right[6]) 
-{
-    
-    float m0 = (b[0] + b[1]) * 0.5;
-    float m1 = (b[1] + b[2]) * 0.5;
-    float m2 = (b[2] + b[3]) * 0.5;
-    float m3 = (b[3] + b[4]) * 0.5;
-    float m4 = (b[4] + b[5]) * 0.5;
-
-    
-    vec4 n = vec4(
-        (m0 + m1) * 0.5,
-        (m1 + m2) * 0.5,
-        (m2 + m3) * 0.5,
-        (m3 + m4) * 0.5
-    );  
-
-    
-    vec3 o = mix(n.xyz, n.yzw, 0.5);
-
-    
-    vec2 p = mix(o.xy, o.yz, 0.5);
-
-    
-    float q = mix(p.x, p.y, 0.5);
-
-    
-    left[0] = b[0];
-    left[1] = m0;
-    left[2] = n.x;
-    left[3] = o.x;
-    left[4] = p.x;
-    left[5] = q;
-
-    
-    right[0] = q;
-    right[1] = p.y;
-    right[2] = o.z;
-    right[3] = n.w;
-    right[4] = m4;
-    right[5] = b[5];
-}
-
-#endif
-#endif
-#ifndef SIGN_CHANGE
-#ifndef SIGN_CHANGE
-#define SIGN_CHANGE
-
-bool sign_change(float a, float b) 
-{
-    return (a < 0.0) != (b < 0.0);
-}
-
-bool sign_change(vec2 v) 
-{
-    return (v.x < 0.0) != (v.y < 0.0);
-}
-
-bool sign_change(vec3 v) 
-{
-    return (v.x < 0.0) != (v.y < 0.0) ||
-           (v.y < 0.0) != (v.z < 0.0);
-}
-
-bool sign_change(vec4 v) 
-{
-    return (v.x < 0.0) != (v.y < 0.0) ||
-           (v.y < 0.0) != (v.z < 0.0) ||
-           (v.z < 0.0) != (v.w < 0.0);
-}
-
-bool sign_change(float v[5]) 
-{
-    return (v[0] < 0.0) != (v[1] < 0.0) ||
-           (v[1] < 0.0) != (v[2] < 0.0) ||
-           (v[2] < 0.0) != (v[3] < 0.0) ||
-           (v[3] < 0.0) != (v[4] < 0.0);
-}
-
-bool sign_change(float v[6]) 
-{
-    return (v[0] < 0.0) != (v[1] < 0.0) ||
-           (v[1] < 0.0) != (v[2] < 0.0) ||
-           (v[2] < 0.0) != (v[3] < 0.0) ||
-           (v[3] < 0.0) != (v[4] < 0.0) ||
-           (v[4] < 0.0) != (v[5] < 0.0);
-}
-
-#endif
-#endif
-
-bool split_bernstein_sign_change(in float b[6]) 
-{
-    float r[6];
-
-    split_bernstein(b, b, r); 
-
-    return sign_change(b) || sign_change(r);
 }
 
 #endif
@@ -2601,16 +1934,6 @@ vec3  cbrt(in vec3 v)
         pow(abs(v.x), 1.0/3.0), 
         pow(abs(v.y), 1.0/3.0),
         pow(abs(v.z), 1.0/3.0)
-    ); 
-}
-
-vec4  cbrt(in vec4 v) 
-{ 
-    return sign(v) * vec4(
-        pow(abs(v.x), 1.0/3.0), 
-        pow(abs(v.y), 1.0/3.0), 
-        pow(abs(v.z), 1.0/3.0), 
-        pow(abs(v.w), 1.0/3.0)
     ); 
 }
 
@@ -3471,19 +2794,28 @@ bool poly5_has_root
     
     
     
-    begin_value = poly[5];
-    begin_value = begin_value * begin + poly[4];
-    begin_value = begin_value * begin + poly[3];
-    begin_value = begin_value * begin + poly[2];
-    begin_value = begin_value * begin + poly[1];
-    begin_value = begin_value * begin + poly[0];
+    
+    deriv_poly[5] = deriv_poly[4] * (1.0 / 5.0);
+    deriv_poly[4] = deriv_poly[3] * (1.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (1.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (1.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (1.0 / 1.0);
+    deriv_poly[0] = poly[0];
+
+    
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     
     #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         
-        if (poly5_has_root_sign_change(begin_value, poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
         {
             return true;
         }
@@ -3649,19 +2981,28 @@ bool poly5_has_root_v2
     
     
     
-    begin_value = poly[5];
-    begin_value = begin_value * begin + poly[4];
-    begin_value = begin_value * begin + poly[3];
-    begin_value = begin_value * begin + poly[2];
-    begin_value = begin_value * begin + poly[1];
-    begin_value = begin_value * begin + poly[0];
+    
+    deriv_poly[5] = deriv_poly[4] * (1.0 / 5.0);
+    deriv_poly[4] = deriv_poly[3] * (1.0 / 4.0);
+    deriv_poly[3] = deriv_poly[2] * (1.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (1.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (1.0 / 1.0);
+    deriv_poly[0] = poly[0];
+
+    
+    begin_value = deriv_poly[5];
+    begin_value = begin_value * begin + deriv_poly[4];
+    begin_value = begin_value * begin + deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
 
     
     #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         
-        if (poly5_has_root_sign_change(begin_value, poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
         {
             return true;
         }
@@ -7303,7 +6644,11 @@ if (sign_change(quintic.bernstein_coeffs))
     sum_anti_diags(coeffs, quintic.coeffs);
 
     
+    #if VARIATION_ENABLED == 1
+    cell.intersected = sign_change(quintic.residuals) || poly5_has_root(quintic.coeffs, 0.0, 1.0);
+    #else
     cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+    #endif
 
     #if DEBUG_ENABLED == 1
     stats.num_intersection_tests += 1;
@@ -7754,7 +7099,11 @@ if (sign_change(quintic.bernstein_coeffs))
     sum_anti_diags(coeffs, quintic.coeffs);
 
     
+    #if VARIATION_ENABLED == 1
+    cell.intersected = sign_change(quintic.residuals) || poly5_has_root(quintic.coeffs, 0.0, 1.0);
+    #else
     cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+    #endif
 
     #if DEBUG_ENABLED == 1
     stats.num_intersection_tests += 1;
@@ -8013,7 +7362,11 @@ if (sign_change(quintic.bernstein_coeffs))
     sum_anti_diags(coeffs, quintic.coeffs);
 
     
+    #if VARIATION_ENABLED == 1
+    cell.intersected = sign_change(quintic.residuals) || poly5_has_root(quintic.coeffs, 0.0, 1.0);
+    #else
     cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+    #endif
 
     #if DEBUG_ENABLED == 1
     stats.num_intersection_tests += 1;

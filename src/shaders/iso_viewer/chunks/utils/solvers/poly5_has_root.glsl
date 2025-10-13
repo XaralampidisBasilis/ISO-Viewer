@@ -18,20 +18,18 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 // \param begin The beginning of an interval where the polynomial is monotonic.
 // \param end The end of said interval.
 // \param begin_value The value of the given polynomial at begin.
-// \param error_tolerance The error tolerance for the returned root location.
+// \param tolerance The error tolerance for the returned root location.
 //        Typically the error will be much lower but in theory it can be
 //        bigger.
 // \return true if a root was found, false if no root exists.
-
-bool poly5_has_root_newton_bisection
-(
+bool poly5_has_root_bisection(
     out float out_root, 
     out float out_end_value,
     float poly[6], 
     float begin, 
     float end,
     float begin_value, 
-    float error_tolerance
+    float tolerance
 ){
     if (begin == end) 
     {
@@ -55,7 +53,146 @@ bool poly5_has_root_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 50; ++i) 
+    for (int i = 0; i != 20; ++i) 
+    {
+        // Evaluate the polynomial and its derivative
+        float value = poly[5];
+        value = value * current + poly[4];
+        value = value * current + poly[3];
+        value = value * current + poly[2];
+        value = value * current + poly[1];
+        value = value * current + poly[0];
+
+        // Shorten the interval
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
+
+        // Apply Bisection method
+        current = 0.5 * (begin + end);
+    }
+
+    out_root = current;
+    return true;
+}
+
+// Searches a single root of a polynomial within a given interval.
+// \param out_root The location of the found root.
+// \param out_end_value The value of the given polynomial at end.
+// \param poly Coefficients of the polynomial for which a root should be found.
+//        Coefficient poly[i] is multiplied by x^i.
+// \param begin The beginning of an interval where the polynomial is monotonic.
+// \param end The end of said interval.
+// \param begin_value The value of the given polynomial at begin.
+// \param tolerance The error tolerance for the returned root location.
+//        Typically the error will be much lower but in theory it can be
+//        bigger.
+// \return true if a root was found, false if no root exists.
+bool poly5_has_root_neubauer(
+    out float out_root, 
+    out float out_end_value,
+    float poly[6], 
+    float begin, 
+    float end,
+    float begin_value, 
+    float tolerance
+){
+    if (begin == end) 
+    {
+        out_end_value = begin_value;
+        return false;
+    }
+
+    // Evaluate the polynomial at the end of the interval
+    float end_value = poly[5];
+    end_value = end_value * end + poly[4];
+    end_value = end_value * end + poly[3];
+    end_value = end_value * end + poly[2];
+    end_value = end_value * end + poly[1];
+    end_value = end_value * end + poly[0];
+    out_end_value = end_value;
+
+    // If the values at both ends have the same non-zero sign, there is no root
+    if ((begin_value > 0.0) == (end_value > 0.0)) return false;
+
+    // Otherwise, we find the root iteratively using Neubauer method (with
+    // bounded iteration count)   
+    float current = 0.5 * (begin + end);
+
+    #pragma no_unroll
+    for (int i = 0; i != 10; ++i) 
+    {
+        // Evaluate the polynomial and its derivative
+        float value = poly[5];
+        value = value * current + poly[4];
+        value = value * current + poly[3];
+        value = value * current + poly[2];
+        value = value * current + poly[1];
+        value = value * current + poly[0];
+
+        // Shorten the interval
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
+        begin_value = left ? begin_value : value;
+        end_value = left ? value : end_value;
+
+        // Compute differences
+        float delta = begin - end;
+        float delta_value = begin_value - end_value;    
+
+        // Apply Neubauer method
+        current = begin - (begin_value * delta) / delta_value;
+    }
+
+    out_root = current;
+    return true;
+}
+
+// Searches a single root of a polynomial within a given interval.
+// \param out_root The location of the found root.
+// \param out_end_value The value of the given polynomial at end.
+// \param poly Coefficients of the polynomial for which a root should be found.
+//        Coefficient poly[i] is multiplied by x^i.
+// \param begin The beginning of an interval where the polynomial is monotonic.
+// \param end The end of said interval.
+// \param begin_value The value of the given polynomial at begin.
+// \param tolerance The error tolerance for the returned root location.
+//        Typically the error will be much lower but in theory it can be
+//        bigger.
+// \return true if a root was found, false if no root exists.
+bool poly5_has_root_newton_bisection(
+    out float out_root, 
+    out float out_end_value,
+    float poly[6], 
+    float begin, 
+    float end,
+    float begin_value, 
+    float tolerance
+){
+    if (begin == end) 
+    {
+        out_end_value = begin_value;
+        return false;
+    }
+
+    // Evaluate the polynomial at the end of the interval
+    out_end_value = poly[5];
+    out_end_value = out_end_value * end + poly[4];
+    out_end_value = out_end_value * end + poly[3];
+    out_end_value = out_end_value * end + poly[2];
+    out_end_value = out_end_value * end + poly[1];
+    out_end_value = out_end_value * end + poly[0];
+
+    // If the values at both ends have the same non-zero sign, there is no root
+    if ((begin_value > 0.0) == (out_end_value > 0.0)) return false;
+
+    // Otherwise, we find the root iteratively using Newton bisection (with
+    // bounded iteration count)
+    float current = 0.5 * (begin + end);
+
+    #pragma no_unroll
+    for (int i = 0; i != 10; ++i) 
     {
         // Evaluate the polynomial and its derivative
         float derivative = poly[5];
@@ -70,9 +207,9 @@ bool poly5_has_root_newton_bisection
         value = value * current + poly[0];
 
         // Shorten the interval
-        bool right = (begin_value > 0.0) == (value > 0.0);
-        begin = right ? current : begin;
-        end = right ? end : current;
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
 
         // Apply Newton's method
         float guess = current - value / derivative;
@@ -82,7 +219,7 @@ bool poly5_has_root_newton_bisection
         float next = (guess >= begin && guess <= end) ? guess : middle;
 
         // Move along or terminate
-        bool done = abs(next - current) < error_tolerance;
+        bool done = abs(next - current) < tolerance;
         current = next;
         if (done) break;
     }
@@ -134,7 +271,7 @@ bool poly5_has_root
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1.0e-6;
+    float tolerance = (end - begin) * 1e-6;
 
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched critical roots are set to begin
@@ -206,17 +343,18 @@ bool poly5_has_root
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
+    #pragma unroll
     for (int i = 2; i != 5; ++i) 
     {
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
         else
         {
             // Create an empty interval for the next iteration
-            critical_roots[i] = critical_roots[i - 1];
+            critical_roots[i] = critical_roots[i-1];
         }
     }
 
@@ -239,18 +377,19 @@ bool poly5_has_root
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
+    #pragma unroll
     for (int i = 1; i != 5; ++i) 
     {
         // Try to find a root
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
         else
         {
             // Create an empty interval for the next iteration
-            critical_roots[i] = critical_roots[i - 1];
+            critical_roots[i] = critical_roots[i-1];
         }
     }
     
@@ -273,10 +412,11 @@ bool poly5_has_root
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where sign change may be found
+    #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         // Try to find sign change
-        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value))
         {
             return true;
         }
@@ -426,6 +566,7 @@ bool poly5_has_root_v2
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
+    #pragma unroll
     for (int i = 1; i != 5; ++i) 
     {
         // Try to find a root
@@ -460,6 +601,7 @@ bool poly5_has_root_v2
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where sign change may be found
+    #pragma unroll
     for (int i = 0; i != 5; ++i) 
     {
         // Try to find sign change
