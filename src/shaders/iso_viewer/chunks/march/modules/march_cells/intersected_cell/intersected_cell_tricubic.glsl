@@ -1,5 +1,5 @@
 
-#include "./update_quintic"
+#include "../update_quintic"
 
 // Reconstruct the quintic polynomial coefficients from the residual matrix
 // Using inverse Vandermonde matrices for quadratic and cubic interpolation

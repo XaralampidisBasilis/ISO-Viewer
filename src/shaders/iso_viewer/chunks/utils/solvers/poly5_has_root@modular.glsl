@@ -22,6 +22,9 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef SWAP
 #include "../math/swap"
 #endif
+#ifndef SORT
+#include "../math/sort"
+#endif
 
 // Searches a single root of a polynomial within a given interval.
 // \param out_root The location of the found root.
@@ -258,7 +261,7 @@ vec2 poly5_has_root_quadratic_roots(
         float scaled_root = poly[1] + (poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
         float root0 = -2.0 * poly[0] / scaled_root;
         float root1 = -0.5 * scaled_root / poly[2];
-        // root1 = (abs(poly[2]) < tolerance) ?  root0 : root1;
+        sort(root0, root1);
         
         // Indicate that the cubic derivative has two roots
         out_roots[0] = min(root0, root1);
@@ -305,12 +308,7 @@ vec3 poly5_has_root_cubic_roots(
             float scaled_root = poly[4] + (poly[4] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
             float root1 = -2.0 * poly[5] / scaled_root;
             float root2 = -0.5 * scaled_root / poly[3];
-            // root2 = (abs(poly[3]) < tolerance) ?  root1 : root2;
-
-            // 3-element sorting network
-            if (root0 > root1) { swap(root0, root1); }
-            if (root0 > root2) { swap(root0, root2); }
-            if (root1 > root2) { swap(root1, root2); }
+            sort(root0, root1, root2);
 
             // Indicate that the quartic derivative has three roots
             out_roots[0] = root0;

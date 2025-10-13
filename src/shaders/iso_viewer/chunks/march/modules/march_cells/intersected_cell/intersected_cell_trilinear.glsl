@@ -1,5 +1,5 @@
 
-#include "./update_cubic"
+#include "../update_cubic"
 
 // from the sampled intensities we can compute the trilinear interpolation cubic polynomial coefficients
 cubic.coeffs = cubic.residuals * cubic_inv_vander;

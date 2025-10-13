@@ -12,7 +12,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     // Compute the bias vector corresponding to quadratic correction terms
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 // Construct the residual matrix: subtract isovalue from interpolated samples

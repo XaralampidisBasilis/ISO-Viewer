@@ -1,5 +1,5 @@
 
-#include "./update_quintic"
+#include "../update_quintic"
 
 // Convert the residual polynomial to Bernstein basis using precomputed transformation matrices
 mat4x3 bernstein_coeffs = matrixCompMult(quad_bernstein * residuals * cubic_bernstein, quintic_bernstein_weights);

@@ -1,5 +1,5 @@
 
-#include "./update_cubic"
+#include "../update_cubic"
 
 // compute berstein coefficients from samples
 cubic.bernstein_coeffs = cubic.residuals * cubic_bernstein;
