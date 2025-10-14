@@ -15,19 +15,19 @@ export default class ExtremaMap
 
     computeTensor()
     {
-        console.time('computeTensor@ExtremaMap') 
+        console.time('computeTensor') 
         this.blockSize = this.configs.blockSize
         this.tensor = computeExtremaMap(this.interpolationMap.tensor, this.blockSize)
         
         const shape = this.tensor.shape
         this.dimensions = new THREE.Vector3(...shape.slice(0,3).toReversed())
 
-        console.timeEnd('computeTensor@ExtremaMap') 
+        console.timeEnd('computeTensor') 
     }
 
     computeTexture()
     {
-        console.time('computeTexture@ExtremaMap') 
+        console.time('computeTexture') 
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RGBAFormat
         this.texture.type = THREE.HalfFloatType
@@ -37,7 +37,7 @@ export default class ExtremaMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 4
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture@ExtremaMap') 
+        console.timeEnd('computeTexture') 
     }   
 
     updateTexture()

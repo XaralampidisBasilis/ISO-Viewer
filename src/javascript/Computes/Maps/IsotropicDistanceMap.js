@@ -15,15 +15,15 @@ export default class IsotropicDistanceMap
 
     computeTensor()
     {
-        console.time('computeTensor@IsotropicDistanceMap') 
+        console.time('computeTensor') 
         this.tensor = computeIsotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
         this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
-        console.timeEnd('computeTensor@IsotropicDistanceMap') 
+        console.timeEnd('computeTensor') 
     }
 
     computeTexture()
     {
-        console.time('computeTexture@IsotropicDistanceMap') 
+        console.time('computeTexture') 
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
@@ -33,7 +33,7 @@ export default class IsotropicDistanceMap
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
-        console.timeEnd('computeTexture@IsotropicDistanceMap') 
+        console.timeEnd('computeTexture') 
     }  
 
     updateTexture()

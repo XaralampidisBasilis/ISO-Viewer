@@ -1,0 +1,856 @@
+import {
+	Controls,
+	MathUtils,
+	MOUSE,
+	Quaternion,
+	Vector2,
+	Vector3
+} from 'three';
+
+/**
+ * FlyTrackballControls (v2)
+ * - Pan X matches TrackballControls (drag right => pan right).
+ * - Zoom: middle-drag and wheel use linear factor like TrackballControls.
+ * - New: invertMiddleDragZoom (flip only middle-drag zoom direction).
+ * - New: avoids tiny initial position nudge by applying target+eye only when zooming.
+ */
+const _changeEvent = { type: 'change' };
+const _startEvent  = { type: 'start' };
+const _endEvent    = { type: 'end' };
+
+const _EPS = 0.000001;
+const _STATE = { NONE: -1, FPS_LOOK: 0, ZOOM: 1, PAN: 2, TOUCH_LOOK: 3, TOUCH_ZOOM_PAN: 4 };
+
+// temps
+const _v2          = new Vector2();
+const _mouseChange = new Vector2();
+const _pan         = new Vector3();
+const _tmpV        = new Vector3();
+const _right       = new Vector3();
+const _upWorld     = new Vector3();
+const _fwd         = new Vector3();
+const _tmpQ        = new Quaternion();
+
+class FlyTrackballControls extends Controls {
+
+	constructor( object, domElement = null ) {
+
+		super( object, domElement );
+
+		// ---------------- Public API ----------------
+
+		// Movement (FPS style translation)
+		this.movementSpeed            = 1.0;
+		this.rollSpeed                = 0.8;
+		this.autoForward              = false;
+		this.movementSpeedMultiplier  = 1.0;
+
+		// Mouse look (FPS yaw/pitch)
+		this.lookSpeed                = 0.002;
+
+		// Trackball-like config
+		this.noZoom                   = false;
+		this.noPan                    = false;
+		this.zoomSpeed                = 1.2;
+		this.panSpeed                 = 0.5;
+		this.minDistance              = 0;
+		this.maxDistance              = Infinity;
+		this.staticMoving             = false;
+		this.dynamicDampingFactor     = 0.2;
+
+		// New: flip only middle-button drag zoom
+		this.invertMiddleDragZoom     = true;
+
+		this.enableKeyboard           = true;
+
+		this.mouseButtons = {
+			LEFT   : MOUSE.ROTATE,
+			MIDDLE : MOUSE.DOLLY,
+			RIGHT  : MOUSE.PAN
+		};
+
+		this.target     = new Vector3();
+		this._eye       = new Vector3();
+		this.state      = _STATE.NONE;
+
+		this._pointers           = [];
+		this._pointerPositions   = {};
+
+		this._moveState = {
+			up: 0, down: 0, left: 0, right: 0, forward: 0, back: 0,
+			pitchUp: 0, pitchDown: 0, yawLeft: 0, yawRight: 0, rollLeft: 0, rollRight: 0
+		};
+
+		this._fpsLast   = new Vector2();
+
+		this._zoomStart = new Vector2();
+		this._zoomEnd   = new Vector2();
+		this._panStart  = new Vector2();
+		this._panEnd    = new Vector2();
+
+		this._touchZoomDistanceStart = 0;
+		this._touchZoomDistanceEnd   = 0;
+
+		this._lastPosition   = new Vector3().copy( this.object.position );
+		this._lastQuaternion = new Quaternion().copy( this.object.quaternion );
+		this._lastZoom       = this.object.zoom || 1;
+
+		this._lastUpdateTime = ( typeof performance !== 'undefined' ? performance.now() : Date.now() );
+
+		this.screen = { left: 0, top: 0, width: 0, height: 0 };
+
+		// Bind handlers
+		this._onKeyDown       = onKeyDown.bind( this );
+		this._onKeyUp         = onKeyUp.bind( this );
+		this._onWindowBlur    = onWindowBlur.bind( this );
+
+		this._onPointerDown   = onPointerDown.bind( this );
+		this._onPointerMove   = onPointerMove.bind( this );
+		this._onPointerUp     = onPointerUp.bind( this );
+		this._onPointerCancel = onPointerCancel.bind( this );
+		this._onMouseWheel    = onMouseWheel.bind( this );
+		this._onContextMenu   = onContextMenu.bind( this );
+
+		this._onMouseDown     = onMouseDown.bind( this );
+		this._onMouseMove     = onMouseMove.bind( this );
+		this._onMouseUp       = onMouseUp.bind( this );
+
+		this._onTouchStart    = onTouchStart.bind( this );
+		this._onTouchMove     = onTouchMove.bind( this );
+		this._onTouchEnd      = onTouchEnd.bind( this );
+
+		if ( domElement !== null ) {
+
+			this.connect( domElement );
+			this.handleResize();
+
+		}
+
+		// Capture initial eye from current transform without moving the object
+		this._eye.subVectors( this.object.position, this.target );
+
+		// No initial update() positional rewrite to avoid tiny nudges
+
+	}
+
+	// ---------------- Lifecycle ----------------
+
+	connect( element ) {
+
+		super.connect( element );
+
+		if ( this.enableKeyboard ) {
+
+			window.addEventListener( 'keydown', this._onKeyDown );
+			window.addEventListener( 'keyup', this._onKeyUp );
+			window.addEventListener( 'blur', this._onWindowBlur );
+
+		}
+
+		this.domElement.addEventListener( 'pointerdown', this._onPointerDown );
+		this.domElement.addEventListener( 'pointercancel', this._onPointerCancel );
+		this.domElement.addEventListener( 'wheel', this._onMouseWheel, { passive: false } );
+		this.domElement.addEventListener( 'contextmenu', this._onContextMenu );
+
+		this.domElement.style.touchAction = 'none';
+
+	}
+
+	disconnect() {
+
+		window.removeEventListener( 'keydown', this._onKeyDown );
+		window.removeEventListener( 'keyup', this._onKeyUp );
+		window.removeEventListener( 'blur', this._onWindowBlur );
+
+		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
+		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+		this.domElement.removeEventListener( 'pointercancel', this._onPointerCancel );
+		this.domElement.removeEventListener( 'wheel', this._onMouseWheel );
+		this.domElement.removeEventListener( 'contextmenu', this._onContextMenu );
+
+		this.domElement.style.touchAction = 'auto';
+
+	}
+
+	dispose() { this.disconnect(); }
+
+	handleResize() {
+
+		const box = this.domElement.getBoundingClientRect();
+		const d   = this.domElement.ownerDocument.documentElement;
+
+		this.screen.left   = box.left + window.pageXOffset - d.clientLeft;
+		this.screen.top    = box.top + window.pageYOffset - d.clientTop;
+		this.screen.width  = box.width;
+		this.screen.height = box.height;
+
+	}
+
+	_getMouseOnScreen( pageX, pageY ) {
+
+		_v2.set(
+			( pageX - this.screen.left ) / this.screen.width,
+			( pageY - this.screen.top )  / this.screen.height
+		);
+
+		return _v2;
+
+	}
+
+	update() {
+
+		const now = ( typeof performance !== 'undefined' ? performance.now() : Date.now() );
+		let dt    = ( now - this._lastUpdateTime ) / 1000;
+		if ( dt <= 0 ) dt = 0.016;
+		this._lastUpdateTime = now;
+
+		_applyKeyboardTranslation.call( this, dt );
+		_applyKeyboardViewRotation.call( this, dt );
+
+		// NOTE: We deliberately DO NOT recompute position = target + eye here,
+		// to avoid tiny initial drift. Zoom handler applies it when _eye changes.
+
+		const quatChanged = ( 8 * ( 1 - this._lastQuaternion.dot( this.object.quaternion ) ) > _EPS );
+		const posChanged  = ( this._lastPosition.distanceToSquared( this.object.position ) > _EPS );
+
+		if ( this.object.isOrthographicCamera ) {
+
+			if ( posChanged || quatChanged || this._lastZoom !== this.object.zoom ) {
+
+				this.dispatchEvent( _changeEvent );
+				this._lastPosition.copy( this.object.position );
+				this._lastQuaternion.copy( this.object.quaternion );
+				this._lastZoom = this.object.zoom;
+
+			}
+
+		} else {
+
+			if ( posChanged || quatChanged ) {
+
+				this.dispatchEvent( _changeEvent );
+				this._lastPosition.copy( this.object.position );
+				this._lastQuaternion.copy( this.object.quaternion );
+
+			}
+
+		}
+
+	}
+
+	reset() {
+
+		this.state = _STATE.NONE;
+
+		this.target.set( 0, 0, 0 );
+		this.object.position.set( 0, 0, 0 );
+		this.object.quaternion.identity();
+		this.object.up.set( 0, 1, 0 );
+
+		this.object.updateProjectionMatrix?.();
+
+		this._eye.subVectors( this.object.position, this.target );
+		this._lastPosition.copy( this.object.position );
+		this._lastQuaternion.copy( this.object.quaternion );
+		this._lastZoom = this.object.zoom || 1;
+
+		this.dispatchEvent( _changeEvent );
+
+	}
+
+	_addPointer( event ) { this._pointers.push( event ); }
+
+	_removePointer( event ) {
+
+		delete this._pointerPositions[ event.pointerId ];
+
+		for ( let i = 0; i < this._pointers.length; i ++ ) {
+
+			if ( this._pointers[ i ].pointerId == event.pointerId ) {
+
+				this._pointers.splice( i, 1 );
+				return;
+
+			}
+
+		}
+
+	}
+
+	_trackPointer( event ) {
+
+		let position = this._pointerPositions[ event.pointerId ];
+
+		if ( position === undefined ) {
+
+			position = new Vector2();
+			this._pointerPositions[ event.pointerId ] = position;
+
+		}
+
+		position.set( event.pageX, event.pageY );
+
+	}
+
+	_getSecondPointerPosition( event ) {
+
+		const pointer = ( event.pointerId === this._pointers[ 0 ].pointerId ) ? this._pointers[ 1 ] : this._pointers[ 0 ];
+		return this._pointerPositions[ pointer.pointerId ];
+
+	}
+
+}
+
+// ---------------- Quaternion-based view rotation ----------------
+
+function _applyViewAngles( yaw, pitch, roll ) {
+
+	_upWorld.set( 0, 1, 0 ).applyQuaternion( this.object.quaternion ).normalize();
+
+	if ( yaw ) {
+
+		_tmpQ.setFromAxisAngle( _upWorld, yaw );
+		this.object.quaternion.premultiply( _tmpQ );
+
+	}
+
+	_fwd.set( 0, 0, -1 ).applyQuaternion( this.object.quaternion ).normalize();
+	_right.crossVectors( _fwd, _upWorld ).normalize();
+
+	if ( pitch ) {
+
+		_tmpQ.setFromAxisAngle( _right, pitch );
+		this.object.quaternion.premultiply( _tmpQ );
+
+	}
+
+	_fwd.set( 0, 0, -1 ).applyQuaternion( this.object.quaternion ).normalize();
+
+	if ( roll ) {
+
+		_tmpQ.setFromAxisAngle( _fwd, roll );
+		this.object.quaternion.premultiply( _tmpQ );
+
+	}
+
+	// keep eye/target consistent in orientation (but DON'T rewrite position)
+	const r = this._eye.length() || 1.0;
+	this._eye.copy( _fwd ).multiplyScalar( r );
+	this.target.copy( this.object.position ).sub( this._eye );
+
+}
+
+// ---------------- Keyboard translation/rotation ----------------
+
+function _applyKeyboardTranslation( dt ) {
+
+	const forward = ( this._moveState.forward || ( this.autoForward && ! this._moveState.back ) ) ? 1 : 0;
+
+	_tmpV.set(
+		- this._moveState.left  + this._moveState.right,
+		- this._moveState.down  + this._moveState.up,
+		- forward               + this._moveState.back
+	);
+
+	if ( _tmpV.lengthSq() ) {
+
+		const moveMult = dt * this.movementSpeed * ( this.movementSpeedMultiplier || 1 );
+		_tmpV.multiplyScalar( moveMult ).applyQuaternion( this.object.quaternion );
+
+		this.object.position.add( _tmpV );
+		this.target.add( _tmpV );
+
+		this._eye.subVectors( this.object.position, this.target );
+
+	}
+
+}
+
+function _applyKeyboardViewRotation( dt ) {
+
+	const yaw   = ( this._moveState.yawLeft   - this._moveState.yawRight )  * dt * this.rollSpeed;
+	const pitch = ( this._moveState.pitchUp   - this._moveState.pitchDown ) * dt * this.rollSpeed;
+	const roll  = ( this._moveState.rollLeft  - this._moveState.rollRight ) * dt * this.rollSpeed;
+
+	if ( yaw || pitch || roll ) {
+
+		_applyViewAngles.call( this, yaw, pitch, roll );
+
+	}
+
+}
+
+// ---------------- Mouse look / Pan / Zoom ----------------
+
+function _rotateCameraFPSByMouse( dx, dy ) {
+
+	const yaw   = - dx * this.lookSpeed;
+	const pitch = - dy * this.lookSpeed;
+
+	_applyViewAngles.call( this, yaw, pitch, 0 );
+
+	this.dispatchEvent( _changeEvent );
+
+}
+
+function _applyPanEasing() {
+
+	const damp = this.staticMoving ? 1.0 : ( 1.0 - this.dynamicDampingFactor );
+	this._panStart.add( _mouseChange.subVectors( this._panEnd, this._panStart ).multiplyScalar( damp ) );
+
+}
+
+function _panCamera() {
+
+	_mouseChange.copy( this._panEnd ).sub( this._panStart );
+
+	if ( _mouseChange.lengthSq() ) {
+
+		const scale = this._eye.length() * this.panSpeed * ( this.noPan ? 0 : 1 );
+
+		_mouseChange.multiplyScalar( scale );
+
+		_fwd.set( 0, 0, -1 ).applyQuaternion( this.object.quaternion ).normalize();
+		_upWorld.set( 0, 1, 0 ).applyQuaternion( this.object.quaternion ).normalize();
+		_right.crossVectors( _fwd, _upWorld ).normalize();
+
+		// Invert X to match TrackballControls
+		_pan.copy( _right ).multiplyScalar( - _mouseChange.x );
+		_pan.addScaledVector( _upWorld, _mouseChange.y );
+
+		this.object.position.add( _pan );
+		this.target.add( _pan );
+
+		_applyPanEasing.call( this );
+
+	}
+
+}
+
+function _clampEyeDistance() {
+
+	if ( ! this.object.isPerspectiveCamera ) return;
+
+	const len = this._eye.length();
+	const clamped = MathUtils.clamp( len, this.minDistance, this.maxDistance );
+
+	if ( clamped !== len && len > 0 ) this._eye.multiplyScalar( clamped / len );
+
+}
+
+function _applyEyeToPosition() {
+
+	// Helper: sync world position with eye change
+	this.object.position.addVectors( this.target, this._eye );
+
+}
+
+function _zoomCamera( isMiddleDrag ) {
+
+	let factor;
+
+	if ( this.state === _STATE.TOUCH_ZOOM_PAN ) {
+
+		factor = this._touchZoomDistanceStart / this._touchZoomDistanceEnd;
+		this._touchZoomDistanceStart = this._touchZoomDistanceEnd;
+
+		if ( this.object.isPerspectiveCamera ) {
+
+			this._eye.multiplyScalar( factor );
+			_clampEyeDistance.call( this );
+			_applyEyeToPosition.call( this );
+
+		} else if ( this.object.isOrthographicCamera ) {
+
+			this.object.zoom = MathUtils.clamp( this.object.zoom / factor, 0, Infinity );
+			if ( this._lastZoom !== this.object.zoom ) this.object.updateProjectionMatrix();
+
+		}
+
+	} else {
+
+		const invert = ( isMiddleDrag && this.invertMiddleDragZoom ) ? -1 : 1;
+		factor = 1.0 + invert * ( this._zoomEnd.y - this._zoomStart.y ) * this.zoomSpeed;
+
+		if ( factor !== 1.0 && factor > 0.0 ) {
+
+			if ( this.object.isPerspectiveCamera ) {
+
+				this._eye.multiplyScalar( factor );
+				_clampEyeDistance.call( this );
+				_applyEyeToPosition.call( this );
+
+			} else if ( this.object.isOrthographicCamera ) {
+
+				this.object.zoom = MathUtils.clamp( this.object.zoom / factor, 0, Infinity );
+				if ( this._lastZoom !== this.object.zoom ) this.object.updateProjectionMatrix();
+
+			}
+
+		}
+
+		const damp = this.staticMoving ? 1.0 : ( 1.0 - this.dynamicDampingFactor );
+		this._zoomStart.y += ( this._zoomEnd.y - this._zoomStart.y ) * damp;
+
+	}
+
+}
+
+// ---------------- Event handlers ----------------
+
+function onPointerDown( event ) {
+
+	if ( this.enabled === false ) return;
+
+	if ( this._pointers.length === 0 ) {
+
+		this.domElement.setPointerCapture( event.pointerId );
+		this.domElement.addEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.addEventListener( 'pointerup', this._onPointerUp );
+
+	}
+
+	this._addPointer( event );
+
+	if ( event.pointerType === 'touch' ) this._onTouchStart( event );
+	else this._onMouseDown( event );
+
+}
+
+function onPointerMove( event ) {
+
+	if ( this.enabled === false ) return;
+
+	if ( event.pointerType === 'touch' ) this._onTouchMove( event );
+	else this._onMouseMove( event );
+
+}
+
+function onPointerUp( event ) {
+
+	if ( this.enabled === false ) return;
+
+	if ( event.pointerType === 'touch' ) this._onTouchEnd( event );
+	else this._onMouseUp();
+
+	this._removePointer( event );
+
+	if ( this._pointers.length === 0 ) {
+
+		this.domElement.releasePointerCapture( event.pointerId );
+		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
+		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+
+	}
+
+}
+
+function onPointerCancel( event ) { this._removePointer( event ); }
+
+function onMouseDown( event ) {
+
+	let mouseAction;
+
+	switch ( event.button ) {
+
+		case 0: mouseAction = this.mouseButtons.LEFT; break;
+		case 1: mouseAction = this.mouseButtons.MIDDLE; break;
+		case 2: mouseAction = this.mouseButtons.RIGHT; break;
+		default: mouseAction = -1;
+
+	}
+
+	switch ( mouseAction ) {
+
+		case MOUSE.DOLLY:  this.state = this.noZoom ? _STATE.NONE : _STATE.ZOOM; break;
+		case MOUSE.ROTATE: this.state = _STATE.FPS_LOOK; break;
+		case MOUSE.PAN:    this.state = this.noPan ? _STATE.NONE : _STATE.PAN; break;
+		default:           this.state = _STATE.NONE;
+
+	}
+
+	if ( this.state === _STATE.ZOOM ) {
+
+		this._zoomStart.copy( this._getMouseOnScreen( event.pageX, event.pageY ) );
+		this._zoomEnd.copy( this._zoomStart );
+
+	} else if ( this.state === _STATE.PAN ) {
+
+		this._panStart.copy( this._getMouseOnScreen( event.pageX, event.pageY ) );
+		this._panEnd.copy( this._panStart );
+
+	} else if ( this.state === _STATE.FPS_LOOK ) {
+
+		this._fpsLast.set( event.pageX, event.pageY );
+
+	}
+
+	this.dispatchEvent( _startEvent );
+
+}
+
+function onMouseMove( event ) {
+
+	if ( this.state === _STATE.ZOOM && ! this.noZoom ) {
+
+		this._zoomEnd.copy( this._getMouseOnScreen( event.pageX, event.pageY ) );
+		_zoomCamera.call( this, /*isMiddleDrag*/ true );
+		this.dispatchEvent( _changeEvent );
+
+	} else if ( this.state === _STATE.PAN && ! this.noPan ) {
+
+		this._panEnd.copy( this._getMouseOnScreen( event.pageX, event.pageY ) );
+		_panCamera.call( this );
+		this.dispatchEvent( _changeEvent );
+
+	} else if ( this.state === _STATE.FPS_LOOK ) {
+
+		const dx = event.pageX - this._fpsLast.x;
+		const dy = event.pageY - this._fpsLast.y;
+
+		this._fpsLast.set( event.pageX, event.pageY );
+
+		if ( dx || dy ) _rotateCameraFPSByMouse.call( this, dx, dy );
+
+	}
+
+}
+
+function onMouseUp() {
+
+	this.state = _STATE.NONE;
+	this.dispatchEvent( _endEvent );
+
+}
+
+function onMouseWheel( event ) {
+
+	if ( this.enabled === false || this.noZoom === true ) return;
+
+	event.preventDefault();
+
+	let k;
+	switch ( event.deltaMode ) {
+
+		case 2: k = 0.025;  break; // page
+		case 1: k = 0.01;   break; // line
+		default: k = 0.00025; break; // pixel
+
+	}
+
+	const factor = 1.0 + ( - event.deltaY * k ) * this.zoomSpeed;
+
+	if ( factor !== 1.0 && factor > 0.0 ) {
+
+		if ( this.object.isPerspectiveCamera ) {
+
+			this._eye.multiplyScalar( factor );
+			_clampEyeDistance.call( this );
+			_applyEyeToPosition.call( this );
+
+		} else if ( this.object.isOrthographicCamera ) {
+
+			this.object.zoom = MathUtils.clamp( this.object.zoom / factor, 0, Infinity );
+			if ( this._lastZoom !== this.object.zoom ) this.object.updateProjectionMatrix();
+
+		}
+
+		this.dispatchEvent( _startEvent );
+		this.dispatchEvent( _endEvent );
+		this.dispatchEvent( _changeEvent );
+
+	}
+
+}
+
+function onContextMenu( event ) {
+
+	if ( this.enabled === false ) return;
+	event.preventDefault();
+
+}
+
+function onTouchStart( event ) {
+
+	this._trackPointer( event );
+
+	switch ( this._pointers.length ) {
+
+		case 1:
+			this.state = _STATE.TOUCH_LOOK;
+			this._fpsLast.set( this._pointers[ 0 ].pageX, this._pointers[ 0 ].pageY );
+			break;
+
+		default:
+			this.state = _STATE.TOUCH_ZOOM_PAN;
+
+			const dx = this._pointers[ 0 ].pageX - this._pointers[ 1 ].pageX;
+			const dy = this._pointers[ 0 ].pageY - this._pointers[ 1 ].pageY;
+
+			this._touchZoomDistanceEnd = this._touchZoomDistanceStart = Math.sqrt( dx * dx + dy * dy );
+
+			const x = ( this._pointers[ 0 ].pageX + this._pointers[ 1 ].pageX ) / 2;
+			const y = ( this._pointers[ 0 ].pageY + this._pointers[ 1 ].pageY ) / 2;
+
+			this._panStart.copy( this._getMouseOnScreen( x, y ) );
+			this._panEnd.copy( this._panStart );
+
+	}
+
+	this.dispatchEvent( _startEvent );
+
+}
+
+function onTouchMove( event ) {
+
+	this._trackPointer( event );
+
+	switch ( this._pointers.length ) {
+
+		case 1: {
+
+			const dx = event.pageX - this._fpsLast.x;
+			const dy = event.pageY - this._fpsLast.y;
+
+			this._fpsLast.set( event.pageX, event.pageY );
+
+			if ( dx || dy ) _rotateCameraFPSByMouse.call( this, dx, dy );
+			break;
+
+		}
+
+		default: {
+
+			const pos = this._getSecondPointerPosition( event );
+
+			const dx = event.pageX - pos.x;
+			const dy = event.pageY - pos.y;
+
+			this._touchZoomDistanceEnd = Math.sqrt( dx * dx + dy * dy );
+
+			const x = ( event.pageX + pos.x ) / 2;
+			const y = ( event.pageY + pos.y ) / 2;
+
+			this._panEnd.copy( this._getMouseOnScreen( x, y ) );
+
+			_zoomCamera.call( this, /*isMiddleDrag*/ false );
+			_panCamera.call( this );
+
+		}
+
+	}
+
+}
+
+function onTouchEnd( event ) {
+
+	switch ( this._pointers.length ) {
+
+		case 0:
+			this.state = _STATE.NONE;
+			break;
+
+		case 1:
+			this.state = _STATE.TOUCH_LOOK;
+			this._fpsLast.set( event.pageX, event.pageY );
+			break;
+
+		case 2:
+			this.state = _STATE.TOUCH_ZOOM_PAN;
+
+			for ( let i = 0; i < this._pointers.length; i ++ ) {
+
+				if ( this._pointers[ i ].pointerId !== event.pointerId ) {
+
+					const position = this._pointerPositions[ this._pointers[ i ].pointerId ];
+					this._fpsLast.set( position.x, position.y );
+					break;
+
+				}
+
+			}
+			break;
+
+	}
+
+	this.dispatchEvent( _endEvent );
+
+}
+
+// ---------------- Keyboard handlers ----------------
+
+function onKeyDown( event ) {
+
+	if ( ! this.enabled || ! this.enableKeyboard ) return;
+
+	let used = false;
+
+	switch ( event.code ) {
+
+		case 'ShiftLeft':
+		case 'ShiftRight': this.movementSpeedMultiplier = 0.1; used = true; break;
+
+		case 'KeyW': this._moveState.forward = 1; used = true; break;
+		case 'KeyS': this._moveState.back    = 1; used = true; break;
+		case 'KeyA': this._moveState.left    = 1; used = true; break;
+		case 'KeyD': this._moveState.right   = 1; used = true; break;
+		case 'KeyR': this._moveState.up      = 1; used = true; break;
+		case 'KeyF': this._moveState.down    = 1; used = true; break;
+
+		case 'ArrowUp':    this._moveState.pitchUp   = 1; used = true; break;
+		case 'ArrowDown':  this._moveState.pitchDown = 1; used = true; break;
+		case 'ArrowLeft':  this._moveState.yawLeft   = 1; used = true; break;
+		case 'ArrowRight': this._moveState.yawRight  = 1; used = true; break;
+
+		case 'KeyQ': this._moveState.rollLeft  = 1; used = true; break;
+		case 'KeyE': this._moveState.rollRight = 1; used = true; break;
+
+	}
+
+	if ( used && event.code.startsWith( 'Arrow' ) ) event.preventDefault();
+
+}
+
+function onKeyUp( event ) {
+
+	if ( ! this.enableKeyboard ) return;
+
+	switch ( event.code ) {
+
+		case 'ShiftLeft':
+		case 'ShiftRight': this.movementSpeedMultiplier = 1.0; break;
+
+		case 'KeyW': this._moveState.forward = 0; break;
+		case 'KeyS': this._moveState.back    = 0; break;
+		case 'KeyA': this._moveState.left    = 0; break;
+		case 'KeyD': this._moveState.right   = 0; break;
+		case 'KeyR': this._moveState.up      = 0; break;
+		case 'KeyF': this._moveState.down    = 0; break;
+
+		case 'ArrowUp':    this._moveState.pitchUp   = 0; break;
+		case 'ArrowDown':  this._moveState.pitchDown = 0; break;
+		case 'ArrowLeft':  this._moveState.yawLeft   = 0; break;
+		case 'ArrowRight': this._moveState.yawRight  = 0; break;
+
+		case 'KeyQ': this._moveState.rollLeft  = 0; break;
+		case 'KeyE': this._moveState.rollRight = 0; break;
+
+	}
+
+}
+
+function onWindowBlur() {
+
+	this._moveState.up = this._moveState.down = this._moveState.left = this._moveState.right = 0;
+	this._moveState.forward = this._moveState.back = 0;
+
+	this._moveState.pitchUp = this._moveState.pitchDown = 0;
+	this._moveState.yawLeft = this._moveState.yawRight = 0;
+	this._moveState.rollLeft = this._moveState.rollRight = 0;
+
+	this.movementSpeedMultiplier = 1.0;
+
+}
+
+export { FlyTrackballControls };

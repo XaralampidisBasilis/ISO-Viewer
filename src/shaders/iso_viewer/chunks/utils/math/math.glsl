@@ -1,4 +1,4 @@
-
+#include "./sort" 
 #include "./swap" 
 #include "./cbrt" 
 #include "./diff" 
@@ -10,7 +10,6 @@
 #include "./mmix2" 
 #include "./ssign" 
 #include "./sum"
-#include "./pick"
 #include "./eval_poly"
 #include "./sign_change"
 #include "./sign_changes"

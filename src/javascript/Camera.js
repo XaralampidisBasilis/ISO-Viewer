@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import Experience from './Experience'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
+import { FlyControls } from 'three/examples/jsm/controls/FlyControls'
+import { FlyTrackballControls } from './Utils/FlyTrackballControls'
 
 export default class Camera
 {
@@ -11,19 +13,22 @@ export default class Camera
         this.sizes = this.experience.sizes
         this.scene = this.experience.scene
         this.canvas = this.experience.canvas
+        this.time = this.experience.time
 
         this.setInstance()
-        this.setTrackball()
+        // this.setTrackballControls()
+        // this.setFlyControls()
+        this.setFlyingTrackballControls()
     }
 
     setInstance()
     {
-        this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 10)
+        this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 100)
         this.instance.position.set(1, 1, 1)
         this.scene.add(this.instance)
     }
 
-    setOrbit()
+    setOrbitControls()
     {
         this.orbit = new OrbitControls(this.instance, this.canvas)
         this.orbit.enableDamping = true
@@ -32,7 +37,7 @@ export default class Camera
         this.orbit.zoomSpeed = 2
     }
 
-    setTrackball()
+    setTrackballControls()
     {
         this.trackball = new TrackballControls(this.instance, this.canvas)
         this.trackball.staticMoving = false
@@ -40,6 +45,33 @@ export default class Camera
         this.trackball.zoomSpeed = 2.0
         this.trackball.panSpeed = 0.05
         this.trackball.rotateSpeed = 1.0
+        this.trackball.enabled = true   
+    }
+
+    setFlyControls()
+    {
+        this.fly = new FlyControls(this.instance, this.canvas) 
+        this.fly.movementSpeed = 0.5       
+        this.fly.rollSpeed = Math.PI / 8   
+        this.fly.dragToLook = true         
+        this.fly.autoForward = false
+        this.fly.enabled = true
+    }
+
+    setFlyingTrackballControls()
+    {
+        this.flyTrackball = new FlyTrackballControls(this.instance, this.canvas)
+        
+        // Trackball tuning
+        this.flyTrackball.staticMoving = false
+        this.flyTrackball.dynamicDampingFactor = 0.3
+        this.flyTrackball.zoomSpeed = 2.0
+        this.flyTrackball.panSpeed = 0.05
+        this.flyTrackball.rotateSpeed = 1.0
+
+        // Fly tuning
+        this.flyTrackball.movementSpeed = 0.3      
+        this.flyTrackball.runMultiplier = 2.5
     }
 
     setRaycaster()
@@ -61,6 +93,12 @@ export default class Camera
 
         if (this.trackball)
             this.trackball.update()
+
+        if (this.fly) 
+            this.fly.update()
+
+        if (this.flyTrackball) 
+            this.flyTrackball.update()
 
         if (this.raycaster)
             this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)

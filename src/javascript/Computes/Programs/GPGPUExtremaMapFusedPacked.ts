@@ -153,7 +153,7 @@ class GPGPUExtremaMap implements GPGPUProgram
     }
 }
 
-class GPGPUExtremaMap_v2 implements GPGPUProgram 
+class GPGPUExtremaMap2 implements GPGPUProgram 
 {
     variableNames = ['A']
     outputShape: number[]
@@ -331,7 +331,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
 
 export function computeExtremaMap(interpolationMap: tf.Tensor5D, blockSize: number) : tf.Tensor
 {
-    const program = new GPGPUExtremaMap_v2(interpolationMap.shape, blockSize)
+    const program = new GPGPUExtremaMap2(interpolationMap.shape, blockSize)
     return runProgram(program, [interpolationMap]) as tf.Tensor4D
 }
 

@@ -3,46 +3,52 @@
 
 // n-element Bose–Nelson networks
 
-void sort(inout float a, inout float b)
+void sort(inout float a, inout float b) 
 {
-    if (a > b) { float t = a; a = b; b = t; }
+    float x = min(a, b); 
+    float y = max(a, b); 
+    a = x; 
+    b = y;
 }
 
-void sort(inout float a, inout float b, inout float c)
+void sort(inout float a, inout float b, inout float c) 
 {
-    if (a > b) { float t = a; a = b; b = t; }
-    if (b > c) { float t = b; b = c; c = t; }
-    if (a > b) { float t = a; a = b; b = t; }
+    sort(a, b);
+    sort(b, c);
+    sort(a, b);
 }
 
-void sort(inout float a, inout float b, inout float c, inout float d)
+void sort(inout float a, inout float b, inout float c, inout float d) 
 {
-    if (a > b) { float t = a; a = b; b = t; }
-    if (c > d) { float t = c; c = d; d = t; }
-    if (a > c) { float t = a; a = c; c = t; }
-    if (b > d) { float t = b; b = d; d = t; }
-    if (b > c) { float t = b; b = c; c = t; }
+    sort(a, b);
+    sort(c, d);
+    sort(a, c);
+    sort(b, d);
+    sort(b, c);
 }
 
 void sort(inout vec2 v)
 {
-    v = (v.x > v.y) ? v.yx : v.xy;
+    float x = min(v.x, v.y); 
+    float y = max(v.x, v.y); 
+    v.x = x; 
+    v.y = y;
 }
 
-void sort(inout vec3 v)
+void sort(inout vec3 v) 
 {
-    v.xy = (v.x > v.y) ? v.yx : v.xy;
-    v.yz = (v.y > v.z) ? v.zy : v.yz;
-    v.xy = (v.x > v.y) ? v.yx : v.xy;
+    sort(v.xy);
+    sort(v.yz);
+    sort(v.xy);
 }
 
-void sort(inout vec4 v)
+void sort(inout vec4 v) 
 {
-    v.xy = (v.x > v.y) ? v.yx : v.xy;
-    v.zw = (v.z > v.w) ? v.wz : v.zw;
-    v.xz = (v.x > v.z) ? v.zx : v.xz;
-    v.yw = (v.y > v.w) ? v.wy : v.yw;
-    v.yz = (v.y > v.z) ? v.zy : v.yz;
+    sort(v.xy);
+    sort(v.zw);
+    sort(v.xz);
+    sort(v.yw);
+    sort(v.yz);
 }
 
 #endif // SORT

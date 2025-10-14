@@ -261,13 +261,15 @@ vec2 poly5_has_root_quadratic_roots(
         float scaled_root = poly[1] + (poly[1] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
         float root0 = -2.0 * poly[0] / scaled_root;
         float root1 = -0.5 * scaled_root / poly[2];
+
+        // Clamp roots to interval and sort
+        root0 = clamp(root0, begin, end);
+        root1 = clamp(root1, begin, end);
         sort(root0, root1);
         
         // Indicate that the cubic derivative has two roots
-        out_roots[0] = min(root0, root1);
-        out_roots[1] = max(root0, root1);
-
-        out_roots = clamp(out_roots, begin, end);
+        out_roots[0] = root0;
+        out_roots[1] = root1;
     }
 
     return out_roots;
@@ -308,15 +310,16 @@ vec3 poly5_has_root_cubic_roots(
             float scaled_root = poly[4] + (poly[4] > 0.0 ? sqrt_discriminant : -sqrt_discriminant);
             float root1 = -2.0 * poly[5] / scaled_root;
             float root2 = -0.5 * scaled_root / poly[3];
+
+            // Clamp roots to interval and sort
+            root1 = clamp(root1, begin, end);
+            root2 = clamp(root2, begin, end);
             sort(root0, root1, root2);
 
             // Indicate that the quartic derivative has three roots
             out_roots[0] = root0;
             out_roots[1] = root1;
             out_roots[2] = root2;
-
-            // Clamp roots to interval
-            out_roots = clamp(out_roots, begin, end);
         }
         else
         {

@@ -16,11 +16,11 @@ export default class InterpolationMap
 
     computeTensor()
     {
-        console.time('computeTensor@InterpolationMap') 
+        console.time('computeTensor') 
         this.tensor = computeInterpolationMap(this.volumeMap.tensor)
         this.tensorData = this.tensor.dataSync()
         this.dimensions = new THREE.Vector3(...this.volumeMap.dimensions)
-        console.timeEnd('computeTensor@InterpolationMap') 
+        console.timeEnd('computeTensor') 
     }
 
     restoreTensor()
@@ -30,7 +30,7 @@ export default class InterpolationMap
 
     computeTexture()
     {
-        console.time('computeTexture@InterpolationMap') 
+        console.time('computeTexture') 
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RGBAFormat
         this.texture.type = THREE.HalfFloatType
@@ -40,7 +40,7 @@ export default class InterpolationMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 4
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture@InterpolationMap') 
+        console.timeEnd('computeTexture') 
     }
 
     updateTexture()

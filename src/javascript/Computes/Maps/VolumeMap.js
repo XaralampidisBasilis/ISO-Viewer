@@ -23,7 +23,7 @@ export default class VolumeMap
 
     computeTensor()
     {
-        console.time('computeTensor@VolumeMap') 
+        console.time('computeTensor') 
         
         this.setVolume()
         this.downscaleFactor = this.configs.downscaleFactor
@@ -42,12 +42,12 @@ export default class VolumeMap
             tensor = normalize(tensor)
             return tensor
         })  
-        console.timeEnd('computeTensor@VolumeMap') 
+        console.timeEnd('computeTensor') 
     }
 
     computeTexture()
     {
-        console.time('computeTexture@VolumeMap') 
+        console.time('computeTexture') 
         this.texture = new THREE.Data3DTexture(this.getTextureData, ...this.dimensions)
         this.texture.format = THREE.RedFormat
         this.texture.type = THREE.FloatType
@@ -57,7 +57,7 @@ export default class VolumeMap
         this.texture.generateMipmaps = false
         this.texture.needsUpdate = true
         this.texture.unpackAlignment = 1
-        console.timeEnd('computeTexture@VolumeMap') 
+        console.timeEnd('computeTexture') 
     }
 
     updateTexture()

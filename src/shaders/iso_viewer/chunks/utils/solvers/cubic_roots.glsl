@@ -18,9 +18,6 @@ Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
 #ifndef CBRT
 #include "../math/cbrt"
 #endif
-#ifndef PICK
-#include "../math/pick"
-#endif
 #ifndef SQRT_3
 #define SQRT_3 1.73205080757
 #endif

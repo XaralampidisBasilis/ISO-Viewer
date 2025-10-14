@@ -15,24 +15,24 @@ export default class OccupancyMap
 
     computeTensor()
     {
-        console.time('computeTensor@OccupancyMap') 
+        console.time('computeTensor') 
         this.isosurfaceValue = this.configs.isosurfaceValue
         this.interpolationMethod = this.configs.interpolationMethod
         this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.interpolationMethod, this.isosurfaceValue)
         this.dimensions = this.extremaMap.dimensions
-        console.timeEnd('computeTensor@OccupancyMap') 
+        console.timeEnd('computeTensor') 
     }
 
     computeBoundingBox()
     {
-        console.time('computeBoundingBox@OccupancyMap') 
+        console.time('computeBoundingBox') 
         this.boundingBox = getBoundingBox(this.tensor)
-        console.timeEnd('computeBoundingBox@OccupancyMap') 
+        console.timeEnd('computeBoundingBox') 
     }
 
     computeTexture()
     {
-        console.time('computeTexture@OccupancyMap') 
+        console.time('computeTexture') 
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
@@ -42,7 +42,7 @@ export default class OccupancyMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 1
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture@OccupancyMap') 
+        console.timeEnd('computeTexture') 
     }   
 
     updateTexture()
