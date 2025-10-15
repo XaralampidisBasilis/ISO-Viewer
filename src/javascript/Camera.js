@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import Experience from './Experience'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
-import { FlyControls } from 'three/examples/jsm/controls/FlyControls'
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+// import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
+// import { FlyControls } from 'three/examples/jsm/controls/FlyControls'
 import { ProbeControls } from './Utils/ProbeControls'
 
 export default class Camera
@@ -16,8 +16,6 @@ export default class Camera
         this.time = this.experience.time
 
         this.setInstance()
-        // this.setTrackballControls()
-        // this.setFlyControls()
         this.setProbeControls()
     }
 
