@@ -8,6 +8,58 @@ in vec3 v_ray_direction;
 
 out vec4 fragColor;
 
+#ifndef SORT
+#define SORT
+
+void sort(inout float a, inout float b) 
+{
+    float x = min(a, b); 
+    float y = max(a, b); 
+    a = x; 
+    b = y;
+}
+
+void sort(inout float a, inout float b, inout float c) 
+{
+    sort(a, b);
+    sort(b, c);
+    sort(a, b);
+}
+
+void sort(inout float a, inout float b, inout float c, inout float d) 
+{
+    sort(a, b);
+    sort(c, d);
+    sort(a, c);
+    sort(b, d);
+    sort(b, c);
+}
+
+void sort(inout vec2 v)
+{
+    float x = min(v.x, v.y); 
+    float y = max(v.x, v.y); 
+    v.x = x; 
+    v.y = y;
+}
+
+void sort(inout vec3 v) 
+{
+    sort(v.xy);
+    sort(v.yz);
+    sort(v.xy);
+}
+
+void sort(inout vec4 v) 
+{
+    sort(v.xy);
+    sort(v.zw);
+    sort(v.xz);
+    sort(v.yw);
+    sort(v.yz);
+}
+
+#endif 
 #ifndef SWAP
 #define SWAP
 
@@ -149,13 +201,13 @@ float mmin(float v[6])
 #ifndef MMIX
 #define MMIX
 
-int    mmix(in int    a, in int    b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b-a) * pct; }
+int    mmix(in int    a, in int    b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b - a) * pct; }
 
 float mmix(in float a, in float b, in float pct) { return mix(a, b, pct); }
 vec2  mmix(in vec2  a, in vec2  b, in float pct) { return mix(a, b, pct); }
@@ -229,13 +281,13 @@ vec4 mmix(vec4 a, vec4 b, vec4 c, vec4 pct) {
 #ifndef MMIX
 #define MMIX
 
-int    mmix(in int    a, in int    b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b-a) * pct; }
+int    mmix(in int    a, in int    b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b - a) * pct; }
 
 float mmix(in float a, in float b, in float pct) { return mix(a, b, pct); }
 vec2  mmix(in vec2  a, in vec2  b, in float pct) { return mix(a, b, pct); }
@@ -365,96 +417,10 @@ vec4 mmix2(vec4 a00, vec4 a10, vec4 a20, vec4 a01, vec4 a11, vec4 a21, vec4 a02,
 #ifndef SSIGN
 #define SSIGN
 
-#ifndef PICK
-#ifndef PICK
-#define PICK
-
-float pick(in bool cond, in float a, in float b) 
-{ 
-    return (cond ? a : b); 
-}
-
-vec2 pick(in bvec2 cond, in vec2 a, in vec2 b) 
-{ 
-    return vec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-vec3 pick(in bvec3 cond, in vec3 a, in vec3 b) 
-{ 
-    return vec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-vec4 pick(in bvec4 cond, in vec4 a, in vec4 b) 
-{ 
-    return vec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-int pick(in bool cond, in int a, in int b) 
-{ 
-    return (cond ? a : b); 
-}
-
-ivec2 pick(in bvec2 cond, in ivec2 a, in ivec2 b) 
-{ 
-    return ivec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-ivec3 pick(in bvec3 cond, in ivec3 a, in ivec3 b) 
-{ 
-    return ivec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-ivec4 pick(in bvec4 cond, in ivec4 a, in ivec4 b) 
-{ 
-    return ivec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-#endif
-#endif
-
-float ssign(in float v) 
-{ 
-    return pick(v < 0.0, -1.0, 1.0);
-}
-
-vec2 ssign(in vec2 v) 
-{ 
-    return pick(lessThan(v, vec2(0.0)), vec2(-1.0), vec2( 1.0)); 
-}
-
-vec3 ssign(in vec3 v) 
-{   
-    return pick(lessThan(v, vec3(0.0)), vec3(-1.0), vec3( 1.0));
-}
-
-vec4 ssign(in vec4 v) 
-{ 
-    return pick(lessThan(v, vec4(0.0)), vec4(-1.0), vec4( 1.0)); 
-}
+float ssign(float v) { return step(0.0, v) * 2.0 - 1.0; }
+vec2  ssign(vec2  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec3  ssign(vec3  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec4  ssign(vec4  v) { return step(0.0, v) * 2.0 - 1.0; }
 
 #endif 
 #ifndef SUM
@@ -463,74 +429,6 @@ vec4 ssign(in vec4 v)
 float sum(in vec2 v) { return dot(v, vec2(1.0)); }
 float sum(in vec3 v) { return dot(v, vec3(1.0)); }
 float sum(in vec4 v) { return dot(v, vec4(1.0)); }
-
-#endif
-#ifndef PICK
-#define PICK
-
-float pick(in bool cond, in float a, in float b) 
-{ 
-    return (cond ? a : b); 
-}
-
-vec2 pick(in bvec2 cond, in vec2 a, in vec2 b) 
-{ 
-    return vec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-vec3 pick(in bvec3 cond, in vec3 a, in vec3 b) 
-{ 
-    return vec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-vec4 pick(in bvec4 cond, in vec4 a, in vec4 b) 
-{ 
-    return vec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-int pick(in bool cond, in int a, in int b) 
-{ 
-    return (cond ? a : b); 
-}
-
-ivec2 pick(in bvec2 cond, in ivec2 a, in ivec2 b) 
-{ 
-    return ivec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-ivec3 pick(in bvec3 cond, in ivec3 a, in ivec3 b) 
-{ 
-    return ivec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-ivec4 pick(in bvec4 cond, in ivec4 a, in ivec4 b) 
-{ 
-    return ivec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
 
 #endif
 #ifndef EVAL_POLY
@@ -1056,13 +954,13 @@ bool sign_change(float v[6])
 #ifndef MMIX
 #define MMIX
 
-int    mmix(in int    a, in int    b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b-a) * pct; }
+int    mmix(in int    a, in int    b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b - a) * pct; }
 
 float mmix(in float a, in float b, in float pct) { return mix(a, b, pct); }
 vec2  mmix(in vec2  a, in vec2  b, in float pct) { return mix(a, b, pct); }
@@ -1425,13 +1323,13 @@ int sign_changes(float v[6])
 #ifndef MMIX
 #define MMIX
 
-int    mmix(in int    a, in int    b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b-a) * pct; }
-ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b-a) * pct; }
-ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b-a) * pct; }
-ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b-a) * pct; }
+int    mmix(in int    a, in int    b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in int    pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in int    pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in int    pct) { return a + (b - a) * pct; }
+ivec2  mmix(in ivec2  a, in ivec2  b, in ivec2  pct) { return a + (b - a) * pct; }
+ivec3  mmix(in ivec3  a, in ivec3  b, in ivec3  pct) { return a + (b - a) * pct; }
+ivec4  mmix(in ivec4  a, in ivec4  b, in ivec4  pct) { return a + (b - a) * pct; }
 
 float mmix(in float a, in float b, in float pct) { return mix(a, b, pct); }
 vec2  mmix(in vec2  a, in vec2  b, in float pct) { return mix(a, b, pct); }
@@ -1588,96 +1486,10 @@ void abs_l1_normalization(in float v[6], out float u[6])
 #ifndef SSIGN
 #define SSIGN
 
-#ifndef PICK
-#ifndef PICK
-#define PICK
-
-float pick(in bool cond, in float a, in float b) 
-{ 
-    return (cond ? a : b); 
-}
-
-vec2 pick(in bvec2 cond, in vec2 a, in vec2 b) 
-{ 
-    return vec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-vec3 pick(in bvec3 cond, in vec3 a, in vec3 b) 
-{ 
-    return vec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-vec4 pick(in bvec4 cond, in vec4 a, in vec4 b) 
-{ 
-    return vec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-int pick(in bool cond, in int a, in int b) 
-{ 
-    return (cond ? a : b); 
-}
-
-ivec2 pick(in bvec2 cond, in ivec2 a, in ivec2 b) 
-{ 
-    return ivec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-ivec3 pick(in bvec3 cond, in ivec3 a, in ivec3 b) 
-{ 
-    return ivec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-ivec4 pick(in bvec4 cond, in ivec4 a, in ivec4 b) 
-{ 
-    return ivec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-#endif
-#endif
-
-float ssign(in float v) 
-{ 
-    return pick(v < 0.0, -1.0, 1.0);
-}
-
-vec2 ssign(in vec2 v) 
-{ 
-    return pick(lessThan(v, vec2(0.0)), vec2(-1.0), vec2( 1.0)); 
-}
-
-vec3 ssign(in vec3 v) 
-{   
-    return pick(lessThan(v, vec3(0.0)), vec3(-1.0), vec3( 1.0));
-}
-
-vec4 ssign(in vec4 v) 
-{ 
-    return pick(lessThan(v, vec4(0.0)), vec4(-1.0), vec4( 1.0)); 
-}
+float ssign(float v) { return step(0.0, v) * 2.0 - 1.0; }
+vec2  ssign(vec2  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec3  ssign(vec3  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec4  ssign(vec4  v) { return step(0.0, v) * 2.0 - 1.0; }
 
 #endif
 #endif
@@ -1935,76 +1747,6 @@ vec3  cbrt(in vec3 v)
         pow(abs(v.y), 1.0/3.0),
         pow(abs(v.z), 1.0/3.0)
     ); 
-}
-
-#endif
-#endif
-#ifndef PICK
-#ifndef PICK
-#define PICK
-
-float pick(in bool cond, in float a, in float b) 
-{ 
-    return (cond ? a : b); 
-}
-
-vec2 pick(in bvec2 cond, in vec2 a, in vec2 b) 
-{ 
-    return vec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-vec3 pick(in bvec3 cond, in vec3 a, in vec3 b) 
-{ 
-    return vec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-vec4 pick(in bvec4 cond, in vec4 a, in vec4 b) 
-{ 
-    return vec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-int pick(in bool cond, in int a, in int b) 
-{ 
-    return (cond ? a : b); 
-}
-
-ivec2 pick(in bvec2 cond, in ivec2 a, in ivec2 b) 
-{ 
-    return ivec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-ivec3 pick(in bvec3 cond, in ivec3 a, in ivec3 b) 
-{ 
-    return ivec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-ivec4 pick(in bvec4 cond, in ivec4 a, in ivec4 b) 
-{ 
-    return ivec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
 }
 
 #endif
@@ -2568,15 +2310,14 @@ bool poly3_has_root
 #ifndef POLY5_HAS_ROOT
 #define POLY5_HAS_ROOT
 
-bool poly5_has_root_newton_bisection
-(
+bool poly5_has_root_bisection(
     out float out_root, 
     out float out_end_value,
     float poly[6], 
     float begin, 
     float end,
     float begin_value, 
-    float error_tolerance
+    float tolerance
 ){
     if (begin == end) 
     {
@@ -2600,7 +2341,122 @@ bool poly5_has_root_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 50; ++i) 
+    for (int i = 0; i != 20; ++i) 
+    {
+        
+        float value = poly[5];
+        value = value * current + poly[4];
+        value = value * current + poly[3];
+        value = value * current + poly[2];
+        value = value * current + poly[1];
+        value = value * current + poly[0];
+
+        
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
+
+        
+        current = 0.5 * (begin + end);
+    }
+
+    out_root = current;
+    return true;
+}
+
+bool poly5_has_root_neubauer(
+    out float out_root, 
+    out float out_end_value,
+    float poly[6], 
+    float begin, 
+    float end,
+    float begin_value, 
+    float tolerance
+){
+    if (begin == end) 
+    {
+        out_end_value = begin_value;
+        return false;
+    }
+
+    
+    float end_value = poly[5];
+    end_value = end_value * end + poly[4];
+    end_value = end_value * end + poly[3];
+    end_value = end_value * end + poly[2];
+    end_value = end_value * end + poly[1];
+    end_value = end_value * end + poly[0];
+    out_end_value = end_value;
+
+    
+    if ((begin_value > 0.0) == (end_value > 0.0)) return false;
+
+    
+    
+    float current = 0.5 * (begin + end);
+
+    #pragma no_unroll
+    for (int i = 0; i != 10; ++i) 
+    {
+        
+        float value = poly[5];
+        value = value * current + poly[4];
+        value = value * current + poly[3];
+        value = value * current + poly[2];
+        value = value * current + poly[1];
+        value = value * current + poly[0];
+
+        
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
+        begin_value = left ? begin_value : value;
+        end_value = left ? value : end_value;
+
+        
+        float delta = begin - end;
+        float delta_value = begin_value - end_value;    
+
+        
+        current = begin - (begin_value * delta) / delta_value;
+    }
+
+    out_root = current;
+    return true;
+}
+
+bool poly5_has_root_newton_bisection(
+    out float out_root, 
+    out float out_end_value,
+    float poly[6], 
+    float begin, 
+    float end,
+    float begin_value, 
+    float tolerance
+){
+    if (begin == end) 
+    {
+        out_end_value = begin_value;
+        return false;
+    }
+
+    
+    out_end_value = poly[5];
+    out_end_value = out_end_value * end + poly[4];
+    out_end_value = out_end_value * end + poly[3];
+    out_end_value = out_end_value * end + poly[2];
+    out_end_value = out_end_value * end + poly[1];
+    out_end_value = out_end_value * end + poly[0];
+
+    
+    if ((begin_value > 0.0) == (out_end_value > 0.0)) return false;
+
+    
+    
+    float current = 0.5 * (begin + end);
+
+    #pragma no_unroll
+    for (int i = 0; i != 10; ++i) 
     {
         
         float derivative = poly[5];
@@ -2615,9 +2471,9 @@ bool poly5_has_root_newton_bisection
         value = value * current + poly[0];
 
         
-        bool right = (begin_value > 0.0) == (value > 0.0);
-        begin = right ? current : begin;
-        end = right ? end : current;
+        bool left = (begin_value > 0.0) != (value > 0.0);
+        begin = left ? begin : current;
+        end = left ? current : end;
 
         
         float guess = current - value / derivative;
@@ -2627,7 +2483,7 @@ bool poly5_has_root_newton_bisection
         float next = (guess >= begin && guess <= end) ? guess : middle;
 
         
-        bool done = abs(next - current) < error_tolerance;
+        bool done = abs(next - current) < tolerance;
         current = next;
         if (done) break;
     }
@@ -2670,7 +2526,7 @@ bool poly5_has_root
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1.0e-6;
+    float tolerance = (end - begin) * 1e-6;
 
     
     
@@ -2746,14 +2602,14 @@ bool poly5_has_root
     for (int i = 2; i != 5; ++i) 
     {
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
         else
         {
             
-            critical_roots[i] = critical_roots[i - 1];
+            critical_roots[i] = critical_roots[i-1];
         }
     }
 
@@ -2781,14 +2637,14 @@ bool poly5_has_root
     {
         
         float root;
-        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value, tolerance))
+        if (poly5_has_root_newton_bisection(root, begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value, tolerance))
         {
             critical_roots[i] = root;
         }
         else
         {
             
-            critical_roots[i] = critical_roots[i - 1];
+            critical_roots[i] = critical_roots[i-1];
         }
     }
     
@@ -2815,7 +2671,7 @@ bool poly5_has_root
     for (int i = 0; i != 5; ++i) 
     {
         
-        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i + 1], begin_value))
+        if (poly5_has_root_sign_change(begin_value, deriv_poly, critical_roots[i], critical_roots[i+1], begin_value))
         {
             return true;
         }
@@ -3023,96 +2879,10 @@ bool poly5_has_root_v2
 #ifndef SSIGN
 #define SSIGN
 
-#ifndef PICK
-#ifndef PICK
-#define PICK
-
-float pick(in bool cond, in float a, in float b) 
-{ 
-    return (cond ? a : b); 
-}
-
-vec2 pick(in bvec2 cond, in vec2 a, in vec2 b) 
-{ 
-    return vec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-vec3 pick(in bvec3 cond, in vec3 a, in vec3 b) 
-{ 
-    return vec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-vec4 pick(in bvec4 cond, in vec4 a, in vec4 b) 
-{ 
-    return vec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-int pick(in bool cond, in int a, in int b) 
-{ 
-    return (cond ? a : b); 
-}
-
-ivec2 pick(in bvec2 cond, in ivec2 a, in ivec2 b) 
-{ 
-    return ivec2(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y)
-    );
-}
-
-ivec3 pick(in bvec3 cond, in ivec3 a, in ivec3 b) 
-{ 
-    return ivec3(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z)
-    );
-}
-
-ivec4 pick(in bvec4 cond, in ivec4 a, in ivec4 b) 
-{ 
-    return ivec4(
-        (cond.x ? a.x : b.x),
-        (cond.y ? a.y : b.y),
-        (cond.z ? a.z : b.z),
-        (cond.w ? a.w : b.w)
-    );
-}
-
-#endif
-#endif
-
-float ssign(in float v) 
-{ 
-    return pick(v < 0.0, -1.0, 1.0);
-}
-
-vec2 ssign(in vec2 v) 
-{ 
-    return pick(lessThan(v, vec2(0.0)), vec2(-1.0), vec2( 1.0)); 
-}
-
-vec3 ssign(in vec3 v) 
-{   
-    return pick(lessThan(v, vec3(0.0)), vec3(-1.0), vec3( 1.0));
-}
-
-vec4 ssign(in vec4 v) 
-{ 
-    return pick(lessThan(v, vec4(0.0)), vec4(-1.0), vec4( 1.0)); 
-}
+float ssign(float v) { return step(0.0, v) * 2.0 - 1.0; }
+vec2  ssign(vec2  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec3  ssign(vec3  v) { return step(0.0, v) * 2.0 - 1.0; }
+vec4  ssign(vec4  v) { return step(0.0, v) * 2.0 - 1.0; }
 
 #endif
 #endif
@@ -6175,63 +5945,41 @@ vec3 compute_gradient(in vec3 p, out mat3 hessian)
 
 vec2 compute_curvatures(in vec3 gradient, in mat3 hessian)
 {
-    vec3 normal = normalize(gradient);
+    vec3 n = normalize(gradient);
+    vec3 t0 = normalize(cross(n, abs(n.z) < 0.999 ? vec3(0,0,1) : vec3(0,1,0)));
+    vec3 t1 = cross(n, t0);
 
-    
-    vec3 orthogonal = cross(normal, abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 1, 0));
+    mat2x3 T = mat2x3(t0, t1);
+    mat2 A = transpose(T) * hessian * T / length(gradient);
 
-    
-    vec3 t0 = normalize(orthogonal);
-    vec3 t1 = cross(normal, t0);
+    float traceA = A[0][0] + A[1][1];
+    float detA = A[0][0]*A[1][1] - A[0][1]*A[1][0];
+    float disc = sqrt(max(traceA*traceA - 4.0*detA, 0.0));
 
-    
-    mat2x3 tangents = mat2x3(t0, t1);
+    vec2 kappa = 0.5 * vec2(traceA - disc, traceA + disc);
 
-    
-    mat2 shape = (transpose(tangents) * hessian * tangents) / length(gradient);
-
-    
-    float trace = shape[0][0] + shape[1][1];
-    float determinant = determinant(shape);
-    float discriminant = sqrt(max(trace * trace - 4.0 * determinant, 0.0));
-
-    
-    vec2 curvatures = vec2(trace - discriminant, trace + discriminant) * 0.5;
-    return curvatures;
+    return kappa;
 }
 
 vec2 compute_curvatures(in vec3 gradient, in mat3 hessian, out vec3 eigenvectors[2])
 {
-    vec3 normal = normalize(gradient);
+    vec3 n = normalize(gradient);
+    vec3 t0 = normalize(cross(n, abs(n.z) < 0.999 ? vec3(0,0,1) : vec3(0,1,0)));
+    vec3 t1 = cross(n, t0);
 
-    
-    vec3 orthogonal = cross(normal, abs(normal.x) < abs(normal.z) ? vec3(1, 0, 0) : vec3(0, 1, 0));
+    mat2x3 T = mat2x3(t0, t1);
+    mat2 A = transpose(T) * hessian * T / length(gradient);
 
-    
-    vec3 t0 = normalize(orthogonal);
-    vec3 t1 = cross(normal, t0);
+    float traceA = A[0][0] + A[1][1];
+    float detA = A[0][0]*A[1][1] - A[0][1]*A[1][0];
+    float disc = sqrt(max(traceA*traceA - 4.0*detA, 0.0));
 
-    
-    mat2x3 tangents = mat2x3(t0, t1);
+    vec2 kappa = 0.5 * vec2(traceA - disc, traceA + disc);
 
-    
-    mat2 shape = (transpose(tangents) * hessian * tangents) / length(gradient);
+    eigenvectors[0] = normalize(kappa.x * t0 + (kappa.x + A[1][1] - A[0][0]) * t1);
+    eigenvectors[1] = normalize(kappa.y * t0 + (kappa.y + A[1][1] - A[0][0]) * t1);
 
-    
-    float trace = shape[0][0] + shape[1][1];
-    float determinant = determinant(shape);
-    float discriminant = sqrt(max(trace * trace - 4.0 * determinant, 0.0));
-
-    
-    vec2 curvatures = vec2(trace - discriminant, trace + discriminant) * 0.5;
-
-    
-    float difference = shape[1][1] - shape[0][0];
-    eigenvectors[0] = curvatures.x * t0 + (curvatures.x + difference) * t1;
-    eigenvectors[1] = curvatures.y * t0 + (curvatures.y + difference) * t1;
-
-    
-    return curvatures;
+    return kappa;
 }
 
 #endif
@@ -6626,7 +6374,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -6671,7 +6419,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -6726,7 +6474,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 4; ++n) 
-    cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
+cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
 
 #elif INTERPOLATION_METHOD == 1
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
@@ -6753,7 +6501,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 6; ++n) 
-    quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
+quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
 #endif
 
     hit.undefined = false;
@@ -7081,7 +6829,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -7126,7 +6874,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -7185,7 +6933,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 4; ++n) 
-    cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
+cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
 
 #elif INTERPOLATION_METHOD == 1
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
@@ -7212,7 +6960,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 6; ++n) 
-    quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
+quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
 #endif
 
     hit.undefined = false;
@@ -7344,7 +7092,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -7389,7 +7137,7 @@ for (int i = 1; i < 4; i++)
     quintic.features[i] = tricubic_features(position);
 
     
-    quintic.biases[i - 1] = tricubic_bias(position);
+    quintic.biases[i-1] = tricubic_bias(position);
 }
 
 mat4x3 residuals = transpose(quintic.biases) * quintic.features - u_volume.isovalue;
@@ -7441,7 +7189,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 4; ++n) 
-    cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
+cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
 
 #elif INTERPOLATION_METHOD == 1
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
@@ -7468,7 +7216,7 @@ hit.normal = normalize(hit.gradient);
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 for (int n = 0; n < 6; ++n) 
-    quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
+quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
 #endif
 
     hit.undefined = false;

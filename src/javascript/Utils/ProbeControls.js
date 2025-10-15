@@ -7,13 +7,6 @@ import {
 	Vector3
 } from 'three';
 
-/**
- * FlyTrackballControls (v2)
- * - Pan X matches TrackballControls (drag right => pan right).
- * - Zoom: middle-drag and wheel use linear factor like TrackballControls.
- * - New: invertMiddleDragZoom (flip only middle-drag zoom direction).
- * - New: avoids tiny initial position nudge by applying target+eye only when zooming.
- */
 const _changeEvent = { type: 'change' };
 const _startEvent  = { type: 'start' };
 const _endEvent    = { type: 'end' };
@@ -31,7 +24,7 @@ const _upWorld     = new Vector3();
 const _fwd         = new Vector3();
 const _tmpQ        = new Quaternion();
 
-class FlyTrackballControls extends Controls {
+class ProbeControls extends Controls {
 
 	constructor( object, domElement = null ) {
 
@@ -40,10 +33,10 @@ class FlyTrackballControls extends Controls {
 		// ---------------- Public API ----------------
 
 		// Movement (FPS style translation)
-		this.movementSpeed            = 1.0;
-		this.rollSpeed                = 0.8;
-		this.autoForward              = false;
-		this.movementSpeedMultiplier  = 1.0;
+		this.movementSpeed           = 0.1;
+		this.movementSpeedMultiplier = 1.0;
+		this.rollSpeed               = 0.8;
+		this.autoForward             = false;
 
 		// Mouse look (FPS yaw/pitch)
 		this.lookSpeed                = 0.002;
@@ -51,12 +44,12 @@ class FlyTrackballControls extends Controls {
 		// Trackball-like config
 		this.noZoom                   = false;
 		this.noPan                    = false;
-		this.zoomSpeed                = 1.2;
-		this.panSpeed                 = 0.5;
+		this.zoomSpeed                = 1.0;
+		this.panSpeed                 = 0.05;
 		this.minDistance              = 0;
 		this.maxDistance              = Infinity;
-		this.staticMoving             = false;
-		this.dynamicDampingFactor     = 0.2;
+		this.staticMoving             = true;
+		this.dynamicDampingFactor     = 0.3;
 
 		// New: flip only middle-button drag zoom
 		this.invertMiddleDragZoom     = true;
@@ -200,6 +193,9 @@ class FlyTrackballControls extends Controls {
 
 	update() {
 
+		// keep _eye in sync with external camera changes
+		_syncEyeFromObject.call( this );
+
 		const now = ( typeof performance !== 'undefined' ? performance.now() : Date.now() );
 		let dt    = ( now - this._lastUpdateTime ) / 1000;
 		if ( dt <= 0 ) dt = 0.016;
@@ -302,6 +298,14 @@ class FlyTrackballControls extends Controls {
 
 }
 
+
+// Keep _eye consistent with external camera changes without moving the camera
+function _syncEyeFromObject() {
+
+	this._eye.subVectors( this.object.position, this.target );
+
+}
+
 // ---------------- Quaternion-based view rotation ----------------
 
 function _applyViewAngles( yaw, pitch, roll ) {
@@ -396,8 +400,11 @@ function _rotateCameraFPSByMouse( dx, dy ) {
 
 function _applyPanEasing() {
 
-	const damp = this.staticMoving ? 1.0 : ( 1.0 - this.dynamicDampingFactor );
-	this._panStart.add( _mouseChange.subVectors( this._panEnd, this._panStart ).multiplyScalar( damp ) );
+	if ( this.staticMoving ) {
+		this._panStart.copy( this._panEnd );
+	} else {
+		this._panStart.add( _mouseChange.subVectors( this._panEnd, this._panStart ).multiplyScalar( this.dynamicDampingFactor ) );
+	}
 
 }
 
@@ -407,7 +414,7 @@ function _panCamera() {
 
 	if ( _mouseChange.lengthSq() ) {
 
-		const scale = this._eye.length() * this.panSpeed * ( this.noPan ? 0 : 1 );
+		const scale = this._eye.length() * this.panSpeed * this.movementSpeedMultiplier * ( this.noPan ? 0 : 1 );
 
 		_mouseChange.multiplyScalar( scale );
 
@@ -471,7 +478,7 @@ function _zoomCamera( isMiddleDrag ) {
 	} else {
 
 		const invert = ( isMiddleDrag && this.invertMiddleDragZoom ) ? -1 : 1;
-		factor = 1.0 + invert * ( this._zoomEnd.y - this._zoomStart.y ) * this.zoomSpeed;
+		factor = 1.0 + invert * ( this._zoomEnd.y - this._zoomStart.y ) * ( this.zoomSpeed * this.movementSpeedMultiplier );
 
 		if ( factor !== 1.0 && factor > 0.0 ) {
 
@@ -490,8 +497,11 @@ function _zoomCamera( isMiddleDrag ) {
 
 		}
 
-		const damp = this.staticMoving ? 1.0 : ( 1.0 - this.dynamicDampingFactor );
-		this._zoomStart.y += ( this._zoomEnd.y - this._zoomStart.y ) * damp;
+		if ( this.staticMoving ) {
+			this._zoomStart.copy( this._zoomEnd );
+		} else {
+			this._zoomStart.y += ( this._zoomEnd.y - this._zoomStart.y ) * this.dynamicDampingFactor;
+		}
 
 	}
 
@@ -549,6 +559,9 @@ function onPointerUp( event ) {
 function onPointerCancel( event ) { this._removePointer( event ); }
 
 function onMouseDown( event ) {
+
+	// ensure _eye matches camera before we compute zoom/pan scales
+	_syncEyeFromObject.call( this );
 
 	let mouseAction;
 
@@ -628,6 +641,9 @@ function onMouseWheel( event ) {
 
 	if ( this.enabled === false || this.noZoom === true ) return;
 
+	// make sure _eye is fresh so first wheel does not snap
+	_syncEyeFromObject.call( this );
+
 	event.preventDefault();
 
 	let k;
@@ -639,7 +655,7 @@ function onMouseWheel( event ) {
 
 	}
 
-	const factor = 1.0 + ( - event.deltaY * k ) * this.zoomSpeed;
+	const factor = 1.0 + ( - event.deltaY * k ) * ( this.zoomSpeed * this.movementSpeedMultiplier );
 
 	if ( factor !== 1.0 && factor > 0.0 ) {
 
@@ -672,6 +688,9 @@ function onContextMenu( event ) {
 }
 
 function onTouchStart( event ) {
+
+	// keep _eye fresh at the beginning of a gesture
+	_syncEyeFromObject.call( this );
 
 	this._trackPointer( event );
 
@@ -788,8 +807,8 @@ function onKeyDown( event ) {
 
 	switch ( event.code ) {
 
-		case 'ShiftLeft':
-		case 'ShiftRight': this.movementSpeedMultiplier = 0.1; used = true; break;
+		case 'ShiftLeft': this.movementSpeedMultiplier = 0.1; used = true; break;
+		case 'ShiftRight': this.movementSpeedMultiplier = 5.0; used = true; break;
 
 		case 'KeyW': this._moveState.forward = 1; used = true; break;
 		case 'KeyS': this._moveState.back    = 1; used = true; break;
@@ -818,7 +837,7 @@ function onKeyUp( event ) {
 
 	switch ( event.code ) {
 
-		case 'ShiftLeft':
+		case 'ShiftLeft': this.movementSpeedMultiplier = 1.0; break;
 		case 'ShiftRight': this.movementSpeedMultiplier = 1.0; break;
 
 		case 'KeyW': this._moveState.forward = 0; break;
@@ -853,4 +872,4 @@ function onWindowBlur() {
 
 }
 
-export { FlyTrackballControls };
+export { ProbeControls };

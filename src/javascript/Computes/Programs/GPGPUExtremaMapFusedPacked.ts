@@ -136,6 +136,9 @@ class GPGPUExtremaMap implements GPGPUProgram
 
             }}}
 
+            blockMinMaxMinMax.xz -= 0.001;
+            blockMinMaxMinMax.yw += 0.001;
+            
             return blockMinMaxMinMax;
         }
 
@@ -304,6 +307,9 @@ class GPGPUExtremaMap2 implements GPGPUProgram
                 blockMinMaxMinMax.yw = max(blockMinMaxMinMax.yw, cellMinMaxMinMax.yw);
 
             }}}
+
+            blockMinMaxMinMax.xz -= 0.001;
+            blockMinMaxMinMax.yw += 0.001;
 
             return blockMinMaxMinMax;
         }

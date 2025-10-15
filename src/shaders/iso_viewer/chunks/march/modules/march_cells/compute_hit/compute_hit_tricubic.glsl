@@ -1,6 +1,13 @@
 
 // Compute quintic polynomial roots in [0, 1]
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
+
+// #if VARIATION_ENABLED == 1
+// poly5_roots_v2(quintic.roots, quintic.coeffs, 0.0, 1.0);
+// #else
+// poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
+// #endif
+
 quintic.root = mmin(quintic.roots);
 
 // Compute derivative at root
@@ -33,5 +40,5 @@ hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
 // Count roots
 for (int n = 0; n < 6; ++n) 
-    quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
+quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
 

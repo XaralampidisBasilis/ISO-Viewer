@@ -3,7 +3,7 @@ import Experience from './Experience'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
 import { FlyControls } from 'three/examples/jsm/controls/FlyControls'
-import { FlyTrackballControls } from './Utils/FlyTrackballControls'
+import { ProbeControls } from './Utils/ProbeControls'
 
 export default class Camera
 {
@@ -18,7 +18,7 @@ export default class Camera
         this.setInstance()
         // this.setTrackballControls()
         // this.setFlyControls()
-        this.setFlyingTrackballControls()
+        this.setProbeControls()
     }
 
     setInstance()
@@ -58,20 +58,9 @@ export default class Camera
         this.fly.enabled = true
     }
 
-    setFlyingTrackballControls()
+    setProbeControls()
     {
-        this.flyTrackball = new FlyTrackballControls(this.instance, this.canvas)
-        
-        // Trackball tuning
-        this.flyTrackball.staticMoving = false
-        this.flyTrackball.dynamicDampingFactor = 0.3
-        this.flyTrackball.zoomSpeed = 2.0
-        this.flyTrackball.panSpeed = 0.05
-        this.flyTrackball.rotateSpeed = 1.0
-
-        // Fly tuning
-        this.flyTrackball.movementSpeed = 0.3      
-        this.flyTrackball.runMultiplier = 2.5
+        this.probe = new ProbeControls(this.instance, this.canvas)
     }
 
     setRaycaster()
@@ -97,8 +86,8 @@ export default class Camera
         if (this.fly) 
             this.fly.update()
 
-        if (this.flyTrackball) 
-            this.flyTrackball.update()
+        if (this.probe) 
+            this.probe.update()
 
         if (this.raycaster)
             this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)

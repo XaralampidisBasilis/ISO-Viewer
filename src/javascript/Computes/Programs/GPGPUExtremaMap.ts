@@ -146,6 +146,9 @@ class GPGPUExtremaMap implements GPGPUProgram
 
             }}}
 
+            blockMinMax.x -= 0.001;
+            blockMinMax.y += 0.001;
+
             return blockMinMax;
         }
 
