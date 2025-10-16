@@ -87,7 +87,7 @@ bool poly5_roots_newton_bisection
     return true;
 }
 
-// Computes the roots of the quadratic derivative of the polynomial.
+// Computes the roots of the quadratic polynomial.
 // \param poly Coefficients of the polynomial for which a root should be found.
 //        Coefficient poly[i] is multiplied by x^i.
 // \param begin The beginning of an interval where the polynomial is monotonic.
