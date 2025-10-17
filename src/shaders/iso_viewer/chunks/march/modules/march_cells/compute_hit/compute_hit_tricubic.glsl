@@ -1,16 +1,14 @@
 
 // Compute quintic polynomial roots in [0, 1]
-// poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
+quintic_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 
-#if VARIATION_ENABLED == 1
-poly5_roots_with_deflation(quintic.roots, quintic.coeffs, 0.0, 1.0);
-#else
-poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
-#endif
+// #if VARIATION_ENABLED == 1
+// quintic_roots_deflate(quintic.roots, quintic.coeffs, 0.0, 1.0);
+// #else
+// quintic_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
+// #endif
 
 quintic.root = mmin(quintic.roots);
-// debug.variable1 = to_color(abs(quintic.root - POLY5_NO_INTERSECTION) < 1e-6);
-
 
 // Compute derivative at root
 eval_poly(quintic.coeffs, quintic.root, hit.derivative);

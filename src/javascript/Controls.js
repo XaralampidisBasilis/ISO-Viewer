@@ -189,6 +189,7 @@ export default class Controls
             discardingEnabled: Boolean(defines.DISCARDING_ENABLED),
             debugEnabled     : Boolean(defines.DEBUG_ENABLED),
             variationEnabled : Boolean(defines.VARIATION_ENABLED),
+            variationMethod  : Number(defines.VARIATION_METHOD),
         }
 
         this.controllers.debug = 
@@ -314,6 +315,13 @@ export default class Controls
             .onFinishChange((value) => 
             { 
                 defines.VARIATION_ENABLED = Number(value)
+                material.needsUpdate = true 
+            }),
+            
+            variationMethod: folder.add(objects, 'variationMethod').options([1, 2, 3, 4, 5])
+            .onFinishChange((value) => 
+            { 
+                defines.VARIATION_METHOD = Number(value)
                 material.needsUpdate = true 
             }),
 

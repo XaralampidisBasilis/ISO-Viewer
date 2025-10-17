@@ -80,6 +80,7 @@ export default function()
         DEBUG_ENABLED     : 1,
         DISCARDING_ENABLED: 1,
         VARIATION_ENABLED : 0,
+        VARIATION_METHOD  : 1,
 
         MAX_CELLS            : 1000,
         MAX_TRACES           : 5000,

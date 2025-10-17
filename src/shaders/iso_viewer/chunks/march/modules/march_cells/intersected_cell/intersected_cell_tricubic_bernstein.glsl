@@ -15,13 +15,17 @@ if (sign_change(quintic.bernstein_coeffs))
     sum_anti_diags(coeffs, quintic.coeffs);
 
     // Compute quintic intersection by evaluating sign changes
+    // cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+
+    #if VARIATION_METHOD == 1
     cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
 
-    // #if VARIATION_ENABLED == 1
-    // cell.intersected = sign_change(quintic.residuals) || poly5_has_root(quintic.coeffs, 0.0, 1.0);
-    // #else
-    // cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
-    // #endif
+    #elif VARIATION_METHOD == 2
+    cell.intersected = quintic_has_root(quintic.coeffs, 0.0, 1.0);
+
+    #elif VARIATION_METHOD == 3
+    cell.intersected = quintic_has_root_deflate(quintic.coeffs, 0.0, 1.0);
+    #endif
 
     #if DEBUG_ENABLED == 1
     stats.num_intersection_tests += 1;
