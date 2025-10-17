@@ -266,15 +266,16 @@ export default class Controls
 
                 cubic_root:              801,
                 cubic_num_roots:         802,
-                cubic_coeffs:            803,
-                cubic_bernstein_coeffs:  804,
+                cubic_weights:           803,
+                cubic_bernstein_weights: 804,
                 cubic_bernstein_spread:  805,
 
                 quintic_root:              851,
                 quintic_num_roots:         852,
-                quintic_coeffs:            853,
-                quintic_bernstein_coeffs:  854,
-                quintic_bernstein_spread:  855,
+                quintic_degree:            853,
+                quintic_weights:           854,
+                quintic_bernstein_weights: 855,
+                quintic_bernstein_spread:  856,
 
                 stats_num_cells             : 901,
                 stats_num_traces            : 902,

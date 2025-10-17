@@ -62,14 +62,13 @@ bool poly5_roots_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i != 10; ++i) 
+    for (int i = 0; i < 10; ++i) 
     {
         // Evaluate the polynomial and its derivative
         float value = poly[5] * current + poly[4];
         float derivative = poly[5];
-
         #pragma unroll
-        for (int j = 3; j != -1; --j) 
+        for (int j = 3; j >= 0; --j) 
         {
             derivative = derivative * current + value;
             value = value * current + poly[j];
@@ -113,14 +112,19 @@ bool poly5_roots_quadratic_roots(
     if (begin == end) return false;
 
     // If quadratic discriminant is negative there are no roots
-    float disc = poly[1] * poly[1] - 4.0 * poly[0] * poly[2];
-    if (disc < 0.0) return false;
+    float discriminant = poly.y * poly.y - 4.0 * poly.x * poly.z;
+    if (discriminant < 0.0) return false;
  
     // Compute the quadratic roots using numerically stable solutions
-    float sqrt_disc = sqrt(max(disc, 0.0));
-    float scaled_root = poly[1] + (poly[1] > 0.0 ? sqrt_disc : -sqrt_disc);
-    out_roots[0] = -2.0 * poly[0] / scaled_root;
-    out_roots[1] = -0.5 * scaled_root / poly[2];
+    float sqrt_disc = sqrt(max(discriminant, 0.0));
+    float scaled_root = poly.y + (poly.y > 0.0 ? sqrt_disc : -sqrt_disc);
+    float root0 = -2.0 * poly.x / scaled_root;
+    float root1 = -0.5 * scaled_root / poly.z;
+    root0 = clamp(root0, begin, end);
+    root1 = clamp(root1, begin, end); 
+
+    out_roots.x = min(root0, root1);
+    out_roots.y = max(root0, root1);
     return true;
 }
 
@@ -158,18 +162,13 @@ void poly5_roots
 
     // Compute its two roots using the quadratic formula
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly;
-    quad_poly[2] = deriv_poly[2];
-    quad_poly[1] = deriv_poly[1];
-    quad_poly[0] = deriv_poly[0];
-
+    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
     vec2 quad_roots;
-    if (poly5_roots_quadratic_roots(quad_roots, quad_poly, begin, end)) 
-    {
-        quad_roots = clamp(quad_roots, begin, end);
 
-        out_roots[3] = min(quad_roots[0], quad_roots[1]);
-        out_roots[4] = max(quad_roots[0], quad_roots[1]);
+    if (poly5_roots_quadratic_roots(quad_roots, quad_poly, begin, end)) 
+    {        
+        out_roots[3] = quad_roots[0];
+        out_roots[4] = quad_roots[1];
     }
     else 
     {
@@ -187,7 +186,7 @@ void poly5_roots
     // negative impact on the overall run time. Profiling indicates that the
     // current implementation has no spilling whatsoever.
     #pragma no_unroll
-    for (int degree = 3; degree != 6; ++degree) 
+    for (int degree = 3; degree <= 5; ++degree) 
     {
         // Take the integral of the previous derivative (scaled such that the
         // constant coefficient can still be copied directly from poly)
@@ -214,7 +213,7 @@ void poly5_roots
 
         // Iterate over the intervals where roots may be found
         #pragma unroll
-        for (int i = 0; i != 5; ++i) 
+        for (int i = 0; i <= 4; ++i) 
         {
             if (i < 5 - degree) continue;
 
@@ -278,18 +277,13 @@ void poly5_roots_with_cubic_deflation
     deriv_poly[0] = poly[3];        
 
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly;
-    quad_poly[2] = deriv_poly[2];
-    quad_poly[1] = deriv_poly[1];
-    quad_poly[0] = deriv_poly[0];
-
+    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
     vec2 quad_roots;
+
     if (poly5_roots_quadratic_roots(quad_roots, quad_poly, begin, end)) 
     {
-        quad_roots = clamp(quad_roots, begin, end);
-
-        out_roots[3] = min(quad_roots[0], quad_roots[1]);
-        out_roots[4] = max(quad_roots[0], quad_roots[1]);
+        out_roots[3] = quad_roots[0];
+        out_roots[4] = quad_roots[1];
     }
     else 
     {
@@ -301,29 +295,22 @@ void poly5_roots_with_cubic_deflation
     // degree = 3
     // Take the integral of the previous derivative (scaled such that the
     // constant coefficient can still be copied directly from poly)
-    deriv_poly[5] = deriv_poly[4] * (3.0 / 5.0);
-    deriv_poly[4] = deriv_poly[3] * (3.0 / 4.0);
     deriv_poly[3] = deriv_poly[2] * (3.0 / 3.0);
     deriv_poly[2] = deriv_poly[1] * (3.0 / 2.0);
     deriv_poly[1] = deriv_poly[0] * (3.0 / 1.0);
     deriv_poly[0] = poly[2];
 
     // Determine the value of this derivative at begin
-    float begin_value = deriv_poly[5];
-    begin_value = begin_value * begin + deriv_poly[4];
-    begin_value = begin_value * begin + deriv_poly[3];
-    begin_value = begin_value * begin + deriv_poly[2];
-    begin_value = begin_value * begin + deriv_poly[1];
-    begin_value = begin_value * begin + deriv_poly[0];
-
-    // Setup quadratic polynomial for cubic
-    quad_poly[2] = deriv_poly[3];
-    quad_poly[1] = deriv_poly[2];
-    quad_poly[0] = deriv_poly[1];
+    float begin_value = deriv_poly[3];
+    begin_value = deriv_poly[2] + begin_value * begin;
+    begin_value = deriv_poly[1] + begin_value * begin;
+    begin_value = deriv_poly[0] + begin_value * begin;
 
     // Iterate over the intervals where roots may be found
+    int num_roots = 0;
+
     #pragma unroll
-    for (int i = 2; i != 5; ++i) 
+    for (int i = 2; i <= 4; ++i) 
     {
         float current_begin = out_roots[i];
         float current_end = out_roots[i + 1];
@@ -331,18 +318,29 @@ void poly5_roots_with_cubic_deflation
         // Try to find a cubic root
         float root;
         if (poly5_roots_newton_bisection(root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
-        {   
-            quad_poly[1] += quad_poly[2] * root; 
-            quad_poly[0] += quad_poly[1] * root; 
+        {               
+            out_roots[i] = root; num_roots++;
+        }
+        else
+        {
+            // Create an empty interval for the next iteration
+            out_roots[i] = out_roots[i - 1];
+        }
+
+        if (i == 4) continue;
+
+        if (num_roots == 1)
+        {
+            vec3 quad_poly;
+            quad_poly[2] = deriv_poly[3];
+            quad_poly[1] = deriv_poly[2] + quad_poly[2] * root; 
+            quad_poly[0] = deriv_poly[1] + quad_poly[1] * root; 
 
             vec2 quad_roots;
-            if (poly5_roots_quadratic_roots(quad_roots, quad_poly, current_end, end)) 
+            if (poly5_roots_quadratic_roots(quad_roots, quad_poly, root, end)) 
             {
-                quad_roots[0] = inside_open(quad_roots[0], current_end, end) ? quad_roots[0] : root;
-                quad_roots[1] = inside_open(quad_roots[1], current_end, end) ? quad_roots[1] : root;
-
-                out_roots[3] = min(quad_roots[0], quad_roots[1]);
-                out_roots[4] = min(quad_roots[0], quad_roots[1]);
+                out_roots[3] = quad_roots[0];
+                out_roots[4] = quad_roots[1];
             }
             else 
             {
@@ -351,11 +349,6 @@ void poly5_roots_with_cubic_deflation
             }
 
             break;
-        }
-        else
-        {
-            // Create an empty interval for the next iteration
-            out_roots[i] = out_roots[i - 1];
         }
     }
 
@@ -368,7 +361,7 @@ void poly5_roots_with_cubic_deflation
     // negative impact on the overall run time. Profiling indicates that the
     // current implementation has no spilling whatsoever.
     #pragma no_unroll
-    for (int degree = 4; degree != 6; ++degree) 
+    for (int degree = 4; degree <= 5; ++degree) 
     {
         // Take the integral of the previous derivative (scaled such that the
         // constant coefficient can still be copied directly from poly)
@@ -386,15 +379,15 @@ void poly5_roots_with_cubic_deflation
 
         // Determine the value of this derivative at begin
         float begin_value = deriv_poly[5];
-        begin_value = begin_value * begin + deriv_poly[4];
-        begin_value = begin_value * begin + deriv_poly[3];
-        begin_value = begin_value * begin + deriv_poly[2];
-        begin_value = begin_value * begin + deriv_poly[1];
-        begin_value = begin_value * begin + deriv_poly[0];
+        begin_value = deriv_poly[4] + begin_value * begin;
+        begin_value = deriv_poly[3] + begin_value * begin;
+        begin_value = deriv_poly[2] + begin_value * begin;
+        begin_value = deriv_poly[1] + begin_value * begin;
+        begin_value = deriv_poly[0] + begin_value * begin;
 
         // Iterate over the intervals where roots may be found
         #pragma unroll
-        for (int i = 0; i != 5; ++i) 
+        for (int i = 0; i <= 4; ++i) 
         {
             if (i < 5 - degree) continue;
 
@@ -457,18 +450,13 @@ void poly5_roots_with_deflation
     deriv_poly[0] = poly[3];    
 
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly;
-    quad_poly[2] = deriv_poly[2];
-    quad_poly[1] = deriv_poly[1];
-    quad_poly[0] = deriv_poly[0];
-
+    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
     vec2 quad_roots;
+    
     if (poly5_roots_quadratic_roots(quad_roots, quad_poly, begin, end)) 
     {
-        quad_roots = clamp(quad_roots, begin, end);
-
-        out_roots[3] = min(quad_roots[0], quad_roots[1]);
-        out_roots[4] = max(quad_roots[0], quad_roots[1]);
+        out_roots[3] = quad_roots[0];
+        out_roots[4] = quad_roots[1];
     }
     else 
     {
@@ -485,13 +473,9 @@ void poly5_roots_with_deflation
     // However, it would also cause register spilling, which has a far more
     // negative impact on the overall run time. Profiling indicates that the
     // current implementation has no spilling whatsoever.
-    float defl_poly[6];
-
     #pragma no_unroll
-    for (int degree = 3; degree != 6; ++degree) 
+    for (int degree = 3; degree <= 5; ++degree) 
     {
-        int num_roots = 0;
-
         // Take the integral of the previous derivative (scaled such that the
         // constant coefficient can still be copied directly from poly)
         float prev_derivative_order = float(6 - degree);
@@ -516,11 +500,12 @@ void poly5_roots_with_deflation
         begin_value = begin_value * begin + deriv_poly[0];
 
         // Start deflated polynomial as the derivative
-        defl_poly = deriv_poly;
+        float defl_poly[6] = deriv_poly;
+        int num_roots = 0;
 
         // Iterate over the intervals where roots may be found
         #pragma unroll
-        for (int i = 0; i != 5; ++i) 
+        for (int i = 0; i <= 4; ++i) 
         {
             if (i < 5 - degree) continue;
 
@@ -531,11 +516,11 @@ void poly5_roots_with_deflation
             float root;
             if (poly5_roots_newton_bisection(root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
-                out_roots[i] = root;
-                num_roots++;
-
+                out_roots[i] = root; num_roots++;
+                
                 // Shift coefficients left one slot to avoid
                 // dynamic indexing later in quadratic polynomial
+                // float defl_residue = defl_poly[0];
                 defl_poly[0] = defl_poly[1];
                 defl_poly[1] = defl_poly[2];
                 defl_poly[2] = defl_poly[3];
@@ -544,39 +529,13 @@ void poly5_roots_with_deflation
                 defl_poly[5] = 0.0;
 
                 // Triangular accumulation to deflate the polynomial
+                // without causing spilling.
                 defl_poly[4] += defl_poly[5] * root;
                 defl_poly[3] += defl_poly[4] * root;
                 defl_poly[2] += defl_poly[3] * root;
                 defl_poly[1] += defl_poly[2] * root;
                 defl_poly[0] += defl_poly[1] * root;
-                
-                if (num_roots == degree - 2)
-                {
-                    float fall_root = (degree == 5) ? POLY5_NO_INTERSECTION : root;
-
-                    vec3 quad_poly;
-                    quad_poly[2] = defl_poly[2];
-                    quad_poly[1] = defl_poly[1];
-                    quad_poly[0] = defl_poly[0];
-
-                    vec2 quad_roots;
-                    if (poly5_roots_quadratic_roots(quad_roots, quad_poly, current_end, end)) 
-                    {
-                        quad_roots[0] = inside_open(quad_roots[0], current_end, end) ? quad_roots[0] : fall_root;
-                        quad_roots[1] = inside_open(quad_roots[1], current_end, end) ? quad_roots[1] : fall_root;
-
-                        out_roots[3] = min(quad_roots[0], quad_roots[1]);
-                        out_roots[4] = min(quad_roots[0], quad_roots[1]);
-                    }
-                    else 
-                    {
-                        out_roots[3] = fall_root;
-                        out_roots[4] = fall_root;
-                    }
-
-                    break;
-                }
-
+                // defl_residue += defl_poly[0] * root;
             }
             else if (degree < 5)
             {
@@ -587,12 +546,39 @@ void poly5_roots_with_deflation
             {
                 out_roots[i] = POLY5_NO_INTERSECTION;
             }
+
+            if (i == 4) continue;
+            
+            // If we reach the appropriate amount of roots to perform deflation to
+            // quadratic, continue to solving this quadratic
+            if (num_roots == degree - 2)
+            {
+                vec3 quad_poly = vec3(defl_poly[0], defl_poly[1], defl_poly[2]);
+                vec2 quad_roots;
+
+                if (poly5_roots_quadratic_roots(quad_roots, quad_poly, root, end)) 
+                {
+                    out_roots[3] = quad_roots[0];
+                    out_roots[4] = quad_roots[1];
+                }
+                else if (degree < 5)
+                {
+                    out_roots[3] = root;
+                    out_roots[4] = root;
+                }
+                else
+                {
+                    out_roots[3] = POLY5_NO_INTERSECTION;
+                    out_roots[4] = POLY5_NO_INTERSECTION;
+                }
+
+                break;
+            }
         }
     }
 
     // We no longer need this array entry
     out_roots[5] = POLY5_NO_INTERSECTION;
 }
-
 
 #endif

@@ -9,13 +9,15 @@ poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 #endif
 
 quintic.root = mmin(quintic.roots);
+// debug.variable1 = to_color(abs(quintic.root - POLY5_NO_INTERSECTION) < 1e-6);
+
 
 // Compute derivative at root
 eval_poly(quintic.coeffs, quintic.root, hit.derivative);
+hit.derivative /= cell.span_distance;
 
 // Compute orientation
-hit.orientation = -ssign(hit.derivative); 
-hit.derivative /= cell.span_distance;
+hit.orientation = -sign(hit.derivative); 
 
 // Compute intersection distance
 hit.distance = mix(cell.entry_distance, cell.exit_distance, quintic.root);
@@ -41,4 +43,5 @@ hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 // Count roots
 for (int n = 0; n < 6; ++n) 
 quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
+
 
