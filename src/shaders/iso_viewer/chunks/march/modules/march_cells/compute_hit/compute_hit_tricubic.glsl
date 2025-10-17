@@ -3,7 +3,7 @@
 // poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 
 #if VARIATION_ENABLED == 1
-poly5_roots_with_cubic_deflation(quintic.roots, quintic.coeffs, 0.0, 1.0);
+poly5_roots_with_deflation(quintic.roots, quintic.coeffs, 0.0, 1.0);
 #else
 poly5_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 #endif

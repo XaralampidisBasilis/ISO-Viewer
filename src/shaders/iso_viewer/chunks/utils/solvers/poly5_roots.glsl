@@ -307,8 +307,6 @@ void poly5_roots_with_cubic_deflation
     begin_value = deriv_poly[0] + begin_value * begin;
 
     // Iterate over the intervals where roots may be found
-    int num_roots = 0;
-
     #pragma unroll
     for (int i = 2; i <= 4; ++i) 
     {
@@ -319,36 +317,33 @@ void poly5_roots_with_cubic_deflation
         float root;
         if (poly5_roots_newton_bisection(root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
         {               
-            out_roots[i] = root; num_roots++;
+            out_roots[i] = root; 
+
+            if (i < 4)
+            {
+                vec3 quad_poly;
+                quad_poly[2] = deriv_poly[3];
+                quad_poly[1] = deriv_poly[2] + quad_poly[2] * root; 
+                quad_poly[0] = deriv_poly[1] + quad_poly[1] * root; 
+
+                vec2 quad_roots;
+                if (poly5_roots_quadratic_roots(quad_roots, quad_poly, root, end)) 
+                {
+                    out_roots[3] = quad_roots[0];
+                    out_roots[4] = quad_roots[1];
+                }
+                else 
+                {
+                    out_roots[3] = root;
+                    out_roots[4] = root;
+                }
+                break;
+            }
         }
         else
         {
             // Create an empty interval for the next iteration
             out_roots[i] = out_roots[i - 1];
-        }
-
-        if (i == 4) continue;
-
-        if (num_roots == 1)
-        {
-            vec3 quad_poly;
-            quad_poly[2] = deriv_poly[3];
-            quad_poly[1] = deriv_poly[2] + quad_poly[2] * root; 
-            quad_poly[0] = deriv_poly[1] + quad_poly[1] * root; 
-
-            vec2 quad_roots;
-            if (poly5_roots_quadratic_roots(quad_roots, quad_poly, root, end)) 
-            {
-                out_roots[3] = quad_roots[0];
-                out_roots[4] = quad_roots[1];
-            }
-            else 
-            {
-                out_roots[3] = root;
-                out_roots[4] = root;
-            }
-
-            break;
         }
     }
 
@@ -500,11 +495,9 @@ void poly5_roots_with_deflation
         begin_value = begin_value * begin + deriv_poly[0];
 
         // Start deflated polynomial as the derivative
-        float defl_poly[6] = deriv_poly;
-        int num_roots = 0;
+        int num_roots = 0; float defl_poly[6] = deriv_poly; 
 
         // Iterate over the intervals where roots may be found
-        #pragma unroll
         for (int i = 0; i <= 4; ++i) 
         {
             if (i < 5 - degree) continue;
@@ -513,14 +506,14 @@ void poly5_roots_with_deflation
             float current_end = out_roots[i + 1];
 
             // Try to find a root
-            float root;
-            if (poly5_roots_newton_bisection(root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+            float current_root;
+            if (poly5_roots_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
-                out_roots[i] = root; num_roots++;
+                out_roots[i] = current_root; num_roots++;
                 
-                // Shift coefficients left one slot to avoid
-                // dynamic indexing later in quadratic polynomial
-                // float defl_residue = defl_poly[0];
+                // When a root is found deflate the polynomial by one degree 
+                // Shift coefficients left one slot to avoid dynamic indexing later in quadratic polynomial
+                // float residue = defl_poly[0]; 
                 defl_poly[0] = defl_poly[1];
                 defl_poly[1] = defl_poly[2];
                 defl_poly[2] = defl_poly[3];
@@ -528,14 +521,14 @@ void poly5_roots_with_deflation
                 defl_poly[4] = defl_poly[5];
                 defl_poly[5] = 0.0;
 
-                // Triangular accumulation to deflate the polynomial
+                // Iterative accumulation to deflate the polynomial
                 // without causing spilling.
-                defl_poly[4] += defl_poly[5] * root;
-                defl_poly[3] += defl_poly[4] * root;
-                defl_poly[2] += defl_poly[3] * root;
-                defl_poly[1] += defl_poly[2] * root;
-                defl_poly[0] += defl_poly[1] * root;
-                // defl_residue += defl_poly[0] * root;
+                defl_poly[4] += defl_poly[5] * current_root;
+                defl_poly[3] += defl_poly[4] * current_root;
+                defl_poly[2] += defl_poly[3] * current_root;
+                defl_poly[1] += defl_poly[2] * current_root;
+                defl_poly[0] += defl_poly[1] * current_root;
+                // residue += defl_poly[0] * current_root;
             }
             else if (degree < 5)
             {
@@ -547,33 +540,34 @@ void poly5_roots_with_deflation
                 out_roots[i] = POLY5_NO_INTERSECTION;
             }
 
-            if (i == 4) continue;
+            // When we have the appropriate amount of roots 
+            // so the deflation polynomial becomes quadratic
+            // solve for the remaining roots and terminate
+            // Exclude last bracket computations since we searched already
+            if (num_roots < degree - 2 || i == 4) continue;
             
-            // If we reach the appropriate amount of roots to perform deflation to
-            // quadratic, continue to solving this quadratic
-            if (num_roots == degree - 2)
+            vec3 quad_poly = vec3(defl_poly[0], defl_poly[1], defl_poly[2]);
+            vec2 quad_roots;
+
+            // Compute quadratic roots in [current_root, end]
+            // if roots where found clamp them to bracket to keep the order
+            if (poly5_roots_quadratic_roots(quad_roots, quad_poly, current_root, end)) 
             {
-                vec3 quad_poly = vec3(defl_poly[0], defl_poly[1], defl_poly[2]);
-                vec2 quad_roots;
-
-                if (poly5_roots_quadratic_roots(quad_roots, quad_poly, root, end)) 
-                {
-                    out_roots[3] = quad_roots[0];
-                    out_roots[4] = quad_roots[1];
-                }
-                else if (degree < 5)
-                {
-                    out_roots[3] = root;
-                    out_roots[4] = root;
-                }
-                else
-                {
-                    out_roots[3] = POLY5_NO_INTERSECTION;
-                    out_roots[4] = POLY5_NO_INTERSECTION;
-                }
-
-                break;
+                out_roots[3] = quad_roots[0];
+                out_roots[4] = quad_roots[1];
             }
+            else if (degree < 5)
+            {
+                out_roots[3] = current_root;
+                out_roots[4] = current_root;
+            }
+            else
+            {
+                out_roots[3] = POLY5_NO_INTERSECTION;
+                out_roots[4] = POLY5_NO_INTERSECTION;
+            }
+
+            break;
         }
     }
 
