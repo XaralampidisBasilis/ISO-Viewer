@@ -10,25 +10,27 @@ It demonstrates real-time **isosurface rendering** directly in WebGL.
 
 > ⚠️ **Note:** The demo does **not** run on mobile devices. Please open it on a desktop or laptop with GPU acceleration enabled.
 
-### 🎮 Navigation Controls
-The viewer uses **ProbeControls**, combining free-fly (FPS) movement and trackball-style camera control.
-
-**Mouse**
-- 🖱️ **Left drag** → Look around  
-- 🖱️ **Middle scroll** → Zoom in or out  
-- 🖱️ **Right drag** → Pan
-
-**Keyboard**
-- ⌨️ **W / S** → Move forward / backward  
-- ⌨️ **A / D** → Move left / right  
-- ⌨️ **R / F** → Move up / down  
-- ⌨️ **Q / E** → Roll left / right  
-- ⌨️ **Arrow keys** → Rotate view  
-- ⌨️ **Space** → Move faster  
-- ⌨️ **Shift** → Move slower
-
 ---
 
+## 🎮 Navigation Controls
+
+The viewer uses **ProbeControls**, combining free-fly (FPS) movement and trackball-style camera control.
+
+### 🖱️ Mouse
+- **Left drag** → Look around  
+- **Middle scroll** → Zoom in or out  
+- **Right drag** → Pan
+
+### ⌨️ Keyboard
+- **W / S** → Move forward / backward  
+- **A / D** → Move left / right  
+- **R / F** → Move up / down  
+- **Q / E** → Roll left / right  
+- **Arrows** → Rotate view  
+- **Space** → Move faster  
+- **Shift** → Move slower
+
+---
 
 ## 🛠️ Setup
 
