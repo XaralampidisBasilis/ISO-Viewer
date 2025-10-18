@@ -29,7 +29,6 @@ vec4 debug_cell_min_position = to_color(map(box.min_position, box.max_position, 
 vec4 debug_cell_max_position = to_color(map(box.min_position, box.max_position, cell.max_position)); 
 
 // PRINT DEBUG
-
 switch (u_debug.option - 200)
 { 
     case 1: fragColor = debug_cell_intersected;        break;

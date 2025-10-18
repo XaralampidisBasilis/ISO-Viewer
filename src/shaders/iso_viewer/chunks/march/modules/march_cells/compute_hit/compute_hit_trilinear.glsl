@@ -31,7 +31,4 @@ hit.normal = normalize(hit.gradient);
 // Compute principal curvatures
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
-// Count roots
-for (int n = 0; n < 4; ++n) 
-cubic.num_roots += (cubic.roots[n] != cubic.roots[3]) ? 1 : 0;
 

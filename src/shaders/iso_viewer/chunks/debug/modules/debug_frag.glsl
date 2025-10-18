@@ -22,9 +22,7 @@ vec4 debug_frag_color = to_color(frag.color);
 // shaded luminance
 vec4 debug_frag_luminance = to_color(dot(frag.color, vec3(0.2126, 0.7152, 0.0722)));
 
-
 // PRINT DEBUG
-
 switch (u_debug.option - 500)
 {
    

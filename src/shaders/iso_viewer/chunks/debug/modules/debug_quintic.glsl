@@ -5,13 +5,28 @@
 vec4 debug_quintic_root = to_color(quintic.root);
 
 // num roots
+int quintic_num_roots = 0;
+for (int i = 0; i <= 5; ++i) 
+{   
+    if (quintic.roots[i] != quintic.roots[5])
+    {
+        quintic_num_roots++;
+    }
+}
+
 vec4 debug_quintic_num_roots = to_color(float(quintic.num_roots) / 5.0);
 
 // degree
+float quintic_maxabs = 0.0;
+for (int i = 0; i <= 5; ++i) 
+{
+    quintic_maxabs = max(quintic_maxabs, abs(quintic.coeffs[i]));
+}
+
 int quintic_degree = 0;
 for (int i = 5; i >= 0; --i)
 {
-    if (abs(quintic.coeffs[i]) > 1e-3)
+    if (abs(quintic.coeffs[i]) / quintic_maxabs > 0.01)
     {
         quintic_degree = i;
         break;
@@ -75,7 +90,6 @@ vec4 debug_quintic_bernstein_weights = to_color(
 vec4 debug_quintic_bernstein_spread = to_color(mmax(quintic.bernstein_coeffs) - mmin(quintic.bernstein_coeffs));
 
 // PRINT DEBUG
-
 switch (u_debug.option - 850)
 { 
     case 1: fragColor = debug_quintic_root;                 break;

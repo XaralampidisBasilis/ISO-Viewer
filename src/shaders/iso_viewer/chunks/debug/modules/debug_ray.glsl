@@ -29,7 +29,6 @@ vec4 debug_ray_end_position = to_color(map(box.min_position, box.max_position, r
 
 
 // PRINT DEBUG
-
 switch (u_debug.option - 100)
 {
     case  1: fragColor = debug_ray_discarded;       break;

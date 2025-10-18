@@ -35,29 +35,14 @@ vec4 debug_hit_steepness = to_color(map(0.0, 1.0, length(hit.gradient)));
 
 // curvatures
 vec4 debug_hit_curvatures = to_color(mmix2(                
-    COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA, // | < 0        | concave ellipsoid   | concave cylinder | hyperboloid Surface |                  
-    COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,  // | = 0        | concave cylinder    | flap plane       | convex cylinder     |
-    COLOR.MAGENTA,   COLOR.ORANGE,    COLOR.GOLD,    // | > 0        | hyperboloid Surface | convex cylinder  | convex ellipsoid    |
-    map(-2.0, 2.0, hit.curvatures)                   // | k_2 \ k_1  | < 0                 | ~ 0              | > 0                 |
+    COLOR.DARK_CYAN, COLOR.DARK_BLUE, COLOR.MAGENTA, // | < 0     | concave ellipsoid   | concave cylinder | hyperboloid Surface |                  
+    COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.ORANGE,  // | = 0     | concave cylinder    | flap plane       | convex cylinder     |
+    COLOR.MAGENTA,   COLOR.ORANGE,    COLOR.GOLD,    // | > 0     | hyperboloid Surface | convex cylinder  | convex ellipsoid    |
+    map(-2.0, 2.0, hit.curvatures)                   // | k2 \ k1 | < 0                 | ~ 0              | > 0                 |
 ));                 
 
-// mean curvature
-// vec4 debug_hit_mean_curvature = to_color(mmix(COLOR.LIGHT_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_RED, 
-//     map(-2.0, 2.0, mean(hit.curvatures) * 2.0))
-// );
-
-// // max curvature
-// vec4 debug_hit_max_curvature = to_color(mmix(COLOR.BLUE, COLOR.DARK_GRAY, COLOR.RED, 
-//     map(-2.0, 2.0, maxabs(hit.curvatures)))
-// );
-
-// // soft curvature
-// vec4 debug_hit_total_curvature = to_color(mmix(COLOR.DARK_BLUE, COLOR.DARK_GRAY, COLOR.LIGHT_YELLOW, 
-//     map(-2.0, 2.0, mean(abs(hit.curvatures))))
-// );
 
 // PRINT DEBUG
-
 switch (u_debug.option - 450)
 { 
     case  1: fragColor = debug_hit_discarded;       break;
@@ -72,7 +57,4 @@ switch (u_debug.option - 450)
     case 10: fragColor = debug_hit_gradient;        break;
     case 11: fragColor = debug_hit_steepness;       break;
     case 12: fragColor = debug_hit_curvatures;      break;
-    // case 10: fragColor = debug_hit_mean_curvature;  break;
-    // case 11: fragColor = debug_hit_max_curvature;   break;
-    // case 12: fragColor = debug_hit_total_curvature; break;
 }

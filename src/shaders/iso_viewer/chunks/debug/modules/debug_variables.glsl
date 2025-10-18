@@ -1,6 +1,5 @@
 
 // PRINT DEBUG
-
 switch (u_debug.option - 1000)
 { 
     case 0  : fragColor = debug.variable0; break;

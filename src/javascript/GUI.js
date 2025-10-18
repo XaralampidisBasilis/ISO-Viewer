@@ -275,9 +275,10 @@ export default class GUI
 
                 cubic_root:              801,
                 cubic_num_roots:         802,
-                cubic_weights:           803,
-                cubic_bernstein_weights: 804,
-                cubic_bernstein_spread:  805,
+                cubic_degree:            803,
+                cubic_weights:           804,
+                cubic_bernstein_weights: 805,
+                cubic_bernstein_spread:  806,
 
                 quintic_root:              851,
                 quintic_num_roots:         852,
@@ -336,11 +337,11 @@ export default class GUI
             // maxGroups: folder.add(uniforms, 'max_groups').min(0).max(defines.MAX_GROUPS).step(1),
             // maxBlocks: folder.add(uniforms, 'max_blocks').min(0).max(defines.MAX_BLOCKS_IN_GROUP).step(1),
             // maxCells : folder.add(uniforms, 'max_cells').min(0).max(defines.MAX_CELLS_IN_BLOCK).step(1),
-            variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(0.001),
-            variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(0.001),
-            variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(0.001),
-            variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(0.001),
-            variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(0.001),
+            variable1 : folder.add(uniforms, 'variable1').min(0).max(1).step(1e-6),
+            variable2 : folder.add(uniforms, 'variable2').min(0).max(1).step(1e-6),
+            variable3 : folder.add(uniforms, 'variable3').min(0).max(1).step(1e-6),
+            variable4 : folder.add(uniforms, 'variable4').min(0).max(1).step(1e-6),
+            variable5 : folder.add(uniforms, 'variable5').min(0).max(1).step(1e-6),
         }
     }
     

@@ -31,8 +31,3 @@ hit.normal = normalize(hit.gradient);
 // Compute principal curvatures
 hit.curvatures = compute_curvatures(hit.gradient, hit.hessian);
 
-// Count roots
-for (int n = 0; n < 6; ++n) 
-quintic.num_roots += (quintic.roots[n] != quintic.roots[5]) ? 1 : 0;
-
-

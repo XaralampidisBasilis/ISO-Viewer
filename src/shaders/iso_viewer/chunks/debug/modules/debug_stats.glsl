@@ -20,7 +20,6 @@ vec4 debug_stats_num_texture_fetches = to_color(float(stats.num_texture_fetches)
 vec4 debug_stats_num_intersection_tests = to_color(float(stats.num_intersection_tests) / float(MAX_BLOCKS) * 100.0);
 
 // PRINT DEBUG
-
 switch (u_debug.option - 900)
 {
     case 1: fragColor = debug_stats_num_cells;              break;

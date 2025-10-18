@@ -19,7 +19,6 @@ vec4 debug_trace_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map
 vec4 debug_trace_span_residue = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, (trace.residue - trace.prev_residue) / MILLI_TOLERANCE)));
 
 // PRINT DEBUG
-
 switch (u_debug.option - 300)
 { 
     case  1: fragColor = debug_trace_intersected;     break;
