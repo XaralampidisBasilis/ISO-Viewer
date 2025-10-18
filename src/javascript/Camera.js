@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import Experience from './Experience'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { TrackballControls } from './Utils/TrackballControls'
-import { FlyControls } from './Utils/FlyControls'
 import { ProbeControls } from './Utils/ProbeControls'
-import { ToggleControls } from './Utils/ToggleControls'
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+// import { TrackballControls } from './Utils/TrackballControls'
+// import { FlyControls } from './Utils/FlyControls'
+// import { ToggleControls } from './Utils/ToggleControls'
 
 export default class Camera
 {
@@ -25,39 +25,6 @@ export default class Camera
         this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 10)
         this.instance.position.set(1, 1, 1)
         this.scene.add(this.instance)
-    }
-
-    setOrbitControls()
-    {
-        this.orbit = new OrbitControls(this.instance, this.canvas)
-        this.orbit.enableDamping = true
-        this.orbit.enableZoom = true
-        this.orbit.zoomToCursor = true
-        this.orbit.zoomSpeed = 2
-    }
-
-    setTrackballControls()
-    {
-        this.trackball = new TrackballControls(this.instance, this.canvas)
-        this.trackball.staticMoving = false
-        this.trackball.dynamicDampingFactor = 0.3
-        this.trackball.zoomSpeed = 2.0
-        this.trackball.panSpeed = 0.05
-        this.trackball.rotateSpeed = 1.0
-    }
-
-    setFlyControls()
-    {
-        this.fly = new FlyControls(this.instance, this.canvas) 
-        this.fly.movementSpeed = 0.5       
-        this.fly.rollSpeed = Math.PI / 8   
-        this.fly.dragToLook = true         
-        this.fly.autoForward = false
-    }
-
-    setProbeControls()
-    {
-        this.probe = new ProbeControls(this.instance, this.canvas)
     }
 
     setRaycaster()
