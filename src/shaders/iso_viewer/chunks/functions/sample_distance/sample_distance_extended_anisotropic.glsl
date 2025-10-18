@@ -2,7 +2,7 @@
 #define SAMPLE_DISTANCE_EXTENDED
 
 #ifndef UNPACK_UINT5551
-#include "./unpack_uint5551"
+#include "../unpack_uint5551"
 #endif
 
 // Samples the extended distance texture at given coordinates and octant.

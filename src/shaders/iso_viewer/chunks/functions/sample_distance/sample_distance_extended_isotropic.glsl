@@ -2,7 +2,7 @@
 #define SAMPLE_DISTANCE_EXTENDED_ISOTROPIC
 
 #ifndef UNPACK_UINT5551
-#include "./unpack_uint5551"
+#include "../unpack_uint5551"
 #endif
 
 // Samples the isotropic distance texture at given integer coordinates.

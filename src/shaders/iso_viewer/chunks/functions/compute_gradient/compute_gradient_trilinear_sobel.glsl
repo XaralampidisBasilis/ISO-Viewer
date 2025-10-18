@@ -10,7 +10,7 @@ GPU Gems 2, Chapter 20. Fast Third-Order Texture Filtering
 #define COMPUTE_GRADIENT_TRILINEAR_SOBEL
 
 #ifndef SAMPLE_TRILINEAR_VOLUME
-#include "../sample_value_trilinear"
+#include "../sample_value/sample_value_trilinear"
 #endif
 #ifndef COMPUTE_SECOND_DERIVATIVES
 #include "./compute_second_derivatives"

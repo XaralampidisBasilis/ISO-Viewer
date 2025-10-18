@@ -6,8 +6,6 @@ set_hit();
 set_cell();
 set_block();
 set_frag();
-set_cubic();
-set_quintic();
 
 #if DEBUG_ENABLED == 1
 set_debug();
@@ -15,4 +13,11 @@ set_debug();
 
 #if DEBUG_ENABLED == 1
 set_stats();
+#endif
+
+#if INTERPOLATION_METHOD == 0
+set_cubic();
+
+#elif INTERPOLATION_METHOD == 1
+set_quintic();
 #endif

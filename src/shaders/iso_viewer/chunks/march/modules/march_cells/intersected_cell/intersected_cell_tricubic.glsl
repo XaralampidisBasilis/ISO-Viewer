@@ -11,7 +11,7 @@ sum_anti_diags(coeffs, quintic.coeffs);
 
 // Perform root detection in [0,1] by checking sign changes:
 // First on sampled residuals (fast), then refined on polynomial coefficients (fallback)
-cell.intersected = sign_change(quintic.residuals) || eval_poly_sign_change(quintic.coeffs);
+cell.intersected = sign_change(quintic.residuals) || quintic_has_root(quintic.coeffs, 0.0, 1.0);
     
 // Update fetch/test counters for performance statistics
 #if DEBUG_ENABLED == 1

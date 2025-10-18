@@ -6,7 +6,7 @@
 #define COMPUTE_GRADIENT_TRICUBIC_ANALYTIC
 
 #ifndef SAMPLE_TRICUBIC_VOLUME
-#include "../sample_value_tricubic"
+#include "../sample_value/sample_value_tricubic"
 #endif
 
 /*

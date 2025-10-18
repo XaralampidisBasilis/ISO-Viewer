@@ -11,13 +11,7 @@ if (sign_change(cubic.bernstein_coeffs))
     cubic.coeffs = cubic.residuals * cubic_inv_vander;
 
     // check cubic intersection and sign crossings for degenerate cases
-    cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, sampling_points.xw, cubic.residuals.xw);
- 
-    // #if VARIATION_ENABLED == 1
-    // cell.intersected = sign_change(cubic.residuals) || poly3_has_root(cubic.coeffs, 0.0, 1.0);
-    // #else
-    // cell.intersected = sign_change(cubic.residuals) || is_cubic_solvable(cubic.coeffs, sampling_points.xw, cubic.residuals.xw);
-    // #endif
+    cell.intersected = sign_change(cubic.residuals) || cubic_has_root(cubic.coeffs, 0.0, 1.0);
 
     #if DEBUG_ENABLED == 1
     stats.num_intersection_tests += 1;

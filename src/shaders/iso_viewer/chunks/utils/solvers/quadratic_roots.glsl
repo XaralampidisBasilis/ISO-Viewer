@@ -6,48 +6,37 @@ Numerical Recipes in C: The Art of Scientific Computing, 2nd Edition Section: Ch
 #ifndef QUADRATIC_ROOTS
 #define QUADRATIC_ROOTS
 
-#ifndef SSIGN
-#include "../math/ssign"
-#endif
+// Computes the roots of the quadratic polynomial.
+// \param out_roots The location of the found roots.
+// \param quad Coefficients of the quadratic for which a root should be found.
+//        Coefficient poly[i] is multiplied by x^i.
+// \param begin The beginning of an interval where the polynomial is monotonic.
+// \param end The end of said interval.
+// \return true if a root was found in [begin, end].
+bool quadratic_roots(
+    out vec2 out_roots,
+    in vec3 poly, 
+    in float begin, 
+    in float end
+){
+    if (begin == end) return false;
 
-// Solves the quadratic equation: c[0] + c[1]*x^1 + c[2]*x^2 = 0
-// We assume non zero quadratic coefficient
-// xd is the fallback root
+    // If quadratic discriminant is negative there are no roots
+    float discriminant = poly.y * poly.y - 4.0 * poly.x * poly.z;
+    if (discriminant < 0.0) return false;
+ 
+    // Compute the quadratic roots using numerically stable solutions
+    float sqrt_disc = sqrt(max(discriminant, 0.0));
+    float scaled_root = poly.y + (poly.y > 0.0 ? sqrt_disc : -sqrt_disc);
+    float root0 = -2.0 * poly.x / scaled_root;
+    float root1 = -0.5 * scaled_root / poly.z;
+    root0 = clamp(root0, begin, end);
+    root1 = clamp(root1, begin, end); 
 
-vec2 quadratic_roots(in vec3 c)
-{
-    // adjust quadratic coefficients 
-    vec2 n = c.xy / c.z;
-    n.y /= -2.0;
-
-    // compute quadratic discriminant
-    float d = n.y * n.y - n.x;
-    float sqrt_d = sqrt(max(0.0, d));
-    float xq = n.y + sqrt_d * ssign(n.y);
-
-    // compute quadratic roots via stable formula
-    return vec2(xq, n.x / xq);
+    out_roots.x = min(root0, root1);
+    out_roots.y = max(root0, root1);
+    return true;
 }
-
-vec2 quadratic_roots(in vec3 c, in float xd)
-{
-    // adjust quadratic coefficients 
-    vec2 n = c.xy / c.z;
-    n.y /= -2.0;
-
-    // compute quadratic discriminant
-    float d = n.y * n.y - n.x;
-    float sqrt_d = sqrt(max(0.0, d));
-    float xq = n.y + sqrt_d * ssign(n.y);
-
-    // compute quadratic roots via stable formula
-    vec2 x = vec2(xq, n.x / xq);
-
-    // select roots based on determinant
-    return (d >= 0.0) ? x : vec2(xd);
-}
-
-
 
 #endif
 

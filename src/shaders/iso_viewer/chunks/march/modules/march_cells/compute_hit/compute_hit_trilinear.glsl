@@ -1,14 +1,14 @@
 
 // Compute cubic polynomial roots in [0, 1]
-poly3_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
+cubic_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
 cubic.root = mmin(cubic.roots);
 
 // Compute cubic derivative at min root
 eval_poly(cubic.coeffs, cubic.root, hit.derivative);
+hit.derivative /= cell.span_distance;
 
 // Compute orientation
 hit.orientation = -ssign(hit.derivative); 
-hit.derivative /= cell.span_distance;
 
 // Compute intersection distance/position
 hit.distance = mix(cell.entry_distance, cell.exit_distance, cubic.root);
