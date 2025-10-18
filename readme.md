@@ -18,15 +18,15 @@ The viewer uses **ProbeControls**, combining free-fly (FPS) movement and trackba
 
 ### 🖱️ Mouse
 - **Left drag** → Look around  
-- **Middle drag / Scroll** → Zoom in or out  
+- **Middle scroll** → Zoom in or out  
 - **Right drag** → Pan
 
 ### ⌨️ Keyboard
 - **W / S** → Move forward / backward  
 - **A / D** → Move left / right  
 - **R / F** → Move up / down  
-- **Arrow keys** → Rotate view  
 - **Q / E** → Roll left / right  
+- **Arrows** → Rotate view  
 - **Space** → Move faster  
 - **Shift** → Move slower
 
