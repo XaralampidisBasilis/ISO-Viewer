@@ -11,7 +11,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #define QUINTIC_HAS_ROOT
 
 #ifndef QUINTIC_BRACKET_SUBDIVS
-#define QUINTIC_BRACKET_SUBDIVS 5
+#define QUINTIC_BRACKET_SUBDIVS 4
 #endif
 #ifndef QUADRATIC_ROOTS
 #include "./quadratic_roots"

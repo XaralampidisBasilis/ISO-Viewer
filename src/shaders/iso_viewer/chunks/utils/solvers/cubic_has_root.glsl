@@ -11,7 +11,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #define CUBIC_HAS_ROOT
 
 #ifndef CUBIC_BRACKET_SUBDIVS
-#define CUBIC_BRACKET_SUBDIVS 3
+#define CUBIC_BRACKET_SUBDIVS 2
 #endif
 
 // Searches a single root of a polynomial within a given interval.
