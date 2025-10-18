@@ -10,6 +10,9 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef QUINTIC_HAS_ROOT
 #define QUINTIC_HAS_ROOT
 
+#ifndef QUINTIC_BRACKET_SUBDIVS
+#define QUINTIC_BRACKET_SUBDIVS 5
+#endif
 #ifndef QUADRATIC_ROOTS
 #include "./quadratic_roots"
 #endif
@@ -375,7 +378,7 @@ bool quintic_has_root(
 
     // Iterate over the intervals where roots may be found
     #pragma unroll
-    for (int i = 0; i != 5; ++i) 
+    for (int i = 0; i < 5; ++i) 
     {
         float current_begin = crit_roots[i];
         float current_end = crit_roots[i + 1];
@@ -471,7 +474,7 @@ bool quintic_has_root_deflate(
         float current_root; int num_roots = 0; 
         
         #pragma unroll
-        for (int i = 0; i <= 4; ++i) 
+        for (int i = 0; i < 5; ++i) 
         {
             if (i < 5 - degree) continue;
 
@@ -544,7 +547,7 @@ bool quintic_has_root_deflate(
 
     // Iterate over the intervals where roots may be found
     #pragma unroll
-    for (int i = 0; i != 5; ++i) 
+    for (int i = 0; i < 5; ++i) 
     {
         float current_begin = crit_roots[i];
         float current_end = crit_roots[i + 1];
@@ -555,6 +558,48 @@ bool quintic_has_root_deflate(
         }
     }
     
+    return false;
+}
+
+// Finds if the given quintic has root polynomial in the interval [begin, end]
+// via uniform sampling in 4-wide tiles (SIMD). Checks sign changes.
+bool quintic_has_root_sample(
+    float poly[6], 
+    const float begin, 
+    const float end
+){
+    float delta = (end - begin) / float(QUINTIC_BRACKET_SUBDIVS * 4);
+    float step = delta * 4.0;
+
+    // Start previous value at begin
+    float prev = (((((poly[5]*begin + poly[4])*begin + poly[3])*begin + poly[2])*begin + poly[1])*begin + poly[0]);
+
+    // First tile positions at begin
+    vec4 pos = begin + delta * vec4(1.0, 2.0, 3.0, 4.0);
+
+    #pragma unroll
+    for (int i = 0; i < QUINTIC_BRACKET_SUBDIVS; ++i) 
+    {
+        // Horner on 4 positions at once
+        vec4 v = vec4(poly[5]);
+        v = v * pos + poly[4];
+        v = v * pos + poly[3];
+        v = v * pos + poly[2];
+        v = v * pos + poly[1];
+        v = v * pos + poly[0];
+
+        // sign-change test across the 4 consecutive edges:
+        vec4 a = vec4(prev, v.xyz);
+        vec4 b = v;
+
+        // opposite signs or exactly zero
+        bool has_root = any(lessThanEqual(a * b, vec4(0.0)));
+        if (has_root) return true;
+
+        prev = v.w;  // carry last sample into next edge
+        pos += step; // next tile (advance by 4 segments)
+    }
+
     return false;
 }
 

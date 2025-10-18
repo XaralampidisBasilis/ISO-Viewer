@@ -138,6 +138,7 @@
         "sobel",
         "softstep",
         "ssign",
+        "SUBDIVS",
         "subind",
         "subm",
         "taylormap",
