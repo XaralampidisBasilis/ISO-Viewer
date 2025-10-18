@@ -72,6 +72,7 @@ export default function()
         SKIPPING_STRATEGY   : 2,
         SKIPPING_METHOD     : 2,
         GRADIENTS_METHOD    : 3,
+        INTERSECTION_TEST   : 0,
 
         BERNSTEIN_ENABLED: 1,
         SKIPPING_ENABLED : 1,
@@ -82,10 +83,10 @@ export default function()
         VARIATION_ENABLED : 0,
         VARIATION_METHOD  : 1,
 
-        MAX_CELLS            : 1000,
-        MAX_TRACES           : 5000,
-        MAX_BLOCKS           : 1000,
-        MAX_GROUPS           : 100,
+        MAX_CELLS           : 1000,
+        MAX_TRACES          : 1000 * 5,
+        MAX_BLOCKS          : 1000,
+        MAX_GROUPS          : 100,
         MAX_CELLS_IN_BLOCK  : 10,
         MAX_TRACES_IN_BLOCK : 50,
         MAX_BLOCKS_IN_GROUP : 20,

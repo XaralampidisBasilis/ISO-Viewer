@@ -572,7 +572,7 @@ bool quintic_has_root_sample(
     float step = delta * 4.0;
 
     // Start previous value at begin
-    float prev = (((((poly[5]*begin + poly[4])*begin + poly[3])*begin + poly[2])*begin + poly[1])*begin + poly[0]);
+    float prev = ((((poly[5]*begin + poly[4])*begin + poly[3])*begin + poly[2])*begin + poly[1])*begin + poly[0];
 
     // First tile positions at begin
     vec4 pos = begin + delta * vec4(1.0, 2.0, 3.0, 4.0);

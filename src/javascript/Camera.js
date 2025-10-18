@@ -1,9 +1,10 @@
 import * as THREE from 'three'
 import Experience from './Experience'
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-// import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls'
-// import { FlyControls } from 'three/examples/jsm/controls/FlyControls'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { TrackballControls } from './Utils/TrackballControls'
+import { FlyControls } from './Utils/FlyControls'
 import { ProbeControls } from './Utils/ProbeControls'
+import { ToggleControls } from './Utils/ToggleControls'
 
 export default class Camera
 {
@@ -16,12 +17,12 @@ export default class Camera
         this.time = this.experience.time
 
         this.setInstance()
-        this.setProbeControls()
+        this.controls = new ProbeControls(this.instance, this.canvas)
     }
 
     setInstance()
     {
-        this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 100)
+        this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 10)
         this.instance.position.set(1, 1, 1)
         this.scene.add(this.instance)
     }
@@ -43,7 +44,6 @@ export default class Camera
         this.trackball.zoomSpeed = 2.0
         this.trackball.panSpeed = 0.05
         this.trackball.rotateSpeed = 1.0
-        this.trackball.enabled = true   
     }
 
     setFlyControls()
@@ -53,7 +53,6 @@ export default class Camera
         this.fly.rollSpeed = Math.PI / 8   
         this.fly.dragToLook = true         
         this.fly.autoForward = false
-        this.fly.enabled = true
     }
 
     setProbeControls()
@@ -75,20 +74,8 @@ export default class Camera
 
     update()
     {
-        if (this.orbit)
-            this.orbit.update()
-
-        if (this.trackball)
-            this.trackball.update()
-
-        if (this.fly) 
-            this.fly.update()
-
-        if (this.probe) 
-            this.probe.update()
-
-        if (this.raycaster)
-            this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)
+        if (this.controls) this.controls.update()
+        if (this.raycaster) this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)
     }
 
     destroy() 

@@ -1,16 +1,16 @@
 
 import Experience from './Experience'
 import Configs from './Utils/Configs'
-import GUI from 'lil-gui'
+import Gui from 'lil-gui'
 
-export default class Controls
+export default class GUI
 {
     constructor()
     {
         this.experience = new Experience()
         this.configs = this.experience.configs
         this.viewer = this.experience.world.viewer
-        this.ui = new GUI() 
+        this.instance = new Gui() 
     }
 
     start()
@@ -23,9 +23,9 @@ export default class Controls
     addFolders()
     {        
         this.folders = {}
-        this.folders.configs = this.ui.addFolder('Configs').close()
-        this.folders.shading = this.ui.addFolder('Shading').close()
-        this.folders.debug = this.ui.addFolder('Debug').close()
+        this.folders.configs = this.instance.addFolder('Configs').close()
+        this.folders.shading = this.instance.addFolder('Shading').close()
+        this.folders.debug = this.instance.addFolder('Debug').close()
     }
 
     addToggles()
@@ -68,6 +68,7 @@ export default class Controls
             blockSize           : this.configs.blockSize,
             downscaleFactor     : this.configs.downscaleFactor,
             interpolationMethod : this.configs.interpolationMethod,
+            intersectionTest    : this.configs.intersectionTest,
             gradientsMethod     : this.configs.gradientsMethod,
             marchingMethod      : this.configs.marchingMethod,
             skippingStrategy    : this.configs.skippingStrategy,    
@@ -120,6 +121,12 @@ export default class Controls
             .onFinishChange((option) => 
             { 
                 this.configs.set('skippingMethod', option) 
+            }),
+
+            intersectionTest: folder.add(objects, 'intersectionTest').options(Configs.IntersectionTests)
+            .onFinishChange((option) => 
+            { 
+                this.configs.set('intersectionTest', option) 
             }),
 
             gradientsMethod: folder.add(objects, 'gradientsMethod').options(Configs.GradientsMethods)

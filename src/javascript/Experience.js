@@ -9,7 +9,7 @@ import Renderer from './Renderer'
 import World from './World/World'
 import Resources from './Utils/Resources'
 import Computes from './Computes/Computes'
-import Controls from './Controls'
+import GUI from './GUI'
 import sources from './sources'
 
 export default class Experience
@@ -44,7 +44,7 @@ export default class Experience
         this.computes = new Computes()
         this.world = new World()
         this.stats = new Stats(true)
-        this.controls = new Controls()
+        this.gui = new GUI()
 
         // Size resize event
         this.sizes.on('resize', () => 
@@ -94,7 +94,7 @@ export default class Experience
     {
         await this.computes.start()
         this.world.start()
-        this.controls.start()
+        this.gui.start()
     }
 
     async change(event)
@@ -118,6 +118,7 @@ export default class Experience
         this.camera?.destroy()
         this.renderer?.destroy()
         this.computes?.destroy()
+        this.gui?.destroy()
 
         // Nullify properties for cleanup
         this.configs = null

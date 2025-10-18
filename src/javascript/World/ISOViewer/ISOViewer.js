@@ -151,6 +151,7 @@ export default class ISOViewer extends EventEmitter
         else if (event.key === 'blockSize'          ) this.onChangeBlockSize(event)
         else if (event.key === 'downscaleFactor'    ) this.onChangeDownscaleFactor(event)
         else if (event.key === 'interpolationMethod') this.onChangeInterpolationMethod(event)
+        else if (event.key === 'intersectionTest'   ) this.onChangeIntersectionTest(event)
         else if (event.key === 'skippingStrategy'   ) this.onChangeSkippingStrategy(event)
         else if (event.key === 'skippingMethod'     ) this.onChangeSkippingMethod(event)
         else if (event.key === 'gradientsMethod'    ) this.onChangeGradientsMethod(event)
@@ -224,6 +225,12 @@ export default class ISOViewer extends EventEmitter
         this.material.needsUpdate = true
     }
 
+    onChangeIntersectionTest(event)
+    {
+        this.material.defines.INTERSECTION_TEST = Configs.IntersectionTests.findIndex((x) => x === this.configs.intersectionTest)
+        this.material.needsUpdate = true
+    }
+
     onChangeMarchingMethod(event)
     {
         this.material.defines.MARCHING_METHOD = Configs.MarchingMethods.findIndex((x) => x === this.configs.marchingMethod)
@@ -247,6 +254,8 @@ export default class ISOViewer extends EventEmitter
         this.material.defines.BBOX_ENABLED = Number(this.configs.boundingBoxEnabled)
         this.material.needsUpdate = true
     }
+
+  
 
     onChangeColormap(event)
     {

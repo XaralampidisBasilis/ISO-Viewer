@@ -42,7 +42,7 @@ class ProbeControls extends Controls {
         this.lookSpeed                = 0.002;
 
         // Trackball-like config
-        this.noZoom                   = false;
+        this.noZoom                   = true;
         this.noPan                    = false;
         this.zoomSpeed                = 1.0;
         this.panSpeed                 = 0.05;

@@ -182,6 +182,14 @@ class TrackballControls extends Controls {
 		 */
 		this.keys = [ 'KeyA' /*A*/, 'KeyS' /*S*/, 'KeyD' /*D*/ ];
 
+        /**
+		 * If you want keys enabled.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
+        this.keysEnabled = true;
+
 		/**
 		 * This object contains references to the mouse actions used by the controls.
 		 *
@@ -752,15 +760,15 @@ function onKeyDown( event ) {
 
 		return;
 
-	} else if ( event.code === this.keys[ _STATE.ROTATE ] && ! this.noRotate ) {
+	} else if ( this.keysEnabled && event.code === this.keys[ _STATE.ROTATE ] && ! this.noRotate ) {
 
 		this.keyState = _STATE.ROTATE;
 
-	} else if ( event.code === this.keys[ _STATE.ZOOM ] && ! this.noZoom ) {
+	} else if ( this.keysEnabled && event.code === this.keys[ _STATE.ZOOM ] && ! this.noZoom ) {
 
 		this.keyState = _STATE.ZOOM;
 
-	} else if ( event.code === this.keys[ _STATE.PAN ] && ! this.noPan ) {
+	} else if ( this.keysEnabled && event.code === this.keys[ _STATE.PAN ] && ! this.noPan ) {
 
 		this.keyState = _STATE.PAN;
 
