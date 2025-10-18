@@ -11,6 +11,7 @@ export default class GUI
         this.configs = this.experience.configs
         this.viewer = this.experience.world.viewer
         this.instance = new Gui() 
+        this.instance.close()
     }
 
     start()

@@ -12,6 +12,26 @@ It demonstrates real-time **isosurface rendering** directly in WebGL.
 
 ---
 
+## 🎮 Navigation Controls
+
+The viewer uses **ProbeControls**, combining free-fly (FPS) movement and trackball-style camera control.
+
+### 🖱️ Mouse
+- **Left drag** → Look around  
+- **Middle drag / Scroll** → Zoom in or out  
+- **Right drag** → Pan
+
+### ⌨️ Keyboard
+- **W / S** → Move forward / backward  
+- **A / D** → Move left / right  
+- **R / F** → Move up / down  
+- **Arrow keys** → Rotate view  
+- **Q / E** → Roll left / right  
+- **Space** → Move faster  
+- **Shift** → Move slower
+
+---
+
 ## 🛠️ Setup
 
 First, install [Node.js](https://nodejs.org/en/download/).
