@@ -1,5 +1,7 @@
 
 // PRINT DEBUG
+debug.variable1 = to_color(map(0.0, sqrt(3.0), cell.span_distance * quintic.root));
+
 switch (u_debug.option - 1000)
 { 
     case 0  : fragColor = debug.variable0; break;

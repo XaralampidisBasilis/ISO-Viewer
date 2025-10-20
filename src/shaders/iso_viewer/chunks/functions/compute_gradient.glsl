@@ -12,4 +12,7 @@
 
 #elif GRADIENTS_METHOD == 2
 #include "./compute_gradient/compute_gradient_triquadratic_bspline"
+
+#elif GRADIENTS_METHOD == 3
+#include "./compute_gradient/compute_gradient_tricubic_bspline"
 #endif

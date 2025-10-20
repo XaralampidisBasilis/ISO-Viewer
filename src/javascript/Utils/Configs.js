@@ -10,24 +10,25 @@ export default class Configs extends EventEmitter
 
     static InterpolationMethods = Object.freeze([
         'trilinear',
-        'tricubic',
+        'tricubicCsébfalvi',
     ])
     static GradientsMethods = Object.freeze([
         'analytic',
-        'sobel',
-        'bspline',
+        'trilinearSobel',
+        'triquadraticBspline',
+        'tricubicBspline',
     ])
     static MarchingMethods = Object.freeze([
-        'cells',
-        'traces',
+        'digitalDifferentialAnalyzer',
+        'uniformStepping',
     ])
     static IntersectionTests = Object.freeze([
         'uniformSamples',
         'hierarchicalBrackets',
     ])
     static SkippingStrategies = Object.freeze([
-        'blocks',
-        'groups',
+        'singleBlocks',
+        'multipleBlocks',
     ])
     static SkippingMethods = Object.freeze([
         'occupancy',
@@ -45,11 +46,11 @@ export default class Configs extends EventEmitter
         this.downscaleFactor = 0.8
         this.isosurfaceValue = 0.7
         
-        this.interpolationMethod = 'tricubic'
-        this.gradientsMethod = 'bspline'
-        this.marchingMethod = 'cells'
+        this.interpolationMethod = 'tricubicCsébfalvi'
+        this.gradientsMethod = 'triquadraticBspline'
+        this.marchingMethod = 'digitalDifferentialAnalyzer'
         this.intersectionTest = 'uniformSamples'
-        this.skippingStrategy = 'groups'
+        this.skippingStrategy = 'multipleBlocks'
         this.skippingMethod = 'anisotropicDistance'
         this.colormap = 'pasteljet'
 

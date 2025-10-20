@@ -94,11 +94,11 @@ export default class GUI
             }),
 
             // DANGEROUS for WebGL Context Loss
-            // downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(1).step(0.01)
-            // .onFinishChange((value) => 
-            // { 
-            //     this.configs.set('downscaleFactor', value) 
-            // }),
+            downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(0.8).step(0.1)
+            .onFinishChange((value) => 
+            { 
+                this.configs.set('downscaleFactor', value) 
+            }),
             
             marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
             .onFinishChange((option) => 

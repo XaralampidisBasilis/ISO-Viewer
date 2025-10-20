@@ -292,10 +292,8 @@ void quintic_roots_deflate(
         begin_value = begin_value * begin + deriv_poly[1];
         begin_value = begin_value * begin + deriv_poly[0];
 
-        // Start deflated polynomial as the derivative
-        float defl_poly[6] = deriv_poly;
-
         // Iterate over the intervals where roots may be found
+        float defl_poly[6] = deriv_poly;
         float current_root = begin; 
         int num_roots = 0; 
     
