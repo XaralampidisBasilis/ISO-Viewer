@@ -443,8 +443,9 @@ bool quintic_has_root_deflate(
     // reduce the number of arithmetic instructions roughly by a factor of two.
     // However, it would also cause register spilling, which has a far more
     // negative impact on the overall run time. Profiling indicates that the
-    // current implementation has no spilling whatsoever.    
+    // current implementation has no spilling whatsoever.   
 
+    #pragma no_unroll 
     for (int degree = 3; degree <= 4; ++degree) 
     {
         // Take the integral of the previous derivative (scaled such that the
@@ -471,12 +472,13 @@ bool quintic_has_root_deflate(
         float defl_poly[5] = deriv_poly;
 
         // Iterate over the intervals where roots may be found
-        float current_root; int num_roots = 0; 
+        float current_root = begin; 
+        int num_roots = 0; 
         
         #pragma unroll
         for (int i = 0; i < 5; ++i) 
         {
-            if (i < 5 - degree) continue;
+            if (i < 5 - degree)  continue;
 
             float current_begin = crit_roots[i];
             float current_end = crit_roots[i + 1];
@@ -485,36 +487,30 @@ bool quintic_has_root_deflate(
             if (quintic_deriv_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
             {
                 crit_roots[i] = current_root; 
-                
-                // When a root is found deflate the polynomial by one degree 
-                // Shift coefficients left one slot to avoid dynamic indexing later in quadratic polynomial
-                // float residue = defl_poly[0]; 
-                defl_poly[0] = defl_poly[1];
-                defl_poly[1] = defl_poly[2];
-                defl_poly[2] = defl_poly[3];
-                defl_poly[3] = defl_poly[4];
-                defl_poly[4] = 0.0;
-
-                // Iterative accumulation to deflate the polynomial
-                // without causing spilling.
-                defl_poly[2] += defl_poly[3] * current_root;
-                defl_poly[1] += defl_poly[2] * current_root;
-                defl_poly[0] += defl_poly[1] * current_root;
-                // residue += defl_poly[0] * current_root;
-
-                // Increment root count until there is one bracket left
                 if (i < 4) num_roots++;
 
-                // When the deflated polynomial becomes a quadratic
-                // break the loop and solve for the remaining roots
-                if (num_roots == degree - 2) break;
+                float d4 = 0.0;        
+                float d3 = d4 * current_root + defl_poly[4];
+                float d2 = d3 * current_root + defl_poly[3];
+                float d1 = d2 * current_root + defl_poly[2];
+                float d0 = d1 * current_root + defl_poly[1];
+                // float res = d0 * current_root + defl_poly[0];
 
+                defl_poly[4] = d4;
+                defl_poly[3] = d3;
+                defl_poly[2] = d2;
+                defl_poly[1] = d1;
+                defl_poly[0] = d0;
             }
             else
             {
                 // Create an empty interval for the next iteration
                 crit_roots[i] = crit_roots[i - 1];
             }
+
+            // When the deflated polynomial becomes a quadratic
+            // break the loop and solve for the remaining roots
+            if (num_roots == degree - 2) break;
         }
 
         if (num_roots == degree - 2) 

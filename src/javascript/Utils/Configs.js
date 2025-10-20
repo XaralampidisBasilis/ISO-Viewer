@@ -23,7 +23,7 @@ export default class Configs extends EventEmitter
     ])
     static IntersectionTests = Object.freeze([
         'uniformSamples',
-        'recursiveBrackets',
+        'hierarchicalBrackets',
     ])
     static SkippingStrategies = Object.freeze([
         'blocks',

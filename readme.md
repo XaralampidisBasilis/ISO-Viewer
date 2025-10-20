@@ -8,7 +8,7 @@ It demonstrates real-time **isosurface rendering** directly in WebGL.
 ## 🚀 Live Demo
 👉 [Try the demo here](https://xaralampidisbasilis.github.io/ISO-Viewer/)
 
-> ⚠️ **Note:** The demo does **not** run on mobile devices. Please open it on a desktop or laptop with GPU acceleration enabled.
+> ⚠️ **Note:** The demo does **not** run on mobile devices. Please open it on a desktop or laptop with GPU acceleration enabled. It takes around 1 min to load 
 
 ---
 

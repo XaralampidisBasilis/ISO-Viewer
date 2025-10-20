@@ -26,10 +26,12 @@ bool quadratic_roots(
     if (discriminant < 0.0) return false;
  
     // Compute the quadratic roots using numerically stable solutions
-    float sqrt_disc = sqrt(max(discriminant, 0.0));
-    float scaled_root = poly.y + (poly.y > 0.0 ? sqrt_disc : -sqrt_disc);
-    float root0 = -2.0 * poly.x / scaled_root;
-    float root1 = -0.5 * scaled_root / poly.z;
+    float sqrt_disc = sqrt(discriminant);
+    float scaled_root = -0.5 * (poly.y + sign(poly.y) * sqrt_disc);
+    float root0 = poly.x / scaled_root;
+    float root1 = scaled_root / poly.z;
+
+    // Clamp to interval
     root0 = clamp(root0, begin, end);
     root1 = clamp(root1, begin, end); 
 

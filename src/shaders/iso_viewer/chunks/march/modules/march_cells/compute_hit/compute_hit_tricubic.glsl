@@ -1,6 +1,10 @@
 
 // Compute quintic polynomial roots in [0, 1]
+#if VARIATION_ENABLED == 1
+quintic_roots_deflate(quintic.roots, quintic.coeffs, 0.0, 1.0);
+#else
 quintic_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
+#endif
 quintic.root = mmin(quintic.roots);
 
 // Compute derivative at root

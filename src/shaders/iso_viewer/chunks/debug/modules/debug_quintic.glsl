@@ -14,7 +14,7 @@ for (int i = 0; i <= 5; ++i)
     }
 }
 
-vec4 debug_quintic_num_roots = to_color(float(quintic.num_roots) / 5.0);
+vec4 debug_quintic_num_roots = to_color(float(quintic_num_roots) / 5.0);
 
 // degree
 float quintic_maxabs = 0.0;
