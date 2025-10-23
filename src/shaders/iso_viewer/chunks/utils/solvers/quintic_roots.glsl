@@ -210,6 +210,7 @@ void quintic_roots(
     out_roots[5] = POLY_NO_INTERSECTION;
 }
 
+
 // Finds all roots of the given quintic polynomial in the interval [begin, end] using high order deflation and
 // writes them to out_roots using the cubic deflation method. Some entries will be POLY_NO_INTERSECTION but other 
 // than that the array is sorted. The last entry is always POLY_NO_INTERSECTION.
@@ -221,42 +222,27 @@ void quintic_roots_deflate(
 ){
     float tolerance = (end - begin) * 1e-6;
 
-    // The last entry in the root array is set to end to make it easier to
-    // iterate over relevant intervals, all untouched roots are set to begin
-    out_roots[0] = begin;
-    out_roots[1] = begin;
-    out_roots[2] = begin;
-    out_roots[5] = end;
-
     // Construct the quadratic derivative of the polynomial. We divide each
     // derivative by the factorial of its order, such that the constant
     // coefficient can be copied directly from poly. That is a safeguard
     // against overflow and makes it easier to avoid spilling below. The
     // factors happen to be binomial coefficients then.
-    // degree = 2
     float deriv_poly[6];
     deriv_poly[5] = 0.0;
     deriv_poly[4] = 0.0;
     deriv_poly[3] = 0.0;
-    deriv_poly[2] = poly[5] * 10.0; 
-    deriv_poly[1] = poly[4] * 4.0;  
-    deriv_poly[0] = poly[3];    
+    deriv_poly[2] = 0.0; 
+    deriv_poly[1] = poly[5] * 5.0;  
+    deriv_poly[0] = poly[4];   
 
-    // Compute its two roots using the quadratic formula
-    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
-    vec2 quad_roots;
-    
-    if (quadratic_roots(quad_roots, quad_poly, begin, end)) 
-    {
-        out_roots[3] = quad_roots[0];
-        out_roots[4] = quad_roots[1];
-    }
-    else 
-    {
-        // Indicate that the quadratic has no roots
-        out_roots[3] = begin;
-        out_roots[4] = begin;
-    }
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[3] = begin;
+    out_roots[4] = -deriv_poly[0] / deriv_poly[1];
+    out_roots[5] = end;
 
     // Work your way up to derivatives of higher degree until you reach the
     // polynomial itself. This implementation may seem peculiar: It always
@@ -267,7 +253,7 @@ void quintic_roots_deflate(
     // negative impact on the overall run time. Profiling indicates that the
     // current implementation has no spilling whatsoever.
     #pragma no_unroll
-    for (int degree = 3; degree <= 5; ++degree) 
+    for (int degree = 2; degree <= 5; ++degree) 
     {
         // Take the integral of the previous derivative (scaled such that the
         // constant coefficient can still be copied directly from poly)
@@ -283,6 +269,7 @@ void quintic_roots_deflate(
         deriv_poly[0] = (degree == 5) ? poly[0] : deriv_poly[0];
         deriv_poly[0] = (degree == 4) ? poly[1] : deriv_poly[0];
         deriv_poly[0] = (degree == 3) ? poly[2] : deriv_poly[0];
+        deriv_poly[0] = (degree == 2) ? poly[3] : deriv_poly[0];
 
         // Determine the value of this derivative at begin
         float begin_value = deriv_poly[5];
@@ -300,6 +287,10 @@ void quintic_roots_deflate(
         #pragma no_unroll
         for (int i = 5 - degree; i <= 4; ++i) 
         {
+            // When the deflated polynomial becomes a quadratic
+            // break the loop and solve for the remaining roots
+            if (num_roots == degree - 2) break;  
+
             float current_begin = out_roots[i];
             float current_end = out_roots[i + 1];
 
@@ -333,16 +324,12 @@ void quintic_roots_deflate(
             {
                 out_roots[i] = POLY_NO_INTERSECTION;
             }
-            
-            // When the deflated polynomial becomes a quadratic
-            // break the loop and solve for the remaining roots
-            if (num_roots == degree - 2) break;  
         }
 
+        // Compute quadratic roots in [current_root, end]
+        // if deflated polynomial is quadratic
         if (num_roots == degree - 2) 
         {
-            // Compute quadratic roots in [current_root, end]
-            // if roots where found clamp them to bracket to keep the order
             vec3 quad_poly = vec3(defl_poly[0], defl_poly[1], defl_poly[2]);
             vec2 quad_roots;
 
@@ -355,6 +342,438 @@ void quintic_roots_deflate(
             {
                 out_roots[3] = current_root;
                 out_roots[4] = current_root;
+            }
+        }
+    }
+
+    // We no longer need this array entry
+    out_roots[5] = POLY_NO_INTERSECTION;
+}
+
+void quintic_roots_deflate_2(
+    out float out_roots[6], 
+    float poly[6], 
+    float begin, 
+    float end
+){
+    float tolerance = (end - begin) * 1e-6;
+
+    // Construct the quadratic derivative of the polynomial. We divide each
+    // derivative by the factorial of its order, such that the constant
+    // coefficient can be copied directly from poly. That is a safeguard
+    // against overflow and makes it easier to avoid spilling below. The
+    // factors happen to be binomial coefficients then.
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = 0.0; 
+    deriv_poly[1] = poly[5] * 5.0;  
+    deriv_poly[0] = poly[4];    
+
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[3] = begin;
+    out_roots[4] = -deriv_poly[0] / deriv_poly[1];
+    out_roots[5] = end;
+
+    // Work your way up to derivatives of higher degree until you reach the
+    // polynomial itself. This implementation may seem peculiar: It always
+    // treats the derivative as though it had degree 5 and it
+    // constructs the derivatives in a contrived way. Changing that would
+    // reduce the number of arithmetic instructions roughly by a factor of two.
+    // However, it would also cause register spilling, which has a far more
+    // negative impact on the overall run time. Profiling indicates that the
+    // current implementation has no spilling whatsoever.
+    #pragma no_unroll
+    for (int degree = 2; degree <= 5; ++degree) 
+    {
+        // Take the integral of the previous derivative (scaled such that the
+        // constant coefficient can still be copied directly from poly)
+        float prev_derivative_order = float(6 - degree);
+        deriv_poly[5] = deriv_poly[4] * (prev_derivative_order * (1.0 / 5.0));
+        deriv_poly[4] = deriv_poly[3] * (prev_derivative_order * (1.0 / 4.0));
+        deriv_poly[3] = deriv_poly[2] * (prev_derivative_order * (1.0 / 3.0));
+        deriv_poly[2] = deriv_poly[1] * (prev_derivative_order * (1.0 / 2.0));
+        deriv_poly[1] = deriv_poly[0] * (prev_derivative_order * (1.0 / 1.0));
+     
+        // Copy the constant coefficient without causing spilling. This part
+        // would be harder if the derivative were not scaled the way it is.
+        deriv_poly[0] = (degree == 5) ? poly[0] : deriv_poly[0];
+        deriv_poly[0] = (degree == 4) ? poly[1] : deriv_poly[0];
+        deriv_poly[0] = (degree == 3) ? poly[2] : deriv_poly[0];
+        deriv_poly[0] = (degree == 2) ? poly[3] : deriv_poly[0];
+
+        // Determine the value of this derivative at begin
+        float begin_value = deriv_poly[5];
+        begin_value = begin_value * begin + deriv_poly[4];
+        begin_value = begin_value * begin + deriv_poly[3];
+        begin_value = begin_value * begin + deriv_poly[2];
+        begin_value = begin_value * begin + deriv_poly[1];
+        begin_value = begin_value * begin + deriv_poly[0];
+
+        // Iterate over the intervals where roots may be found
+        float current_root = begin; 
+        int num_roots = 0; 
+
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
+        {
+            float current_begin = out_roots[i];
+            float current_end = out_roots[i + 1];
+
+            // Try to find a root
+            if (quintic_root_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+            {
+                begin_value /= current_end - current_root;
+                out_roots[i] = current_root; 
+                num_roots++;
+
+                float d5 = 0.0;   
+                float d4 = deriv_poly[5] + d5 * current_root;        
+                float d3 = deriv_poly[4] + d4 * current_root;
+                float d2 = deriv_poly[3] + d3 * current_root;
+                float d1 = deriv_poly[2] + d2 * current_root;
+                float d0 = deriv_poly[1] + d1 * current_root;
+                // float res = d0 * current_root + deriv_poly[0];
+
+                deriv_poly[5] = d5;  
+                deriv_poly[4] = d4;
+                deriv_poly[3] = d3;
+                deriv_poly[2] = d2;
+                deriv_poly[1] = d1;
+                deriv_poly[0] = d0;
+            }
+            else if (degree < 5)
+            {
+                // Create an empty interval for the next iteration
+                out_roots[i] = out_roots[i - 1];
+            }
+            else
+            {
+                out_roots[i] = POLY_NO_INTERSECTION;
+            }
+
+            // Compute quadratic roots in [current_root, end]
+            // if deflated polynomial is indeed quadratic
+            if (num_roots == degree - 2) 
+            {
+                // Copy quadratic polynomial before inflation
+                vec3 quad_poly;
+                quad_poly[2] = deriv_poly[2];
+                quad_poly[1] = deriv_poly[1];
+                quad_poly[0] = deriv_poly[0];
+
+                vec2 quad_roots;
+                if (quadratic_roots(quad_roots, quad_poly, current_root, end)) 
+                {
+                    out_roots[i] = quad_roots[0];
+                    out_roots[i + 1] = quad_roots[1];
+                }
+                else
+                {
+                    out_roots[i] = current_root;
+                    out_roots[i + 1] = current_root;
+                }
+
+                break;
+            }
+        }
+
+        // Inflate back the polynomial to get to the initial derivative 
+        float previous_root = begin;
+
+        #pragma unroll
+        for (int i = 0; i <= 4; ++i) 
+        {
+            float current_root = out_roots[i];
+
+            if (current_root == previous_root || 
+                current_root == POLY_NO_INTERSECTION) continue;
+    
+            deriv_poly[5] = -deriv_poly[5] * current_root + deriv_poly[4];     
+            deriv_poly[4] = -deriv_poly[4] * current_root + deriv_poly[3]; 
+            deriv_poly[3] = -deriv_poly[3] * current_root + deriv_poly[2]; 
+            deriv_poly[2] = -deriv_poly[2] * current_root + deriv_poly[1]; 
+            deriv_poly[1] = -deriv_poly[1] * current_root + deriv_poly[0]; 
+            deriv_poly[0] = -deriv_poly[0] * current_root;
+        
+            previous_root = current_root;
+        }   
+    }
+
+    // We no longer need this array entry
+    out_roots[5] = POLY_NO_INTERSECTION;
+}
+
+void quintic_roots_deflate_3(
+    out float out_roots[6], 
+    float poly[6], 
+    float begin, 
+    float end
+){
+    float tolerance = (end - begin) * 1e-6;
+
+    // Construct the quadratic derivative of the polynomial. We divide each
+    // derivative by the factorial of its order, such that the constant
+    // coefficient can be copied directly from poly. That is a safeguard
+    // against overflow and makes it easier to avoid spilling below. The
+    // factors happen to be binomial coefficients then.
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = 0.0; 
+    deriv_poly[1] = poly[5] * 5.0;  
+    deriv_poly[0] = poly[4];    
+
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[3] = begin;
+    out_roots[4] = -deriv_poly[0] / deriv_poly[1];
+    out_roots[5] = end;
+
+    // Work your way up to derivatives of higher degree until you reach the
+    // polynomial itself. This implementation may seem peculiar: It always
+    // treats the derivative as though it had degree 5 and it
+    // constructs the derivatives in a contrived way. Changing that would
+    // reduce the number of arithmetic instructions roughly by a factor of two.
+    // However, it would also cause register spilling, which has a far more
+    // negative impact on the overall run time. Profiling indicates that the
+    // current implementation has no spilling whatsoever.
+    #pragma no_unroll
+    for (int degree = 2; degree <= 5; ++degree) 
+    {
+        // Take the integral of the previous derivative (scaled such that the
+        // constant coefficient can still be copied directly from poly)
+        float prev_derivative_order = float(6 - degree);
+        deriv_poly[5] = deriv_poly[4] * (prev_derivative_order * (1.0 / 5.0));
+        deriv_poly[4] = deriv_poly[3] * (prev_derivative_order * (1.0 / 4.0));
+        deriv_poly[3] = deriv_poly[2] * (prev_derivative_order * (1.0 / 3.0));
+        deriv_poly[2] = deriv_poly[1] * (prev_derivative_order * (1.0 / 2.0));
+        deriv_poly[1] = deriv_poly[0] * (prev_derivative_order * (1.0 / 1.0));
+     
+        // Copy the constant coefficient without causing spilling. This part
+        // would be harder if the derivative were not scaled the way it is.
+        deriv_poly[0] = (degree == 5) ? poly[0] : deriv_poly[0];
+        deriv_poly[0] = (degree == 4) ? poly[1] : deriv_poly[0];
+        deriv_poly[0] = (degree == 3) ? poly[2] : deriv_poly[0];
+        deriv_poly[0] = (degree == 2) ? poly[3] : deriv_poly[0];
+
+        // Determine the value of this derivative at begin
+        float begin_value = deriv_poly[5];
+        begin_value = begin_value * begin + deriv_poly[4];
+        begin_value = begin_value * begin + deriv_poly[3];
+        begin_value = begin_value * begin + deriv_poly[2];
+        begin_value = begin_value * begin + deriv_poly[1];
+        begin_value = begin_value * begin + deriv_poly[0];
+
+        // Iterate over the intervals where roots may be found
+        float current_root = begin; 
+        int num_roots = 0; 
+
+        #pragma unroll
+        for (int i = 0; i <= 4; ++i) 
+        {
+            if (i < 5 - degree) continue;
+
+            float current_begin = out_roots[i];
+            float current_end = out_roots[i + 1];
+
+            // Try to find a root
+            if (quintic_root_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+            {
+                begin_value /= current_end - current_root;
+                out_roots[i] = current_root; 
+                num_roots++;
+
+                float d5 = 0.0;   
+                float d4 = deriv_poly[5] + d5 * current_root;        
+                float d3 = deriv_poly[4] + d4 * current_root;
+                float d2 = deriv_poly[3] + d3 * current_root;
+                float d1 = deriv_poly[2] + d2 * current_root;
+                float d0 = deriv_poly[1] + d1 * current_root;
+                // float res = d0 * current_root + deriv_poly[0];
+
+                deriv_poly[5] = d5;  
+                deriv_poly[4] = d4;
+                deriv_poly[3] = d3;
+                deriv_poly[2] = d2;
+                deriv_poly[1] = d1;
+                deriv_poly[0] = d0;
+            }
+            else if (degree < 5)
+            {
+                // Create an empty interval for the next iteration
+                out_roots[i] = out_roots[i - 1];
+            }
+            else
+            {
+                out_roots[i] = POLY_NO_INTERSECTION;
+            }
+        }
+        // Inflate back the polynomial to get to the initial derivative 
+        float previous_root = begin;
+
+        #pragma unroll
+        for (int i = 0; i <= 4; ++i) 
+        {
+            float current_root = out_roots[i];
+
+            if (current_root == previous_root || current_root == POLY_NO_INTERSECTION) continue;
+    
+            deriv_poly[5] = -deriv_poly[5] * current_root + deriv_poly[4];     
+            deriv_poly[4] = -deriv_poly[4] * current_root + deriv_poly[3]; 
+            deriv_poly[3] = -deriv_poly[3] * current_root + deriv_poly[2]; 
+            deriv_poly[2] = -deriv_poly[2] * current_root + deriv_poly[1]; 
+            deriv_poly[1] = -deriv_poly[1] * current_root + deriv_poly[0]; 
+            deriv_poly[0] = -deriv_poly[0] * current_root;
+        
+            previous_root = current_root;
+        }   
+    }
+
+    // We no longer need this array entry
+    out_roots[5] = POLY_NO_INTERSECTION;
+}
+
+void quintic_roots_deflate_4(
+    out float out_roots[6], 
+    float poly[6], 
+    float begin, 
+    float end
+){
+    float tolerance = (end - begin) * 1e-6;
+
+    // Construct the quadratic derivative of the polynomial. We divide each
+    // derivative by the factorial of its order, such that the constant
+    // coefficient can be copied directly from poly. That is a safeguard
+    // against overflow and makes it easier to avoid spilling below. The
+    // factors happen to be binomial coefficients then.
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = 0.0; 
+    deriv_poly[1] = poly[5] * 5.0;  
+    deriv_poly[0] = poly[4];   
+
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[3] = begin;
+    out_roots[4] = -deriv_poly[0] / deriv_poly[1];
+    out_roots[5] = end;
+
+    // Work your way up to derivatives of higher degree until you reach the
+    // polynomial itself. This implementation may seem peculiar: It always
+    // treats the derivative as though it had degree 5 and it
+    // constructs the derivatives in a contrived way. Changing that would
+    // reduce the number of arithmetic instructions roughly by a factor of two.
+    // However, it would also cause register spilling, which has a far more
+    // negative impact on the overall run time. Profiling indicates that the
+    // current implementation has no spilling whatsoever.
+    #pragma no_unroll
+    for (int degree = 2; degree <= 5; ++degree) 
+    {
+        // Take the integral of the previous derivative (scaled such that the
+        // constant coefficient can still be copied directly from poly)
+        float prev_derivative_order = float(6 - degree);
+        deriv_poly[5] = deriv_poly[4] * (prev_derivative_order * (1.0 / 5.0));
+        deriv_poly[4] = deriv_poly[3] * (prev_derivative_order * (1.0 / 4.0));
+        deriv_poly[3] = deriv_poly[2] * (prev_derivative_order * (1.0 / 3.0));
+        deriv_poly[2] = deriv_poly[1] * (prev_derivative_order * (1.0 / 2.0));
+        deriv_poly[1] = deriv_poly[0] * (prev_derivative_order * (1.0 / 1.0));
+     
+        // Copy the constant coefficient without causing spilling. This part
+        // would be harder if the derivative were not scaled the way it is.
+        deriv_poly[0] = (degree == 5) ? poly[0] : deriv_poly[0];
+        deriv_poly[0] = (degree == 4) ? poly[1] : deriv_poly[0];
+        deriv_poly[0] = (degree == 3) ? poly[2] : deriv_poly[0];
+        deriv_poly[0] = (degree == 2) ? poly[3] : deriv_poly[0];
+
+        // Determine the value of this derivative at begin
+        float begin_value = deriv_poly[5];
+        begin_value = begin_value * begin + deriv_poly[4];
+        begin_value = begin_value * begin + deriv_poly[3];
+        begin_value = begin_value * begin + deriv_poly[2];
+        begin_value = begin_value * begin + deriv_poly[1];
+        begin_value = begin_value * begin + deriv_poly[0];
+
+        // Iterate over the intervals where roots may be found
+        float defl_poly[6] = deriv_poly;
+        float current_root = begin; 
+        int num_roots = 0; 
+    
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
+        {
+            float current_begin = out_roots[i];
+            float current_end = out_roots[i + 1];
+
+            // Try to find a root
+            if (quintic_root_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+            {
+                out_roots[i] = current_root; 
+                num_roots++;
+
+                float d5 = 0.0;   
+                float d4 = d5 * current_root + defl_poly[5];        
+                float d3 = d4 * current_root + defl_poly[4];
+                float d2 = d3 * current_root + defl_poly[3];
+                float d1 = d2 * current_root + defl_poly[2];
+                float d0 = d1 * current_root + defl_poly[1];
+                // float res = d0 * current_root + defl_poly[0];
+
+                defl_poly[5] = d5;  
+                defl_poly[4] = d4;
+                defl_poly[3] = d3;
+                defl_poly[2] = d2;
+                defl_poly[1] = d1;
+                defl_poly[0] = d0;
+            }
+            else if (degree < 5)
+            {
+                // Create an empty interval for the next iteration
+                out_roots[i] = out_roots[i - 1];
+            }
+            else
+            {
+                out_roots[i] = POLY_NO_INTERSECTION;
+            }
+
+            // When the deflated polynomial becomes a quadratic
+            // compute remaining roots with quadratic formula
+            // in [current_root, end] and break the loop
+            if (num_roots == degree - 2) 
+            {
+                // Copy quadratic polynomial before inflation
+                vec3 quad_poly;
+                quad_poly[2] = defl_poly[2];
+                quad_poly[1] = defl_poly[1];
+                quad_poly[0] = defl_poly[0];
+
+                vec2 quad_roots;
+                if (quadratic_roots(quad_roots, quad_poly, current_root, end)) 
+                {
+                    out_roots[i + 1] = quad_roots[0];
+                    out_roots[i + 2] = quad_roots[1];
+                }
+                else
+                {
+                    out_roots[i + 1] = current_root;
+                    out_roots[i + 2] = current_root;
+                }
+
+                break;
             }
         }
     }
