@@ -16,13 +16,19 @@ Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
 
 // When there are fewer intersections/roots than theoretically possible, some
 // array entries are set to this value
-#ifndef POLY_NO_INTERSECTION
-#define POLY_NO_INTERSECTION 3.4e38
+#ifndef CUBIC_NO_INTERSECTION
+#define CUBIC_NO_INTERSECTION 3.4e38
+#endif
+// How close we want to get in the real roots
+#ifndef CUBIC_ROOTS_TOLERANCE
+#define CUBIC_ROOTS_TOLERANCE 1e-6
+#endif
+// The number of newton bisection iterations to reach 
+// the desired error tolerance
+#ifndef CUBIC_NEWTON_BISECTION_ITERS
+#define CUBIC_NEWTON_BISECTION_ITERS 10
 #endif
 
-#ifndef QUADRATIC_ROOTS
-#include "./quadratic_roots"
-#endif
 #ifndef EVAL_POLY
 #include "../math/eval_poly"
 #endif
@@ -75,7 +81,7 @@ bool cubic_roots_newton_bisection
     float current = 0.5 * (begin + end);
 
     #pragma no_unroll
-    for (int i = 0; i < 6; ++i) 
+    for (int i = 0; i < CUBIC_NEWTON_BISECTION_ITERS; ++i) 
     {
         // Evaluate the polynomial and its derivative
         float derivative = poly[3];
@@ -111,15 +117,15 @@ bool cubic_roots_newton_bisection
 }
 
 // Finds all roots of the cubic polynomial in the interval [begin, end] and
-// writes them to out_roots. Some entries will be POLY_NO_INTERSECTION but other 
-// than that the array is sorted. The last entry is always POLY_NO_INTERSECTION.
+// writes them to out_roots. Some entries will be CUBIC_NO_INTERSECTION but other 
+// than that the array is sorted. The last entry is always CUBIC_NO_INTERSECTION.
 void cubic_roots(
     out vec4 out_roots, 
     vec4 poly, 
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1e-6;
+    float tolerance = (end - begin) * CUBIC_ROOTS_TOLERANCE;
 
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched roots are set to begin
@@ -138,17 +144,20 @@ void cubic_roots(
     deriv_poly[3] = 0.0;
 
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
-    vec2 quad_roots;
-
-    if (quadratic_roots(quad_roots, quad_poly, begin, end)) 
-    {        
-        out_roots[1] = quad_roots[0];
-        out_roots[2] = quad_roots[1];
-    }
-    else 
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+    if (discriminant >= 0.0) 
     {
-        // Indicate that the quadratic has no roots
+        // Compute the quadratic roots using numerically stable solutions
+        float sqrt_disc = sqrt(discriminant);
+        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
+        float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
+
+        out_roots[1] = min(root_0, root_1);
+        out_roots[2] = max(root_0, root_1);
+    }
+    else
+    {
         out_roots[1] = begin;
         out_roots[2] = begin;
     }
@@ -183,12 +192,130 @@ void cubic_roots(
         }
         else
         {
-            out_roots[i] = POLY_NO_INTERSECTION;
+            out_roots[i] = CUBIC_NO_INTERSECTION;
         }
     }
  
     // We no longer need this array entry
-    out_roots[3] = POLY_NO_INTERSECTION;
+    out_roots[3] = CUBIC_NO_INTERSECTION;
+}
+
+// Finds all roots of the given quintic polynomial in the interval [begin, end] using cubic deflation and
+// writes them to out_roots using the cubic deflation method. Some entries will be QUINTIC_NO_INTERSECTION but other 
+// than that the array is sorted. The last entry is always QUINTIC_NO_INTERSECTION.
+void cubic_roots_deflate(
+    out vec4 out_roots, 
+    vec4 poly, 
+    float begin, 
+    float end
+){
+    float tolerance = (end - begin) * CUBIC_ROOTS_TOLERANCE;
+
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[3] = end;
+
+    // Construct the quadratic derivative of the polynomial. We divide each
+    // derivative by the factorial of its order, such that the constant
+    // coefficient can be copied directly from poly. That is a safeguard
+    // against overflow and makes it easier to avoid spilling below. The
+    // factors happen to be binomial coefficients then.
+    vec4 deriv_poly;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = poly[3] * 3.0;
+    deriv_poly[1] = poly[2] * 2.0;
+    deriv_poly[0] = poly[1];
+
+    // Compute its two roots using the quadratic formula
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+    if (discriminant >= 0.0) 
+    {
+        // Compute the quadratic roots using numerically stable solutions
+        float sqrt_disc = sqrt(discriminant);
+        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
+        float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
+
+        out_roots[1] = min(root_0, root_1);
+        out_roots[2] = max(root_0, root_1);
+    }
+    else
+    {
+        out_roots[1] = begin;
+        out_roots[2] = begin;
+    }
+
+    // Take the integral of the previous derivative (scaled such that the
+    // constant coefficient can still be copied directly from poly)
+    // Copy the constant coefficient without causing spilling. This part
+    // would be harder if the derivative were not scaled the way it is.
+    deriv_poly[3] = deriv_poly[2] * (1.0 / 3.0);
+    deriv_poly[2] = deriv_poly[1] * (1.0 / 2.0);
+    deriv_poly[1] = deriv_poly[0] * (1.0 / 1.0);
+    deriv_poly[0] = poly[0];
+
+    // Determine the value of this derivative at begin
+    float begin_value = deriv_poly[3];
+    begin_value = begin_value * begin + deriv_poly[2];
+    begin_value = begin_value * begin + deriv_poly[1];
+    begin_value = begin_value * begin + deriv_poly[0];
+
+    // Iterate over the intervals where roots may be found
+    float current_root = begin;
+    bool solve_quadratic = false;
+
+    #pragma unroll
+    for (int i = 0; i <= 2; ++i) 
+    {
+        if (solve_quadratic) continue;
+
+        float current_begin = out_roots[i];
+        float current_end = out_roots[i + 1];
+
+        // Try to find a root
+        if (cubic_roots_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+        {
+            out_roots[i] = current_root;
+
+            // If we found a root but we are in the last bracket deflation is not needed
+            solve_quadratic = (i != 2);
+        }
+        else
+        {
+            out_roots[i] = CUBIC_NO_INTERSECTION;
+        }
+    }
+
+    // Compute quadratic roots in [current_root, end]
+    if (solve_quadratic) 
+    {
+        // deflate the cubic to quadratic
+        deriv_poly[2] = deriv_poly[2] + deriv_poly[3] * current_root; 
+        deriv_poly[1] = deriv_poly[1] + deriv_poly[2] * current_root; 
+
+        // If quadratic discriminant is negative there are no roots
+        float discriminant = deriv_poly[2] * deriv_poly[2] - 4.0 * deriv_poly[1] * deriv_poly[3];
+        if (discriminant >= 0.0) 
+        {
+            // Compute the quadratic roots using numerically stable solutions
+            float sqrt_disc = sqrt(discriminant);
+            float scaled_root = -0.5 * (deriv_poly[2] + sqrt_disc * sign(deriv_poly[2]));
+            float root_0 = clamp(deriv_poly[1] / scaled_root, current_root, end);
+            float root_1 = clamp(scaled_root / deriv_poly[3], current_root, end); 
+
+            out_roots[1] = min(root_0, root_1);
+            out_roots[2] = max(root_0, root_1);
+        }
+        else
+        {
+            out_roots[1] = CUBIC_NO_INTERSECTION;
+            out_roots[2] = CUBIC_NO_INTERSECTION;
+        }
+    }
+
+    // We no longer need this array entry
+    out_roots[3] = CUBIC_NO_INTERSECTION;
 }
 
 // Finds all roots of the cubic polynomial

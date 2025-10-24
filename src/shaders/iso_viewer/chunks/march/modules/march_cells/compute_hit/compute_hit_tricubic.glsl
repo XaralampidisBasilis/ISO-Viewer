@@ -7,7 +7,10 @@ quintic_roots(quintic.roots, quintic.coeffs, 0.0, 1.0);
 quintic_roots_deflate(quintic.roots, quintic.coeffs, 0.0, 1.0);
 
 #elif VARIATION_METHOD == 3
-quintic_roots_deflate_3(quintic.roots, quintic.coeffs, 0.0, 1.0);
+quintic_roots_deflate_inflate(quintic.roots, quintic.coeffs, 0.0, 1.0);
+
+#elif VARIATION_METHOD == 4
+quintic_roots_deflate_cubic(quintic.roots, quintic.coeffs, 0.0, 1.0);
 #endif
 
 quintic.root = mmin(quintic.roots);

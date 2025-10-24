@@ -51,7 +51,6 @@ bool cubic_has_root(
     float begin, 
     float end
 ){
-
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched roots are set to begin
     vec4 crit_roots;
@@ -70,17 +69,20 @@ bool cubic_has_root(
     deriv_poly[3] = 0.0;
 
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
-    vec2 quad_roots;
-
-    if (quadratic_roots(quad_roots, quad_poly, begin, end)) 
-    {        
-        crit_roots[1] = quad_roots[0];
-        crit_roots[2] = quad_roots[1];
-    }
-    else 
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+    if (discriminant >= 0.0) 
     {
-        // Indicate that the quadratic has no roots
+        // Compute the quadratic roots using numerically stable solutions
+        float sqrt_disc = sqrt(discriminant);
+        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
+        float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
+
+        crit_roots[1] = min(root_0, root_1);
+        crit_roots[2] = max(root_0, root_1);
+    }
+    else
+    {
         crit_roots[1] = begin;
         crit_roots[2] = begin;
     }

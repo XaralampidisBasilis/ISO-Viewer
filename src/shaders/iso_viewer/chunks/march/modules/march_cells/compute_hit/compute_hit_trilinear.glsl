@@ -1,6 +1,12 @@
 
 // Compute cubic polynomial roots in [0, 1]
+#if VARIATION_METHOD == 1
 cubic_roots(cubic.roots, cubic.coeffs, 0.0, 1.0);
+
+#elif VARIATION_METHOD == 2
+cubic_roots_deflate(cubic.roots, cubic.coeffs, 0.0, 1.0);
+#endif
+
 cubic.root = mmin(cubic.roots);
 
 // Compute derivative at root

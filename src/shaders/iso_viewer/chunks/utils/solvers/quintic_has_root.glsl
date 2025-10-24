@@ -13,9 +13,6 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef QUINTIC_BRACKET_SUBDIVS
 #define QUINTIC_BRACKET_SUBDIVS 4
 #endif
-#ifndef QUADRATIC_ROOTS
-#include "./quadratic_roots"
-#endif
 
 // Searches a single root of a quartic polynomial within a given interval.
 // \param out_root The location of the found root.
@@ -297,17 +294,20 @@ bool quintic_has_root(
     deriv_poly[0] = poly[3];        
     
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
-    vec2 quad_roots;
-    
-    if (quadratic_roots(quad_roots, quad_poly, begin, end)) 
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+    if (discriminant >= 0.0) 
     {
-        crit_roots[3] = quad_roots[0];
-        crit_roots[4] = quad_roots[1];
+        // Compute the quadratic roots using numerically stable solutions
+        float sqrt_disc = sqrt(discriminant);
+        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
+        float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
+
+        crit_roots[3] = min(root_0, root_1);
+        crit_roots[4] = max(root_0, root_1);
     }
-    else 
+    else
     {
-        // Indicate that the quadratic has no roots
         crit_roots[3] = begin;
         crit_roots[4] = begin;
     }
@@ -353,9 +353,9 @@ bool quintic_has_root(
 
             float current_begin = crit_roots[i];
             float current_end = crit_roots[i + 1];
-            float current_root;
 
             // Try to find a root
+            float current_root;
             if (quintic_deriv_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
             {
                 crit_roots[i] = current_root;
@@ -421,17 +421,20 @@ bool quintic_has_root_deflate(
     deriv_poly[0] = poly[3];        
     
     // Compute its two roots using the quadratic formula
-    vec3 quad_poly = vec3(deriv_poly[0], deriv_poly[1], deriv_poly[2]);
-    vec2 quad_roots;
-    
-    if (quadratic_roots(quad_roots, quad_poly, begin, end)) 
+    float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+    if (discriminant >= 0.0) 
     {
-        crit_roots[3] = quad_roots[0];
-        crit_roots[4] = quad_roots[1];
+        // Compute the quadratic roots using numerically stable solutions
+        float sqrt_disc = sqrt(discriminant);
+        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
+        float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
+
+        crit_roots[3] = min(root_0, root_1);
+        crit_roots[4] = max(root_0, root_1);
     }
-    else 
+    else
     {
-        // Indicate that the quadratic has no roots
         crit_roots[3] = begin;
         crit_roots[4] = begin;
     }
@@ -513,22 +516,27 @@ bool quintic_has_root_deflate(
             if (num_roots == degree - 2) break;
         }
 
+        // Compute quadratic roots in [current_root, end]
+        // if roots where found clamp them to bracket to keep the order
         if (num_roots == degree - 2) 
-        {
-            // Compute quadratic roots in [current_root, end]
-            // if roots where found clamp them to bracket to keep the order
-            vec3 quad_poly = vec3(defl_poly[0], defl_poly[1], defl_poly[2]);
-            vec2 quad_roots;
-
-            if (quadratic_roots(quad_roots, quad_poly, current_root, end)) 
+        {          
+            // Compute its two roots using the stable quadratic formula
+            float discriminant = defl_poly[1] * defl_poly[1] - 4.0 * defl_poly[0] * defl_poly[2];
+            if (discriminant >= 0.0) 
             {
-                crit_roots[3] = quad_roots[0];
-                crit_roots[4] = quad_roots[1];
+                // Compute the quadratic roots using numerically stable solutions
+                float sqrt_disc = sqrt(discriminant);
+                float scaled_root = -0.5 * (defl_poly[1] + sqrt_disc * sign(defl_poly[1]));
+                float root_0 = clamp(defl_poly[0] / scaled_root, begin, end);
+                float root_1 = clamp(scaled_root / defl_poly[2], begin, end); 
+
+                crit_roots[3] = min(root_0, root_1);
+                crit_roots[4] = max(root_0, root_1);
             }
             else
             {
-                crit_roots[3] = current_root;
-                crit_roots[4] = current_root;
+                crit_roots[3] = begin;
+                crit_roots[4] = begin;
             }
         }
     }
