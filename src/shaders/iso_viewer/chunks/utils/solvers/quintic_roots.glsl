@@ -22,7 +22,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 // The number of newton bisection iterations to reach 
 // the desired error tolerance
 #ifndef QUINTIC_NEWTON_BISECTION_ITERS
-#define QUINTIC_NEWTON_BISECTION_ITERS 20
+#define QUINTIC_NEWTON_BISECTION_ITERS 12
 #endif
 
 // Searches a single root of a quintic polynomial within a given interval.
@@ -195,9 +195,9 @@ void quintic_roots(
 
             float current_begin = out_roots[i];
             float current_end = out_roots[i + 1];
-            float current_root;
 
             // Try to find a root
+            float current_root;
             if (quintic_newton_bisection_root(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
                 out_roots[i] = current_root;
@@ -290,8 +290,9 @@ void quintic_roots_deflate(
         float defl_poly[6] = deriv_poly;
 
         // Iterate over the intervals where roots may be found
-        float current_root = begin; int num_roots = 0; 
         bool solve_quadratic = (degree == 2);
+        float current_root = begin; 
+        int num_roots = 0; 
 
         #pragma unroll
         for (int i = 0; i <= 4; ++i) 
@@ -306,7 +307,8 @@ void quintic_roots_deflate(
             // Try to find a root
             if (quintic_newton_bisection_root(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
-                out_roots[i] = current_root; num_roots++;
+                out_roots[i] = current_root; 
+                num_roots++;
 
                 float quot = 0.0, coef = quot;   
                 quot = quot * current_root + defl_poly[5]; defl_poly[5] = coef; coef = quot;   
@@ -429,8 +431,9 @@ void quintic_roots_deflate_inflate(
         begin_value = begin_value * begin + deriv_poly[0];
 
         // Iterate over the intervals where roots may be found
-        float current_root = begin; int num_roots = 0; 
         bool solve_quadratic = (degree == 2);
+        float current_root = begin; 
+        int num_roots = 0; 
 
         #pragma unroll
         for (int i = 0; i <= 4; ++i) 
@@ -444,7 +447,8 @@ void quintic_roots_deflate_inflate(
             if (quintic_newton_bisection_root(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
                 begin_value /= current_end - current_root;
-                out_roots[i] = current_root; num_roots++;
+                out_roots[i] = current_root; 
+                num_roots++;
 
                 float quot = 0.0, coef = quot;   
                 quot = quot * current_root + deriv_poly[5]; deriv_poly[5] = coef; coef = quot;   
@@ -504,10 +508,8 @@ void quintic_roots_deflate_inflate(
         for (int i = 0; i <= 4; ++i) 
         {
             current_root = out_roots[i];
-
+            
             if (i < 5 - degree || current_root == previous_root || num_roots == 0) continue;
-
-            previous_root = current_root;  num_roots--;
 
             deriv_poly[5] = -deriv_poly[5] * current_root + deriv_poly[4];     
             deriv_poly[4] = -deriv_poly[4] * current_root + deriv_poly[3]; 
@@ -515,6 +517,9 @@ void quintic_roots_deflate_inflate(
             deriv_poly[2] = -deriv_poly[2] * current_root + deriv_poly[1]; 
             deriv_poly[1] = -deriv_poly[1] * current_root + deriv_poly[0]; 
             deriv_poly[0] = -deriv_poly[0] * current_root;
+
+            previous_root = current_root; 
+            num_roots--;
         }  
     }
 
@@ -585,8 +590,8 @@ void quintic_roots_deflate_cubic(
     begin_value = deriv_poly[0] + begin_value * begin;
 
     // Iterate over the intervals where roots may be found
-    float current_root = begin;
     bool solve_quadratic = false;
+    float current_root = begin;
 
     #pragma unroll
     for (int i = 2; i <= 4; ++i) 
@@ -678,9 +683,9 @@ void quintic_roots_deflate_cubic(
 
             float current_begin = out_roots[i];
             float current_end = out_roots[i + 1];
-            float current_root;
 
             // Try to find a root
+            float current_root;
             if (quintic_newton_bisection_root(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
             {
                 out_roots[i] = current_root;

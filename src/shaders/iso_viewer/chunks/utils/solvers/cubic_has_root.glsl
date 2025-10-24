@@ -10,8 +10,8 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef CUBIC_HAS_ROOT
 #define CUBIC_HAS_ROOT
 
-#ifndef CUBIC_BRACKET_SUBDIVS
-#define CUBIC_BRACKET_SUBDIVS 2
+#ifndef CUBIC_SAMPLES_SUBDIVS
+#define CUBIC_SAMPLES_SUBDIVS 2
 #endif
 
 // Searches a single root of a polynomial within a given interval.
@@ -117,7 +117,7 @@ bool cubic_has_root_sample(
     const float begin, 
     const float end
 ){
-    float delta = (end - begin) / float(CUBIC_BRACKET_SUBDIVS * 4);
+    float delta = (end - begin) / float(CUBIC_SAMPLES_SUBDIVS * 4);
     float step = delta * 4.0;
 
     // Start previous value at begin
@@ -127,7 +127,7 @@ bool cubic_has_root_sample(
     vec4 pos = begin + delta * vec4(1.0, 2.0, 3.0, 4.0);
 
     #pragma unroll
-    for (int i = 0; i < CUBIC_BRACKET_SUBDIVS; ++i) 
+    for (int i = 0; i < CUBIC_SAMPLES_SUBDIVS; ++i) 
     {
         // Horner on 4 positions at once
         vec4 v = vec4(poly[3]);

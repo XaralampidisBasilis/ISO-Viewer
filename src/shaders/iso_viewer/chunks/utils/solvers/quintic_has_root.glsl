@@ -10,9 +10,15 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 #ifndef QUINTIC_HAS_ROOT
 #define QUINTIC_HAS_ROOT
 
-#ifndef QUINTIC_BRACKET_SUBDIVS
-#define QUINTIC_BRACKET_SUBDIVS 4
+// How close we want to get in the real roots
+#ifndef QUARTIC_ROOTS_TOLERANCE
+#define QUARTIC_ROOTS_TOLERANCE 1e-6
 #endif
+// How to subdivide the samples in groups of 4 for parallel evaluation
+#ifndef QUINTIC_SAMPLES_SUBDIVS
+#define QUINTIC_SAMPLES_SUBDIVS 4
+#endif
+
 
 // Searches a single root of a quartic polynomial within a given interval.
 // \param out_root The location of the found root.
@@ -26,7 +32,7 @@ cyPolynomial.h class (https://github.com/cemyuksel/cyCodeBase/blob/master/cyPoly
 //        Typically the error will be much lower but in theory it can be
 //        bigger.
 // \return true if a root was found, false if no root exists.
-bool quintic_deriv_root_bisection(
+bool quartic_root_bisection(
     out float out_root, 
     out float out_end_value,
     float poly[5], 
@@ -89,7 +95,7 @@ bool quintic_deriv_root_bisection(
 //        Typically the error will be much lower but in theory it can be
 //        bigger.
 // \return true if a root was found, false if no root exists.
-bool quintic_deriv_root_regula_falsi(
+bool quartic_root_regula_falsi(
     out float out_root, 
     out float out_end_value,
     float poly[5], 
@@ -172,7 +178,7 @@ bool quintic_deriv_root_regula_falsi(
 //        Typically the error will be much lower but in theory it can be
 //        bigger.
 // \return true if a root was found, false if no root exists.
-bool quintic_deriv_root_newton_bisection(
+bool quartic_root_newton_bisection(
     out float out_root, 
     out float out_end_value,
     float poly[5], 
@@ -271,7 +277,7 @@ bool quintic_has_root(
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1e-6;
+    float tolerance = (end - begin) * QUARTIC_ROOTS_TOLERANCE;
 
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched critical roots are set to begin
@@ -356,7 +362,7 @@ bool quintic_has_root(
 
             // Try to find a root
             float current_root;
-            if (quintic_deriv_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
+            if (quartic_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
             {
                 crit_roots[i] = current_root;
             }
@@ -398,7 +404,7 @@ bool quintic_has_root_deflate(
     float begin, 
     float end
 ){
-    float tolerance = (end - begin) * 1e-6;
+    float tolerance = (end - begin) * QUARTIC_ROOTS_TOLERANCE;
 
     // The last entry in the root array is set to end to make it easier to
     // iterate over relevant intervals, all untouched critical roots are set to begin
@@ -487,7 +493,7 @@ bool quintic_has_root_deflate(
             float current_end = crit_roots[i + 1];
 
             // Try to find a root
-            if (quintic_deriv_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
+            if (quartic_root_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value))
             {
                 crit_roots[i] = current_root; 
                 if (i < 4) num_roots++;
@@ -572,7 +578,7 @@ bool quintic_has_root_sample(
     const float begin, 
     const float end
 ){
-    float delta = (end - begin) / float(QUINTIC_BRACKET_SUBDIVS * 4);
+    float delta = (end - begin) / float(QUINTIC_SAMPLES_SUBDIVS * 4);
     float step = delta * 4.0;
 
     // Start previous value at begin
@@ -582,7 +588,7 @@ bool quintic_has_root_sample(
     vec4 pos = begin + delta * vec4(1.0, 2.0, 3.0, 4.0);
 
     #pragma unroll
-    for (int i = 0; i < QUINTIC_BRACKET_SUBDIVS; ++i) 
+    for (int i = 0; i < QUINTIC_SAMPLES_SUBDIVS; ++i) 
     {
         // Horner on 4 positions at once
         vec4 v = vec4(poly[5]);

@@ -26,7 +26,7 @@ Shadertoy Quartic Reflections https://www.shadertoy.com/view/flBfzm,
 // The number of newton bisection iterations to reach 
 // the desired error tolerance
 #ifndef CUBIC_NEWTON_BISECTION_ITERS
-#define CUBIC_NEWTON_BISECTION_ITERS 10
+#define CUBIC_NEWTON_BISECTION_ITERS 6
 #endif
 
 #ifndef EVAL_POLY
@@ -183,9 +183,9 @@ void cubic_roots(
     {
         float current_begin = out_roots[i];
         float current_end = out_roots[i + 1];
-        float current_root;
 
         // Try to find a root
+        float current_root;
         if (cubic_roots_newton_bisection(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
         {
             out_roots[i] = current_root;
@@ -262,8 +262,8 @@ void cubic_roots_deflate(
     begin_value = begin_value * begin + deriv_poly[0];
 
     // Iterate over the intervals where roots may be found
-    float current_root = begin;
     bool solve_quadratic = false;
+    float current_root = begin;
 
     #pragma unroll
     for (int i = 0; i <= 2; ++i) 
