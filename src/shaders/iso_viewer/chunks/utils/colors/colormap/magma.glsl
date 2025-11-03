@@ -14,7 +14,7 @@ vec3 magma(float t)
     vec3 b2 = vec3(0.079624, 0.813267, 1.330803);
     vec3 c2 = vec3(1.052351, 0.800573, 0.764647);
     vec3 d2 = vec3(0.286256, 0.854038, 0.863334);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif

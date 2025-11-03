@@ -17,7 +17,9 @@ vec4 debug_stats_num_groups = to_color(float(stats.num_groups) / float(MAX_GROUP
 vec4 debug_stats_num_texture_fetches = to_color(float(stats.num_texture_fetches) / float(MAX_CELLS) * 10.0);
 
 // num tests
-vec4 debug_stats_num_intersection_tests = to_color(float(stats.num_intersection_tests) / float(MAX_BLOCKS) * 100.0);
+// vec4 debug_stats_num_intersection_tests = to_color(float(stats.num_intersection_tests) / float(MAX_BLOCKS) * 10.0);
+vec4 debug_stats_num_intersection_tests = to_color(inferno(float(stats.num_intersection_tests) / (u_debug.variable1 * 100.0)));
+
 
 // PRINT DEBUG
 switch (u_debug.option - 900)

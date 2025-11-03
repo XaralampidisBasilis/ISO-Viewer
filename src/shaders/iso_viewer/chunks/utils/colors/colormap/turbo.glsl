@@ -14,7 +14,7 @@ vec3 turbo(float t)
     vec3 b1 = vec3(0.265151, 1.180907, -0.376009);
     vec3 c1 = vec3(1.460237, 0.381460, 1.554106);
     vec3 d1 = vec3(0.995900, 0.331064, 0.346513);
-    return palette(t, a, b0, c0, d0, b1, c1, d1);
+    return palette(clamp(t, 0.0, 1.0), a, b0, c0, d0, b1, c1, d1);
 }
 
 #endif

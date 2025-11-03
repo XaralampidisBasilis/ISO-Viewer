@@ -140,7 +140,7 @@ void quintic_roots(
     {
         // Compute the quadratic roots using numerically stable solutions
         float sqrt_disc = sqrt(discriminant);
-        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float scaled_root = -0.5 * (deriv_poly[1] + (deriv_poly[1] >= 0.0 ? sqrt_disc : -sqrt_disc));
         float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
         float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
 
@@ -294,12 +294,12 @@ void quintic_roots_deflate(
         float current_root = begin; 
         int num_roots = 0; 
 
-        #pragma unroll
-        for (int i = 0; i <= 4; ++i) 
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
         {
             // When the deflated polynomial becomes a quadratic
             // break the loop and solve for the remaining roots
-            if (i < 5 - degree || solve_quadratic) continue;  
+            if (solve_quadratic) break;  
 
             float current_begin = out_roots[i];
             float current_end = out_roots[i + 1];
@@ -341,9 +341,9 @@ void quintic_roots_deflate(
             {
                 // Compute the quadratic roots using numerically stable solutions
                 float sqrt_disc = sqrt(discriminant);
-                float scaled_root = -0.5 * (defl_poly[1] + sqrt_disc * sign(defl_poly[1]));
-                float root_0 = clamp(deriv_poly[0] / scaled_root, current_root, end);
-                float root_1 = clamp(scaled_root / deriv_poly[2], current_root, end); 
+                float scaled_root = -0.5 * (defl_poly[1] + (defl_poly[1] >= 0.0 ? sqrt_disc : -sqrt_disc));
+                float root_0 = clamp(defl_poly[0] / scaled_root, current_root, end);
+                float root_1 = clamp(scaled_root / defl_poly[2], current_root, end); 
 
                 out_roots[3] = min(root_0, root_1);
                 out_roots[4] = max(root_0, root_1);
@@ -435,10 +435,10 @@ void quintic_roots_deflate_inflate(
         float current_root = begin; 
         int num_roots = 0; 
 
-        #pragma unroll
-        for (int i = 0; i <= 4; ++i) 
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
         {
-            if (i < 5 - degree || solve_quadratic) continue;
+            if (solve_quadratic) break;
 
             float current_begin = out_roots[i];
             float current_end = out_roots[i + 1];
@@ -450,13 +450,13 @@ void quintic_roots_deflate_inflate(
                 out_roots[i] = current_root; 
                 num_roots++;
 
-                float quot = 0.0, coef = quot;   
-                quot = quot * current_root + deriv_poly[5]; deriv_poly[5] = coef; coef = quot;   
-                quot = quot * current_root + deriv_poly[4]; deriv_poly[4] = coef; coef = quot;     
-                quot = quot * current_root + deriv_poly[3]; deriv_poly[3] = coef; coef = quot; 
-                quot = quot * current_root + deriv_poly[2]; deriv_poly[2] = coef; coef = quot; 
-                quot = quot * current_root + deriv_poly[1]; deriv_poly[1] = coef; coef = quot; 
-                quot = quot * current_root + deriv_poly[0]; deriv_poly[0] = coef; coef = quot; 
+                float prev, curr = 0.0;   
+                prev = curr; curr = curr * current_root + deriv_poly[5]; deriv_poly[5] = prev; 
+                prev = curr; curr = curr * current_root + deriv_poly[4]; deriv_poly[4] = prev;   
+                prev = curr; curr = curr * current_root + deriv_poly[3]; deriv_poly[3] = prev; 
+                prev = curr; curr = curr * current_root + deriv_poly[2]; deriv_poly[2] = prev; 
+                prev = curr; curr = curr * current_root + deriv_poly[1]; deriv_poly[1] = prev; 
+                prev = curr; curr = curr * current_root + deriv_poly[0]; deriv_poly[0] = prev; 
 
                 solve_quadratic = (num_roots == degree - 2) && (i != 4);
             }
@@ -482,7 +482,7 @@ void quintic_roots_deflate_inflate(
             {
                 // Compute the quadratic roots using numerically stable solutions
                 float sqrt_disc = sqrt(discriminant);
-                float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+                float scaled_root = -0.5 * (deriv_poly[1] + (deriv_poly[1] >= 0.0 ? sqrt_disc : -sqrt_disc));
                 float root_0 = clamp(deriv_poly[0] / scaled_root, current_root, end);
                 float root_1 = clamp(scaled_root / deriv_poly[2], current_root, end); 
 
@@ -504,23 +504,205 @@ void quintic_roots_deflate_inflate(
         // Inflate back the polynomial to get to the initial derivative 
         float previous_root = begin;
 
-        #pragma unroll
-        for (int i = 0; i <= 4; ++i) 
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
         {
+            if (num_roots == 0) break;
+
             current_root = out_roots[i];
             
-            if (i < 5 - degree || current_root == previous_root || num_roots == 0) continue;
+            if (current_root == previous_root || current_root == QUINTIC_NO_INTERSECTION) continue;
+
+            previous_root = current_root; 
+            num_roots--;
 
             deriv_poly[5] = -deriv_poly[5] * current_root + deriv_poly[4];     
             deriv_poly[4] = -deriv_poly[4] * current_root + deriv_poly[3]; 
             deriv_poly[3] = -deriv_poly[3] * current_root + deriv_poly[2]; 
             deriv_poly[2] = -deriv_poly[2] * current_root + deriv_poly[1]; 
             deriv_poly[1] = -deriv_poly[1] * current_root + deriv_poly[0]; 
-            deriv_poly[0] = -deriv_poly[0] * current_root;
-
-            previous_root = current_root; 
-            num_roots--;
+            deriv_poly[0] = -deriv_poly[0] * current_root;        
         }  
+    }
+
+    // We no longer need this array entry
+    out_roots[5] = QUINTIC_NO_INTERSECTION;
+}
+
+void quintic_roots_deflate_inflate_2(
+    out float out_roots[6], 
+    float poly[6], 
+    float begin, 
+    float end
+){
+    float tolerance = (end - begin) * QUINTIC_ROOTS_TOLERANCE;
+
+    // Construct the quadratic derivative of the polynomial. We divide each
+    // derivative by the factorial of its order, such that the constant
+    // coefficient can be copied directly from poly. That is a safeguard
+    // against overflow and makes it easier to avoid spilling below. The
+    // factors happen to be binomial coefficients then.
+    float deriv_poly[6];
+    deriv_poly[5] = 0.0;
+    deriv_poly[4] = 0.0;
+    deriv_poly[3] = 0.0;
+    deriv_poly[2] = 0.0; 
+    deriv_poly[1] = poly[5] * 5.0;  
+    deriv_poly[0] = poly[4];    
+
+    // The last entry in the root array is set to end to make it easier to
+    // iterate over relevant intervals, all untouched roots are set to begin
+    out_roots[0] = begin;
+    out_roots[1] = begin;
+    out_roots[2] = begin;
+    out_roots[3] = begin;
+    out_roots[4] = -deriv_poly[0] / deriv_poly[1];
+    out_roots[5] = end;
+
+    // Work your way up to derivatives of higher degree until you reach the
+    // polynomial itself. This implementation may seem peculiar: It always
+    // treats the derivative as though it had degree 5 and it
+    // constructs the derivatives in a contrived way. Changing that would
+    // reduce the number of arithmetic instructions roughly by a factor of two.
+    // However, it would also cause register spilling, which has a far more
+    // negative impact on the overall run time. Profiling indicates that the
+    // current implementation has no spilling whatsoever.
+    #pragma no_unroll
+    for (int degree = 2; degree <= 5; ++degree) 
+    {
+        // Take the integral of the previous derivative (scaled such that the
+        // constant coefficient can still be copied directly from poly)
+        float prev_derivative_order = float(6 - degree);
+        deriv_poly[5] = deriv_poly[4] * (prev_derivative_order * (1.0 / 5.0));
+        deriv_poly[4] = deriv_poly[3] * (prev_derivative_order * (1.0 / 4.0));
+        deriv_poly[3] = deriv_poly[2] * (prev_derivative_order * (1.0 / 3.0));
+        deriv_poly[2] = deriv_poly[1] * (prev_derivative_order * (1.0 / 2.0));
+        deriv_poly[1] = deriv_poly[0] * (prev_derivative_order * (1.0 / 1.0));
+     
+        // Copy the constant coefficient without causing spilling. This part
+        // would be harder if the derivative were not scaled the way it is.
+        deriv_poly[0] = (degree == 5) ? poly[0] : deriv_poly[0];
+        deriv_poly[0] = (degree == 4) ? poly[1] : deriv_poly[0];
+        deriv_poly[0] = (degree == 3) ? poly[2] : deriv_poly[0];
+        deriv_poly[0] = (degree == 2) ? poly[3] : deriv_poly[0];
+
+        // Determine the value of this derivative at begin
+        float begin_value = deriv_poly[5];
+        begin_value = begin_value * begin + deriv_poly[4];
+        begin_value = begin_value * begin + deriv_poly[3];
+        begin_value = begin_value * begin + deriv_poly[2];
+        begin_value = begin_value * begin + deriv_poly[1];
+        begin_value = begin_value * begin + deriv_poly[0];
+
+        // Iterate over the intervals where roots may be found
+        bool solve_quadratic = (degree == 2);
+        int num_roots = 0; 
+
+        #pragma no_unroll
+        for (int i = 5 - degree; i <= 4; ++i) 
+        {
+            if (solve_quadratic) break;
+
+            float current_begin = out_roots[i];
+            float current_end = out_roots[i + 1];
+
+            // Try to find a root
+            float current_root; 
+            if (quintic_newton_bisection_root(current_root, begin_value, deriv_poly, current_begin, current_end, begin_value, tolerance))
+            {
+                out_roots[i] = current_root; 
+                num_roots++;
+
+                solve_quadratic = (num_roots == degree - 2) && (i != 4);
+            }
+            else if (degree < 5)
+            {
+                // Create an empty interval for the next iteration
+                out_roots[i] = out_roots[i - 1];
+            }
+            else
+            {
+                out_roots[i] = QUINTIC_NO_INTERSECTION;
+            }
+        }
+
+        // Compute quadratic roots in [current_root, end] if deflated polynomial is indeed quadratic
+        if (solve_quadratic) 
+        {
+            // Deflate derivative polynomial to quadratic
+            float current_root = begin;
+            float previous_root = begin;
+
+            #pragma no_unroll
+            for (int i = 5 - degree; i <= 4; ++i) 
+            {
+                if (num_roots == 0) break;
+
+                current_root = out_roots[i];
+                
+                if (current_root == previous_root || current_root == QUINTIC_NO_INTERSECTION) continue;
+
+                previous_root = current_root; 
+                num_roots--;
+
+                float prev, curr = 0.0; 
+                #pragma unroll
+                for (int j = 5; j >= 0; --j) 
+                { 
+                    prev = curr; 
+                    curr = curr * current_root + deriv_poly[j]; 
+                    deriv_poly[j] = prev; 
+                }
+            }  
+
+            // Solve deflated quadratic polynomial
+            float discriminant = deriv_poly[1] * deriv_poly[1] - 4.0 * deriv_poly[0] * deriv_poly[2];
+            if (discriminant >= 0.0) 
+            {
+                // Compute the quadratic roots using numerically stable solutions
+                float sqrt_disc = sqrt(discriminant);
+                float scaled_root = -0.5 * (deriv_poly[1] + (deriv_poly[1] >= 0.0 ? sqrt_disc : -sqrt_disc));
+                float root_0 = clamp(deriv_poly[0] / scaled_root, current_root, end);
+                float root_1 = clamp(scaled_root / deriv_poly[2], current_root, end); 
+
+                out_roots[3] = min(root_0, root_1);
+                out_roots[4] = max(root_0, root_1);
+            }
+            else if (degree < 5)
+            {
+                out_roots[3] = current_root;
+                out_roots[4] = current_root;
+            }
+            else
+            {
+                out_roots[3] = QUINTIC_NO_INTERSECTION;
+                out_roots[4] = QUINTIC_NO_INTERSECTION;
+            }
+
+            // Inflate quadratic back to derivative polynomial
+            previous_root = begin;
+
+            #pragma no_unroll
+            for (int i = 5 - degree; i <= 4; ++i) 
+            {
+                if (num_roots == degree - 2) break;
+
+                current_root = out_roots[i];
+
+                if (current_root == previous_root || current_root == QUINTIC_NO_INTERSECTION) continue;
+
+                previous_root = current_root; 
+                num_roots++;
+
+                #pragma unroll
+                for (int j = 5; j >= 1; --j) 
+                { 
+                    deriv_poly[j] = -deriv_poly[j] * current_root + deriv_poly[j - 1]; 
+                }
+                deriv_poly[0] = -deriv_poly[0] * current_root;
+            }  
+        }
+
     }
 
     // We no longer need this array entry
@@ -563,7 +745,7 @@ void quintic_roots_deflate_cubic(
     {
         // Compute the quadratic roots using numerically stable solutions
         float sqrt_disc = sqrt(discriminant);
-        float scaled_root = -0.5 * (deriv_poly[1] + sqrt_disc * sign(deriv_poly[1]));
+        float scaled_root = -0.5 * (deriv_poly[1] + (deriv_poly[1] >= 0.0 ? sqrt_disc : -sqrt_disc));
         float root_0 = clamp(deriv_poly[0] / scaled_root, begin, end);
         float root_1 = clamp(scaled_root / deriv_poly[2], begin, end); 
 

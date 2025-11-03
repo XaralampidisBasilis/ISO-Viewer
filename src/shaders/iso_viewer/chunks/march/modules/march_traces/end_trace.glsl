@@ -11,6 +11,10 @@ if (trace.intersected)
 
     // Discard if escaped
     hit.discarded = hit.escaped;
+
+    // Clamp hit distance
+    hit.distance = clamp(hit.distance, ray.start_distance, ray.end_distance);
+    hit.position = camera.position + ray.direction * hit.distance;
 }
 else
 {
@@ -18,4 +22,8 @@ else
     hit.undefined = !trace.terminated;
     hit.discarded = true;
     hit.escaped = false;
+
+    // Set discarded distance the ray end
+    hit.distance = ray.end_distance;
+    hit.position = camera.position + ray.direction * hit.distance;
 }

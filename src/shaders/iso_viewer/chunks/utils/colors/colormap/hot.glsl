@@ -14,7 +14,7 @@ vec3 hot(float t)
     vec3 b1 = vec3(0.669133, -0.097445,1.467678);
     vec3 c1 = vec3(0.457411, 1.673730, 0.848067);
     vec3 d1 = vec3(0.679382, 0.311157, 0.700754);
-    return palette(t, a, b0, c0, d0, b1, c1, d1);
+    return palette(clamp(t, 0.0, 1.0), a, b0, c0, d0, b1, c1, d1);
 }
 
 #endif

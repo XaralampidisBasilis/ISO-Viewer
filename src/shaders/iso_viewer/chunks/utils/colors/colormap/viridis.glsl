@@ -14,7 +14,7 @@ vec3 viridis(float t)
     vec3 b2 = vec3(0.937521, 0.012337, -1.069593);
     vec3 c2 = vec3(0.891060, 1.453194, 1.217589);
     vec3 d2 = vec3(0.781272, 0.775696, 0.520518);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif

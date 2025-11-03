@@ -11,7 +11,7 @@ vec3 winter(float t)
     vec3 b = vec3(-0.000000, 1.999953, 1.430454);
     vec3 c = vec3(0.714514, 0.080087, 0.055794);
     vec3 d = vec3(0.142743, 0.709956, 0.222104);
-    return palette(t, a, b, c, d);
+    return palette(clamp(t, 0.0, 1.0), a, b, c, d);
 }
 
 #endif

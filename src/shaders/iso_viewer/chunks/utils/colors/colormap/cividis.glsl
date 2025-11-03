@@ -14,7 +14,7 @@ vec3 cividis(float t)
     vec3 b2 = vec3(1.085652, 0.238494, 0.032514);
     vec3 c2 = vec3(0.768613, 0.378699, 1.467550);
     vec3 d2 = vec3(0.876007, 0.999533, -0.060326);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif

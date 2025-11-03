@@ -11,7 +11,7 @@ vec3 spring(float t)
     vec3 b = vec3(0.000000, 1.999808, 1.999812);
     vec3 c = vec3(0.745176, 0.080093, 0.080093);
     vec3 d = vec3(0.127412, 0.709953, 0.209954);
-    return palette(t, a, b, c, d);
+    return palette(clamp(t, 0.0, 1.0), a, b, c, d);
 }
 
 #endif

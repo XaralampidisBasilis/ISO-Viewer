@@ -11,7 +11,7 @@ vec3 summer(float t)
     vec3 b = vec3(1.998634, 1.447229, -0.000000);
     vec3 c = vec3(0.080141, 0.055144, 0.732340);
     vec3 d = vec3(0.709931, 0.722482, 0.133830);
-    return palette(t, a, b, c, d);
+    return palette(clamp(t, 0.0, 1.0), a, b, c, d);
 }
 
 #endif

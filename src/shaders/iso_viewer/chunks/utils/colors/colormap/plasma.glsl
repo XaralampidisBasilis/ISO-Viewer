@@ -14,7 +14,7 @@ vec3 plasma(float t)
     vec3 b2 = vec3(0.249030, 0.020714, 0.015128);
     vec3 c2 = vec3(0.709559, 1.885207, 2.000000);
     vec3 d2 = vec3(1.058190, 0.031753, 0.567507);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif

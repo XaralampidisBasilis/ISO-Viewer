@@ -14,7 +14,7 @@ vec3 parula(float t)
     vec3 b2 = vec3(-0.154889, 0.704319, 0.011011);
     vec3 c2 = vec3(1.667578, 0.717541, 2.000000);
     vec3 d2 = vec3(0.135293, 0.686891, 0.102776);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif

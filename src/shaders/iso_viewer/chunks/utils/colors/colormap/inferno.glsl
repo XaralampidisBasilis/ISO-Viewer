@@ -14,7 +14,7 @@ vec3 inferno(float t)
     vec3 b2 = vec3(0.095489, 0.951299, 1.871821);
     vec3 c2 = vec3(0.907917, 0.757037, 1.749972);
     vec3 d2 = vec3(0.380506, 0.870792, -0.130654);
-    return palette(t, a, b1, c1, d1, b2, c2, d2);
+    return palette(clamp(t, 0.0, 1.0), a, b1, c1, d1, b2, c2, d2);
 }
 
 #endif
