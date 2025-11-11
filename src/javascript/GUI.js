@@ -87,24 +87,24 @@ export default class GUI
                 this.configs.set('isosurfaceValue', value) 
             }),
 
-            blockSize : folder.add(objects, 'blockSize').min(2).max(8).step(1)
-            .onFinishChange((value) => 
-            { 
-                this.configs.set('blockSize', value) 
-            }),
+            // blockSize : folder.add(objects, 'blockSize').min(2).max(8).step(1)
+            // .onFinishChange((value) => 
+            // { 
+            //     this.configs.set('blockSize', value) 
+            // }),
 
-            // DANGEROUS for WebGL Context Loss
-            downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(0.8).step(0.1)
-            .onFinishChange((value) => 
-            { 
-                this.configs.set('downscaleFactor', value) 
-            }),
+            // // DANGEROUS for WebGL Context Loss
+            // downscaleFactor : folder.add(objects, 'downscaleFactor').min(0).max(0.8).step(0.1)
+            // .onFinishChange((value) => 
+            // { 
+            //     this.configs.set('downscaleFactor', value) 
+            // }),
             
-            marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
-            .onFinishChange((option) => 
-            { 
-                this.configs.set('marchingMethod', option) 
-            }),
+            // marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
+            // .onFinishChange((option) => 
+            // { 
+            //     this.configs.set('marchingMethod', option) 
+            // }),
 
             interpolationMethod: folder.add(objects, 'interpolationMethod').options(Configs.InterpolationMethods)
             .onFinishChange((option) => 
@@ -112,11 +112,11 @@ export default class GUI
                 this.configs.set('interpolationMethod', option) 
             }),
 
-            skippingStrategy: folder.add(objects, 'skippingStrategy').options(Configs.SkippingStrategies)
-            .onFinishChange((option) => 
-            { 
-                this.configs.set('skippingStrategy', option) 
-            }),
+            // skippingStrategy: folder.add(objects, 'skippingStrategy').options(Configs.SkippingStrategies)
+            // .onFinishChange((option) => 
+            // { 
+            //     this.configs.set('skippingStrategy', option) 
+            // }),
 
             skippingMethod: folder.add(objects, 'skippingMethod').options(Configs.SkippingMethods)
             .onFinishChange((option) => 
@@ -124,11 +124,11 @@ export default class GUI
                 this.configs.set('skippingMethod', option) 
             }),
 
-            intersectionTest: folder.add(objects, 'intersectionTest').options(Configs.IntersectionTests)
-            .onFinishChange((option) => 
-            { 
-                this.configs.set('intersectionTest', option) 
-            }),
+            // intersectionTest: folder.add(objects, 'intersectionTest').options(Configs.IntersectionTests)
+            // .onFinishChange((option) => 
+            // { 
+            //     this.configs.set('intersectionTest', option) 
+            // }),
 
             gradientsMethod: folder.add(objects, 'gradientsMethod').options(Configs.GradientsMethods)
             .onFinishChange((option) => 
