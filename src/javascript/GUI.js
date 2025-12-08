@@ -100,11 +100,11 @@ export default class GUI
             //     this.configs.set('downscaleFactor', value) 
             // }),
             
-            // marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
-            // .onFinishChange((option) => 
-            // { 
-            //     this.configs.set('marchingMethod', option) 
-            // }),
+            marchingMethod: folder.add(objects, 'marchingMethod').options(Configs.MarchingMethods)
+            .onFinishChange((option) => 
+            { 
+                this.configs.set('marchingMethod', option) 
+            }),
 
             interpolationMethod: folder.add(objects, 'interpolationMethod').options(Configs.InterpolationMethods)
             .onFinishChange((option) => 
