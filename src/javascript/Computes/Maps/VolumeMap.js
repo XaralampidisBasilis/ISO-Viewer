@@ -39,14 +39,8 @@ export default class VolumeMap
         this.spacing.fromArray(newSpacing.toReversed())
         this.tensor = tf.tidy(() =>
         {    
-            // const kernel = tf.ones([3, 3, 3, 1, 1], 'float32')
-            // const maskData = new Float32Array(this.mask.data)
-            // let maskTensor = tf.tensor3d(maskData, shape, 'float32')
-            // const convolved = tf.conv3d(maskTensor.expandDims(-1), kernel,  1, 'same')
-            // const inflatedMask = convolved.greater(0).squeeze([-1]); 
-
             const data = new Float32Array(this.volume.data)
-            let tensor = tf.tensor3d(data, shape).mul(inflatedMask)
+            let tensor = tf.tensor3d(data, shape)
             tensor = resizeTrilinear(tensor, newShape, false, true)
             tensor = normalize(tensor)
 
