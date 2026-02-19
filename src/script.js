@@ -33,8 +33,7 @@ async function createExperience(options = {})
     // Merge options with URL parameters as fallback
     const mergedOptions = 
     {
-        sources: options.sources || getSourcesFromUrl(),
-        ...options,
+        sources: options.sources || getSourcesFromUrl(), ...options,
     }
 
     // Create new experience
