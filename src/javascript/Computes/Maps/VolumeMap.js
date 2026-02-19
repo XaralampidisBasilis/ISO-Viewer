@@ -16,9 +16,12 @@ export default class VolumeMap
     setVolume()
     {
         this.volume = this.resources.items.volume
+        this.mask = this.resources.items.mask
         this.dimensions = new THREE.Vector3().fromArray(this.volume.dimensions)
         this.spacing = new THREE.Vector3().fromArray(this.volume.spacing)
         this.size = new THREE.Vector3().fromArray(this.volume.size)
+
+        console.log('Volume', this)
     }
 
     computeTensor()
@@ -35,11 +38,18 @@ export default class VolumeMap
         this.dimensions.fromArray(newShape.toReversed())
         this.spacing.fromArray(newSpacing.toReversed())
         this.tensor = tf.tidy(() =>
-        {
-            let data = new Float32Array(this.volume.data)
-            let tensor = tf.tensor3d(data, shape)
+        {    
+            // const kernel = tf.ones([3, 3, 3, 1, 1], 'float32')
+            // const maskData = new Float32Array(this.mask.data)
+            // let maskTensor = tf.tensor3d(maskData, shape, 'float32')
+            // const convolved = tf.conv3d(maskTensor.expandDims(-1), kernel,  1, 'same')
+            // const inflatedMask = convolved.greater(0).squeeze([-1]); 
+
+            const data = new Float32Array(this.volume.data)
+            let tensor = tf.tensor3d(data, shape).mul(inflatedMask)
             tensor = resizeTrilinear(tensor, newShape, false, true)
             tensor = normalize(tensor)
+
             return tensor
         })  
         console.timeEnd('computeTensor') 
