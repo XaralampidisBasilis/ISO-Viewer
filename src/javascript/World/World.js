@@ -10,15 +10,15 @@ import EventEmitter from '../Utils/EventEmitter'
  */
 export default class World extends EventEmitter
 {
-    constructor()
+    constructor(experience)
     {
         super()
 
-        this.experience = new Experience()
+        this.experience = experience
         this.scene = this.experience.scene
         this.resources = this.experience.resources
         this.camera = this.experience.camera
-        this.viewer = new ISOViewer()
+        this.viewer = new ISOViewer(experience)
     }
 
     start()

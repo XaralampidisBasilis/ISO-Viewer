@@ -14,7 +14,7 @@ export default class Computes extends EventEmitter
 {
     static instance = null
 
-    constructor()
+    constructor(experience)
     {
         super()
 
@@ -24,7 +24,7 @@ export default class Computes extends EventEmitter
         }
         Computes.instance = this
 
-        this.experience = new Experience()
+        this.experience = experience
         this.renderer = this.experience.renderer
         this.configs = this.experience.configs
         this.resources = this.experience.resources

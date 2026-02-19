@@ -37,13 +37,13 @@ export default class Experience
         this.time = new Time()
         this.mouse = new Mouse()
         this.scene = new THREE.Scene()
-        this.camera = new Camera()
-        this.renderer = new Renderer()
+        this.camera = new Camera(this)
+        this.renderer = new Renderer(this)
         this.resources = new Resources(this.options.sources)
-        this.computes = new Computes()
-        this.world = new World()
+        this.computes = new Computes(this)
+        this.world = new World(this)
         this.stats = new Stats(true)
-        this.gui = new GUI()
+        this.gui = new GUI(this)
 
         // Size resize event
         this.sizes.on('resize', () => 

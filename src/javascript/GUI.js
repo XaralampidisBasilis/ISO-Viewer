@@ -5,9 +5,9 @@ import Gui from 'lil-gui'
 
 export default class GUI
 {
-    constructor()
+    constructor(experience)
     {
-        this.experience = new Experience()
+        this.experience = experience
         this.configs = this.experience.configs
         this.viewer = this.experience.world.viewer
         this.instance = new Gui() 

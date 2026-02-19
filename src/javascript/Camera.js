@@ -8,9 +8,9 @@ import { ProbeControls } from './Utils/ProbeControls'
 
 export default class Camera
 {
-    constructor()
+    constructor(experience)
     {
-        this.experience = new Experience()
+        this.experience = experience
         this.sizes = this.experience.sizes
         this.scene = this.experience.scene
         this.canvas = this.experience.canvas

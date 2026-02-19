@@ -8,7 +8,7 @@ export default class ISOViewer extends EventEmitter
 {
     static instance = null
 
-    constructor()
+    constructor(experience)
     {
         super()
    
@@ -18,7 +18,7 @@ export default class ISOViewer extends EventEmitter
         }
         ISOViewer.instance = this
 
-        this.experience = new Experience()
+        this.experience = experience
         this.scene = this.experience.scene
         this.resources = this.experience.resources
         this.renderer = this.experience.renderer

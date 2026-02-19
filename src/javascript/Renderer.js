@@ -9,9 +9,9 @@ import Experience from './Experience'
  */
 export default class Renderer
 {
-    constructor()
+    constructor(experience)
     {
-        this.experience = new Experience()
+        this.experience = experience
         this.canvas = this.experience.canvas
         this.context = this.experience.context
         this.sizes = this.experience.sizes
