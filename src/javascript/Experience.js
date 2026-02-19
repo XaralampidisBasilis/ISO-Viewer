@@ -10,27 +10,26 @@ import World from './World/World'
 import Resources from './Utils/Resources'
 import Computes from './Computes/Computes'
 import GUI from './GUI'
-import sources from './sources'
+import { DEFAULT_OPTIONS, getSourcesFromUrl } from './Config'
 
 export default class Experience
 {
-    static instance = null
-
-    constructor(canvas, context)
+    constructor(canvas, context, options = {})
     {
-        // singleton
-        if (Experience.instance) 
+        // Merge provided options with defaults
+        const mergedOptions = 
         {
-            return Experience.instance
+            ...DEFAULT_OPTIONS,
+            ...options,
         }
-        Experience.instance = this
         
-        // Global access
-        window.experience = this
-
         // Options
         this.canvas = canvas
         this.context = context
+        this.options = mergedOptions
+
+        // Global access (optional - for debugging)
+        window.experience = this
 
         // Setup
         this.configs = new Configs()
@@ -40,7 +39,7 @@ export default class Experience
         this.scene = new THREE.Scene()
         this.camera = new Camera()
         this.renderer = new Renderer()
-        this.resources = new Resources(sources)
+        this.resources = new Resources(this.options.sources)
         this.computes = new Computes()
         this.world = new World()
         this.stats = new Stats(true)
@@ -133,9 +132,7 @@ export default class Experience
         this.stats = null
         this.computes = null
         this.canvas = null
-
-        // Clear the singleton instance
-        instance = null
+        this.options = null
 
         console.log('Experience destroyed')
     }
