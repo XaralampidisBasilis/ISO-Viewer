@@ -10,7 +10,7 @@ import World from './World/World'
 import Resources from './Utils/Resources'
 import Computes from './Computes/Computes'
 import GUI from './GUI'
-import sources from './sources'
+import createSources from './sources'
 
 export default class Experience
 {
@@ -40,7 +40,7 @@ export default class Experience
         this.scene = new THREE.Scene()
         this.camera = new Camera()
         this.renderer = new Renderer()
-        this.resources = new Resources(sources)
+        this.resources = new Resources(createSources())
         this.computes = new Computes()
         this.world = new World()
         this.stats = new Stats(true)
@@ -71,10 +71,11 @@ export default class Experience
         })
 
         // Window refresh event
-        window.addEventListener('beforeunload', () => 
+        this.beforeUnloadHandler = () =>
         {
             this.destroy()
-        })
+        }
+        window.addEventListener('beforeunload', this.beforeUnloadHandler)
     }
 
     resize()
@@ -108,6 +109,7 @@ export default class Experience
         this.sizes.off('resize')
         this.time.off('tick')
         this.configs.off('change')
+        window.removeEventListener('beforeunload', this.beforeUnloadHandler)
 
         // destroy components
         this.configs?.destroy()
@@ -133,9 +135,10 @@ export default class Experience
         this.stats = null
         this.computes = null
         this.canvas = null
+        this.beforeUnloadHandler = null
 
         // Clear the singleton instance
-        instance = null
+        Experience.instance = null
 
         console.log('Experience destroyed')
     }
