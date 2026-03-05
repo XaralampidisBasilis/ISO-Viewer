@@ -15,14 +15,15 @@ import createSources from './javascript/sources'
     const datasources = createSources()
     console.debug('[ISO-Viewer] Initial datasources:', datasources)
 
-    let experience = new Experience(canvas, context)
-
     const getCurrentVolumeUrl = () =>
     {
         return new URLSearchParams(window.location.search).get('volumeUrl') || ''
     }
 
     let currentVolumeUrl = getCurrentVolumeUrl()
+
+    let experience = new Experience(canvas, context)
+    window.parent.postMessage({ type: 'experienceBuildStarted', url: currentVolumeUrl }, '*')
 
     const recreateExperience = () =>
     {
@@ -35,7 +36,9 @@ import createSources from './javascript/sources'
 
         currentVolumeUrl = nextVolumeUrl
         experience?.destroy()
+        window.parent.postMessage({ type: 'clearCache', url: currentVolumeUrl }, '*')
         experience = new Experience(canvas, context)
+        window.parent.postMessage({ type: 'experienceBuildStarted', url: nextVolumeUrl }, '*')
         console.debug('[ISO-Viewer] Viewer recreated, loaded image url:', nextVolumeUrl)
     }
 

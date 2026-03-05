@@ -96,6 +96,8 @@ export default class Experience
         await this.computes.start()
         this.world.start()
         this.gui.start()
+        const volumeUrl = new URLSearchParams(window.location.search).get('volumeUrl') || ''
+        window.parent.postMessage({ type: 'experienceBuildCompleted', url: volumeUrl }, '*')
     }
 
     async change(event)
