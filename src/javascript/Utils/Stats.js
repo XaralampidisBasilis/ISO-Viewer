@@ -1,135 +1,61 @@
-import StatsJs from 'stats.js'
+import EventEmitter from './EventEmitter'
 
-/**
- * Stats
- * 
- * A utility class to handle performance monitoring using stats.js,
- * with optional WebGL2 GPU timing support via EXT_disjoint_timer_query_webgl2.
- */
-export default class Stats
+const sampleWindow = 350
+const idleDelay = 320
+
+export default class Stats extends EventEmitter
 {
-    constructor(_active, parent = document.body)
+    constructor()
     {
-        this.instance = new StatsJs()
-        this.instance.showPanel(0)
-        this.parent = parent
-        Object.assign(this.instance.dom.style, {
-            position: 'absolute',
-            top: 'auto',
-            left: 'auto',
-            right: '14px',
-            bottom: '14px',
-        })
-
+        super()
         this.active = false
-        this.max = 40
-        this.ignoreMaxed = true
+        this.reset()
+    }
 
-        if(_active)
+    setActive(active)
+    {
+        if (this.active === active) return
+        this.active = active
+        this.reset()
+    }
+
+    reset()
+    {
+        this.fps = null
+        this.lastFrame = null
+        this.sampleStart = null
+        this.frames = 0
+        this.trigger('change')
+    }
+
+    frame(now = performance.now())
+    {
+        this.lastFrame = now
+        if (this.sampleStart === null)
         {
-            this.activate()
-        }
-    }
-
-    activate()
-    {
-        this.active = true
-
-        this.parent.appendChild(this.instance.dom)
-    }
-
-    deactivate()
-    {
-        this.active = false
-
-        this.instance.dom.remove()
-    }
-
-    setRenderPanel(_context)
-    {
-        this.render = {}
-        this.render.context = _context
-        this.render.extension = this.render.context.getExtension('EXT_disjoint_timer_query_webgl2')
-        this.render.panel = this.instance.addPanel(new StatsJs.Panel('Render (ms)', '#f8f', '#212'))
-
-        const webGL2 = typeof WebGL2RenderingContext !== 'undefined' && _context instanceof WebGL2RenderingContext
-
-        if(!webGL2 || !this.render.extension)
-        {
-            this.deactivate()
-        }
-    }
-
-    beforeRender()
-    {
-        if(!this.active)
-        {
+            this.sampleStart = now
             return
         }
 
-        // Setup
-        this.queryCreated = false
-        let queryResultAvailable = false
+        this.frames++
+        const elapsed = now - this.sampleStart
+        if (elapsed < sampleWindow) return
 
-        // Test if query result available
-        if(this.render.query)
-        {
-            queryResultAvailable = this.render.context.getQueryParameter(this.render.query, this.render.context.QUERY_RESULT_AVAILABLE)
-            const disjoint = this.render.context.getParameter(this.render.extension.GPU_DISJOINT_EXT)
-                
-            if(queryResultAvailable && !disjoint)
-            {
-                const elapsedNanos = this.render.context.getQueryParameter(this.render.query, this.render.context.QUERY_RESULT)
-                const panelValue = Math.min(elapsedNanos / 1000 / 1000, this.max)
-
-                if(panelValue === this.max && this.ignoreMaxed)
-                {
-                    
-                }
-                else
-                {
-                    this.render.panel.update(panelValue, this.max)
-                }
-            }
-        }
-
-        // If query result available or no query yet
-        if(queryResultAvailable || !this.render.query)
-        {
-            // Create new query
-            this.queryCreated = true
-            this.render.query = this.render.context.createQuery()
-            this.render.context.beginQuery(this.render.extension.TIME_ELAPSED_EXT, this.render.query)
-        }
-
+        const fps = Math.round(this.frames * 1000 / elapsed)
+        this.sampleStart = now
+        this.frames = 0
+        if (fps === this.fps) return
+        this.fps = fps
+        this.trigger('change')
     }
 
-    afterRender()
+    idle(now = performance.now())
     {
-        if(!this.active)
-        {
-            return
-        }
-        
-        // End the query (result will be available "later")
-        if(this.queryCreated)
-        {
-            this.render.context.endQuery(this.render.extension.TIME_ELAPSED_EXT)
-        }
-    }
-
-    update()
-    {
-        if(!this.active)
-        {
-            return
-        }
-
-        this.instance.update()
+        if (this.lastFrame !== null && now - this.lastFrame >= idleDelay) this.reset()
     }
 
     destroy()
     {
-        this.deactivate()
+        this.off('change')
     }
 }

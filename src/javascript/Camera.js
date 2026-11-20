@@ -34,8 +34,9 @@ export default class Camera
             this.controls = new OrbitControls(this.instance, this.canvas)
             this.controls.enableDamping = true
             this.controls.dampingFactor = 0.12
-            this.controls.minDistance = 0.04
-            this.controls.maxDistance = 2
+            const extent = this.size?.length() ?? 0.5
+            this.controls.minDistance = Math.min(0.04, extent * 0.16)
+            this.controls.maxDistance = Math.max(2, extent * 4)
             this.controls.listenToKeyEvents(this.canvas)
         }
         if (target) this.controls.target.copy(target)
@@ -48,6 +49,9 @@ export default class Camera
     {
         this.size = size
         const span = Math.max(size.z, Math.max(size.x, size.y) / Math.min(1, this.instance.aspect))
+        this.instance.near = Math.min(0.001, span / 250)
+        this.instance.far = Math.max(10, span * 8)
+        this.instance.updateProjectionMatrix()
         this.instance.up.set(0, 0, 1)
         this.instance.position.set(0.38, 1, 0.08).normalize().multiplyScalar(span * 1.98)
         const center = new THREE.Vector3()

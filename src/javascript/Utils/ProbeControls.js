@@ -1061,7 +1061,8 @@ function onKeyDown( event ) {
 
 	switch ( event.code ) {
 
-		case 'ShiftLeft': this.speedMultiplier = 0.2; used = true; break;
+		case 'ShiftLeft':
+		case 'ShiftRight': this.speedMultiplier = 0.2; used = true; break;
 		case 'Space':     this.speedMultiplier = 2.0; used = true; break;
 
 		case 'KeyW': this._moveState.forward = 1; used = true; break;
@@ -1081,7 +1082,7 @@ function onKeyDown( event ) {
 
 	}
 
-	if ( used && event.code.startsWith( 'Arrow' ) ) event.preventDefault();
+	if ( used && ( event.code === 'Space' || event.code.startsWith( 'Arrow' ) ) ) event.preventDefault();
 
 }
 
@@ -1091,7 +1092,8 @@ function onKeyUp( event ) {
 
 	switch ( event.code ) {
 
-		case 'ShiftLeft': this.speedMultiplier = 1.0; break;
+		case 'ShiftLeft':
+		case 'ShiftRight': this.speedMultiplier = 1.0; break;
 		case 'Space':     this.speedMultiplier = 1.0; break;
 
 		case 'KeyW': this._moveState.forward = 0; break;

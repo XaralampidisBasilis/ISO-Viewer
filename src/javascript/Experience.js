@@ -11,6 +11,9 @@ import Computes from './Computes/Computes'
 import sources, { intensityRange } from './sources'
 import { setTensorflow } from './tensorflow'
 
+// Keep the rendered local grid within the tested high-detail CTA voxel budget.
+const localVoxelBudget = 410 * 410 * 236
+
 export default class Experience
 {
     static instance = null
@@ -40,7 +43,7 @@ export default class Experience
         this.resources = new Resources()
         this.computes = new Computes()
         this.world = new World()
-        this.stats = new Stats(false, viewport)
+        this.stats = new Stats()
         this.time = new Time()
 
         this.sizes.on('resize', () => {
@@ -58,10 +61,14 @@ export default class Experience
             event.preventDefault()
             this.ready = false
             this.contextLost = true
-            this.stats.deactivate()
+            if (this.stats.active) this.stats.setActive(false)
+            else this.stats.reset()
             this.gui.fail(new Error('The browser lost the graphics context. Reload to restart the viewer.'), true)
         }, { signal })
-        document.addEventListener('visibilitychange', () => this.invalidate(), { signal })
+        document.addEventListener('visibilitychange', () => {
+            this.stats.reset()
+            this.invalidate()
+        }, { signal })
         window.addEventListener('pagehide', event => {
             if (!event.persisted) this.destroy()
         }, { signal })
@@ -93,11 +100,16 @@ export default class Experience
         if (!this.ready) return
 
         if (this.pending.size && !this.loading && !this.applying) this.applySettings()
-        if (!this.dirty && !this.stats.active) return
+        const canMeasure = !this.loading && !this.applying
+        if (!this.dirty && !(canMeasure && this.stats.active))
+        {
+            if (canMeasure) this.stats.idle()
+            return
+        }
 
         this.dirty = false
         this.renderer.update()
-        this.stats.update()
+        if (canMeasure) this.stats.frame()
     }
 
     validateGrid(volume, factor, blockSize, skippingMethod)
@@ -112,40 +124,66 @@ export default class Experience
             throw new Error('Select isotropic distance or block occupancy to fit this GPU’s texture limit.')
     }
 
-    async loadQuality(quality = 'preview')
+    loadQuality(quality = 'preview')
     {
         const source = sources[quality]
-        if (!source || this.loading || this.applying || this.quality === quality || this.contextLost) return
+        if (!source || this.quality === quality) return
+        return this.loadScan(quality, source)
+    }
+
+    loadLocal(file)
+    {
+        return this.loadScan('local', null, file)
+    }
+
+    async loadScan(quality, source, file)
+    {
+        if (this.loading || this.applying || this.contextLost) return
 
         const initial = !this.ready
+        const reframe = initial || file || this.quality === 'local'
         const signal = this.abort.signal
+        const previousSkippingMethod = this.configs.skippingMethod
         this.loading = true
+        this.stats.reset()
         this.gui.busy(true)
-        const download = quality === 'detail' ? 'Downloading the high-detail scan' : 'Downloading the CTA preview'
-        this.gui.setProgress(initial, download)
+        const loadingLabel = file ? 'Reading the local scan' : quality === 'detail'
+            ? 'Downloading the high-detail scan' : 'Downloading the CTA preview'
+        if (initial && file) this.gui.startLocalLoad()
+        const progress = (loaded, total) => this.gui.setProgress(initial, loadingLabel, loaded, total)
+        progress()
 
         try
         {
             this.backend ??= setTensorflow()
+            const data = file
+                ? this.resources.loadFile(file, progress, signal)
+                : this.resources.loadVolume(source.path, progress, signal)
             const [volume] = await Promise.all([
-                this.resources.loadVolume(source.path, (loaded, total) => this.gui.setProgress(initial, download, loaded, total), signal),
+                data,
                 this.backend,
             ])
 
-            if (initial && Math.ceil((volume.dimensions[2] + 1) / this.configs.blockSize) * 8 > this.maxTextureSize)
+            const voxelCount = volume.dimensions.reduce((count, size) => count * size, 1)
+            const factor = source?.factor ?? Math.min(1, Math.cbrt(localVoxelBudget / voxelCount),
+                this.maxTextureSize / Math.max(...volume.dimensions))
+            const range = file ? undefined : intensityRange
+            const octantDepth = Math.ceil((Math.ceil(volume.dimensions[2] * factor) + 1) / this.configs.blockSize) * 8
+            if (reframe && octantDepth > this.maxTextureSize &&
+                (previousSkippingMethod === 'anisotropicDistance' || previousSkippingMethod === 'extendedAnisotropicDistance'))
                 this.configs.skippingMethod = 'isotropicDistance'
-            this.validateGrid(volume, source.factor, this.configs.blockSize, this.configs.skippingMethod)
-            await this.computes.rebuild(volume, source.factor, intensityRange, label => this.gui.setProgress(initial, label), signal)
-            if (this.contextLost) return
 
-            this.configs.downscaleFactor = source.factor
+            this.validateGrid(volume, factor, this.configs.blockSize, this.configs.skippingMethod)
+            await this.computes.rebuild(volume, factor, range, label => this.gui.setProgress(initial, label), signal)
+            if (this.contextLost || signal.aborted) return
+
+            this.configs.downscaleFactor = factor
             this.quality = quality
-            if (initial)
-            {
-                this.world.start()
-                this.camera.reset(this.world.viewer.size)
-            }
+            this.scanName = file?.name
+            this.intensityRange = range
+            if (initial) this.world.start()
             else this.world.change()
+            if (reframe) this.camera.reset(this.world.viewer.size)
 
             this.renderer.update()
             this.ready = true
@@ -153,6 +191,7 @@ export default class Experience
         }
         catch (error)
         {
+            this.configs.skippingMethod = previousSkippingMethod
             if (!signal.aborted && !this.contextLost)
             {
                 console.error(error)
@@ -188,8 +227,9 @@ export default class Experience
 
             if (changes.has('blockSize') || changes.has('downscaleFactor'))
             {
+                this.stats.reset()
                 this.gui.busy(true)
-                await this.computes.rebuild(volume, configs.downscaleFactor, intensityRange, label => this.gui.setProgress(false, label), signal)
+                await this.computes.rebuild(volume, configs.downscaleFactor, this.intensityRange, label => this.gui.setProgress(false, label), signal)
                 this.gui.ready(this.quality)
             }
             else

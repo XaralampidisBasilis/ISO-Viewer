@@ -14,7 +14,7 @@ export default class Renderer
             canvas: experience.canvas,
             context: experience.context,
         })
-        this.instance.setClearColor('#101923', 1)
+        this.instance.setClearColor('#211d20', 1)
         this.resize()
     }
 

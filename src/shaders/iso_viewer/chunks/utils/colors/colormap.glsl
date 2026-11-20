@@ -23,6 +23,18 @@
 #include "./colormap/cividis"
 
 const int COLORMAP_IVORY = 20;
+const int COLORMAP_SILVER = 21;
+const int COLORMAP_TEAL = 22;
+const int COLORMAP_AMBER = 23;
+const int COLORMAP_LAVENDER = 24;
+
+vec3 tinted_ramp(in float t, in vec3 tint)
+{
+    // Preserve the original tint at the demo's opening isovalue.
+    const float reference = 0.35;
+    if (t < reference) return mix(0.55 * tint, tint, t / reference);
+    return mix(tint, vec3(1.0), 0.45 * (t - reference) / (1.0 - reference));
+}
 
 vec3 colormap(in float t, in int type)
 {
@@ -46,7 +58,11 @@ vec3 colormap(in float t, in int type)
     else if (type == COLORMAP_INFERNO) return inferno(t);
     else if (type == COLORMAP_MAGMA) return magma(t);
     else if (type == COLORMAP_CIVIDIS) return cividis(t);
-    else if (type == COLORMAP_IVORY) return vec3(0.93, 0.86, 0.73);
+    else if (type == COLORMAP_IVORY) return tinted_ramp(t, vec3(0.93, 0.86, 0.73));
+    else if (type == COLORMAP_SILVER) return tinted_ramp(t, vec3(0.81, 0.87, 0.94));
+    else if (type == COLORMAP_TEAL) return tinted_ramp(t, vec3(0.43, 0.82, 0.76));
+    else if (type == COLORMAP_AMBER) return tinted_ramp(t, vec3(0.95, 0.69, 0.42));
+    else if (type == COLORMAP_LAVENDER) return tinted_ramp(t, vec3(0.80, 0.70, 0.94));
 
     else return vec3(0.0); 
 }

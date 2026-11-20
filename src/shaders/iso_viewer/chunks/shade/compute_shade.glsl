@@ -10,22 +10,28 @@ float specular = pow(lambertian, u_shading.shininess);
 
 // Modulations
 float modulate_edges = smoothstep(0.0, 0.5, abs(view_angle));
-float modulate_gradient = mix(0.2, 1.0, smoothstep(0.0, 0.1, length(hit.gradient)));
-float modulate_curvature = mean(smoothstep(-1.2, 0.0, hit.curvatures.x), smoothstep(-1.2, 0.0, hit.curvatures.y)); 
-
 modulate_edges = mix(1.0, modulate_edges, u_shading.modulate_edges);
-modulate_gradient = mix(1.0, modulate_gradient, u_shading.modulate_gradient);
-modulate_curvature = mix(1.0, modulate_curvature, u_shading.modulate_curvature);
+float modulate_gradient = 1.0;
+if (u_shading.modulate_gradient > 0.0)
+{
+    float gradient_strength = smoothstep(0.0, 0.1, length(hit.gradient));
+    modulate_gradient = mix(1.0, mix(0.2, 1.0, gradient_strength), u_shading.modulate_gradient);
+}
 
 // Colors 
-frag.color_material = colormap(hit.value, u_shading.colormap);
+// Use the requested level so root approximation error cannot change the material color.
+frag.color_material = colormap(u_volume.isovalue, u_shading.colormap);
 frag.color_ambient = frag.color_material * u_shading.reflect_ambient;
 frag.color_diffuse = frag.color_material * u_shading.reflect_diffuse  * lambertian;
 frag.color_specular = frag.color_material * u_shading.reflect_specular * specular;
 frag.color_directional = frag.color_diffuse + frag.color_specular;
 
 frag.color_directional *= min(modulate_edges, modulate_gradient);
-frag.color_ambient *= modulate_curvature;
+if (u_shading.modulate_curvature > 0.0)
+{
+    vec2 curvature = smoothstep(-1.2, 0.0, hit.curvatures);
+    frag.color_ambient *= mix(1.0, mean(curvature), u_shading.modulate_curvature);
+}
 frag.color = frag.color_ambient + frag.color_directional;
 
 // Compose colors

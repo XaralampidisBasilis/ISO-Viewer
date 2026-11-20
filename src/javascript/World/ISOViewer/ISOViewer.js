@@ -58,7 +58,7 @@ export default class ISOViewer
         }
 
         const debug = uniforms.u_debug.value
-        debug.option = configs.diagnosticView
+        debug.option = configs.effectiveDebugView
         debug.max_groups = maxGroups
         debug.max_blocks = Math.ceil(maxBlocks / maxGroups)
         debug.max_cells = cellsPerBlock
@@ -74,8 +74,9 @@ export default class ISOViewer
             SKIPPING_ENABLED: Number(configs.skippingEnabled),
             BBOX_ENABLED: Number(configs.boundingBoxEnabled),
             BERNSTEIN_ENABLED: Number(configs.bernsteinEnabled),
-            DEBUG_ENABLED: Number(configs.diagnosticView !== 0),
-            DISCARDING_ENABLED: Number(configs.diagnosticView === 0 || !configs.showMisses),
+            DEBUG_ENABLED: Number(configs.debugEnabled),
+            DISCARDING_ENABLED: Number(!configs.debugEnabled || !configs.showMisses),
+            VARIATION_METHOD: configs.effectiveRootSolver,
             MAX_CELLS: maxCells,
             MAX_CELLS_IN_BLOCK: cellsPerBlock,
             MAX_TRACES: maxCells * 5,
@@ -94,7 +95,10 @@ export default class ISOViewer
 
     syncShading()
     {
-        this.material.uniforms.u_shading.value.colormap = Configs.Colormaps.indexOf(this.configs.colormap)
+        const shading = this.material.uniforms.u_shading.value
+        shading.colormap = Configs.Colormaps.indexOf(this.configs.colormap)
+        shading.modulate_gradient = Number(this.configs.gradientShading)
+        shading.modulate_curvature = Number(this.configs.curvatureShading)
     }
 
     destroy()
