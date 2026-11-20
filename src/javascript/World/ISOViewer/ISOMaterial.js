@@ -29,6 +29,7 @@ export default function()
         ({
             min_position: new THREE.Vector3(),
             max_position: new THREE.Vector3(),
+            occupied: false,
         }),
 
         u_textures: new THREE.Uniform
@@ -42,9 +43,9 @@ export default function()
         ({
             colormap          : 0,
             shininess         : 40.0,
-            reflect_ambient   : 0.2,
-            reflect_diffuse   : 1.0,
-            reflect_specular  : 0.2,
+            reflect_ambient   : 0.24,
+            reflect_diffuse   : 0.80,
+            reflect_specular  : 0.16,
             modulate_edges    : 1.0,
             modulate_gradient : 1.0,
             modulate_curvature: 1.0,
@@ -78,7 +79,7 @@ export default function()
         SKIPPING_ENABLED : 1,
         BBOX_ENABLED     : 1,
 
-        DEBUG_ENABLED     : 1,
+        DEBUG_ENABLED     : 0,
         DISCARDING_ENABLED: 1,
         VARIATION_ENABLED : 0,
         VARIATION_METHOD  : 1,

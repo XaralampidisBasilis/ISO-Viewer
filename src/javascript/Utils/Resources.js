@@ -1,93 +1,35 @@
-import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { NIFTILoader } from './NIFTILoader'
-import EventEmitter from './EventEmitter'
 
-export default class Resources extends EventEmitter
+export default class Resources
 {
-    constructor(sources)
+    constructor()
     {
-        super()
-
-        this.sources = sources
-
-        this.items = {}
-        this.toLoad = this.sources.length
-        this.loaded = 0
-
-        this.setLoaders()
-        this.startLoading()
+        this.loader = new NIFTILoader()
     }
 
-    setLoaders()
+    async loadVolume(path, onProgress, signal)
     {
-        this.loaders = {}
-        this.loaders.gltfLoader = new GLTFLoader()
-        this.loaders.textureLoader = new THREE.TextureLoader()
-        this.loaders.cubeTextureLoader = new THREE.CubeTextureLoader()
-        this.loaders.niftiLoader = new NIFTILoader()
-    }
+        const response = await fetch(path, { signal })
+        if (!response.ok) throw new Error(`Could not download the scan (HTTP ${response.status}).`)
 
-    startLoading()
-    {
-        console.time('setResources')
-
-        // Load each source
-        for(const source of this.sources)
-        {
-            if(source.type === 'gltfModel')
+        const total = Number(response.headers.get('content-length'))
+        let loaded = 0
+        const trackProgress = new TransformStream({
+            transform(chunk, controller)
             {
-                this.loaders.gltfLoader.load(
-                    source.path,
-                    (file) =>
-                    {
-                        this.sourceLoaded(source, file)
-                    }
-                )
-            }
-            else if(source.type === 'texture')
-            {
-                this.loaders.textureLoader.load(
-                    source.path,
-                    (file) =>
-                    {
-                        this.sourceLoaded(source, file)
-                    }
-                )
-            }
-            else if(source.type === 'cubeTexture')
-            {
-                this.loaders.cubeTextureLoader.load(
-                    source.path,
-                    (file) =>
-                    {
-                        this.sourceLoaded(source, file)
-                    }
-                )
-            }
-            else if(source.type === 'niftiFile')
-            {
-                this.loaders.niftiLoader.load(
-                    source.path,
-                    (file) =>
-                    {
-                        this.sourceLoaded(source, file)
-                    }
-                )
-            }
-        }
-    }
+                loaded += chunk.byteLength
+                onProgress(loaded, total)
+                controller.enqueue(chunk)
+            },
+        })
 
-    sourceLoaded(source, file)
-    {
-        this.items[source.name] = file
-
-        this.loaded++
-
-        if(this.loaded === this.toLoad)
-        {
-            console.timeEnd('setResources')
-            this.trigger('ready')
-        }
+        const stream = response.body.pipeThrough(trackProgress)
+        // A static host can also send the file with HTTP gzip content encoding.
+        const decoded = typeof DecompressionStream === 'function' && !response.headers.get('content-encoding')
+            ? stream.pipeThrough(new DecompressionStream('gzip'))
+            : stream
+        const data = await new Response(decoded).arrayBuffer()
+        signal.throwIfAborted()
+        return this.loader.parse(data)
     }
 }

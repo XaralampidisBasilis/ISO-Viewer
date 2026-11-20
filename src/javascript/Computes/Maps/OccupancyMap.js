@@ -1,8 +1,6 @@
 import * as THREE from 'three'
-import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
 import { computeOccupancyMap } from '../Programs/GPGPUOccupancyMapPacked'
-import { computeBoundingBox as getBoundingBox } from '../Programs/GPGPUBoundingBox'
 
 export default class OccupancyMap
 {
@@ -23,17 +21,10 @@ export default class OccupancyMap
         console.timeEnd('computeTensor') 
     }
 
-    computeBoundingBox()
-    {
-        console.time('computeBoundingBox') 
-        this.boundingBox = getBoundingBox(this.tensor)
-        console.timeEnd('computeBoundingBox') 
-    }
-
-    computeTexture()
+    computeTexture(data = this.getTextureData())
     {
         console.time('computeTexture') 
-        this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
+        this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
         this.texture.internalFormat = 'R8UI'
@@ -42,18 +33,44 @@ export default class OccupancyMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 1
         this.texture.needsUpdate = true
+        this.computeBoundingBox(data)
         console.timeEnd('computeTexture') 
     }   
 
-    updateTexture()
+    updateTexture(data = this.getTextureData())
     {
-        this.texture.image.data.set(this.getTextureData())
+        this.texture.image.data.set(data)
         this.texture.needsUpdate = true
+        this.computeBoundingBox(data)
     }
 
     getTextureData()
     {
         return new Uint8Array(this.tensor.dataSync())
+    }
+
+    computeBoundingBox(data)
+    {
+        const { x: width, y: height, z: depth } = this.dimensions
+        const minCoords = [width, height, depth]
+        const maxCoords = [-1, -1, -1]
+        let index = 0
+
+        // Reuse the occupancy readback that already supplies the texture upload.
+        for (let z = 0; z < depth; z++)
+            for (let y = 0; y < height; y++)
+                for (let x = 0; x < width; x++)
+                {
+                    if (!data[index++]) continue
+                    minCoords[0] = Math.min(minCoords[0], x)
+                    minCoords[1] = Math.min(minCoords[1], y)
+                    minCoords[2] = Math.min(minCoords[2], z)
+                    maxCoords[0] = Math.max(maxCoords[0], x)
+                    maxCoords[1] = Math.max(maxCoords[1], y)
+                    maxCoords[2] = Math.max(maxCoords[2], z)
+                }
+
+        this.boundingBox = maxCoords[0] < 0 ? null : { minCoords, maxCoords }
     }
 
     dispose()

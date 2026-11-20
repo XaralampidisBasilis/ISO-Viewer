@@ -178,16 +178,6 @@ class GPGPUExtremaMap2 implements GPGPUProgram
         const ivec3 voxelMinCoords = ivec3(0);
         const ivec3 voxelMaxCoords = ivec3(${inWidth-1}, ${inHeight-1}, ${inDepth-1});
 
-        const mat2x4 Elevations = mat2x4(
-            1.0, 2.0/3.0, 1.0/3.0, 0.0,   
-            0.0, 1.0/3.0, 2.0/3.0, 1.0
-        );
-
-        const mat2x4 Contributions = mat2x4(
-            0.0, -0.25,  0.0,  0.0,  
-            0.0,  0.0, -0.25,  0.0
-        );
-
         vec4 cellSamples[8];
   
         vec4 getVoxelSample(ivec3 voxelCoords)
@@ -210,57 +200,38 @@ class GPGPUExtremaMap2 implements GPGPUProgram
             }}} 
         }
    
-        float getBernsteinCoefficient(ivec3 coeffIndices)
+        // Convert one axis at a time. Alpha accumulates its correction while the
+        // remaining derivative channels are still linear along the processed axes.
+        vec4 elevate(vec4 a, vec4 b, int index, int axis)
         {
-            float bernsteinCoefficient = 0.0;
-
-            int u = coeffIndices.x;
-            int v = coeffIndices.y;
-            int w = coeffIndices.z;
-
-            for (int r = 0; r < 2; r++) 
-            {
-                float Mz = Contributions[r][w];
-                float Wz = Elevations[r][w];
-
-            for (int q = 0; q < 2; q++) 
-            {
-                float My = Contributions[q][v];
-                float Wy = Elevations[q][v];
-
-            for (int p = 0; p < 2; p++) 
-            {
-                float Mx = Contributions[p][u];
-                float Wx = Elevations[p][u];
-
-                vec4  M = vec4(Mx, My, Mz, 1.0);
-                float W = Wx * Wy * Wz;
-
-                int voxelIndex = p + q * 2 + r * 4;
-                vec4  V = cellSamples[voxelIndex];
-
-                bernsteinCoefficient += dot(V, M) * W;
-
-            }}} 
-
-            return bernsteinCoefficient;
+            if (index == 0) return a;
+            if (index == 3) return b;
+            vec4 coefficient = mix(a, b, float(index) / 3.0);
+            coefficient.a -= (index == 1 ? a[axis] : b[axis]) / 6.0;
+            return coefficient;
         }
 
         vec2 getCellExtremaTricubic()
         {
             vec2 cellMinMax = vec2(1.0, 0.0);
             
-            for (int w = 0; w < 4; w++) {
-            for (int v = 0; v < 4; v++) {
-            for (int u = 0; u < 4; u++) {
+            for (int u = 0; u < 4; u++)
+            {
+                vec4 x00 = elevate(cellSamples[0], cellSamples[1], u, 0);
+                vec4 x10 = elevate(cellSamples[2], cellSamples[3], u, 0);
+                vec4 x01 = elevate(cellSamples[4], cellSamples[5], u, 0);
+                vec4 x11 = elevate(cellSamples[6], cellSamples[7], u, 0);
 
-                ivec3 coeffIndices = ivec3(u, v, w);
-                float bernsteinCoefficient = getBernsteinCoefficient(coeffIndices);
-                
-                cellMinMax.x = min(cellMinMax.x, bernsteinCoefficient);
-                cellMinMax.y = max(cellMinMax.y, bernsteinCoefficient);
-
-            }}} 
+                for (int v = 0; v < 4; v++)
+                {
+                    vec4 a = elevate(x00, x10, v, 1);
+                    vec4 b = elevate(x01, x11, v, 1);
+                    float c1 = mix(a.a, b.a, 1.0/3.0) - a.b / 6.0;
+                    float c2 = mix(a.a, b.a, 2.0/3.0) - b.b / 6.0;
+                    cellMinMax.x = min(cellMinMax.x, min(min(a.a, b.a), min(c1, c2)));
+                    cellMinMax.y = max(cellMinMax.y, max(max(a.a, b.a), max(c1, c2)));
+                }
+            }
 
             return cellMinMax;
         }

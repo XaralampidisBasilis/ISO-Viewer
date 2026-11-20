@@ -22,6 +22,8 @@
 #include "./colormap/magma"
 #include "./colormap/cividis"
 
+const int COLORMAP_IVORY = 20;
+
 vec3 colormap(in float t, in int type)
 {
     if      (type == COLORMAP_PARULA) return parula(t);
@@ -44,6 +46,7 @@ vec3 colormap(in float t, in int type)
     else if (type == COLORMAP_INFERNO) return inferno(t);
     else if (type == COLORMAP_MAGMA) return magma(t);
     else if (type == COLORMAP_CIVIDIS) return cividis(t);
+    else if (type == COLORMAP_IVORY) return vec3(0.93, 0.86, 0.73);
 
     else return vec3(0.0); 
 }

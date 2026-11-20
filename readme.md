@@ -1,7 +1,10 @@
-# 🫀 ISO-Viewer
+# ISOViewer
 
-An interactive **cardiac CT data visualization tool** for the browser, built with **Three.js** and custom shaders.  
-It demonstrates real-time **isosurface rendering** directly in WebGL.  
+Explore a **head-and-neck CT angiogram** with an interactive isosurface renderer built with Three.js, TensorFlow.js, and WebGL2. The demo opens a 10.8 MiB preview and loads the 84 MiB source scan when you select **High detail**.
+
+[Open the demo](https://xaralampidisbasilis.github.io/ISO-Viewer/)
+
+See the [project overview](PROJECT_OVERVIEW.md) for the architecture, rendering pipeline, and development reference.
 
 ---
 ## 📄 Related Publication (IEEE)
@@ -22,47 +25,21 @@ The system reaches **25–45 FPS** on contrast-enhanced cardiac CT volumes using
 
 ---
 
-## 🚀 Live Demo
-👉 [Try the demo here](https://xaralampidisbasilis.github.io/ISO-Viewer/)
+## Exploring the scan
 
-> ⚠️ **Note:** The demo does **not** run on mobile devices. Please open it on a desktop or laptop with GPU acceleration enabled. It takes around 1 min to load 
+Start in **Orbit** mode and drag to rotate, scroll or pinch to zoom, and right-drag to pan. **Reset view** returns to the opening angle.
 
----
+In **Fly** mode, click the viewport to focus it. Drag to look around, use **W/A/S/D** to move, **R/F** to move vertically, and **Q/E** to roll. Arrow keys rotate the view. **Space** increases speed and **Shift** reduces it.
 
-## 🎮 Navigation
+Use **Rendering methods** to compare interpolation, traversal, and empty-space skipping. **Diagnostics** visualizes normals, principal curvatures, or traversal and intersection counts.
 
-The viewer uses **first-person, spaceship-like movement** powered by custom **ProbeControls.js**.
+## Local development
 
-### 🖱️ Mouse
-- **Left drag** → Look around  
-- **Middle scroll** → Zoom in/out  
-- **Right drag** → Pan around
-
-### ⌨️ Keyboard
-- **W / S** → Move forward / backward  
-- **A / D** → Move left / right  
-- **R / F** → Move up / down  
-- **Q / E** → Roll left / right  
-- **Arrows** → Rotate view  
-- **Space** → Move faster  
-- **Shift** → Move slower
-
----
-
-## 🛠️ Setup
-
-First, install [Node.js](https://nodejs.org/en/download/).
-
-Then run the following commands:
+Use Node.js and a browser with GPU-accelerated WebGL2. Open the development address printed by Vite.
 
 ```bash
-# Install dependencies (only required once)
-npm install
-
-# Start a local development server at localhost:8080
+npm ci
 npm run dev
-
-# Build for production (output in dist/ directory)
-npm run build
 ```
-<img width="1413" height="3990" alt="Cardiac-ReadMe-lowres" src="https://github.com/user-attachments/assets/cf7c23ee-a211-4fb9-a551-c5b3c6b11a81" />
+
+`npm run build` regenerates the GitHub Pages demo in `docs/`. To recreate the preview from the bundled CTA, run `node scripts/generate-cta-preview.mjs` before building.

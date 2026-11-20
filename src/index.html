@@ -1,14 +1,165 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> </title>
-    <link rel="stylesheet" href="./style.css">  
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0c1118">
+    <meta name="description" content="Explore a head and neck CT angiography scan with interactive GPU isosurface rendering.">
+    <title>ISOViewer | Head &amp; neck CTA</title>
 </head>
 <body>
-    <canvas id="debug-tensor"></canvas>
-    <canvas class="webgl"></canvas>
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span>ISOViewer</span>
+        </div>
+        <span class="brand-caption">Medical volume research</span>
+        <button class="paper-button" type="button" id="open-research">About the research <span aria-hidden="true">↗</span></button>
+    </header>
+
+    <main class="workspace">
+        <section class="viewer" aria-label="Interactive CTA viewer">
+            <div class="viewport" id="viewport">
+                <canvas class="webgl" tabindex="0" aria-label="3D rendering of the head and neck CTA" aria-describedby="navigation-help"></canvas>
+                <div class="viewport-toolbar" hidden id="viewport-tools">
+                    <div class="view-modes" role="group" aria-label="Navigation mode">
+                        <button type="button" data-camera="orbit" aria-pressed="true">Orbit</button>
+                        <button type="button" data-camera="fly" aria-pressed="false">Fly</button>
+                    </div>
+                    <button type="button" class="reset-view" id="reset-view"><span aria-hidden="true">↺</span> Reset view</button>
+                </div>
+                <div class="loading" id="loading" role="status" aria-live="polite">
+                    <div class="loading-mark" aria-hidden="true"><span></span></div>
+                    <strong id="loading-title">Starting the viewer</strong>
+                    <span id="loading-description">Head &amp; neck CT angiography</span>
+                    <progress id="loading-progress" aria-label="Scan download"></progress>
+                    <button type="button" id="retry" hidden>Reload viewer</button>
+                </div>
+                <div class="stage-message" role="status" id="empty-view" hidden>No surface at this isovalue</div>
+            </div>
+            <div class="viewport-footer">
+                <p id="navigation-help">Drag to orbit <span>·</span> Scroll or pinch to zoom <span>·</span> Right-drag to pan</p>
+                <p class="viewport-resolution" id="viewport-resolution" hidden></p>
+            </div>
+        </section>
+
+        <aside class="inspector" aria-label="Viewer settings">
+            <div class="inspector-heading">
+                <p class="eyebrow">CT angiography</p>
+                <h1>Head &amp; neck</h1>
+                <p>Explore a surface within the scan by changing the intensity threshold.</p>
+            </div>
+
+            <form id="settings">
+                <fieldset id="settings-fields" disabled>
+                    <section class="settings-group surface-controls" aria-label="Isosurface">
+                        <div class="setting-title">
+                            <label for="isovalue">Isovalue</label>
+                            <output id="isovalue-output" for="isovalue">0.350</output>
+                        </div>
+                        <input id="isovalue" data-config="isosurfaceValue" type="range" min="0" max="1" step="0.001" value="0.35">
+                        <div class="range-labels"><span>0 · Lower intensity</span><span>Higher intensity · 1</span></div>
+                        <button class="text-button" type="button" id="reset-isovalue">Reset threshold</button>
+                    </section>
+
+                    <section class="settings-group" aria-labelledby="quality-label">
+                        <h2 id="quality-label">Volume detail</h2>
+                        <div class="quality-picker" role="group" aria-labelledby="quality-label">
+                            <button type="button" data-quality="preview" aria-pressed="true">
+                                <strong>Preview</strong><span>256 × 256 × 148</span>
+                            </button>
+                            <button type="button" data-quality="detail" aria-pressed="false">
+                                <strong>High detail</strong><span>410 × 410 × 236</span>
+                            </button>
+                        </div>
+                        <p id="quality-status" class="field-note" role="status" aria-live="polite">High detail downloads the 84 MiB source scan.</p>
+                        <progress id="quality-progress" aria-label="High-detail scan download" hidden></progress>
+                    </section>
+
+                    <details class="settings-group">
+                        <summary>Appearance</summary>
+                        <div class="details-content">
+                            <label class="select-setting">Palette
+                                <select data-config="colormap" id="colormap"></select>
+                            </label>
+                            <label class="select-setting">Surface normals
+                                <select data-config="gradientsMethod">
+                                    <option value="analytic">Analytic gradient</option>
+                                    <option value="trilinearSobel">Trilinear Sobel</option>
+                                    <option value="triquadraticBspline">Triquadratic B-spline</option>
+                                    <option value="tricubicBspline">Tricubic B-spline</option>
+                                </select>
+                            </label>
+                        </div>
+                    </details>
+
+                    <details class="settings-group">
+                        <summary>Rendering methods</summary>
+                        <div class="details-content">
+                            <label class="select-setting">Interpolation
+                                <select data-config="interpolationMethod">
+                                    <option value="trilinear">Trilinear</option>
+                                    <option value="tricubicCsébfalvi">Csébfalvi tricubic</option>
+                                </select>
+                            </label>
+                            <label class="select-setting">Ray traversal
+                                <select data-config="marchingMethod">
+                                    <option value="digitalDifferentialAnalyzer">Cell traversal (DDA)</option>
+                                    <option value="uniformStepping">Uniform stepping</option>
+                                </select>
+                            </label>
+                            <label class="select-setting">Empty-space map
+                                <select data-config="skippingMethod">
+                                    <option value="occupancy">Block occupancy</option>
+                                    <option value="isotropicDistance">Isotropic distance</option>
+                                    <option value="anisotropicDistance">Anisotropic distance</option>
+                                    <option value="extendedIsotropicDistance">Extended isotropic distance</option>
+                                    <option value="extendedAnisotropicDistance">Extended anisotropic distance</option>
+                                </select>
+                            </label>
+                            <label class="check-setting"><input type="checkbox" data-config="skippingEnabled"> Skip empty space</label>
+                            <label class="check-setting" id="bernstein-control"><input type="checkbox" data-config="bernsteinEnabled"> Bernstein rejection</label>
+                            <label class="check-setting"><input type="checkbox" data-config="boundingBoxEnabled"> Clip to occupied bounds</label>
+                        </div>
+                    </details>
+
+                    <details class="settings-group">
+                        <summary>Diagnostics</summary>
+                        <div class="details-content">
+                            <label class="select-setting">Viewport display
+                                <select data-config="diagnosticView">
+                                    <option value="0">Shaded surface</option>
+                                    <option value="459">Surface normals</option>
+                                    <option value="462">Principal curvatures</option>
+                                    <option value="901">Traversal steps</option>
+                                    <option value="903">Blocks visited</option>
+                                    <option value="905">Texture fetches</option>
+                                    <option value="906">Intersection tests</option>
+                                </select>
+                            </label>
+                            <label class="check-setting" id="show-misses"><input type="checkbox" data-config="showMisses"> Show rays that miss the surface</label>
+                            <button class="text-button" type="button" id="show-stats" aria-pressed="false">Show frame statistics</button>
+                        </div>
+                    </details>
+                </fieldset>
+            </form>
+        </aside>
+    </main>
+
+    <dialog id="research-dialog" aria-labelledby="research-title">
+        <form method="dialog"><button class="dialog-close" aria-label="Close research information">×</button></form>
+        <p class="eyebrow">IEEE BIBE 2025</p>
+        <h2 id="research-title">High-Quality Analytic Isosurface Rendering for Web-Based Cardiac Imaging</h2>
+        <p>Vasileios Lazaros Charalampidis and colleagues presented these methods for cardiac imaging. The viewer applies them to a head-and-neck CT angiogram.</p>
+        <dl class="research-methods">
+            <div><dt>Implicit surfaces</dt><dd>Each pixel solves for a ray’s first intersection with the chosen intensity level.</dd></div>
+            <div><dt>Distance maps</dt><dd>A grid of block bounds and distances lets rays skip regions that cannot contain the surface.</dd></div>
+            <div><dt>Bernstein rejection</dt><dd>Polynomial coefficients identify cells the ray can pass through without a root solve.</dd></div>
+        </dl>
+        <a class="paper-link" href="https://doi.org/10.1109/BIBE66822.2025.00019" target="_blank" rel="noopener">Read the paper <span aria-hidden="true">↗</span></a>
+    </dialog>
+
+    <noscript>Enable JavaScript to open the interactive CTA viewer.</noscript>
     <script type="module" src="./script.js"></script>
 </body>
 </html>

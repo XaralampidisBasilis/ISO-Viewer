@@ -1,48 +1,35 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
-import Computes from '../Computes'
 import { resizeTrilinear } from '../Programs/GPGPUResizeTrilinear'
 import { normalize } from '../Programs/GPGPUNormalizePacked'
 
 export default class VolumeMap
 {
-    constructor()
+    setVolume(volume)
     {
-        this.computes = new Computes()
-        this.configs = this.computes.configs
-        this.resources = this.computes.resources
+        this.dimensions = new THREE.Vector3().fromArray(volume.dimensions)
+        this.spacing = new THREE.Vector3().fromArray(volume.spacing)
+        this.size = new THREE.Vector3().fromArray(volume.size)
     }
 
-    setVolume()
-    {
-        this.volume = this.resources.items.volume
-        this.mask = this.resources.items.mask
-        this.dimensions = new THREE.Vector3().fromArray(this.volume.dimensions)
-        this.spacing = new THREE.Vector3().fromArray(this.volume.spacing)
-        this.size = new THREE.Vector3().fromArray(this.volume.size)
-
-        console.log('Volume', this)
-    }
-
-    computeTensor()
+    computeTensor(volume, downscaleFactor, range)
     {
         console.time('computeTensor') 
         
-        this.setVolume()
-        this.downscaleFactor = this.configs.downscaleFactor
+        this.setVolume(volume)
 
-        const shape = this.volume.dimensions.toReversed()
-        const newShape = shape.map((x) => Math.ceil(this.downscaleFactor * x))
-        const newSpacing = this.volume.spacing.toReversed().map((x, i) => shape[i]/newShape[i] * x)
+        const shape = [...volume.dimensions].reverse()
+        const newShape = shape.map((x) => Math.ceil(downscaleFactor * x))
+        const newSpacing = [...volume.spacing].reverse().map((x, i) => shape[i] / newShape[i] * x)
         
-        this.dimensions.fromArray(newShape.toReversed())
-        this.spacing.fromArray(newSpacing.toReversed())
+        this.dimensions.fromArray([...newShape].reverse())
+        this.spacing.fromArray(newSpacing.reverse())
         this.tensor = tf.tidy(() =>
         {    
-            const data = new Float32Array(this.volume.data)
+            const data = new Float32Array(volume.data)
             let tensor = tf.tensor3d(data, shape)
             tensor = resizeTrilinear(tensor, newShape, false, true)
-            tensor = normalize(tensor)
+            tensor = normalize(tensor, range)
 
             return tensor
         })  

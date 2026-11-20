@@ -34,10 +34,13 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
     return tf.engine().makeTensorFromTensorInfo(info) as tf.Tensor
 }
 
-export function normalize(inputTensor: tf.Tensor3D): tf.Tensor3D 
+export function normalize(inputTensor: tf.Tensor3D, range?: [number, number]): tf.Tensor3D
 {
-    const globalMin = tf.min(inputTensor).arraySync() as number
-    const globalMax = tf.max(inputTensor).arraySync() as number
+    const [globalMin, globalMax] = range ?? [
+        tf.min(inputTensor).arraySync() as number,
+        tf.max(inputTensor).arraySync() as number,
+    ]
+    if (globalMin === globalMax) return tf.zerosLike(inputTensor)
     const program = new GPGPUNormalize(inputTensor.shape , globalMin , globalMax)
     return runProgram(program, [inputTensor]) as tf.Tensor3D
 }

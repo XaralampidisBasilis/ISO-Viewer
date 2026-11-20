@@ -18,14 +18,22 @@ void main()
 {
     #include "./chunks/structs/set_structs"
     #include "./chunks/raycast/compute_raycast"
+    #if DEBUG_ENABLED == 0 && DISCARDING_ENABLED == 1
+    if (ray.span_distance <= 0.0) discard;
+    #endif
+
     #include "./chunks/march/compute_march"
+    #if DEBUG_ENABLED == 0 && DISCARDING_ENABLED == 1
+    if (hit.discarded) discard;
+    #endif
+
     #include "./chunks/shade/compute_shade"
 
     #if DEBUG_ENABLED == 1
     #include "./chunks/debug/compute_debug"
     #endif
 
-    #if DISCARDING_ENABLED == 1
+    #if DEBUG_ENABLED == 1 && DISCARDING_ENABLED == 1
     fragColor.a *= hit.discarded ? 0.0 : 1.0;
     #endif
 }

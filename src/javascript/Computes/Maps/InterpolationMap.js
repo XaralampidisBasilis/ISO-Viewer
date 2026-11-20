@@ -1,9 +1,7 @@
 import * as THREE from 'three'
-import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
 import { computeInterpolationMap } from '../Programs/GPGPUInterpolationMapPacked'
 import { toHalfFloat } from '../Programs/GPGPUToHalfFloatPacked'
-// import { toHalfFloat, fromHalfFloat } from 'three/src/extras/DataUtils.js'
 
 export default class InterpolationMap
 {
@@ -18,14 +16,8 @@ export default class InterpolationMap
     {
         console.time('computeTensor') 
         this.tensor = computeInterpolationMap(this.volumeMap.tensor)
-        this.tensorData = this.tensor.dataSync()
         this.dimensions = new THREE.Vector3(...this.volumeMap.dimensions)
         console.timeEnd('computeTensor') 
-    }
-
-    restoreTensor()
-    {
-        this.tensor = tf.tensor5d(this.tensorData, this.tensor.shape)
     }
 
     computeTexture()
@@ -49,11 +41,15 @@ export default class InterpolationMap
         this.texture.needsUpdate = true
     }
     
-    /*
-        Really fast but produces small artifacts due to numeral instabilities 
-    */
     getTextureData()
     {
+        // Native conversion avoids a second full-sized TensorFlow.js texture.
+        if (typeof Float16Array === 'function')
+        {
+            const half = new Float16Array(this.tensor.dataSync())
+            return new Uint16Array(half.buffer, half.byteOffset, half.length)
+        }
+
         const tensor = toHalfFloat(this.tensor)
         const dataFloat = tensor.dataSync()
         const dataHalfFloat = new Uint16Array(dataFloat)
@@ -61,22 +57,6 @@ export default class InterpolationMap
 
         return dataHalfFloat
     }
-
-    /*
-        More numerically stable, but significantly slower
-    */
-    // getTextureData()
-    // {
-    //     const dataFloat = this.tensor.dataSync()
-    //     const dataHalfFloat = new Uint16Array(this.tensor.size)
-
-    //     for (let i = 0; i < dataFloat.length; ++i) 
-    //     {
-    //         dataHalfFloat[i] = toHalfFloat(dataFloat[i])
-    //     }
-
-    //     return dataHalfFloat
-    // }
 
     dispose()
     {

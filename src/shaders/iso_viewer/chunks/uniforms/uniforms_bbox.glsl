@@ -5,6 +5,7 @@ struct UniformsBbox
 {
     vec3 min_position;
     vec3 max_position;
+    bool occupied;
 };
 
 uniform UniformsBbox u_bbox;

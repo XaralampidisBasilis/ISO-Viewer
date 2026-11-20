@@ -1,10 +1,7 @@
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import Experience from './Experience'
 import { ProbeControls } from './Utils/ProbeControls'
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-// import { TrackballControls } from './Utils/TrackballControls'
-// import { FlyControls } from './Utils/FlyControls'
-// import { ToggleControls } from './Utils/ToggleControls'
 
 export default class Camera
 {
@@ -12,72 +9,68 @@ export default class Camera
     {
         this.experience = new Experience()
         this.sizes = this.experience.sizes
-        this.scene = this.experience.scene
         this.canvas = this.experience.canvas
-        this.time = this.experience.time
-
-        this.setInstance()
-        this.controls = new ProbeControls(this.instance, this.canvas)
-    }
-
-    setInstance()
-    {
         this.instance = new THREE.PerspectiveCamera(35, this.sizes.width / this.sizes.height, 0.001, 10)
-        this.instance.position.set(1, 1, 1)
-        this.scene.add(this.instance)
+        this.instance.up.set(0, 0, 1)
+        this.instance.position.set(0.2, 0.6, 0.1)
+        this.experience.scene.add(this.instance)
+
+        this.focusCanvas = () => this.canvas.focus({ preventScroll: true })
+        this.canvas.addEventListener('pointerdown', this.focusCanvas)
+        this.setMode('orbit')
     }
 
-    setRaycaster()
+    setMode(mode, target = this.controls?.target.clone())
     {
-        this.raycaster = new THREE.Raycaster()
-        this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)
+        this.controls?.dispose()
+        this.mode = mode
+        if (mode === 'fly')
+        {
+            this.controls = new ProbeControls(this.instance, this.canvas)
+        }
+        else
+        {
+            this.instance.up.set(0, 0, 1)
+            this.controls = new OrbitControls(this.instance, this.canvas)
+            this.controls.enableDamping = true
+            this.controls.dampingFactor = 0.12
+            this.controls.minDistance = 0.04
+            this.controls.maxDistance = 2
+            this.controls.listenToKeyEvents(this.canvas)
+        }
+        if (target) this.controls.target.copy(target)
+        this.controls.update()
+        this.controls.addEventListener('change', () => this.experience.cameraChanged())
+        this.experience.invalidate()
+    }
+
+    reset(size = this.size)
+    {
+        this.size = size
+        const span = Math.max(size.z, Math.max(size.x, size.y) / Math.min(1, this.instance.aspect))
+        this.instance.up.set(0, 0, 1)
+        this.instance.position.set(0.38, 1, 0.08).normalize().multiplyScalar(span * 1.98)
+        const center = new THREE.Vector3()
+        this.instance.lookAt(center)
+        this.setMode(this.mode, center)
     }
 
     resize()
     {
         this.instance.aspect = this.sizes.width / this.sizes.height
         this.instance.updateProjectionMatrix()
+        this.controls.handleResize?.()
     }
 
     update()
     {
-        if (this.controls) this.controls.update()
-        if (this.raycaster) this.raycaster.setFromCamera(this.mouse.ndcPosition, this.instance)
+        this.controls.update()
     }
 
-    destroy() 
+    destroy()
     {
-        this.scene.remove(this.instance)
-
-        if (this.orbit) 
-        {
-            this.orbit.dispose()
-            this.orbit = null
-        }
-
-        if (this.trackball) 
-        {
-            this.trackball.dispose()
-            this.trackball = null
-        }
-
-        if (this.raycaster)
-        {
-            this.raycaster = null
-        }
-
-        if (this.instance) 
-        {
-            this.instance = null
-        }
-
-        this.experience = null
-        this.sizes = null
-        this.scene = null
-        this.canvas = null
-
-        console.log('Camera destroyed')
+        this.canvas.removeEventListener('pointerdown', this.focusCanvas)
+        this.controls.dispose()
+        this.instance.removeFromParent()
     }
 }
-
-

@@ -13,8 +13,9 @@ export default ({
     build:
     {
         outDir: '../docs', // Output in the docs/ folder
-        emptyOutDir: true, // Empty the folder first
-        sourcemap: true // Add sourcemap
+        emptyOutDir: true,
+        copyPublicDir: false, // Runtime assets are imported by the viewer.
+        sourcemap: true
     },
     plugins:
     [

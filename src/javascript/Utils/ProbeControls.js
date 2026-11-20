@@ -280,6 +280,7 @@ class ProbeControls extends Controls {
 			window.addEventListener( 'keydown', this._onKeyDown );
 			window.addEventListener( 'keyup', this._onKeyUp );
 			window.addEventListener( 'blur', this._onWindowBlur );
+			this.domElement.addEventListener( 'blur', this._onWindowBlur );
 
 		}
 
@@ -300,6 +301,7 @@ class ProbeControls extends Controls {
 		window.removeEventListener( 'keydown', this._onKeyDown );
 		window.removeEventListener( 'keyup', this._onKeyUp );
 		window.removeEventListener( 'blur', this._onWindowBlur );
+		this.domElement.removeEventListener( 'blur', this._onWindowBlur );
 
 		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
 		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
@@ -1053,7 +1055,7 @@ function onTouchEnd( event ) {
 
 function onKeyDown( event ) {
 
-	if ( ! this.enabled || ! this.enableKeyboard ) return;
+	if ( ! this.enabled || ! this.enableKeyboard || document.activeElement !== this.domElement ) return;
 
 	let used = false;
 

@@ -1,71 +1,32 @@
 import EventEmitter from './EventEmitter'
 
-/**
- * Sizes
- * 
- * A utility class to track and respond to changes in the browser window size.
- * Extends EventEmitter to notify subscribers when the window is resized.
- */
-export default class Sizes extends EventEmitter 
+export default class Sizes extends EventEmitter
 {
-    targetPixels = 1500000
-    minPixelRatio = 0.5
-    maxPixelRatio = 1.0
-
-    constructor() 
+    constructor(viewport)
     {
         super()
-
-        // Setup initial dimensions
-        this.width = window.innerWidth
-        this.height = window.innerHeight
-        this.pixelRatio = this.computePixelRatio(this.width, this.height) 
-
-        // Bind resize event
-        this.onResize = this.onResize.bind(this)
-        window.addEventListener('resize', this.onResize)
+        this.viewport = viewport
+        this.update()
+        this.observer = new ResizeObserver(() => this.update())
+        this.observer.observe(viewport)
+        this.onWindowResize = () => this.update()
+        window.addEventListener('resize', this.onWindowResize)
     }
 
-    computePixelRatio(width, height)
+    update()
     {
-        const devicePR = window.devicePixelRatio || 1
+        const width = Math.max(1, this.viewport.clientWidth)
+        const height = Math.max(1, this.viewport.clientHeight)
+        const pixelRatio = Math.max(0.5, Math.min(window.devicePixelRatio || 1, 1, Math.sqrt(1500000 / (width * height))))
+        if (width === this.width && height === this.height && pixelRatio === this.pixelRatio) return
 
-        // Pixel-budget-based DPR so: width*height*(dpr^2) ~= targetPixels
-        const budgetPR = Math.sqrt(this.targetPixels / Math.max(1, width * height))
-
-        // Respect both device DPR and quality bounds
-        const capped = Math.min(devicePR, this.maxPixelRatio, budgetPR)
-        return Math.max(this.minPixelRatio, capped)
+        Object.assign(this, { width, height, pixelRatio })
+        this.trigger('resize')
     }
 
-
-    onResize() 
+    destroy()
     {
-        // Update dimensions
-        this.width = window.innerWidth
-        this.height = window.innerHeight
-        this.pixelRatio = this.computePixelRatio(this.width, this.height)
-        console.log(this.pixelRatio)
-
-        // Emit the `resize` event with updated values
-        this.trigger('resize', 
-        {
-            width: this.width,
-            height: this.height,
-            pixelRatio: this.pixelRatio
-        })
-    }
-
-    destroy() 
-    {
-        // Remove the resize event listener
-        window.removeEventListener('resize', this.onResize)
-
-        // Nullify properties for cleanup
-        this.width = null
-        this.height = null
-        this.pixelRatio = null
-
-        console.log('Sizes destroyed')
+        this.observer.disconnect()
+        window.removeEventListener('resize', this.onWindowResize)
     }
 }

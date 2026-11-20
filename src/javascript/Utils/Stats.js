@@ -8,10 +8,18 @@ import StatsJs from 'stats.js'
  */
 export default class Stats
 {
-    constructor(_active)
+    constructor(_active, parent = document.body)
     {
         this.instance = new StatsJs()
         this.instance.showPanel(0)
+        this.parent = parent
+        Object.assign(this.instance.dom.style, {
+            position: 'absolute',
+            top: 'auto',
+            left: 'auto',
+            right: '14px',
+            bottom: '14px',
+        })
 
         this.active = false
         this.max = 40
@@ -27,14 +35,14 @@ export default class Stats
     {
         this.active = true
 
-        document.body.appendChild(this.instance.dom)
+        this.parent.appendChild(this.instance.dom)
     }
 
     deactivate()
     {
         this.active = false
 
-        document.body.removeChild(this.instance.dom)
+        this.instance.dom.remove()
     }
 
     setRenderPanel(_context)

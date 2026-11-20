@@ -1,5 +1,4 @@
 import * as tf from '@tensorflow/tfjs'
-import EventEmitter from '../Utils/EventEmitter'
 import Experience from '../Experience'
 import VolumeMap from './Maps/VolumeMap'
 import InterpolationMap from './Maps/InterpolationMap'
@@ -10,258 +9,141 @@ import AnisotropicDistanceMap from './Maps/AnisotropicDistanceMap'
 import ExtendedIsotropicDistanceMap from './Maps/ExtendedIsotropicDistanceMap'
 import ExtendedAnisotropicDistanceMap from './Maps/ExtendedAnisotropicDistanceMap'
 
-export default class Computes extends EventEmitter
+const mapTypes = {
+    volumeMap: VolumeMap,
+    interpolationMap: InterpolationMap,
+    extremaMap: ExtremaMap,
+    occupancyMap: OccupancyMap,
+    isotropicDistance: IsotropicDistanceMap,
+    anisotropicDistance: AnisotropicDistanceMap,
+    extendedIsotropicDistance: ExtendedIsotropicDistanceMap,
+    extendedAnisotropicDistance: ExtendedAnisotropicDistanceMap,
+}
+
+export default class Computes
 {
     static instance = null
 
     constructor()
     {
-        super()
-
-        if (Computes.instance) 
-        {
-            return Computes.instance
-        }
+        if (Computes.instance) return Computes.instance
         Computes.instance = this
-
-        this.experience = new Experience()
-        this.renderer = this.experience.renderer
-        this.configs = this.experience.configs
-        this.resources = this.experience.resources
-        
-        this.setMaps()
+        this.configs = new Experience().configs
+        this.maps = null
+        this.distanceMap = null
     }
 
-    setMaps()
+    async rebuild(volume, downscaleFactor, range, onProgress, signal)
     {
-        this.volumeMap = new VolumeMap()
-        this.interpolationMap = new InterpolationMap()
-        this.extremaMap = new ExtremaMap()
-        this.occupancyMap = new OccupancyMap()
-        this.isotropicDistanceMap = new IsotropicDistanceMap()
-        this.anisotropicDistanceMap = new AnisotropicDistanceMap()
-        this.extendedIsotropicDistanceMap = new ExtendedIsotropicDistanceMap()
-        this.extendedAnisotropicDistanceMap = new ExtendedAnisotropicDistanceMap()
-        this.resolveDistanceMap()
+        const previous = this.maps
+        const previousDistanceMap = this.distanceMap
+        const maps = {}
+        this.maps = maps
+        this.distanceMap = null
+
+        const stage = async (message) => {
+            onProgress(message)
+            await tf.nextFrame()
+            signal.throwIfAborted()
+        }
+
+        try
+        {
+            // Map constructors resolve their dependencies in insertion order.
+            for (const [name, MapType] of Object.entries(mapTypes))
+            {
+                const map = new MapType()
+                maps[name] = map
+                this[name] = map
+            }
+
+            await stage('Preparing voxel data')
+            this.volumeMap.computeTensor(volume, downscaleFactor, range)
+            this.interpolationMap.computeTensor()
+            this.volumeMap.tensor.dispose()
+            this.volumeMap.tensor = null
+
+            await stage('Building interpolation bounds')
+            this.extremaMap.computeTensor()
+            this.interpolationMap.computeTexture()
+            this.interpolationMap.tensor.dispose()
+            this.interpolationMap.tensor = null
+
+            await stage('Building empty-space maps')
+            this.updateAcceleration()
+            this.volume = volume
+        }
+        catch (error)
+        {
+            this.disposeMaps(maps)
+            if (!signal.aborted)
+            {
+                this.maps = previous
+                if (previous) Object.assign(this, previous)
+                this.distanceMap = previousDistanceMap
+            }
+            else this.disposeMaps(previous)
+            throw error
+        }
+
+        this.disposeMaps(previous)
     }
 
-    resolveDistanceMap()
+    updateAcceleration(rethreshold = true)
     {
-        this.skippingMethod = this.configs.skippingMethod
-        this.distanceMap = this.isotropicDistanceMap
+        const occupancy = this.occupancyMap
+        const previous = this.distanceMap
+        const distance = this.maps[this.configs.skippingMethod] ?? null
+        if (!rethreshold && distance === previous) return
 
-        if (this.skippingMethod === 'anisotropicDistance')
-            this.distanceMap = this.anisotropicDistanceMap
-        
-        if (this.skippingMethod === 'extendedIsotropicDistance')
-            this.distanceMap = this.extendedIsotropicDistanceMap
+        if (rethreshold || distance)
+        {
+            occupancy.computeTensor()
+            try
+            {
+                distance?.computeTensor()
+                const occupancyData = rethreshold ? occupancy.getTextureData() : null
+                if (distance?.texture) distance.updateTexture()
+                else distance?.computeTexture()
 
-        if (this.skippingMethod === 'extendedAnisotropicDistance')
-            this.distanceMap = this.extendedAnisotropicDistanceMap
+                // Keep the old occupancy until all required GPU readbacks have succeeded.
+                if (occupancyData)
+                {
+                    if (occupancy.texture) occupancy.updateTexture(occupancyData)
+                    else occupancy.computeTexture(occupancyData)
+                }
+            }
+            finally
+            {
+                occupancy.tensor.dispose()
+                occupancy.tensor = null
+                if (distance?.tensor)
+                {
+                    distance.tensor.dispose()
+                    distance.tensor = null
+                }
+            }
+        }
+
+        this.distanceMap = distance
+        if (previous && previous !== distance)
+        {
+            previous.texture?.dispose()
+            previous.texture = null
+        }
     }
 
-    async start()
+    disposeMaps(maps)
     {
-        console.time('start@Computes') 
-
-        this.volumeMap.computeTensor()
-        this.interpolationMap.computeTensor()
-        this.volumeMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.extremaMap.computeTensor()
-        this.interpolationMap.computeTexture()
-        this.interpolationMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-        await tf.nextFrame()
-
-        if (this.configs.boundingBoxEnabled) 
-            this.occupancyMap.computeBoundingBox()
-
-        this.occupancyMap.computeTexture()
-        this.occupancyMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.distanceMap.computeTexture()
-        this.distanceMap.tensor.dispose()
-        await tf.nextFrame()
-
-        console.timeEnd('start@Computes') 
-        this.printResources()
-    }
-
-    async change(event)
-    {
-        if      (event.key === 'isosurfaceValue'    ) await this.onChangeIsosurfaceValue(event)
-        else if (event.key === 'blockSize'          ) await this.onChangeBlockSize(event)
-        else if (event.key === 'downscaleFactor'    ) await this.onChangeDownscaleFactor(event)
-        else if (event.key === 'interpolationMethod') await this.onChangeInterpolationMethod(event)
-        else if (event.key === 'skippingMethod'     ) await this.onChangeSkippingMethod(event)
-    }
-
-    async onChangeIsosurfaceValue(event)
-    {
-        console.time('onChangeIsosurfaceValue@Computes') 
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-
-        if (this.configs.boundingBoxEnabled) 
-            this.occupancyMap.computeBoundingBox()
-
-        this.occupancyMap.updateTexture()
-        this.occupancyMap.tensor.dispose()
-
-        this.distanceMap.updateTexture()
-        this.distanceMap.tensor.dispose()
-
-        console.timeEnd('onChangeIsosurfaceValue@Computes')
-        this.printResources() 
-    }
-
-    async onChangeBlockSize(event)
-    {
-        console.time('onChangeBlockSize@Computes') 
-
-        this.extremaMap.tensor.dispose()
-        this.occupancyMap.texture.dispose()
-        this.distanceMap.texture.dispose()
-        await tf.nextFrame()
-
-        this.interpolationMap.restoreTensor()
-        this.extremaMap.computeTensor()
-        this.interpolationMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-
-        if (this.configs.boundingBoxEnabled) 
-            this.occupancyMap.computeBoundingBox()
-
-        this.occupancyMap.computeTexture()
-        this.occupancyMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.distanceMap.computeTexture()
-        this.distanceMap.tensor.dispose()
-        await tf.nextFrame()
-
-        console.timeEnd('onChangeBlockSize@Computes')
-        this.printResources() 
-    }
-
-    async onChangeDownscaleFactor(event)
-    {
-        console.time('onChangeDownscaleFactor@Computes') 
-
-        this.extremaMap.tensor.dispose()
-        this.interpolationMap.texture.dispose()
-        this.occupancyMap.texture.dispose()
-        this.distanceMap.texture.dispose()
-        await tf.nextFrame()
-
-        this.volumeMap.computeTensor()
-        this.interpolationMap.computeTensor()
-        this.volumeMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.extremaMap.computeTensor()
-        this.interpolationMap.computeTexture()
-        this.interpolationMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-        await tf.nextFrame()
-
-        if (this.configs.boundingBoxEnabled) 
-            this.occupancyMap.computeBoundingBox()
-
-        this.occupancyMap.computeTexture()
-        this.occupancyMap.tensor.dispose()
-        await tf.nextFrame()
-
-        this.distanceMap.computeTexture()
-        this.distanceMap.tensor.dispose()
-        await tf.nextFrame()
-
-        console.timeEnd('onChangeDownscaleFactor@Computes') 
-        this.printResources()
-    }
-
-    async onChangeInterpolationMethod(event)
-    {
-        console.time('onChangeInterpolationMethod@Computes') 
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-
-        if (this.configs.boundingBoxEnabled) 
-            this.occupancyMap.computeBoundingBox()
-
-        this.occupancyMap.updateTexture()
-        this.occupancyMap.tensor.dispose()
-
-        this.distanceMap.updateTexture()
-        this.distanceMap.tensor.dispose()
-
-        console.timeEnd('onChangeInterpolationMethod@Computes') 
-        this.printResources()
-    }
-
-    async onChangeSkippingMethod(event)
-    {
-        console.time('onChangeSkippingMethod@Computes') 
-
-        this.distanceMap.texture.dispose()
-        this.resolveDistanceMap()
-
-        this.occupancyMap.computeTensor()
-        this.distanceMap.computeTensor()
-        this.occupancyMap.tensor.dispose()
-
-        this.distanceMap.computeTexture()
-        this.distanceMap.tensor.dispose()
-
-        console.timeEnd('onChangeSkippingMethod@Computes') 
-        console.log('')
+        for (const map of Object.values(maps ?? {})) map.dispose()
     }
 
     destroy()
     {
-        this.volumeMap.dispose()
-        this.interpolationMap.dispose()
-        this.extremaMap.dispose()
-        this.occupancyMap.dispose()
-        this.isotropicDistanceMap.dispose()
-        this.anisotropicDistanceMap.dispose()
-        this.extendedAnisotropicDistanceMap.dispose()
-
-        this.volumeMap = null
-        this.interpolationMap = null
-        this.extremaMap = null
-        this.occupancyMap = null
-        this.isotropicDistanceMap = null
-        this.anisotropicDistanceMap = null
-        this.extendedAnisotropicDistanceMap = null
-
-        this.experience = null
-        this.renderer = null
-        this.configs = null
-        this.resources = null
-
-        instance = null
-
-        console.log('Computes destroyed')
-    }
-    
-    printResources()
-    {
-        console.log(`Num of tensors: ${tf.memory().numTensors}, Num of textures: ${this.renderer.instance.info.memory.textures}`)
-        console.log(``)
+        this.disposeMaps(this.maps)
+        this.maps = null
+        this.distanceMap = null
+        this.volume = null
+        Computes.instance = null
     }
 }

@@ -1,24 +1,12 @@
 // Source: https://learnwebgl.brown37.net/09_lights/lights_combined.html
 
-// Compute shading vectors
-vec3 light_position = camera.position;
-vec3 light_vector = light_position - hit.position;
-vec3 view_vector = camera.position - hit.position;
-
-// Compute shading directions
-vec3 light_direction = normalize(light_vector * u_volume.spacing_normalized);
-vec3 view_direction = normalize(view_vector * u_volume.spacing_normalized);
-vec3 halfway_direction = normalize(light_direction + view_direction);
-
-// Compute vector angles
-float light_angle = dot(light_direction, hit.normal);
+// The light and the eye share the camera position.
+vec3 view_direction = normalize((camera.position - hit.position) * u_volume.spacing_normalized);
 float view_angle = dot(view_direction, hit.normal);
-float halfway_angle = dot(halfway_direction, hit.normal);
 
 // Compute parameters
-float lambertian = clamp(light_angle, 0.0, 1.0);
-float specular = clamp(halfway_angle, 0.0, 1.0);
-specular = pow(specular, u_shading.shininess);
+float lambertian = clamp(view_angle, 0.0, 1.0);
+float specular = pow(lambertian, u_shading.shininess);
 
 // Modulations
 float modulate_edges = smoothstep(0.0, 0.5, abs(view_angle));
