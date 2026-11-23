@@ -14,9 +14,10 @@ export default class ControlPanels
         }, { signal })
 
         tablist.addEventListener('keydown', event => {
-            const index = this.tabs.findIndex(({ tab }) => tab === event.target)
+            const visible = this.tabs.filter(({ tab }) => !tab.hidden)
+            const index = visible.findIndex(({ tab }) => tab === event.target)
             if (index < 0) return
-            const last = this.tabs.length - 1
+            const last = visible.length - 1
             const destinations = {
                 ArrowLeft: index > 0 ? index - 1 : last,
                 ArrowRight: index < last ? index + 1 : 0,
@@ -26,7 +27,7 @@ export default class ControlPanels
             const next = destinations[event.key]
             if (!Number.isInteger(next)) return
             event.preventDefault()
-            this.select(this.tabs[next].panel.id, true)
+            this.select(visible[next].panel.id, true)
         }, { signal })
     }
 

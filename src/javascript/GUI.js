@@ -14,8 +14,9 @@ export default class GUI
         this.listeners = new AbortController()
         this.touchInput = matchMedia('(pointer: coarse)')
         this.panels = new ControlPanels(this.elements['control-tabs'], panelId => {
-            this.elements['debug-shortcut'].setAttribute('aria-expanded', String(panelId === 'debug-panel'))
+            this.elements['debug-tab'].hidden = panelId !== 'debug-panel'
         }, this.listeners.signal)
+        this.setupMenu()
 
         for (const name of Configs.Colormaps)
             this.elements.colormap.add(new Option(name[0].toUpperCase() + name.slice(1), name))
@@ -28,7 +29,6 @@ export default class GUI
             this.elements['debug-view'].append(group)
         }
 
-        this.listen(this.elements['open-research'], 'click', () => this.elements['research-dialog'].showModal())
         this.listen(this.elements.retry, 'click', () => location.reload())
         this.listen(this.elements.settings, 'submit', event => event.preventDefault())
     }
@@ -36,6 +36,69 @@ export default class GUI
     listen(element, name, listener)
     {
         element.addEventListener(name, listener, { signal: this.listeners.signal })
+    }
+
+    setupMenu()
+    {
+        const menuBar = this.elements['menu-bar']
+        const menus = Array.from(menuBar.querySelectorAll('details'))
+        for (const menu of menus)
+        {
+            const summary = menu.querySelector('summary')
+            this.listen(menu, 'click', event => {
+                if (!event.target.closest('button')) return
+                if (menu.contains(document.activeElement)) summary.focus()
+                menu.open = false
+            })
+            this.listen(menu, 'keydown', event => {
+                if (event.key !== 'Escape' || !menu.open) return
+                event.preventDefault()
+                menu.open = false
+                summary.focus()
+            })
+            this.listen(menu, 'focusout', event => {
+                if (event.relatedTarget && !menu.contains(event.relatedTarget)) menu.open = false
+            })
+        }
+        this.listen(document, 'pointerdown', event => {
+            for (const menu of menus)
+                if (!menu.contains(event.target)) menu.open = false
+        })
+
+        for (const button of menuBar.querySelectorAll('[data-panel]'))
+            this.listen(button, 'click', () => this.panels.select(button.dataset.panel, true))
+
+        for (const button of menuBar.querySelectorAll('[data-dialog]'))
+        {
+            this.listen(button, 'click', () => {
+                button.closest('details').querySelector('summary').focus()
+                this.elements[button.dataset.dialog].showModal()
+            })
+        }
+
+        this.themeButtons = Array.from(menuBar.querySelectorAll('[data-theme]'))
+        let theme = 'light'
+        try { if (localStorage.getItem('isoviewer-theme') === 'dark') theme = 'dark' }
+        catch { /* Storage may be unavailable. */ }
+        this.applyTheme(theme)
+        for (const button of this.themeButtons)
+        {
+            this.listen(button, 'click', () => {
+                const choice = button.dataset.theme
+                this.applyTheme(choice)
+                try { localStorage.setItem('isoviewer-theme', choice) }
+                catch { /* The current theme still applies. */ }
+            })
+        }
+    }
+
+    applyTheme(theme)
+    {
+        const root = document.documentElement
+        root.dataset.theme = theme
+        for (const button of this.themeButtons)
+            button.setAttribute('aria-pressed', String(button.dataset.theme === theme))
+        document.querySelector('meta[name="theme-color"]').content = getComputedStyle(root).getPropertyValue('--titlebar').trim()
     }
 
     connect(experience)
@@ -49,14 +112,13 @@ export default class GUI
             const input = event.target
             const file = input.files[0]
             input.value = ''
-            if (file)
-            {
-                this.panels.select('scan-panel')
-                experience.loadLocal(file)
-            }
+            if (file) experience.loadLocal(file)
         })
-        this.listen(this.elements['return-to-demo'], 'click', () => experience.loadQuality('preview'))
 
+        this.listen(this.elements['open-isovalue'], 'click', () => {
+            this.panels.select('render-panel')
+            this.elements.isovalue.focus()
+        })
         this.listen(this.elements.isovalue, 'input', () => this.updateThresholdLabel())
         this.listen(this.elements.settings, 'change', event => {
             const field = event.target
@@ -69,21 +131,15 @@ export default class GUI
         })
         this.listen(this.elements['reset-isovalue'], 'click', () => configs.set('isosurfaceValue', this.defaultIsovalue))
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
-        this.listen(this.elements['debug-shortcut'], 'click', () => this.panels.select('debug-panel', true))
         this.listen(this.elements['fps-toggle'], 'click', () => stats.setActive(!stats.active))
         stats.on('change', () => this.updateFps())
 
         for (const button of this.qualityButtons)
             this.listen(button, 'click', () => experience.loadQuality(button.dataset.quality))
 
+        this.listen(this.elements['debug-view'], 'change', event => this.setDiagnosticView(Number(event.target.value)))
         for (const button of this.viewButtons)
-        {
-            this.listen(button, 'click', () => {
-                const view = Number(button.dataset.view)
-                configs.set('diagnosticView', view)
-                configs.set('debugEnabled', view !== 0)
-            })
-        }
+            this.listen(button, 'click', () => this.setDiagnosticView(Number(button.dataset.view)))
 
         for (const button of this.cameraButtons)
         {
@@ -100,6 +156,13 @@ export default class GUI
         this.updateNavigationHelp()
         this.updateFps()
         this.sync()
+    }
+
+    setDiagnosticView(view)
+    {
+        const { configs } = this.experience
+        configs.set('diagnosticView', view)
+        configs.set('debugEnabled', view !== 0)
     }
 
     updateFps()
@@ -136,18 +199,9 @@ export default class GUI
         this.updateThresholdLabel()
         this.elements['bernstein-control'].firstElementChild.disabled = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
         this.elements['debug-options'].hidden = !configs.debugEnabled
-        this.elements['root-solver-setting'].hidden = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
-        if (configs.debugEnabled)
-        {
-            const trilinear = configs.interpolationMethod === 'trilinear'
-            const solver = this.elements['root-solver']
-            for (const option of solver.options) option.disabled = trilinear && Number(option.value) > 2
-            solver.value = String(configs.effectiveRootSolver)
-
-            const view = this.elements['debug-view']
-            for (const option of view.options) option.disabled = !debugViewAvailable(Number(option.value), configs)
-            view.value = String(configs.effectiveDebugView)
-        }
+        const view = this.elements['debug-view']
+        for (const option of view.options) option.disabled = !debugViewAvailable(Number(option.value), configs)
+        view.value = String(configs.effectiveDebugView)
 
         for (const button of this.viewButtons)
             button.setAttribute('aria-pressed', String(Number(button.dataset.view) === configs.effectiveDebugView))
@@ -156,27 +210,34 @@ export default class GUI
         for (const button of this.qualityButtons)
             button.setAttribute('aria-pressed', String(button.dataset.quality === quality))
 
-        const dimensions = computes.volumeMap.dimensions.toArray().join(' × ')
-        const blocks = computes.occupancyMap.dimensions.toArray().join(' × ')
-        if (configs.debugEnabled)
-        {
-            this.elements['debug-spacing'].textContent = computes.volumeMap.spacing.toArray()
-                .map(value => Number((value * 1000).toPrecision(3))).join(' × ') + ' mm'
-        }
-        this.elements['viewport-resolution'].textContent = dimensions
-        this.elements['viewport-block-grid'].textContent = blocks
-        this.elements['grid-readouts'].hidden = false
+        const { dimensions, spacing } = computes.volumeMap
+        const voxelGrid = dimensions.toArray().join(' × ')
+        const blockGrid = computes.occupancyMap.dimensions.toArray().join(' × ')
+        const { blockSize } = computes.extremaMap
+        this.elements['volume-dimensions'].textContent = voxelGrid
+        this.elements['volume-spacing'].textContent = spacing.toArray()
+            .map(value => Number((value * 1000).toPrecision(3))).join(' × ') + ' mm'
+        this.elements['volume-block-grid'].textContent = blockGrid
+        this.elements['volume-block-size'].textContent = [blockSize, blockSize, blockSize].join(' × ') + ' cells'
+        this.elements['status-voxel-grid'].textContent = voxelGrid
+        this.elements['status-block-grid'].textContent = blockGrid
+        this.elements['status-grids'].hidden = false
+        this.elements['open-volume-parameters'].disabled = false
         this.elements['empty-view'].hidden = computes.occupancyMap.boundingBox !== null || configs.debugEnabled
     }
 
     busy(busy)
     {
         this.elements['settings-fields'].disabled = busy
-        this.elements['threshold-fields'].disabled = busy
+        this.elements['open-isovalue'].disabled = busy
+        this.elements['debug-view'].disabled = busy
         this.elements['open-scan'].disabled = busy
-        this.elements['debug-shortcut'].disabled = busy
         this.elements['fps-toggle'].disabled = busy
+        const cameraUnavailable = !this.experience?.ready
+        this.elements['reset-view'].disabled = cameraUnavailable
+        for (const button of this.cameraButtons) button.disabled = cameraUnavailable
         for (const button of this.viewButtons) button.disabled = busy
+        for (const button of this.qualityButtons) button.disabled = busy
     }
 
     startLocalLoad()
@@ -199,6 +260,7 @@ export default class GUI
         {
             const status = this.elements['quality-status']
             if (status.textContent !== label) status.textContent = label
+            this.elements['quality-notice'].hidden = false
         }
 
         bar.hidden = !initial && loaded === undefined
@@ -209,40 +271,26 @@ export default class GUI
     ready(quality)
     {
         this.elements.loading.hidden = true
-        this.elements['viewport-tools'].hidden = false
-        this.elements['quality-progress'].hidden = true
+        this.elements['quality-notice'].hidden = true
         const local = quality === 'local'
-        this.elements['scan-type'].textContent = local ? 'Local NIfTI' : 'CT angiography'
-        this.elements['scan-title'].textContent = local ? 'Your scan' : 'Head & neck'
+        this.elements['scan-title'].textContent = local ? 'Local NIfTI' : 'Head & neck CTA'
         this.elements['scan-description'].textContent = local ? this.experience.scanName : ''
         this.elements['scan-description'].hidden = !local
-        this.elements['quality-label'].textContent = local ? 'Scan source' : 'Volume detail'
-        this.elements['demo-quality'].hidden = local
-        this.elements['return-to-demo'].hidden = !local
-        this.updateScanStatus(quality)
+        this.elements['volume-source'].textContent = local ? this.experience.scanName : 'Head & neck CTA'
+        this.elements['volume-detail'].textContent = local ? 'Local scan' : quality === 'detail' ? 'Detailed Scan' : 'Preview Scan'
+        this.elements['volume-resampling'].hidden = !local || this.experience.configs.downscaleFactor >= 1
         this.busy(false)
         this.sync()
-    }
-
-    updateScanStatus(quality)
-    {
-        const local = quality === 'local'
-        const status = this.elements['quality-status']
-        status.textContent = local
-            ? 'This file stays on your device.'
-            : quality === 'preview' ? 'High detail downloads the 84 MiB source scan.' : 'High detail is active.'
-        if (local && this.experience.configs.downscaleFactor < 1)
-            status.textContent += ' Large grids are rendered at reduced resolution.'
     }
 
     fail(error, fatal)
     {
         const message = error.message || 'An unexpected error interrupted the viewer.'
+        this.elements['quality-notice'].hidden = true
         if (fatal)
         {
             this.busy(true)
             this.elements.loading.hidden = false
-            this.elements['viewport-tools'].hidden = true
             this.elements['loading-title'].textContent = 'Viewer unavailable'
             this.elements['loading-description'].textContent = message
             this.elements['loading-progress'].hidden = true
@@ -251,8 +299,6 @@ export default class GUI
         }
         else
         {
-            this.elements['quality-progress'].hidden = true
-            this.updateScanStatus(this.experience.quality)
             this.busy(false)
             this.sync()
             const notice = this.elements['settings-error']
