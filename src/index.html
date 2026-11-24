@@ -47,23 +47,18 @@
                     </div>
                 </div>
             </details>
-            <details name="app-menu">
-                <summary>Render</summary>
-                <div class="menu-panel">
-                    <button type="button" id="open-isovalue" disabled>Isovalue</button>
-                    <button type="button" data-panel="render-panel">Ray casting</button>
-                    <button type="button" data-panel="surface-panel">Surface appearance</button>
-                </div>
-            </details>
-            <details name="app-menu">
+            <details name="app-menu" id="debug-menu">
                 <summary>Debug</summary>
-                <div class="menu-panel">
-                    <label class="menu-field">Visualize
-                        <select id="debug-view" disabled>
-                            <option value="0">Shaded surface</option>
-                        </select>
-                    </label>
-                    <button type="button" data-panel="debug-panel">Diagnostics settings</button>
+                <div class="menu-panel debug-menu-panel">
+                    <fieldset class="debug-controls" id="debug-controls" disabled>
+                        <label class="check-setting"><input type="checkbox" id="debug-enabled" data-config="debugEnabled" aria-controls="debug-options"> Enable debug</label>
+                        <div id="debug-options" hidden>
+                            <div class="debug-browser">
+                                <div class="debug-categories" id="debug-categories" role="tablist" aria-label="Visualization categories" aria-orientation="vertical"></div>
+                                <div class="debug-views" id="debug-views"></div>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
             </details>
             <details name="app-menu">
@@ -100,7 +95,6 @@
                 <div class="control-tabs" id="control-tabs" role="tablist" aria-label="Viewer controls">
                     <button type="button" id="render-tab" role="tab" aria-controls="render-panel" aria-selected="true">Render</button>
                     <button type="button" id="surface-tab" role="tab" aria-controls="surface-panel" aria-selected="false" tabindex="-1">Surface</button>
-                    <button type="button" id="debug-tab" role="tab" aria-controls="debug-panel" aria-selected="false" tabindex="-1" hidden>Debug</button>
                 </div>
 
                 <fieldset id="settings-fields" disabled>
@@ -171,13 +165,6 @@
                         </details>
                     </section>
 
-                    <section class="control-panel" id="debug-panel" role="tabpanel" aria-labelledby="debug-tab" hidden>
-                        <fieldset class="control-group">
-                            <legend>Shader diagnostics</legend>
-                            <label class="check-setting"><input type="checkbox" data-config="debugEnabled" aria-controls="debug-options"> Enable shader debugging</label>
-                            <label class="check-setting" id="debug-options" hidden><input type="checkbox" data-config="showMisses"> Show rays that miss the surface</label>
-                        </fieldset>
-                    </section>
                 </fieldset>
             </form>
         </aside>
@@ -185,6 +172,7 @@
             <dl class="grid-readouts" id="status-grids" hidden>
                 <div><dt>Voxel grid</dt><dd id="status-voxel-grid"></dd></div>
                 <div><dt>Block grid</dt><dd id="status-block-grid"></dd></div>
+                <div title="Actual WebGL drawing-buffer size"><dt>View size</dt><dd id="status-view-size">—</dd></div>
             </dl>
             <p id="navigation-help">Drag to orbit · Scroll or pinch to zoom · Right-drag to pan</p>
             <div class="frame-meter">

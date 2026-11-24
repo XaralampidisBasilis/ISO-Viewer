@@ -1,10 +1,12 @@
 import * as THREE from 'three'
 import Experience from './Experience'
+import EventEmitter from './Utils/EventEmitter'
 
-export default class Renderer
+export default class Renderer extends EventEmitter
 {
     constructor()
     {
+        super()
         const experience = new Experience()
         this.sizes = experience.sizes
         this.scene = experience.scene
@@ -22,6 +24,7 @@ export default class Renderer
     {
         const { width, height, pixelRatio } = this.sizes
         this.instance.setDrawingBufferSize(width, height, pixelRatio * this.scale)
+        this.trigger('resize')
     }
 
     setInteractionScale(scale)

@@ -75,7 +75,7 @@ export default class ISOViewer
             BBOX_ENABLED: Number(configs.boundingBoxEnabled),
             BERNSTEIN_ENABLED: Number(configs.bernsteinEnabled),
             DEBUG_ENABLED: Number(configs.debugEnabled),
-            DISCARDING_ENABLED: Number(!configs.debugEnabled || !configs.showMisses),
+            DISCARDING_ENABLED: Number(!configs.debugEnabled),
             VARIATION_METHOD: configs.effectiveRootSolver,
             MAX_CELLS: maxCells,
             MAX_CELLS_IN_BLOCK: cellsPerBlock,

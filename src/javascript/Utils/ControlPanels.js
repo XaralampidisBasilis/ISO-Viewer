@@ -1,12 +1,14 @@
 export default class ControlPanels
 {
-    constructor(tablist, onSelect, signal)
+    constructor(tablist, signal)
     {
         this.tabs = Array.from(tablist.querySelectorAll('[role="tab"]'), tab => ({
             tab,
             panel: tab.ownerDocument.getElementById(tab.getAttribute('aria-controls')),
         }))
-        this.onSelect = onSelect
+        const vertical = tablist.getAttribute('aria-orientation') === 'vertical'
+        const previous = vertical ? 'ArrowUp' : 'ArrowLeft'
+        const next = vertical ? 'ArrowDown' : 'ArrowRight'
 
         tablist.addEventListener('click', event => {
             const tab = event.target.closest('[role="tab"]')
@@ -14,20 +16,19 @@ export default class ControlPanels
         }, { signal })
 
         tablist.addEventListener('keydown', event => {
-            const visible = this.tabs.filter(({ tab }) => !tab.hidden)
-            const index = visible.findIndex(({ tab }) => tab === event.target)
+            const index = this.tabs.findIndex(({ tab }) => tab === event.target)
             if (index < 0) return
-            const last = visible.length - 1
+            const last = this.tabs.length - 1
             const destinations = {
-                ArrowLeft: index > 0 ? index - 1 : last,
-                ArrowRight: index < last ? index + 1 : 0,
+                [previous]: index > 0 ? index - 1 : last,
+                [next]: index < last ? index + 1 : 0,
                 Home: 0,
                 End: last,
             }
-            const next = destinations[event.key]
-            if (!Number.isInteger(next)) return
+            const destination = destinations[event.key]
+            if (!Number.isInteger(destination)) return
             event.preventDefault()
-            this.select(visible[next].panel.id, true)
+            this.select(this.tabs[destination].panel.id, true)
         }, { signal })
     }
 
@@ -44,7 +45,6 @@ export default class ControlPanels
             item.panel.hidden = !active
         }
 
-        this.onSelect(panelId)
         if (focus) selected.tab.focus()
     }
 }

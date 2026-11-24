@@ -8,20 +8,19 @@ ISOViewer is a browser-based research viewer for **3D medical images**. The demo
 
 1. Open the viewer in a browser with GPU-accelerated WebGL2. It starts with a **10.8 MiB preview**. Choose **File → Detailed Scan** to load the 84 MiB source scan or **File → Preview Scan** to switch back.
 2. Drag in **Orbit** mode to rotate, scroll or pinch to zoom, and right-drag to pan. Choose **View → Reset view** to return to the opening angle.
-3. Choose **Render → Isovalue** to focus the slider and select a surface at a different normalized intensity. Choose **Normals** or **Curvature** from **View** to inspect the same surface in different ways.
+3. Use the **Isovalue** slider in the left-hand **Render** tab to select a surface at a different normalized intensity. Choose **Normals** or **Curvature** from **View** to inspect the same surface in different ways.
 4. Choose **File → Open scan** to load a single 3D NIfTI file (`.nii` or `.nii.gz`). The file is processed locally in the browser. Choose either bundled scan from **File** to return to the CTA demo.
 
-The **View** menu also switches between **Light mode** and **Dark mode**. The viewer remembers the choice in that browser. Use **Debug → Visualize** to inspect parameters such as hit distance, gradient magnitude, or traversal steps. Choose **Shaded surface** to return to the regular rendering. **Help → About the research** has the paper and method summary.
+The **View** menu also switches between **Light mode** and **Dark mode**. The viewer remembers the choice in that browser. Turn on **Debug → Enable debug** to reveal the diagnostic browser and show missed rays automatically. The viewer resumes the last available diagnostic view or starts with **Traversal steps**. Hover over or select a category to browse its views. Turn debug off or choose **View → Surface** to return to regular rendering. **Help → About the research** has the paper and method summary.
 
 | Settings tab | Controls |
 | --- | --- |
 | **Surface** | Palette, normal estimation, and independent gradient and curvature shading switches |
 | **Render** | Isovalue, interpolation, cell traversal or uniform stepping, and empty-space skipping |
-| **Debug** | Shader debugging and missed-ray display |
 
 In **Fly** mode, click the viewport to focus it. Drag to look around. Use **W/A/S/D** to move, **R/F** to move up or down, **Q/E** to roll, and the **arrow keys** to rotate. Hold **Space** to speed up or **Shift** to slow down.
 
-The lower-left status bar shows the voxel and block grids. Open **Help → Volume parameters** for the scan source, detail level, voxel spacing, and block size. Turn on **Measure FPS** to sample continuously at rest. Turn it off to return to rendering on demand.
+The lower-left status bar shows the voxel and block grids and the rendered **View size** in pixels. View size updates during camera motion and window resizing. Open **Help → Volume parameters** for the scan source, detail level, voxel spacing, and block size. Turn on **Measure FPS** to sample continuously at rest. Turn it off to return to rendering on demand.
 
 ## Diagnostic views
 

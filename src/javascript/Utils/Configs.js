@@ -48,7 +48,6 @@ export default class Configs extends EventEmitter
             curvatureShading: true,
             debugEnabled: false,
             diagnosticView: 0,
-            showMisses: false,
             rootSolverMethod: 1,
         })
     }
