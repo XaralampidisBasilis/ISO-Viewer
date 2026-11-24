@@ -16,9 +16,9 @@ box_entry_exit = max(box_entry_exit, 0.0);
 if (box_entry_exit.x < box_entry_exit.y)
 {
     // update camera box bounds
-    box.min_entry_distance = box_min_max.x;
+    box.min_entry_distance = max(box_min_max.x, 0.0);
     box.max_exit_distance  = box_min_max.y;
-    box.max_span_distance  = box_min_max.y - box_min_max.x;
+    box.max_span_distance  = box.max_exit_distance - box.min_entry_distance;
 
     // update ray box distances
     box.entry_distance = box_entry_exit.x;

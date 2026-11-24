@@ -1,26 +1,20 @@
-
-// compute box min/max positions
+// Advance one cell using the face distances initialized by start_cell.
+#if DEBUG_ENABLED == 1
 cell.min_position = vec3(cell.coords) - 0.5;
 cell.max_position = vec3(cell.coords) + 0.5;
+#endif
 
-// compute entry from previous exit
 cell.entry_distance = cell.exit_distance;
 cell.entry_position = cell.exit_position;
 
-// compute exit from cell ray intersection 
-cell.exit_distance = intersect_box_exit(cell.min_position, cell.max_position, camera.position, ray.inv_direction, cell.exit_normal);
-cell.exit_position = camera.position + ray.direction * cell.exit_distance; 
-
-// compute span distance
+cell.exit_distance = intersectCellFarDistances(cell.coords, cell_far_distances, cell.exit_normal);
+cell.exit_position = camera.position + ray.direction * cell.exit_distance;
 cell.span_distance = cell.exit_distance - cell.entry_distance;
 
-// compute next coordinates
 cell.coords += cell.exit_normal * ray.signs;
+cell_far_distances = advanceCellFarDistances(cell_far_distances, cell_step_distances, cell.exit_distance, cell.exit_normal);
+cell.terminated = cell.exit_distance > ray.end_distance;
 
-// compute termination condition
-cell.terminated = cell.exit_distance > ray.end_distance; 
-
-// update stats
 #if DEBUG_ENABLED == 1
 stats.num_cells += 1;
 #endif

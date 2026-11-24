@@ -1,6 +1,10 @@
 
 if (trace.intersected)
 {
+    #if DEBUG_ENABLED == 1
+    stats.num_root_solves += 1;
+    #endif
+
     // Compute hit details
     #include "./compute_hit"
 

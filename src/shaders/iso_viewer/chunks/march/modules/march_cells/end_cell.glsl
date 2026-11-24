@@ -1,6 +1,10 @@
 
 if (cell.intersected) 
 {
+    #if DEBUG_ENABLED == 1
+    stats.num_root_solves += 1;
+    #endif
+
     // Compute the hit details for the intersected cell
     #include "./compute_hit"
 

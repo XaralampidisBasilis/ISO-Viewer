@@ -16,7 +16,8 @@ block.entry_distance = block.exit_distance;
 block.entry_position = block.exit_position;
 
 // compute exit from cell ray intersection 
-block.exit_distance = intersect_box_exit(block.min_position, block.max_position, camera.position, ray.inv_direction, block.exit_normal);
+block.exit_distance = intersectBlockFarDistances(block.coords, block_far_distances, block.exit_normal);
+block_far_distances = advanceBlockFarDistances(block_far_distances, block_step_distances, block.exit_distance, block.exit_normal);
 block.exit_position = camera.position + ray.direction * block.exit_distance;
 
 // compute span distance
@@ -30,6 +31,5 @@ block.terminated = block.exit_distance > ray.end_distance;
 
 // update stats
 #if DEBUG_ENABLED == 1
-stats.num_texture_fetches += 1;
 stats.num_blocks += 1;
 #endif

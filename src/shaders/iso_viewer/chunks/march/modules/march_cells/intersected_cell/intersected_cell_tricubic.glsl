@@ -18,8 +18,7 @@ cell.intersected = sign_change(quintic.residuals) || quintic_has_root_sample(qui
 cell.intersected = sign_change(quintic.residuals) || quintic_has_root(quintic.coeffs, 0.0, 1.0);
 #endif
 
-// Update fetch/test counters for performance statistics
+// Count the intersection test.
 #if DEBUG_ENABLED == 1
-stats.num_texture_fetches += 3;
 stats.num_intersection_tests += 1;
 #endif

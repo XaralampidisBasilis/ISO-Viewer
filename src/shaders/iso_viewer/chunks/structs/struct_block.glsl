@@ -8,6 +8,7 @@ struct Block
     bool  terminated;
     ivec3 exit_normal;
     ivec3 coords;  
+    ivec3 current_coords;
     ivec3 skip_coords;
     ivec3 max_coords;
     ivec3 min_coords;
@@ -28,6 +29,7 @@ void set_block()
     block.occupied       = false;
     block.terminated     = false;
     block.coords         = ivec3(0);
+    block.current_coords = ivec3(0);
     block.exit_normal    = ivec3(0);
     block.min_coords     = ivec3(0);
     block.max_coords     = ivec3(0);

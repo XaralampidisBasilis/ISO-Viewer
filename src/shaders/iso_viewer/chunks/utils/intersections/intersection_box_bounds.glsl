@@ -1,12 +1,3 @@
-/**
- * Calculates the minimum and maximum distance from a point to a 3D box.
- *
- * @param b_min   The minimum corner (bottom-left-front) of the box.
- * @param b_max   The maximum corner (top-right-back) of the box.
- * @param P       The 3D point in space.
- * @return float    The min distance from the point to the box.
- */
-
 #ifndef INTERSECTION_BOX_BOUNDS
 #define INTERSECTION_BOX_BOUNDS
 
@@ -14,14 +5,16 @@
 #include "../math/mmax"
 #endif
 
-vec2 intersection_box_bounds(vec3 b_min, vec3 b_max, vec3 p) 
+// Signed distance to the box and unsigned distance to its farthest corner.
+vec2 intersection_box_bounds(vec3 boxMin, vec3 boxMax, vec3 point)
 {
-    vec3 c = (b_max + b_min) * 0.5;
-    vec3 s = (b_max - b_min) * 0.5;
-    vec3 aq = abs(p - c);
-    vec3 d_min = aq - s;
-    vec3 d_max = aq + s;    
-    return vec2(length(max(d_min, 0.0) + min(mmax(d_min), 0.0)), length(d_max));
+    vec3 center = 0.5 * (boxMin + boxMax);
+    vec3 halfExtent = 0.5 * (boxMax - boxMin);
+    vec3 offset = abs(point - center);
+    vec3 q = offset - halfExtent;
+    float minDistance = length(max(q, 0.0)) + min(mmax(q), 0.0);
+    float maxDistance = length(offset + halfExtent);
+    return vec2(minDistance, maxDistance);
 }
 
 #endif // BOX_BOUNDS

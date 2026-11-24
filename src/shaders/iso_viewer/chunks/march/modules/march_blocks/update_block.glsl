@@ -1,4 +1,6 @@
 
+block.current_coords = block.coords;
+
 #if SKIPPING_METHOD == 0
 #include "./update_block/update_block_occupancy"
 

@@ -1,5 +1,6 @@
 import Configs from './Utils/Configs'
 import ControlPanels from './Utils/ControlPanels'
+import TraversalLegend from './Utils/TraversalLegend'
 import { debugViews, debugViewAvailable } from './Utils/DebugViews'
 
 const traversalStepsView = 901
@@ -137,7 +138,7 @@ export default class GUI
     {
         this.experience = experience
         const { configs, camera, renderer, stats } = experience
-        this.defaultIsovalue = configs.isosurfaceValue
+        this.counterLegend = new TraversalLegend(this.elements, renderer.instance)
         this.listen(this.touchInput, 'change', () => this.updateNavigationHelp())
         this.listen(this.elements['open-scan'], 'click', () => this.elements['scan-file'].click())
         this.listen(this.elements['scan-file'], 'change', event => {
@@ -168,7 +169,6 @@ export default class GUI
             const view = previousView && debugViewAvailable(previousView, configs) ? previousView : traversalStepsView
             this.setDiagnosticView(view)
         })
-        this.listen(this.elements['reset-isovalue'], 'click', () => configs.set('isosurfaceValue', this.defaultIsovalue))
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
         this.listen(this.elements['fps-toggle'], 'click', () => stats.setActive(!stats.active))
         stats.on('change', () => this.updateFps())
@@ -269,6 +269,7 @@ export default class GUI
         this.updateDebugControls()
 
         if (!quality) return
+        this.counterLegend.update(this.experience.world.viewer.material.uniforms.u_debug.value)
         for (const button of this.qualityButtons)
             button.setAttribute('aria-pressed', String(button.dataset.quality === quality))
 
@@ -349,6 +350,7 @@ export default class GUI
         this.elements['quality-notice'].hidden = true
         if (fatal)
         {
+            this.counterLegend?.update(null)
             this.busy(true)
             this.elements.loading.hidden = false
             this.elements['loading-title'].textContent = 'Viewer unavailable'

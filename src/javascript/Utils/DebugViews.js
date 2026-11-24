@@ -9,6 +9,8 @@ export const debugViews = {
     'Traversal counters': {
         901: 'Traversal steps', 903: 'Blocks visited', 904: 'Block groups visited',
         905: 'Texture fetches', 906: 'Intersection tests',
+        907: 'Volume reads', 908: 'Occupancy reads', 909: 'Distance-map reads',
+        910: 'Root solves', 911: 'Bernstein rejections',
     },
     Ray: {
         102: 'Direction', 103: 'Direction signs', 104: 'Sample spacing',
@@ -50,6 +52,26 @@ export const debugViews = {
 
 export const debugViewIds = Object.values(debugViews).flatMap(group => Object.keys(group).map(Number))
 
+export function debugCounterReference(view, defines)
+{
+    const fineSteps = defines.MARCHING_METHOD === 0 ? defines.MAX_CELLS : defines.MAX_TRACES
+    switch (view)
+    {
+        case 901:
+        case 906: return fineSteps
+        case 902: return defines.MAX_TRACES
+        case 903: return defines.MAX_BLOCKS
+        case 904: return defines.MAX_GROUPS
+        case 905:
+        case 907:
+        case 908:
+        case 909: return fineSteps + (defines.SKIPPING_ENABLED ? defines.MAX_BLOCKS : 0)
+        case 910: return 1
+        case 911: return defines.MAX_CELLS
+        default: return 0
+    }
+}
+
 export function debugViewAvailable(view, configs)
 {
     const dda = configs.marchingMethod === 'digitalDifferentialAnalyzer'
@@ -59,5 +81,6 @@ export function debugViewAvailable(view, configs)
     if (view >= 400 && view < 450) return configs.skippingEnabled
     if (view >= 800 && view < 900)
         return dda && (trilinear === (view < 850)) && (view % 50 < 5 || configs.bernsteinEnabled)
+    if (view === 911) return dda && configs.bernsteinEnabled
     return true
 }

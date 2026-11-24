@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import Experience from '../../Experience'
 import Configs from '../../Utils/Configs'
+import { debugCounterReference } from '../../Utils/DebugViews'
 import ISOMaterial from './ISOMaterial'
 
 export default class ISOViewer
@@ -85,6 +86,7 @@ export default class ISOViewer
             MAX_GROUPS: maxGroups,
             MAX_BLOCKS_IN_GROUP: debug.max_blocks,
         }
+        debug.counter_reference = debugCounterReference(debug.option, defines)
 
         if (Object.keys(defines).some(key => material.defines[key] !== defines[key]))
         {

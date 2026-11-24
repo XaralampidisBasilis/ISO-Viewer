@@ -12,8 +12,7 @@ cell.intersected = sign_change(cubic.residuals) || cubic_has_root(cubic.coeffs, 
 cell.intersected = sign_change(cubic.residuals) || cubic_has_root_sample(cubic.coeffs, 0.0, 1.0);
 #endif
 
-// update stats
+// Count the intersection test.
 #if DEBUG_ENABLED == 1
-stats.num_texture_fetches += 3;
 stats.num_intersection_tests += 1;
 #endif

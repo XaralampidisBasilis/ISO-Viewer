@@ -6,6 +6,10 @@
 #include "./intersected_trace/intersected_trace_tricubic"
 #endif
 
+#if DEBUG_ENABLED == 1
+stats.num_intersection_tests += 1;
+#endif
+
 
 
 

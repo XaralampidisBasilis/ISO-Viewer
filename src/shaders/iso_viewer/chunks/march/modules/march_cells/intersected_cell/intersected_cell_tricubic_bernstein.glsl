@@ -27,9 +27,9 @@ if (sign_change(quintic.bernstein_coeffs))
     #endif
 }
 
-// update stats
 #if DEBUG_ENABLED == 1
-stats.num_texture_fetches += 3;
+else
+{
+    stats.num_bernstein_rejections += 1;
+}
 #endif
-
-

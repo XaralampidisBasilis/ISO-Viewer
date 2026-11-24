@@ -1,36 +1,27 @@
-
-// COMPUTE DEBUG
-
-// Fine traversal steps for the active marching method.
 #if MARCHING_METHOD == 0
-vec4 debug_stats_num_steps = to_color(float(stats.num_cells) / float(MAX_CELLS) * 10.0);
+int fine_step_count = stats.num_cells;
 #else
-vec4 debug_stats_num_steps = to_color(float(stats.num_traces) / float(MAX_TRACES) * 10.0);
+int fine_step_count = stats.num_traces;
 #endif
 
-// num traces
-vec4 debug_stats_num_traces = to_color(float(stats.num_traces) / float(MAX_TRACES) * 10.0);
-
-// num blocks
-vec4 debug_stats_num_blocks = to_color(float(stats.num_blocks) / float(MAX_BLOCKS) * 10.0);
-
-// num groups
-vec4 debug_stats_num_groups = to_color(float(stats.num_groups) / float(MAX_GROUPS) * 10.0);
-
-// num fetches
-vec4 debug_stats_num_texture_fetches = to_color(float(stats.num_texture_fetches) / float(MAX_CELLS) * 10.0);
-
-// num tests
-vec4 debug_stats_num_intersection_tests = to_color(inferno(clamp(float(stats.num_intersection_tests) / float(MAX_CELLS) * 10.0, 0.0, 1.0)));
-
-
-// PRINT DEBUG
+int debug_count = 0;
 switch (u_debug.option - 900)
 {
-    case 1: fragColor = debug_stats_num_steps;              break;
-    case 2: fragColor = debug_stats_num_traces;             break;
-    case 3: fragColor = debug_stats_num_blocks;             break;
-    case 4: fragColor = debug_stats_num_groups;             break;
-    case 5: fragColor = debug_stats_num_texture_fetches;    break;
-    case 6: fragColor = debug_stats_num_intersection_tests; break;
+    case 1: debug_count = fine_step_count; break;
+    case 2: debug_count = stats.num_traces; break;
+    case 3: debug_count = stats.num_blocks; break;
+    case 4: debug_count = stats.num_groups; break;
+    case 5: debug_count = stats.num_volume_reads + stats.num_occupancy_reads + stats.num_distance_reads; break;
+    case 6: debug_count = stats.num_intersection_tests; break;
+    case 7: debug_count = stats.num_volume_reads; break;
+    case 8: debug_count = stats.num_occupancy_reads; break;
+    case 9: debug_count = stats.num_distance_reads; break;
+    case 10: debug_count = stats.num_root_solves; break;
+    case 11: debug_count = stats.num_bernstein_rejections; break;
+}
+
+if (u_debug.counter_reference > 0.0)
+{
+    vec3 counter_color = debug_count == 0 ? vec3(0.0) : turboBurn(float(debug_count) / u_debug.counter_reference);
+    fragColor = to_color(counter_color);
 }

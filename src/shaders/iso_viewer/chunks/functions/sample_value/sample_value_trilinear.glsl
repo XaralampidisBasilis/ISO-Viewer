@@ -6,6 +6,9 @@
 float sample_value_trilinear(in vec3 coords)
 {
     vec3 texture_coords = coords * u_volume.inv_dimensions;
+#if DEBUG_ENABLED == 1
+    stats.num_volume_reads += 1;
+#endif
     return texture(u_textures.interpolation_map, texture_coords).a;
 }
 

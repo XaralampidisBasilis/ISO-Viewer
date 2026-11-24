@@ -2,9 +2,13 @@
 #include "../march_blocks/start_block"
 #include "./start_cell"
 
-for (int j = 0; j < MAX_BLOCKS; j++) 
+#if SKIPPING_STRATEGY == 0
+for (int k = 0; k < MAX_BLOCKS; k++)
+#else
+for (int k = 0; k < MAX_GROUPS; k++)
+#endif
 {
-    #include "../march_blocks/update_block"
+    #include "../march_blocks/advance_blocks"
 
     if (!(block.occupied || block.terminated)) continue;
 
