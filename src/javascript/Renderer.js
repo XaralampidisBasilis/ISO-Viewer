@@ -41,7 +41,8 @@ export default class Renderer extends EventEmitter
     {
         this.instance.render(this.scene, this.camera.instance)
         const { computes, configs } = this.experience
-        this.orientationCube.update(this.camera.instance, computes.volume, configs.orientationCubeVisible)
+        const theme = document.documentElement.dataset.theme
+        this.orientationCube.update(this.camera.instance, computes.volume, configs.orientationCubeVisible, theme)
     }
 
     destroy()

@@ -13,16 +13,25 @@
 #volume-controls { margin: 0 12px 10px; font-size: 15px; }
 #settings { display: flex; flex: 1; flex-direction: column; min-height: 0; }
 .inspector :where(fieldset) { min-width: 0; margin: 0; padding: 0; border: 0; }
-.threshold-controls { padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.threshold-controls {
+    grid-area: threshold;
+    min-width: 0;
+    margin: 7px 7px 0;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: var(--bevel);
+}
+.threshold-controls:disabled { color: var(--muted); }
 .setting-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .setting-title label { font-size: 13px; font-weight: 700; }
 .setting-title input {
-    width: 7ch;
+    width: 8ch;
     min-width: 0;
-    padding: 2px 3px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--accent);
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    background: var(--field);
+    color: var(--text);
     font: 14px var(--mono);
     text-align: right;
     appearance: textfield;
@@ -30,6 +39,7 @@
 .setting-title input:hover, .setting-title input:focus { border-color: var(--accent); background: var(--field); }
 .setting-title input::-webkit-inner-spin-button, .setting-title input::-webkit-outer-spin-button { margin: 0; appearance: none; }
 #isovalue { display: block; width: calc(100% - 2px); margin: 6px 1px 1px; accent-color: var(--accent); }
+#isovalue-scale { display: block; color: var(--muted); font-size: 12px; }
 #settings-fields:disabled .control-panel { opacity: 0.65; }
 
 .control-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; margin: 0 11px; border-bottom: 1px solid var(--border); }
@@ -55,6 +65,10 @@
 
 @media (max-width: 720px) {
     #settings-fields { overflow: visible; }
+}
+@media (max-width: 720px), (pointer: coarse) {
+    .setting-title input { min-height: 36px; font-size: 16px; }
+    #isovalue { min-height: 44px; margin-block: 0; }
 }
 @media (pointer: coarse) {
     .control-tabs button, .check-setting { min-height: 36px; }

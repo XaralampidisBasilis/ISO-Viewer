@@ -37,7 +37,7 @@
                         <button type="button" data-view="462" aria-pressed="false" disabled>Curvature</button>
                     </div>
                     <div class="menu-group" role="group" aria-label="Wireframes">
-                        <button type="button" id="toggle-occupancy-wireframe" aria-pressed="false" disabled>Occupancy map</button>
+                        <button type="button" id="toggle-occupancy-wireframe" aria-pressed="false" disabled>Occupancy wireframe</button>
                         <button type="button" id="toggle-bounding-box" aria-pressed="false" disabled>Bounding box</button>
                         <button type="button" id="toggle-volume-box" aria-pressed="false" disabled>Volume box</button>
                     </div>
@@ -47,7 +47,6 @@
                     <div class="menu-group" role="group" aria-label="Camera">
                         <button type="button" data-camera="orbit" aria-pressed="true" disabled>Orbit</button>
                         <button type="button" data-camera="fly" aria-pressed="false" disabled>Fly</button>
-                        <button type="button" id="reset-view" disabled>Reset view</button>
                     </div>
                     <div class="menu-group" role="group" aria-label="Color mode">
                         <button type="button" data-theme="light" aria-pressed="true">Light mode</button>
@@ -80,6 +79,16 @@
         </nav>
         <input id="scan-file" type="file" accept=".nii,.nii.gz" aria-label="Choose a NIfTI scan" hidden>
         <section class="viewer" aria-label="Interactive volume viewer">
+            <div class="viewer-toolbar">
+                <div class="viewer-state" role="status">
+                    <span id="scan-quality" hidden></span>
+                    <strong id="active-view">Surface</strong>
+                </div>
+                <div class="viewer-actions">
+                    <button type="button" id="back-to-surface" hidden>Back to surface</button>
+                    <button type="button" id="reset-view" disabled>Reset view</button>
+                </div>
+            </div>
             <div class="viewport" id="viewport">
                 <canvas class="webgl" tabindex="0" aria-label="3D rendering of the current scan" aria-describedby="navigation-help"></canvas>
                 <canvas id="orientation-cube" width="192" height="192" role="img" aria-label="Patient orientation" hidden></canvas>
@@ -104,8 +113,20 @@
                         <span><i aria-hidden="true"></i>0</span>
                     </div>
                 </figure>
+                <button type="button" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Enter fullscreen" hidden>
+                    <span aria-hidden="true">⛶</span>
+                </button>
             </div>
         </section>
+
+        <fieldset class="threshold-controls" id="threshold-controls" aria-labelledby="isovalue-label" disabled>
+            <div class="setting-title">
+                <label id="isovalue-label" for="isovalue">Isovalue</label>
+                <input id="isovalue-output" type="number" min="0" max="1" step="0.001" value="0.350" inputmode="decimal" required aria-label="Isovalue number" aria-describedby="isovalue-scale">
+            </div>
+            <input id="isovalue" type="range" min="0" max="1" step="0.001" value="0.35" aria-describedby="isovalue-scale">
+            <span id="isovalue-scale">Normalized 0–1</span>
+        </fieldset>
 
         <aside class="inspector" aria-labelledby="volume-controls">
             <h2 id="volume-controls">Volume controls</h2>
@@ -141,13 +162,6 @@
                     </section>
 
                     <section class="control-panel" id="render-panel" role="tabpanel" aria-labelledby="render-tab">
-                        <div class="threshold-controls">
-                            <div class="setting-title">
-                                <label for="isovalue">Isovalue</label>
-                                <input id="isovalue-output" data-config="isosurfaceValue" type="number" min="0" max="1" step="0.001" value="0.350" required aria-label="Isovalue">
-                            </div>
-                            <input id="isovalue" data-config="isosurfaceValue" type="range" min="0" max="1" step="0.001" value="0.35">
-                        </div>
                         <div class="control-group">
                             <label class="select-setting">Interpolation
                                 <select data-config="interpolationMethod">
@@ -193,16 +207,21 @@
             </form>
         </aside>
         <footer class="workstation-status" aria-label="Rendering status">
-            <dl class="grid-readouts" id="status-grids" hidden>
-                <div><dt>Voxel grid</dt><dd id="status-voxel-grid"></dd></div>
-                <div><dt>Block grid</dt><dd id="status-block-grid"></dd></div>
-                <div title="Actual WebGL drawing-buffer size"><dt>View size</dt><dd id="status-view-size">—</dd></div>
-            </dl>
             <p id="navigation-help">Drag to orbit · Scroll or pinch to zoom · Right-drag to pan</p>
-            <div class="frame-meter">
-                <span class="fps-readout" title="Rendered frames per second. The viewer stops drawing when idle unless measurement is active."><span id="fps-value">—</span> FPS</span>
-                <button type="button" id="fps-toggle" aria-pressed="false" title="Render continuously to measure FPS at rest" disabled>Measure FPS</button>
-            </div>
+            <details class="render-details" id="render-details" hidden>
+                <summary>Rendering details</summary>
+                <div class="render-readouts">
+                    <dl class="grid-readouts">
+                        <div><dt>Voxel grid</dt><dd id="status-voxel-grid"></dd></div>
+                        <div><dt>Block grid</dt><dd id="status-block-grid"></dd></div>
+                        <div title="Actual WebGL drawing-buffer size"><dt>View size</dt><dd id="status-view-size">—</dd></div>
+                    </dl>
+                    <div class="frame-meter">
+                        <span class="fps-readout" title="Rendered frames per second. The viewer stops drawing when idle unless measurement is active."><span id="fps-value">—</span> FPS</span>
+                        <button type="button" id="fps-toggle" aria-pressed="false" title="Render continuously to measure FPS at rest" disabled>Measure FPS</button>
+                    </div>
+                </div>
+            </details>
         </footer>
     </main>
 

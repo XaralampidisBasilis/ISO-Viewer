@@ -24,6 +24,7 @@ export default class GUI
         this.setupDebugBrowser()
         this.viewButtons = Array.from(document.querySelectorAll('[data-view]'))
         this.setupMenu()
+        this.setupFullscreen()
 
         for (const name of Configs.Colormaps)
             this.elements.colormap.add(new Option(name[0].toUpperCase() + name.slice(1), name))
@@ -140,6 +141,45 @@ export default class GUI
         for (const button of this.themeButtons)
             button.setAttribute('aria-pressed', String(button.dataset.theme === theme))
         document.querySelector('meta[name="theme-color"]').content = getComputedStyle(root).getPropertyValue('--titlebar').trim()
+        this.experience?.invalidate()
+    }
+
+    setupFullscreen()
+    {
+        const { viewport, 'fullscreen-toggle': button } = this.elements
+        const sync = () => {
+            const fullscreen = document.fullscreenElement === viewport || viewport.classList.contains('viewport-expanded')
+            const label = fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
+            button.firstElementChild.textContent = fullscreen ? '×' : '⛶'
+            button.setAttribute('aria-label', label)
+            button.title = label
+        }
+        const expandWindow = expanded => {
+            viewport.classList.toggle('viewport-expanded', expanded)
+            sync()
+        }
+
+        button.hidden = false
+        this.listen(button, 'click', async () => {
+            if (viewport.classList.contains('viewport-expanded')) expandWindow(false)
+            else if (document.fullscreenElement === viewport)
+            {
+                try { await document.exitFullscreen() }
+                catch (error) { console.warn('Could not exit fullscreen.', error) }
+            }
+            else if (document.fullscreenEnabled)
+            {
+                try { await viewport.requestFullscreen() }
+                catch { expandWindow(true) }
+            }
+            else expandWindow(true)
+        })
+        this.listen(document, 'fullscreenchange', sync)
+        this.listen(document, 'keydown', event => {
+            if (event.key !== 'Escape' || !viewport.classList.contains('viewport-expanded')) return
+            event.preventDefault()
+            expandWindow(false)
+        })
     }
 
     connect(experience)
@@ -156,7 +196,10 @@ export default class GUI
             if (file) experience.loadLocal(file)
         })
 
-        this.listen(this.elements.isovalue, 'input', () => this.updateThresholdLabel())
+        this.listen(this.elements.isovalue, 'input', event => {
+            const value = event.target.valueAsNumber
+            this.elements['isovalue-output'].value = value.toFixed(3)
+        })
         this.listen(this.elements['isovalue-output'], 'keydown', event => {
             if (event.key !== 'Enter' && event.key !== 'Escape') return
             event.preventDefault()
@@ -164,27 +207,29 @@ export default class GUI
                 event.target.value = configs.isosurfaceValue.toFixed(3)
             event.target.blur()
         })
+        this.listen(this.elements['threshold-controls'], 'change', event => {
+            const field = event.target
+            if (field.validity.valid) configs.set('isosurfaceValue', field.valueAsNumber)
+            this.syncThreshold()
+        })
         this.listen(this.elements.settings, 'change', event => {
             const field = event.target
             const key = field.dataset.config
             if (!key) return
-            if (field === this.elements['isovalue-output'] && !field.validity.valid)
-            {
-                field.value = configs.isosurfaceValue.toFixed(3)
-                return
-            }
             let value = field.value
             if (field.type === 'checkbox') value = field.checked
             else if (typeof configs.get(key) === 'number') value = Number(value)
             configs.set(key, value)
-            if (field === this.elements['isovalue-output'])
-                this.elements.isovalue.value = field.value = value.toFixed(3)
         })
         this.listen(this.elements['debug-enabled'], 'change', event => {
             configs.set('diagnosticView', 0)
             configs.set('debugEnabled', event.target.checked)
         })
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
+        this.listen(this.elements['back-to-surface'], 'click', () => {
+            this.setDiagnosticView(0)
+            experience.canvas.focus({ preventScroll: true })
+        })
         for (const [id, key] of overlayControls)
             this.listen(this.elements[id], 'click', () => {
                 const visible = !configs[key]
@@ -192,6 +237,9 @@ export default class GUI
                 if (visible && key === 'occupancyWireframeVisible') this.setDiagnosticView(0)
             })
         this.listen(this.elements['fps-toggle'], 'click', () => stats.setActive(!stats.active))
+        this.listen(this.elements['render-details'], 'toggle', event => {
+            if (!event.target.open) stats.setActive(false)
+        })
         stats.on('change', () => this.updateFps())
         renderer.on('resize.gui', () => this.updateViewSize())
 
@@ -239,14 +287,21 @@ export default class GUI
         for (const [id, key] of overlayControls)
         {
             const button = this.elements[id]
-            button.disabled = disabled
-            button.setAttribute('aria-pressed', String(configs?.get(key) ?? false))
+            const available = key !== 'orientationCubeVisible' || Boolean(this.experience?.computes.volume?.patientOrientation)
+            button.disabled = disabled || !available
+            button.setAttribute('aria-pressed', String(available && (configs?.get(key) ?? false)))
         }
         this.elements['debug-options'].hidden = !configs?.debugEnabled
         const activeView = configs?.effectiveDebugView ?? 0
         const activeButton = this.viewButtons.find(button => Number(button.dataset.view) === activeView)
+        const label = activeButton?.textContent.trim() || 'Surface'
+        const viewLabel = this.elements['active-view']
+        if (viewLabel.textContent !== label) viewLabel.textContent = label
+        const back = this.elements['back-to-surface']
+        back.hidden = activeView === 0
+        back.disabled = disabled
         this.elements['debug-view-status'].textContent = activeView
-            ? `Viewing ${activeButton?.textContent.trim() ?? ''}`
+            ? `Viewing ${label}`
             : 'Select a diagnostic to replace the shaded surface.'
         for (const button of this.viewButtons)
         {
@@ -284,9 +339,10 @@ export default class GUI
         this.elements['navigation-help'].textContent = hint
     }
 
-    updateThresholdLabel()
+    syncThreshold()
     {
-        this.elements['isovalue-output'].value = Number(this.elements.isovalue.value).toFixed(3)
+        const value = this.experience.configs.isosurfaceValue.toFixed(3)
+        this.elements.isovalue.value = this.elements['isovalue-output'].value = value
     }
 
     sync()
@@ -299,7 +355,7 @@ export default class GUI
             if (field.type === 'checkbox') field.checked = value
             else field.value = String(value)
         }
-        this.updateThresholdLabel()
+        this.syncThreshold()
         this.elements['bernstein-control'].firstElementChild.disabled = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
         this.updateDebugControls()
 
@@ -319,7 +375,7 @@ export default class GUI
         this.elements['volume-block-size'].textContent = [blockSize, blockSize, blockSize].join(' × ') + ' cells'
         this.elements['status-voxel-grid'].textContent = voxelGrid
         this.elements['status-block-grid'].textContent = blockGrid
-        this.elements['status-grids'].hidden = false
+        this.elements['render-details'].hidden = false
         this.elements['open-volume-parameters'].disabled = false
         this.elements['empty-view'].hidden = computes.occupancyMap.boundingBox !== null || configs.effectiveDebugView !== 0
     }
@@ -327,6 +383,7 @@ export default class GUI
     busy(busy)
     {
         this.elements['settings-fields'].disabled = busy
+        this.elements['threshold-controls'].disabled = busy
         this.updateDebugControls()
         this.elements['open-scan'].disabled = busy
         this.elements['fps-toggle'].disabled = busy
@@ -373,7 +430,11 @@ export default class GUI
         this.elements['scan-description'].textContent = local ? this.experience.scanName : ''
         this.elements['scan-description'].hidden = !local
         this.elements['volume-source'].textContent = local ? this.experience.scanName : 'Head & neck CTA'
-        this.elements['volume-detail'].textContent = local ? 'Local scan' : quality === 'detail' ? 'Detailed Scan' : 'Preview Scan'
+        const qualityLabel = local ? 'Local scan' : quality === 'detail' ? 'Detailed scan' : 'Preview scan'
+        const indicator = this.elements['scan-quality']
+        if (indicator.textContent !== qualityLabel) indicator.textContent = qualityLabel
+        indicator.hidden = false
+        this.elements['volume-detail'].textContent = qualityLabel
         this.elements['volume-resampling'].hidden = !local || this.experience.configs.downscaleFactor >= 1
         this.busy(false)
         this.sync()
