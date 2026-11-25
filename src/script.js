@@ -8,7 +8,7 @@ try
 {
     const context = canvas.getContext('webgl2', {
         antialias: false,
-        depth: false,
+        depth: true,
         powerPreference: 'high-performance',
     })
     if (!context) throw new Error('This viewer needs a browser with GPU-accelerated WebGL2.')

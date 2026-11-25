@@ -3,6 +3,13 @@ import ControlPanels from './Utils/ControlPanels'
 import TraversalLegend from './Utils/TraversalLegend'
 import { debugViews, debugViewSources, debugViewUnavailableReason } from './Utils/DebugViews'
 
+const overlayControls = [
+    ['toggle-occupancy-wireframe', 'occupancyWireframeVisible'],
+    ['toggle-bounding-box', 'boundingBoxVisible'],
+    ['toggle-volume-box', 'volumeBoxVisible'],
+    ['toggle-orientation-cube', 'orientationCubeVisible'],
+]
+
 export default class GUI
 {
     constructor()
@@ -178,6 +185,12 @@ export default class GUI
             configs.set('debugEnabled', event.target.checked)
         })
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
+        for (const [id, key] of overlayControls)
+            this.listen(this.elements[id], 'click', () => {
+                const visible = !configs[key]
+                configs.set(key, visible)
+                if (visible && key === 'occupancyWireframeVisible') this.setDiagnosticView(0)
+            })
         this.listen(this.elements['fps-toggle'], 'click', () => stats.setActive(!stats.active))
         stats.on('change', () => this.updateFps())
         renderer.on('resize.gui', () => this.updateViewSize())
@@ -223,11 +236,17 @@ export default class GUI
         const configs = this.experience?.configs
         const disabled = this.elements['settings-fields'].disabled || !configs
         this.elements['debug-controls'].disabled = disabled
+        for (const [id, key] of overlayControls)
+        {
+            const button = this.elements[id]
+            button.disabled = disabled
+            button.setAttribute('aria-pressed', String(configs?.get(key) ?? false))
+        }
         this.elements['debug-options'].hidden = !configs?.debugEnabled
         const activeView = configs?.effectiveDebugView ?? 0
         const activeButton = this.viewButtons.find(button => Number(button.dataset.view) === activeView)
         this.elements['debug-view-status'].textContent = activeView
-            ? `Viewing ${activeButton?.querySelector('.debug-view-name')?.textContent ?? ''}`
+            ? `Viewing ${activeButton?.textContent.trim() ?? ''}`
             : 'Select a diagnostic to replace the shaded surface.'
         for (const button of this.viewButtons)
         {

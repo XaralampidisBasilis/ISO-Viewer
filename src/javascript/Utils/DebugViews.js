@@ -1,4 +1,6 @@
-// The numeric codes match the switches in the fragment shader's debug modules.
+export const occupancyMapView = 420
+
+// The numeric codes select fragment shader diagnostics.
 export const debugViews = {
     'Surface hit': {
         454: 'Distance', 455: 'Position', 456: 'Residue',
@@ -26,6 +28,7 @@ export const debugViews = {
         407: 'Exit distance', 408: 'Span distance', 409: 'Min position', 410: 'Max position',
         411: 'Current coordinates', 412: 'Min coordinates', 413: 'Max coordinates',
         414: 'Entry position', 415: 'Exit position',
+        [occupancyMapView]: 'Occupancy map',
     },
     Cells: {
         201: 'Intersected', 202: 'Terminated', 203: 'Coordinates',
@@ -79,6 +82,7 @@ for (const [base, prefix, fields] of [
     fields.forEach((field, index) => { debugViewSources[base + index] = `${prefix}.${field}` })
 
 debugViewSources[461] = 'length(hit.gradient)'
+debugViewSources[occupancyMapView] = 'Occupied candidate blocks at the current isovalue.'
 debugViewSources[464] = 'hit.hessian[0][0], [1][1], [2][2]'
 debugViewSources[465] = 'hit.hessian[0][1], [0][2], [1][2]'
 debugViewSources[517] = 'dot(frag.color, luminance weights)'
@@ -141,10 +145,12 @@ export function debugCounterReference(view, defines)
 
 export function debugViewUnavailableReason(view, configs)
 {
+    if (view === occupancyMapView) return ''
+
     const dda = configs.marchingMethod === 'digitalDifferentialAnalyzer'
     const trilinear = configs.interpolationMethod === 'trilinear'
     if ((view >= 200 && view < 300) || view === 901)
-        return dda ? '' : 'Select cell traversal (DDA) in Render.'
+        return dda ? '' : 'Select Discrete Differential Analyzer in Render.'
     if ((view >= 300 && view < 400) || view === 902)
         return dda ? 'Select uniform stepping in Render.' : ''
     if ((view >= 400 && view < 450) || view === 903 || view === 904)
@@ -155,14 +161,14 @@ export function debugViewUnavailableReason(view, configs)
     }
     if (view >= 800 && view < 900)
     {
-        if (!dda) return 'Select cell traversal (DDA) in Render.'
+        if (!dda) return 'Select Discrete Differential Analyzer in Render.'
         if (trilinear !== (view < 850))
             return view < 850 ? 'Select trilinear interpolation in Render.' : 'Select Csébfalvi tricubic interpolation in Render.'
         if (debugViewSources[view]?.includes('bernstein') && !configs.bernsteinEnabled)
             return 'Enable Bernstein rejection in Render.'
     }
     if (view === 911 && (!dda || !configs.bernsteinEnabled))
-        return 'Enable cell traversal (DDA) and Bernstein rejection in Render.'
+        return 'Enable Discrete Differential Analyzer and Bernstein rejection in Render.'
     if (view >= 1003 && view <= 1009)
         return 'This custom shader variable has no assignment yet.'
     return ''

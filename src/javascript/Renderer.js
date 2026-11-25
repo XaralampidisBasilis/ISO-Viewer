@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import Experience from './Experience'
 import EventEmitter from './Utils/EventEmitter'
+import OrientationCube from './Utils/OrientationCube'
 
 export default class Renderer extends EventEmitter
 {
@@ -11,6 +12,8 @@ export default class Renderer extends EventEmitter
         this.sizes = experience.sizes
         this.scene = experience.scene
         this.camera = experience.camera
+        this.experience = experience
+        this.orientationCube = new OrientationCube(document.querySelector('#orientation-cube'))
         this.scale = 1
         this.instance = new THREE.WebGLRenderer({
             canvas: experience.canvas,
@@ -37,6 +40,8 @@ export default class Renderer extends EventEmitter
     update()
     {
         this.instance.render(this.scene, this.camera.instance)
+        const { computes, configs } = this.experience
+        this.orientationCube.update(this.camera.instance, computes.volume, configs.orientationCubeVisible)
     }
 
     destroy()

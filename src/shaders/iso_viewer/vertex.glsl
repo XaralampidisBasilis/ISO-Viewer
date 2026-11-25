@@ -3,6 +3,10 @@ out vec3 v_position;
 out vec3 v_camera_position;
 out vec3 v_camera_direction;
 out vec3 v_ray_direction;
+#if WRITE_SURFACE_DEPTH == 1
+out vec2 v_proxy_clip_zw;
+flat out vec2 v_camera_clip_zw;
+#endif
 
 uniform mat4 uCustomModelMatrix;
 
@@ -24,4 +28,8 @@ void main()
 
     // Vertex position in physical space
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #if WRITE_SURFACE_DEPTH == 1
+    v_proxy_clip_zw = gl_Position.zw;
+    v_camera_clip_zw = projectionMatrix[3].zw;
+    #endif
 }

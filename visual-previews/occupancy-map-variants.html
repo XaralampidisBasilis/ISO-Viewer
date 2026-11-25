@@ -1,0 +1,98 @@
+<div id="iso-occupancy-preview" class="viz-carousel" aria-label="Occupancy map design alternatives">
+  <section data-variant="Shaded surface" aria-label="Shaded surface">
+    <div class="iso-window">
+      <header>ISOViewer <b>Occupancy map</b></header>
+      <canvas width="720" height="380" aria-label="Shaded surface on a synthetic branching block grid"></canvas>
+      <footer><span>Shaded surface</span><span>Synthetic occupancy grid</span></footer>
+    </div>
+  </section>
+  <section data-variant="Surface with edges" aria-label="Surface with edges" hidden>
+    <div class="iso-window">
+      <header>ISOViewer <b>Occupancy map</b></header>
+      <canvas width="720" height="380" aria-label="Surface with edges on a synthetic branching block grid"></canvas>
+      <footer><span>Surface with edges</span><span>Synthetic occupancy grid</span></footer>
+    </div>
+  </section>
+  <section data-variant="Wireframe" aria-label="Wireframe" hidden>
+    <div class="iso-window">
+      <header>ISOViewer <b>Occupancy map</b></header>
+      <canvas width="720" height="380" aria-label="Wireframe on a synthetic branching block grid"></canvas>
+      <footer><span>Wireframe</span><span>Synthetic occupancy grid</span></footer>
+    </div>
+  </section>
+  <section data-variant="Translucent boxes" aria-label="Translucent boxes" hidden>
+    <div class="iso-window">
+      <header>ISOViewer <b>Occupancy map</b></header>
+      <canvas width="720" height="380" aria-label="Translucent boxes on a synthetic branching block grid"></canvas>
+      <footer><span>Translucent boxes</span><span>Synthetic occupancy grid</span></footer>
+    </div>
+  </section>
+  <section data-variant="Clipped surface" aria-label="Clipped surface" hidden>
+    <div class="iso-window">
+      <header>ISOViewer <b>Occupancy map</b></header>
+      <canvas width="720" height="380" aria-label="Clipped surface on a synthetic branching block grid"></canvas>
+      <footer><span>Clipped surface</span><span>Synthetic occupancy grid</span></footer>
+    </div>
+  </section>
+</div>
+<style>
+#iso-occupancy-preview .iso-window{overflow:hidden;background:light-dark(#e7eaed,#282b30);color:light-dark(#22272d,#f1f3f4);border:1px solid light-dark(#bac2c9,#4b535c);font:13px system-ui,sans-serif}
+#iso-occupancy-preview header,#iso-occupancy-preview footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 12px}
+#iso-occupancy-preview header{padding-right:96px}
+#iso-occupancy-preview canvas{display:block;width:100%;height:clamp(208px,50vw,395px);object-fit:contain;background:#211d20}
+</style>
+<script>
+(() => {
+    const root = document.getElementById('iso-occupancy-preview');
+    const branches = [
+        [[0,0,-9],[0,0,1],2.5], [[0,0,0],[-5,0,7],1.6], [[0,0,0],[5,2,7],1.8],
+        [[-4,0,5],[-7,3,8],1.1], [[3,1,4],[7,-2,6],1.1], [[0,0,-4],[-5,-2,-1],1.2]
+    ];
+    const occupied = new Set();
+    const cells = [];
+    for (let x=-9;x<=9;x++) for (let y=-4;y<=5;y++) for (let z=-11;z<=10;z++) {
+        const p=[x,y,z];
+        const filled=branches.some(([a,b,r])=>{
+            const v=b.map((n,i)=>n-a[i]), q=p.map((n,i)=>n-a[i]);
+            const t=Math.max(0,Math.min(1,q.reduce((s,n,i)=>s+n*v[i],0)/v.reduce((s,n)=>s+n*n,0)));
+            return Math.hypot(...q.map((n,i)=>n-t*v[i]))<=r;
+        });
+        if(filled){ cells.push(p); occupied.add(p.join()); }
+    }
+    const faces = [
+        [[1,0,0],[[1,0,0],[1,1,0],[1,1,1],[1,0,1]],'#378f9b'],
+        [[0,-1,0],[[0,0,0],[1,0,0],[1,0,1],[0,0,1]],'#55c9cd'],
+        [[0,0,1],[[0,0,1],[1,0,1],[1,1,1],[0,1,1]],'#98eee6']
+    ];
+    const project=([x,y,z])=>[350+16*(x+0.69*y),194+16*(-0.23*x+0.34*y-0.91*z)];
+    const depth=([x,y,z])=>0.62*x-0.9*y+0.35*z;
+    const polygon=(ctx,points)=>{
+        ctx.beginPath(); points.map(project).forEach(([u,v],i)=>i?ctx.lineTo(u,v):ctx.moveTo(u,v)); ctx.closePath();
+    };
+    root.querySelectorAll('canvas').forEach((canvas,mode)=>{
+        const ctx=canvas.getContext('2d');
+        const clipped=mode===4;
+        const kept=p=>!clipped||p[1]>=0;
+        const draw=[];
+        for(const p of cells.filter(kept)) for(const [normal,corners,color] of faces){
+            const neighbor=p.map((n,i)=>n+normal[i]);
+            if(mode!==2&&mode!==3&&kept(neighbor)&&occupied.has(neighbor.join())) continue;
+            const points=corners.map(c=>c.map((n,i)=>n+p[i]-0.5));
+            const cut=clipped&&normal[1]===-1&&p[1]===0&&occupied.has(neighbor.join());
+            draw.push({points,color:cut?'#e8ad56':color,d:points.reduce((s,q)=>s+depth(q),0)/4});
+        }
+        draw.sort((a,b)=>a.d-b.d);
+        for(const face of draw){
+            polygon(ctx,face.points);
+            if(mode!==2){ctx.globalAlpha=mode===3?0.16:1;ctx.fillStyle=face.color;ctx.fill();}
+            if(mode!==0){
+                ctx.globalAlpha=mode===3?0.15:mode===2?0.35:0.8;
+                ctx.strokeStyle=mode===2||mode===3?'#98eee6':'#204c53';
+                ctx.lineWidth=mode===1?1.25:0.8;ctx.stroke();
+            } else {
+                ctx.strokeStyle=face.color;ctx.lineWidth=0.8;ctx.stroke();
+            }
+        }
+    });
+})();
+</script>

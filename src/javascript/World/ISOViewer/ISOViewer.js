@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import Experience from '../../Experience'
 import Configs from '../../Utils/Configs'
-import { debugCounterReference } from '../../Utils/DebugViews'
+import { debugCounterReference, occupancyMapView } from '../../Utils/DebugViews'
 import ISOMaterial from './ISOMaterial'
 
 export default class ISOViewer
@@ -13,7 +13,20 @@ export default class ISOViewer
         this.configs = experience.configs
         this.material = ISOMaterial()
         this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.material)
+        this.boxEdges = new THREE.EdgesGeometry(this.mesh.geometry)
+        this.volumeBox = this.createBoxWireframe(0x99aaff, 1)
+        this.boundingBox = this.createBoxWireframe(0xffbd57, 2)
         this.syncShading()
+    }
+
+    createBoxWireframe(color, renderOrder)
+    {
+        const material = new THREE.LineBasicMaterial({ color, transparent: true, depthTest: true, depthWrite: false })
+        const wireframe = new THREE.LineSegments(this.boxEdges, material)
+        wireframe.renderOrder = renderOrder
+        wireframe.visible = false
+        this.mesh.add(wireframe)
+        return wireframe
     }
 
     sync()
@@ -29,6 +42,7 @@ export default class ISOViewer
 
         this.size = size
         this.mesh.scale.copy(size)
+        this.volumeBox.visible = configs.volumeBoxVisible
         const translation = new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.5)
         const scale = new THREE.Matrix4().makeScale(dimensions.x, dimensions.y, dimensions.z)
         uniforms.uCustomModelMatrix.value.multiplyMatrices(scale, translation)
@@ -51,15 +65,24 @@ export default class ISOViewer
         const bounds = uniforms.u_bbox.value
         const occupied = computes.occupancyMap.boundingBox
         bounds.occupied = occupied !== null
+        this.boundingBox.visible = bounds.occupied && configs.boundingBoxVisible
         if (occupied)
         {
             const origin = new THREE.Vector3()
             bounds.min_position.fromArray(occupied.minCoords).multiplyScalar(configs.blockSize).subScalar(0.5).clamp(origin, dimensions)
             bounds.max_position.fromArray(occupied.maxCoords).addScalar(1).multiplyScalar(configs.blockSize).subScalar(0.5).clamp(origin, dimensions)
+            this.boundingBox.position.addVectors(bounds.min_position, bounds.max_position)
+                .divide(dimensions).multiplyScalar(0.5).subScalar(0.5)
+            this.boundingBox.scale.subVectors(bounds.max_position, bounds.min_position).divide(dimensions)
         }
+        const writeSurfaceDepth = this.volumeBox.visible || this.boundingBox.visible
+        material.depthTest = writeSurfaceDepth
+        material.depthWrite = writeSurfaceDepth
 
         const debug = uniforms.u_debug.value
         debug.option = configs.effectiveDebugView
+        const occupancyView = debug.option === occupancyMapView
+        const debugEnabled = debug.option !== 0 && !occupancyView
         debug.max_groups = maxGroups
         debug.max_blocks = Math.ceil(maxBlocks / maxGroups)
         debug.max_cells = cellsPerBlock
@@ -75,8 +98,11 @@ export default class ISOViewer
             SKIPPING_ENABLED: Number(configs.skippingEnabled),
             BBOX_ENABLED: Number(configs.boundingBoxEnabled),
             BERNSTEIN_ENABLED: Number(configs.bernsteinEnabled),
-            DEBUG_ENABLED: Number(configs.effectiveDebugView !== 0),
-            DISCARDING_ENABLED: Number(configs.effectiveDebugView === 0),
+            WRITE_SURFACE_DEPTH: Number(writeSurfaceDepth),
+            OCCUPANCY_VIEW: Number(occupancyView),
+            OCCUPANCY_WIREFRAME: Number(debug.option === 0 && configs.occupancyWireframeVisible),
+            DEBUG_ENABLED: Number(debugEnabled),
+            DISCARDING_ENABLED: Number(!debugEnabled),
             VARIATION_METHOD: configs.effectiveRootSolver,
             MAX_CELLS: maxCells,
             MAX_CELLS_IN_BLOCK: cellsPerBlock,
@@ -106,6 +132,9 @@ export default class ISOViewer
     destroy()
     {
         this.mesh.removeFromParent()
+        this.boxEdges.dispose()
+        this.boundingBox.material.dispose()
+        this.volumeBox.material.dispose()
         this.mesh.geometry.dispose()
         this.material.dispose()
     }

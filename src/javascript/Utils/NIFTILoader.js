@@ -1,4 +1,4 @@
-import { FileLoader, Loader } from 'three'
+import { FileLoader, Loader, Matrix3 } from 'three'
 import { Volume } from 'three/examples/jsm/misc/Volume'
 import * as nifti from 'nifti-reader-js'
 
@@ -14,6 +14,32 @@ const voxelTypes = {
 }
 
 const nativeLittleEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1
+
+function patientOrientation(header, data)
+{
+    const toGridOrientation = rows => {
+        const entries = rows.slice(0, 3).flatMap(row => row.slice(0, 3).map((value, axis) => value / header.pixDims[axis + 1]))
+        if (!entries.every(Number.isFinite)) return null
+        const matrix = new Matrix3().set(...entries)
+        const norm = Math.max(...entries.map(Math.abs))
+        return Math.abs(matrix.determinant()) > 1e-6 * norm ** 3 ? matrix : null
+    }
+
+    let sform = null
+    if (header.sform_code > 0)
+    {
+        const view = new DataView(data)
+        const wide = header instanceof nifti.NIFTI2
+        const start = wide ? 400 : 280
+        const stride = wide ? 8 : 4
+        const read = wide ? view.getFloat64.bind(view) : view.getFloat32.bind(view)
+        sform = toGridOrientation([0, 1, 2].map(row => [0, 1, 2].map(col =>
+            read(start + (row * 4 + col) * stride, header.littleEndian))))
+    }
+    const qform = header.qform_code > 0 ? toGridOrientation(header.getQformMat()) : null
+    if (sform && qform && Math.sign(sform.determinant()) !== Math.sign(qform.determinant())) return null
+    return header.qform_code === 1 && header.sform_code !== 1 ? qform ?? sform : sform ?? qform
+}
 
 class NIFTILoader extends Loader
 {
@@ -93,6 +119,7 @@ class NIFTILoader extends Loader
 
         volume.dimensions = dimensions
         volume.spacing = spacing
+        volume.patientOrientation = patientOrientation(header, data)
         volume.spatialUnits = 'Meters'
         volume.size = dimensions.map((size, axis) => size * spacing[axis])
         volume.xLength = dimensions[0]
