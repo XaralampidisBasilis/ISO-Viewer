@@ -57,4 +57,7 @@ switch (u_debug.option - 450)
     case 10: fragColor = debug_hit_gradient;        break;
     case 11: fragColor = debug_hit_steepness;       break;
     case 12: fragColor = debug_hit_curvatures;      break;
+    case 13: fragColor = to_color(hit.value); break;
+    case 14: fragColor = to_color(0.5 + atan(vec3(hit.hessian[0][0], hit.hessian[1][1], hit.hessian[2][2])) / 3.1415926536); break;
+    case 15: fragColor = to_color(0.5 + atan(vec3(hit.hessian[0][1], hit.hessian[0][2], hit.hessian[1][2])) / 3.1415926536); break;
 }

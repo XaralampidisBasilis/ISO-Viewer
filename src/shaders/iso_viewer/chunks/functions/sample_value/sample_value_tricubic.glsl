@@ -20,7 +20,7 @@ vec4 tricubic_features(in vec3 coords)
 
     // Sample the precomputed augmented volume texture (fxx, fyy, fzz, f)
 #if DEBUG_ENABLED == 1
-    stats.num_volume_reads += 1;
+    stats.num_volume_fetches += 1;
 #endif
     return texture(u_textures.interpolation_map, texture_coords);
 }

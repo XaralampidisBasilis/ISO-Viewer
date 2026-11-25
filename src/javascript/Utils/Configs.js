@@ -78,7 +78,7 @@ export default class Configs extends EventEmitter
 
     get effectiveRootSolver()
     {
-        if (!this.debugEnabled || (this.interpolationMethod === 'trilinear' && this.rootSolverMethod > 2)) return 1
+        if (!this.effectiveDebugView || (this.interpolationMethod === 'trilinear' && this.rootSolverMethod > 2)) return 1
         return this.rootSolverMethod
     }
 

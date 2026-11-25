@@ -26,7 +26,7 @@ for (int i = 0; i <= 5; ++i)
 int quintic_degree = 0;
 for (int i = 5; i >= 0; --i)
 {
-    if (abs(quintic.coeffs[i]) / quintic_maxabs > 0.01)
+    if (abs(quintic.coeffs[i]) / max(quintic_maxabs, 1e-20) > 0.01)
     {
         quintic_degree = i;
         break;
@@ -53,7 +53,7 @@ for (int i = 0; i < 6; ++i)
 }
 for (int i = 0; i < 6; ++i)
 {
-    quintic_weights[i] = abs(quintic.coeffs[i]) / quintic_weights_sum;
+    quintic_weights[i] = abs(quintic.coeffs[i]) / max(quintic_weights_sum, 1e-20);
 }
 
 vec4 debug_quintic_weights = to_color(
@@ -74,7 +74,7 @@ for (int i = 0; i < 6; ++i)
 }
 for (int i = 0; i < 6; ++i)
 {
-    quintic_bernstein_weights[i] = abs(quintic.bernstein_coeffs[i]) / quintic_bernstein_weights_sum;
+    quintic_bernstein_weights[i] = abs(quintic.bernstein_coeffs[i]) / max(quintic_bernstein_weights_sum, 1e-20);
 }
 
 vec4 debug_quintic_bernstein_weights = to_color(  
@@ -97,5 +97,37 @@ switch (u_debug.option - 850)
     case 3: fragColor = debug_quintic_degree;               break;
     case 4: fragColor = debug_quintic_weights;              break;
     case 5: fragColor = debug_quintic_bernstein_weights;    break;
-    case 6: fragColor = debug_quintic_bernstein_spread;     break;
+    case 6: fragColor = debug_quintic_bernstein_spread; break;
+    case 7: fragColor = to_color(0.5 + atan(quintic.residuals[0]) / 3.1415926536); break;
+    case 8: fragColor = to_color(0.5 + atan(quintic.residuals[1]) / 3.1415926536); break;
+    case 9: fragColor = to_color(0.5 + atan(quintic.residuals[2]) / 3.1415926536); break;
+    case 10: fragColor = to_color(0.5 + atan(quintic.residuals[3]) / 3.1415926536); break;
+    case 11: fragColor = to_color(0.5 + atan(quintic.coeffs[0]) / 3.1415926536); break;
+    case 12: fragColor = to_color(0.5 + atan(quintic.coeffs[1]) / 3.1415926536); break;
+    case 13: fragColor = to_color(0.5 + atan(quintic.coeffs[2]) / 3.1415926536); break;
+    case 14: fragColor = to_color(0.5 + atan(quintic.coeffs[3]) / 3.1415926536); break;
+    case 15: fragColor = to_color(0.5 + atan(quintic.coeffs[4]) / 3.1415926536); break;
+    case 16: fragColor = to_color(0.5 + atan(quintic.coeffs[5]) / 3.1415926536); break;
+    case 17: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[0]) / 3.1415926536); break;
+    case 18: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[1]) / 3.1415926536); break;
+    case 19: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[2]) / 3.1415926536); break;
+    case 20: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[3]) / 3.1415926536); break;
+    case 21: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[4]) / 3.1415926536); break;
+    case 22: fragColor = to_color(0.5 + atan(quintic.bernstein_coeffs[5]) / 3.1415926536); break;
+    case 23: fragColor = to_color(quintic.roots[0]); break;
+    case 24: fragColor = to_color(quintic.roots[1]); break;
+    case 25: fragColor = to_color(quintic.roots[2]); break;
+    case 26: fragColor = to_color(quintic.roots[3]); break;
+    case 27: fragColor = to_color(quintic.roots[4]); break;
+    case 28: fragColor = to_color(0.5 + atan(quintic.features[0].xyz) / 3.1415926536); break;
+    case 29: fragColor = to_color(0.5 + atan(quintic.features[1].xyz) / 3.1415926536); break;
+    case 30: fragColor = to_color(0.5 + atan(quintic.features[2].xyz) / 3.1415926536); break;
+    case 31: fragColor = to_color(0.5 + atan(quintic.features[3].xyz) / 3.1415926536); break;
+    case 32: fragColor = to_color(quintic.features[0].w); break;
+    case 33: fragColor = to_color(quintic.features[1].w); break;
+    case 34: fragColor = to_color(quintic.features[2].w); break;
+    case 35: fragColor = to_color(quintic.features[3].w); break;
+    case 36: fragColor = to_color(map(-0.125, 0.0, quintic.biases[0].xyz)); break;
+    case 37: fragColor = to_color(map(-0.125, 0.0, quintic.biases[1].xyz)); break;
+    case 38: fragColor = to_color(map(-0.125, 0.0, quintic.biases[2].xyz)); break;
 }

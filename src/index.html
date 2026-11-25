@@ -57,6 +57,7 @@
                                 <div class="debug-categories" id="debug-categories" role="tablist" aria-label="Visualization categories" aria-orientation="vertical"></div>
                                 <div class="debug-views" id="debug-views"></div>
                             </div>
+                            <p class="debug-view-status" id="debug-view-status" role="status">Select a diagnostic to replace the shaded surface.</p>
                         </div>
                     </fieldset>
                 </div>
@@ -134,7 +135,7 @@
                         <div class="threshold-controls">
                             <div class="setting-title">
                                 <label for="isovalue">Isovalue</label>
-                                <output id="isovalue-output" for="isovalue">0.350</output>
+                                <input id="isovalue-output" data-config="isosurfaceValue" type="number" min="0" max="1" step="0.001" value="0.350" required aria-label="Isovalue">
                             </div>
                             <input id="isovalue" data-config="isosurfaceValue" type="range" min="0" max="1" step="0.001" value="0.35">
                         </div>
@@ -152,6 +153,14 @@
                                     <option value="anisotropicDistance">Anisotropic distance</option>
                                     <option value="extendedIsotropicDistance">Extended isotropic distance</option>
                                     <option value="extendedAnisotropicDistance">Extended anisotropic distance</option>
+                                </select>
+                            </label>
+                            <label class="select-setting">Block size
+                                <select id="block-size" data-config="blockSize">
+                                    <option value="1">1 × 1 × 1 cells</option>
+                                    <option value="2" selected>2 × 2 × 2 cells</option>
+                                    <option value="4">4 × 4 × 4 cells</option>
+                                    <option value="8">8 × 8 × 8 cells</option>
                                 </select>
                             </label>
                         </div>

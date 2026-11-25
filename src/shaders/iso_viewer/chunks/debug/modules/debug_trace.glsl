@@ -27,4 +27,7 @@ switch (u_debug.option - 300)
     case  4: fragColor = debug_trace_position;        break;
     case  5: fragColor = debug_trace_residue;         break;
     case  6: fragColor = debug_trace_span_residue;    break;
+    case  7: fragColor = to_color(map(box.min_entry_distance, box.max_exit_distance, trace.prev_distance)); break;
+    case  8: fragColor = to_color(mmix(COLOR.BLUE, COLOR.BLACK, COLOR.RED, map(-1.0, 1.0, trace.prev_residue / MILLI_TOLERANCE))); break;
+    case  9: fragColor = to_color(trace.spacing); break;
 }

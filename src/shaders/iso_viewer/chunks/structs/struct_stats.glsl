@@ -3,9 +3,9 @@
 
 struct Stats
 {
-    int num_volume_reads;
-    int num_occupancy_reads;
-    int num_distance_reads;
+    int num_volume_fetches;
+    int num_occupancy_fetches;
+    int num_distance_fetches;
     int num_groups;
     int num_cells;
     int num_blocks;
@@ -23,9 +23,9 @@ void set_stats()
     stats.num_blocks  = 0;
     stats.num_cells   = 0;
     stats.num_traces  = 0;
-    stats.num_volume_reads = 0;
-    stats.num_occupancy_reads = 0;
-    stats.num_distance_reads = 0;
+    stats.num_volume_fetches = 0;
+    stats.num_occupancy_fetches = 0;
+    stats.num_distance_fetches = 0;
     stats.num_intersection_tests  = 0;
     stats.num_root_solves = 0;
     stats.num_bernstein_rejections = 0;

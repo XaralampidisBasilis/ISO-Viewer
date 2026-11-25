@@ -6,5 +6,5 @@ export const intensityRange = [0, 4095]
 
 export default {
     preview: { path: preview, factor: 1 },
-    detail: { path: detail, factor: 0.8 },
+    detail: { path: detail, factor: 1 },
 }

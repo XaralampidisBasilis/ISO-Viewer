@@ -1,9 +1,7 @@
 import Configs from './Utils/Configs'
 import ControlPanels from './Utils/ControlPanels'
 import TraversalLegend from './Utils/TraversalLegend'
-import { debugViews, debugViewAvailable } from './Utils/DebugViews'
-
-const traversalStepsView = 901
+import { debugViews, debugViewSources, debugViewUnavailableReason } from './Utils/DebugViews'
 
 export default class GUI
 {
@@ -54,7 +52,10 @@ export default class GUI
                 const button = document.createElement('button')
                 button.type = 'button'
                 button.dataset.view = id
-                button.textContent = label
+                const name = document.createElement('span')
+                name.className = 'debug-view-name'
+                name.textContent = label
+                button.append(name)
                 button.disabled = true
                 panel.append(button)
             }
@@ -149,25 +150,32 @@ export default class GUI
         })
 
         this.listen(this.elements.isovalue, 'input', () => this.updateThresholdLabel())
+        this.listen(this.elements['isovalue-output'], 'keydown', event => {
+            if (event.key !== 'Enter' && event.key !== 'Escape') return
+            event.preventDefault()
+            if (event.key === 'Escape')
+                event.target.value = configs.isosurfaceValue.toFixed(3)
+            event.target.blur()
+        })
         this.listen(this.elements.settings, 'change', event => {
             const field = event.target
             const key = field.dataset.config
             if (!key) return
+            if (field === this.elements['isovalue-output'] && !field.validity.valid)
+            {
+                field.value = configs.isosurfaceValue.toFixed(3)
+                return
+            }
             let value = field.value
             if (field.type === 'checkbox') value = field.checked
             else if (typeof configs.get(key) === 'number') value = Number(value)
             configs.set(key, value)
+            if (field === this.elements['isovalue-output'])
+                this.elements.isovalue.value = field.value = value.toFixed(3)
         })
         this.listen(this.elements['debug-enabled'], 'change', event => {
-            if (!event.target.checked)
-            {
-                this.setDiagnosticView(0)
-                return
-            }
-
-            const previousView = configs.diagnosticView
-            const view = previousView && debugViewAvailable(previousView, configs) ? previousView : traversalStepsView
-            this.setDiagnosticView(view)
+            configs.set('diagnosticView', 0)
+            configs.set('debugEnabled', event.target.checked)
         })
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
         this.listen(this.elements['fps-toggle'], 'click', () => stats.setActive(!stats.active))
@@ -217,10 +225,18 @@ export default class GUI
         this.elements['debug-controls'].disabled = disabled
         this.elements['debug-options'].hidden = !configs?.debugEnabled
         const activeView = configs?.effectiveDebugView ?? 0
+        const activeButton = this.viewButtons.find(button => Number(button.dataset.view) === activeView)
+        this.elements['debug-view-status'].textContent = activeView
+            ? `Viewing ${activeButton?.querySelector('.debug-view-name')?.textContent ?? ''}`
+            : 'Select a diagnostic to replace the shaded surface.'
         for (const button of this.viewButtons)
         {
             const view = Number(button.dataset.view)
-            button.disabled = disabled || !debugViewAvailable(view, configs)
+            const reason = configs ? debugViewUnavailableReason(view, configs) : ''
+            button.disabled = disabled || Boolean(reason)
+            button.title = reason || debugViewSources[view] || button.textContent
+            if (reason) button.setAttribute('aria-description', reason)
+            else button.removeAttribute('aria-description')
             button.setAttribute('aria-pressed', String(view === activeView))
         }
     }
@@ -286,7 +302,7 @@ export default class GUI
         this.elements['status-block-grid'].textContent = blockGrid
         this.elements['status-grids'].hidden = false
         this.elements['open-volume-parameters'].disabled = false
-        this.elements['empty-view'].hidden = computes.occupancyMap.boundingBox !== null || configs.debugEnabled
+        this.elements['empty-view'].hidden = computes.occupancyMap.boundingBox !== null || configs.effectiveDebugView !== 0
     }
 
     busy(busy)

@@ -40,4 +40,6 @@ switch (u_debug.option - 200)
     case 7: fragColor = debug_cell_entry_distance;     break;
     case 8: fragColor = debug_cell_exit_distance;      break;
     case 9: fragColor = debug_cell_span_distance;      break;
+    case 10: fragColor = to_color(map(box.min_position, box.max_position, cell.entry_position)); break;
+    case 11: fragColor = to_color(map(box.min_position, box.max_position, cell.exit_position)); break;
 }

@@ -26,7 +26,7 @@ for (int i = 0; i <= 3; ++i)
 int cubic_degree = 0;
 for (int i = 3; i >= 0; --i)
 {
-    if (abs(cubic.coeffs[i]) / cubic_maxabs > 0.01)
+    if (abs(cubic.coeffs[i]) / max(cubic_maxabs, 1e-20) > 0.01)
     {
         cubic_degree = i;
         break;
@@ -43,7 +43,7 @@ switch(cubic_degree)
 }
 
 // weights
-vec4 cubic_weights = abs(cubic.coeffs) / sum(abs(cubic.coeffs)); 
+vec4 cubic_weights = abs(cubic.coeffs) / max(sum(abs(cubic.coeffs)), 1e-20);
 
 vec4 debug_cubic_weights = to_color(
     cubic_weights[0] * hsv2rgb(vec3(0.0/4.0, 1.0, 1.0)) + // #FF0000
@@ -53,7 +53,7 @@ vec4 debug_cubic_weights = to_color(
 ); 
 
 // bernstein weights
-vec4 cubic_bernstein_weights = abs(cubic.bernstein_coeffs) / sum(abs(cubic.bernstein_coeffs)); 
+vec4 cubic_bernstein_weights = abs(cubic.bernstein_coeffs) / max(sum(abs(cubic.bernstein_coeffs)), 1e-20);
 
 vec4 debug_cubic_bernstein_weights = to_color(
     cubic_bernstein_weights[0] * hsv2rgb(vec3(0.0/4.0, 1.0, 1.0)) + // #FF0000
@@ -73,5 +73,20 @@ switch (u_debug.option - 800)
     case 3: fragColor = debug_cubic_degree;            break;
     case 4: fragColor = debug_cubic_weights;           break;
     case 5: fragColor = debug_cubic_bernstein_weights; break;
-    case 6: fragColor = debug_cubic_bernstein_spread;  break;
+    case 6: fragColor = debug_cubic_bernstein_spread; break;
+    case 7: fragColor = to_color(0.5 + atan(cubic.residuals[0]) / 3.1415926536); break;
+    case 8: fragColor = to_color(0.5 + atan(cubic.residuals[1]) / 3.1415926536); break;
+    case 9: fragColor = to_color(0.5 + atan(cubic.residuals[2]) / 3.1415926536); break;
+    case 10: fragColor = to_color(0.5 + atan(cubic.residuals[3]) / 3.1415926536); break;
+    case 11: fragColor = to_color(0.5 + atan(cubic.coeffs[0]) / 3.1415926536); break;
+    case 12: fragColor = to_color(0.5 + atan(cubic.coeffs[1]) / 3.1415926536); break;
+    case 13: fragColor = to_color(0.5 + atan(cubic.coeffs[2]) / 3.1415926536); break;
+    case 14: fragColor = to_color(0.5 + atan(cubic.coeffs[3]) / 3.1415926536); break;
+    case 15: fragColor = to_color(0.5 + atan(cubic.bernstein_coeffs[0]) / 3.1415926536); break;
+    case 16: fragColor = to_color(0.5 + atan(cubic.bernstein_coeffs[1]) / 3.1415926536); break;
+    case 17: fragColor = to_color(0.5 + atan(cubic.bernstein_coeffs[2]) / 3.1415926536); break;
+    case 18: fragColor = to_color(0.5 + atan(cubic.bernstein_coeffs[3]) / 3.1415926536); break;
+    case 19: fragColor = to_color(cubic.roots[0]); break;
+    case 20: fragColor = to_color(cubic.roots[1]); break;
+    case 21: fragColor = to_color(cubic.roots[2]); break;
 }

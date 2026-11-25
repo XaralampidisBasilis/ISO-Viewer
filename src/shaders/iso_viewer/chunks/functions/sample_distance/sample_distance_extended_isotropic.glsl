@@ -9,7 +9,7 @@
 void sample_distance_extended_isotropic(in ivec3 block_coords, out bool occupied, out ivec3 min_distances, out ivec3 max_distances)
 {
 #if DEBUG_ENABLED == 1
-    stats.num_distance_reads += 1;
+    stats.num_distance_fetches += 1;
 #endif
     uvec2 packed = texelFetch(u_textures.distance_map, block_coords, 0).rg;
     uvec4 min_unpacked = unpack_uint5551(packed.r);

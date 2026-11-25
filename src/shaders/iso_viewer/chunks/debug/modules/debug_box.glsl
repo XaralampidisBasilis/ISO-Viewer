@@ -24,4 +24,9 @@ switch (u_debug.option - 600)
     case 3: fragColor = debug_box_span_distance;      break;
     case 4: fragColor = debug_box_entry_position;     break;
     case 5: fragColor = debug_box_exit_position;      break;
+    case 6: fragColor = to_color(map(box.min_position, box.max_position, box.min_position)); break;
+    case 7: fragColor = to_color(map(box.min_position, box.max_position, box.max_position)); break;
+    case 8: fragColor = to_color(map(box.min_entry_distance, box.max_exit_distance, box.min_entry_distance)); break;
+    case 9: fragColor = to_color(map(box.min_entry_distance, box.max_exit_distance, box.max_exit_distance)); break;
+    case 10: fragColor = to_color(box.max_span_distance / max(length(vec3(u_volume.dimensions)), 1.0)); break;
 }

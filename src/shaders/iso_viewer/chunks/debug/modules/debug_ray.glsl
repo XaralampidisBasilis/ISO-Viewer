@@ -40,4 +40,6 @@ switch (u_debug.option - 100)
     case  7: fragColor = debug_ray_span_distance;   break;
     case  8: fragColor = debug_ray_start_position;  break;
     case  9: fragColor = debug_ray_end_position;    break;
+    case 10: fragColor = to_color(0.5 + atan(ray.inv_direction) / 3.1415926536); break;
+    case 11: fragColor = to_color(float(ray.octant) / 7.0); break;
 }

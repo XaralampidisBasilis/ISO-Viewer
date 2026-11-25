@@ -5,7 +5,7 @@
 bool sample_occupancy(in ivec3 block_coords)
 {    
 #if DEBUG_ENABLED == 1
-    stats.num_occupancy_reads += 1;
+    stats.num_occupancy_fetches += 1;
 #endif
     return (texelFetch(u_textures.occupancy_map, block_coords, 0).r > 0u);
 }
