@@ -2,7 +2,7 @@
 
 ISOViewer is a browser-based research viewer for **3D medical images**. The demo opens a head-and-neck CT angiogram and lets you explore its isosurfaces by changing the intensity threshold. The renderer uses WebGL2, Three.js, and TensorFlow.js.
 
-[Open the demo](https://xaralampidisbasilis.github.io/ISO-Viewer/) · [Read the paper](https://doi.org/10.1109/BIBE66822.2025.00019) · [Project architecture](PROJECT_OVERVIEW.md)
+[Open the demo](https://xaralampidisbasilis.github.io/ISO-Viewer/) · [Read the paper](https://doi.org/10.1109/BIBE66822.2025.00019) · [Project architecture](ARCHITECTURE.md)
 
 ## Explore the demo
 
@@ -38,7 +38,7 @@ Both images use the same high-detail grid, camera, and isovalue. The normal view
 2. **Skip empty space.** The renderer clips rays to the occupied bounds and uses distance maps to advance over empty blocks. An optional Bernstein coefficient test rejects cell segments that cannot contain a crossing.
 3. **Find and shade the intersection.** In cell-traversal mode, the fragment shader solves for the nearest surface crossing within a cell. The viewer shades that first hit directly from the volume data without building a triangle mesh.
 
-The [project overview](PROJECT_OVERVIEW.md) describes the GPU pipeline, texture formats, and acceleration methods in more detail.
+The [architecture guide](ARCHITECTURE.md) describes the GPU pipeline, texture formats, and acceleration methods in more detail.
 
 ## Run locally
 

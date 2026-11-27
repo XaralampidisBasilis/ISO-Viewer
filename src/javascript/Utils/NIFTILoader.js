@@ -17,7 +17,8 @@ const nativeLittleEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1
 
 function patientOrientation(header, data)
 {
-    const toGridOrientation = rows => {
+    const toGridOrientation = rows =>
+    {
         const entries = rows.slice(0, 3).flatMap(row => row.slice(0, 3).map((value, axis) => value / header.pixDims[axis + 1]))
         if (!entries.every(Number.isFinite)) return null
         const matrix = new Matrix3().set(...entries)
@@ -50,7 +51,8 @@ class NIFTILoader extends Loader
         loader.setResponseType('arraybuffer')
         loader.setRequestHeader(this.requestHeader)
         loader.setWithCredentials(this.withCredentials)
-        loader.load(url, data => {
+        loader.load(url, data =>
+        {
             try
             {
                 onLoad(this.parse(data))

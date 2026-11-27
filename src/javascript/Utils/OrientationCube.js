@@ -53,7 +53,8 @@ export default class OrientationCube
 
         const patientToGrid = cubeBasis(orientation)
         const handedness = Math.sign(orientation.determinant())
-        this.faces = directions.map((label, index) => {
+        this.faces = directions.map((label, index) =>
+        {
             const axis = Math.floor(index / 2)
             const sign = index % 2 ? 1 : -1
             const center = new Vector3().setComponent(axis, sign)
@@ -87,7 +88,8 @@ export default class OrientationCube
         const view = new Matrix3().setFromMatrix4(camera.matrixWorldInverse)
         const faces = this.faces.filter(face => face.normal.clone().applyMatrix3(view).z > 1e-4)
         const project = point => point.clone().applyMatrix3(view)
-        const screen = point => {
+        const screen = point =>
+        {
             const { x, y } = project(point)
             return [96 + x * scale, 96 - y * scale]
         }

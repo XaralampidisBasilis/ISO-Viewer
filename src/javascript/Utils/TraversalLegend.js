@@ -87,7 +87,8 @@ export default class TraversalLegend
         const counts = new Set([0, 0.25, 0.5, 0.75, 1].map(fraction => Math.round(fraction * reference)))
         const overflow = reference * 2
         counts.add(overflow)
-        this.elements['counter-legend-ticks'].replaceChildren(...Array.from(counts, count => {
+        this.elements['counter-legend-ticks'].replaceChildren(...Array.from(counts, count =>
+        {
             const tick = document.createElement('span')
             tick.style.bottom = `${count === overflow ? 100 : count / reference * overflowStart * 100}%`
             tick.textContent = countFormat.format(count) + (count === overflow ? '+' : '')

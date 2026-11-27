@@ -33,6 +33,7 @@ export default class Configs extends EventEmitter
         Object.assign(this, {
             blockSize: 2,
             downscaleFactor: 1,
+            unpackedPreprocessing: false,
             isosurfaceValue: 0.35,
             interpolationMethod: 'tricubicCsébfalvi',
             gradientsMethod: 'triquadraticBspline',

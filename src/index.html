@@ -199,6 +199,14 @@
                                 <label class="check-setting"><input type="checkbox" data-config="skippingEnabled"> Skip empty space</label>
                                 <label class="check-setting" id="bernstein-control"><input type="checkbox" data-config="bernsteinEnabled"> Bernstein rejection</label>
                                 <label class="check-setting"><input type="checkbox" data-config="boundingBoxEnabled"> Clip to occupied bounds</label>
+                                <label class="check-setting"><input type="checkbox" data-config="unpackedPreprocessing"> Use unpacked preprocessing</label>
+                                <div class="preprocessing-timing">
+                                    <p>Last full preprocessing time</p>
+                                    <dl class="grid-readouts">
+                                        <div><dt>Packed</dt><dd id="packed-time">—</dd></div>
+                                        <div><dt>Unpacked</dt><dd id="unpacked-time">—</dd></div>
+                                    </dl>
+                                </div>
                             </div>
                         </details>
                     </section>

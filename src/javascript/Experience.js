@@ -46,18 +46,21 @@ export default class Experience
         this.stats = new Stats()
         this.time = new Time()
 
-        this.sizes.on('resize', () => {
+        this.sizes.on('resize', () =>
+        {
             this.camera.resize()
             this.renderer.resize()
             this.invalidate()
         })
         this.time.on('tick', () => this.update())
-        this.configs.on('change', event => {
+        this.configs.on('change', event =>
+        {
             const previous = this.pending.get(event.key)
             this.pending.set(event.key, previous ?? event.oldValue)
         })
         const signal = this.abort.signal
-        canvas.addEventListener('webglcontextlost', event => {
+        canvas.addEventListener('webglcontextlost', event =>
+        {
             event.preventDefault()
             this.ready = false
             this.contextLost = true
@@ -65,11 +68,13 @@ export default class Experience
             else this.stats.reset()
             this.gui.fail(new Error('The browser lost the graphics context. Reload to restart the viewer.'), true)
         }, { signal })
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', () =>
+        {
             this.stats.reset()
             this.invalidate()
         }, { signal })
-        window.addEventListener('pagehide', event => {
+        window.addEventListener('pagehide', event =>
+        {
             if (!event.persisted) this.destroy()
         }, { signal })
 
@@ -86,7 +91,8 @@ export default class Experience
         if (!this.ready) return
         this.renderer.setInteractionScale(0.72)
         clearTimeout(this.settleTimer)
-        this.settleTimer = setTimeout(() => {
+        this.settleTimer = setTimeout(() =>
+        {
             this.renderer.setInteractionScale(1)
             this.invalidate()
         }, 160)
@@ -225,7 +231,7 @@ export default class Experience
             const volume = this.computes.volume
             this.validateGrid(volume, configs.downscaleFactor, configs.blockSize, configs.skippingMethod)
 
-            if (changes.has('blockSize') || changes.has('downscaleFactor'))
+            if (changes.has('blockSize') || changes.has('downscaleFactor') || changes.has('unpackedPreprocessing'))
             {
                 this.stats.reset()
                 this.gui.busy(true)

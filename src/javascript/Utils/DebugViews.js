@@ -79,7 +79,10 @@ for (const [base, prefix, fields] of [
     [901, 'stats', ['num_cells', 'num_traces', 'num_blocks', 'num_groups', 'total texture fetches', 'num_intersection_tests', 'num_volume_fetches', 'num_occupancy_fetches', 'num_distance_fetches', 'num_root_solves', 'num_bernstein_rejections']],
     [1000, 'debug', Array.from({ length: 10 }, (_, index) => `variable${index}`)],
 ])
-    fields.forEach((field, index) => { debugViewSources[base + index] = `${prefix}.${field}` })
+    fields.forEach((field, index) =>
+    {
+        debugViewSources[base + index] = `${prefix}.${field}`
+    })
 
 debugViewSources[461] = 'length(hit.gradient)'
 debugViewSources[occupancyMapView] = 'Occupied candidate blocks at the current isovalue.'

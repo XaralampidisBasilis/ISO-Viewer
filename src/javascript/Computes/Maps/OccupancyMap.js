@@ -1,29 +1,34 @@
 import * as THREE from 'three'
 import Computes from '../Computes'
-import { computeOccupancyMap } from '../Programs/GPGPUOccupancyMapPacked'
+import { computeOccupancyMap } from '../Programs/Blocks/GPGPUOccupancyMap'
+import { computeOccupancyMap as computeOccupancyMapPacked } from '../Programs/Blocks/GPGPUOccupancyMapPacked'
 
 export default class OccupancyMap
 {
-    constructor()
+    constructor(unpacked)
     {
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.extremaMap = this.computes.extremaMap
+        this.computeOccupancy = unpacked ? computeOccupancyMap : computeOccupancyMapPacked
     }
 
     computeTensor()
     {
-        console.time('computeTensor') 
+        console.time('computeTensor')
+
         this.isosurfaceValue = this.configs.isosurfaceValue
         this.interpolationMethod = this.configs.interpolationMethod
-        this.tensor = computeOccupancyMap(this.extremaMap.tensor, this.interpolationMethod, this.isosurfaceValue)
+        this.tensor = this.computeOccupancy(this.extremaMap.tensor, this.interpolationMethod, this.isosurfaceValue)
         this.dimensions = this.extremaMap.dimensions
-        console.timeEnd('computeTensor') 
+
+        console.timeEnd('computeTensor')
     }
 
     computeTexture(data = this.getTextureData())
     {
-        console.time('computeTexture') 
+        console.time('computeTexture')
+
         this.texture = new THREE.Data3DTexture(data, ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
@@ -34,8 +39,9 @@ export default class OccupancyMap
         this.texture.unpackAlignment = 1
         this.texture.needsUpdate = true
         this.computeBoundingBox(data)
-        console.timeEnd('computeTexture') 
-    }   
+
+        console.timeEnd('computeTexture')
+    }
 
     updateTexture(data = this.getTextureData())
     {

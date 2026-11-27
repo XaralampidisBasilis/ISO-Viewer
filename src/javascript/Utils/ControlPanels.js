@@ -10,12 +10,14 @@ export default class ControlPanels
         const previous = vertical ? 'ArrowUp' : 'ArrowLeft'
         const next = vertical ? 'ArrowDown' : 'ArrowRight'
 
-        tablist.addEventListener('click', event => {
+        tablist.addEventListener('click', event =>
+        {
             const tab = event.target.closest('[role="tab"]')
             if (tab) this.select(tab.getAttribute('aria-controls'))
         }, { signal })
 
-        tablist.addEventListener('keydown', event => {
+        tablist.addEventListener('keydown', event =>
+        {
             const index = this.tabs.findIndex(({ tab }) => tab === event.target)
             if (index < 0) return
             const last = this.tabs.length - 1

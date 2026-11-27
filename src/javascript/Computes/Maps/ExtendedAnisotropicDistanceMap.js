@@ -1,30 +1,35 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeExtendedAnisotropicDistanceMap } from '../Programs/GPGPUExtendedAnisotropicDistanceMapFusedPacked'
+import { computeExtendedAnisotropicDistanceMap } from '../Programs/DistanceMaps/Anisotropic/GPGPUExtendedAnisotropicDistanceMapFused'
+import { computeExtendedAnisotropicDistanceMap as computeExtendedAnisotropicDistanceMapPacked } from '../Programs/DistanceMaps/Anisotropic/GPGPUExtendedAnisotropicDistanceMapFusedPacked'
 
-export default class ExtendedAnisotropicDistanceMap 
+export default class ExtendedAnisotropicDistanceMap
 {
-    constructor()
+    constructor(unpacked)
     {
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.occupancyMap = this.computes.occupancyMap
+        this.computeDistance = unpacked ? computeExtendedAnisotropicDistanceMap : computeExtendedAnisotropicDistanceMapPacked
         this.maxDistance = 31
     }
 
     computeTensor()
     {
-        console.time('computeTensor') 
-        this.tensor = computeExtendedAnisotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
+        console.time('computeTensor')
+
+        this.tensor = tf.tidy(() => this.computeDistance(this.occupancyMap.tensor, this.maxDistance))
         this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
         this.dimensions.z *= 8
-        console.timeEnd('computeTensor') 
+
+        console.timeEnd('computeTensor')
     }
 
     computeTexture()
     {
-        console.time('computeTexture') 
+        console.time('computeTexture')
+
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedShortType
@@ -34,8 +39,9 @@ export default class ExtendedAnisotropicDistanceMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 1
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture') 
-    }   
+
+        console.timeEnd('computeTexture')
+    }
 
     updateTexture()
     {

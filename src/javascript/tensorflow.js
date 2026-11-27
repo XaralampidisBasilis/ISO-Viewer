@@ -5,7 +5,7 @@ export async function setTensorflow()
     console.time('setTensorflow')
 
     tf.enableProdMode()
-    tf.env().set('WEBGL_FORCE_F16_TEXTURES', false)
+    tf.env().set('WEBGL_FORCE_F16_TEXTURES', true)
     tf.env().set('WEBGL_PACK', true)
     tf.env().set('WEBGL_CPU_FORWARD', false)
     tf.env().set('WEBGL_VERSION', 2)

@@ -1,30 +1,35 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeAnisotropicDistanceMap } from '../Programs/GPGPUAnisotropicDistanceMapFusedPacked'
+import { computeAnisotropicDistanceMap } from '../Programs/DistanceMaps/Anisotropic/GPGPUAnisotropicDistanceMapFused'
+import { computeAnisotropicDistanceMap as computeAnisotropicDistanceMapPacked } from '../Programs/DistanceMaps/Anisotropic/GPGPUAnisotropicDistanceMapFusedPacked'
 
 export default class AnisotropicDistanceMap
 {
-    constructor()
+    constructor(unpacked)
     {
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.occupancyMap = this.computes.occupancyMap
+        this.computeDistance = unpacked ? computeAnisotropicDistanceMap : computeAnisotropicDistanceMapPacked
         this.maxDistance = 127
     }
 
     computeTensor()
     {
-        console.time('computeTensor') 
-        this.tensor = computeAnisotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
+        console.time('computeTensor')
+
+        this.tensor = tf.tidy(() => this.computeDistance(this.occupancyMap.tensor, this.maxDistance))
         this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
         this.dimensions.z *= 8
-        console.timeEnd('computeTensor') 
+
+        console.timeEnd('computeTensor')
     }
 
     computeTexture()
     {
-        console.time('computeTexture') 
+        console.time('computeTexture')
+
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RedIntegerFormat
         this.texture.type = THREE.UnsignedByteType
@@ -34,8 +39,9 @@ export default class AnisotropicDistanceMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 1
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture') 
-    }   
+
+        console.timeEnd('computeTexture')
+    }
 
     updateTexture()
     {

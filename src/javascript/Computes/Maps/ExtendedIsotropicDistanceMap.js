@@ -1,29 +1,34 @@
 import * as THREE from 'three'
 import * as tf from '@tensorflow/tfjs'
 import Computes from '../Computes'
-import { computeExtendedIsotropicDistanceMap } from '../Programs/GPGPUExtendedIsotropicDistanceMapPacked'
+import { computeExtendedIsotropicDistanceMap } from '../Programs/DistanceMaps/Isotropic/GPGPUExtendedIsotropicDistanceMap'
+import { computeExtendedIsotropicDistanceMap as computeExtendedIsotropicDistanceMapPacked } from '../Programs/DistanceMaps/Isotropic/GPGPUExtendedIsotropicDistanceMapPacked'
 
 export default class ExtendedIsotropicDistanceMap
 {
-    constructor()
+    constructor(unpacked)
     {
         this.computes = new Computes()
         this.configs = this.computes.configs
         this.occupancyMap = this.computes.occupancyMap
+        this.computeDistance = unpacked ? computeExtendedIsotropicDistanceMap : computeExtendedIsotropicDistanceMapPacked
         this.maxDistance = 31
     }
 
     computeTensor()
     {
-        console.time('computeTensor') 
-        this.tensor = computeExtendedIsotropicDistanceMap(this.occupancyMap.tensor, this.maxDistance)
+        console.time('computeTensor')
+
+        this.tensor = tf.tidy(() => this.computeDistance(this.occupancyMap.tensor, this.maxDistance))
         this.dimensions = new THREE.Vector3(...this.occupancyMap.dimensions)
-        console.timeEnd('computeTensor') 
+
+        console.timeEnd('computeTensor')
     }
 
     computeTexture()
     {
-        console.time('computeTexture') 
+        console.time('computeTexture')
+
         this.texture = new THREE.Data3DTexture(this.getTextureData(), ...this.dimensions)
         this.texture.format = THREE.RGIntegerFormat
         this.texture.type = THREE.UnsignedShortType
@@ -33,8 +38,9 @@ export default class ExtendedIsotropicDistanceMap
         this.texture.generateMipmaps = false
         this.texture.unpackAlignment = 2
         this.texture.needsUpdate = true
-        console.timeEnd('computeTexture') 
-    }   
+
+        console.timeEnd('computeTexture')
+    }
 
     updateTexture()
     {

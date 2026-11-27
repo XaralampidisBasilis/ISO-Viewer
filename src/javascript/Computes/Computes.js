@@ -27,10 +27,23 @@ export default class Computes
     constructor()
     {
         if (Computes.instance) return Computes.instance
+
         Computes.instance = this
         this.configs = new Experience().configs
         this.maps = null
         this.distanceMap = null
+        this.timings = null
+    }
+
+    timingKey(downscaleFactor)
+    {
+        const { blockSize, isosurfaceValue, interpolationMethod, skippingMethod } = this.configs
+        return JSON.stringify([downscaleFactor, blockSize, isosurfaceValue, interpolationMethod, skippingMethod])
+    }
+
+    get preprocessingTimes()
+    {
+        return this.timings?.key === this.timingKey(this.configs.downscaleFactor) ? this.timings : null
     }
 
     async rebuild(volume, downscaleFactor, range, onProgress, signal)
@@ -38,10 +51,14 @@ export default class Computes
         const previous = this.maps
         const previousDistanceMap = this.distanceMap
         const maps = {}
+        const unpacked = this.configs.unpackedPreprocessing
+        const timingKey = this.timingKey(downscaleFactor)
+
         this.maps = maps
         this.distanceMap = null
 
-        const stage = async (message) => {
+        const stage = async (message) =>
+        {
             onProgress(message)
             await tf.nextFrame()
             signal.throwIfAborted()
@@ -52,30 +69,46 @@ export default class Computes
             // Map constructors resolve their dependencies in insertion order.
             for (const [name, MapType] of Object.entries(mapTypes))
             {
-                const map = new MapType()
+                const map = new MapType(unpacked)
                 maps[name] = map
                 this[name] = map
             }
 
             await stage('Preparing voxel data')
+
+            let started = performance.now()
             this.volumeMap.computeTensor(volume, downscaleFactor, range)
             this.interpolationMap.computeTensor()
             this.volumeMap.tensor.dispose()
             this.volumeMap.tensor = null
 
+            let elapsed = performance.now() - started
+
             await stage('Building interpolation bounds')
+
+            started = performance.now()
             this.extremaMap.computeTensor()
             this.interpolationMap.computeTexture()
-            this.interpolationMap.tensor.dispose()
+            tf.dispose(this.interpolationMap.tensor)
             this.interpolationMap.tensor = null
 
+            elapsed += performance.now() - started
+
             await stage('Building empty-space maps')
+
+            started = performance.now()
             this.updateAcceleration()
+            elapsed += performance.now() - started
+
+            if (this.volume !== volume || this.timings?.key !== timingKey)
+                this.timings = { key: timingKey, packed: null, unpacked: null }
+            this.timings[unpacked ? 'unpacked' : 'packed'] = elapsed
             this.volume = volume
         }
         catch (error)
         {
             this.disposeMaps(maps)
+
             if (!signal.aborted)
             {
                 this.maps = previous
@@ -83,6 +116,7 @@ export default class Computes
                 this.distanceMap = previousDistanceMap
             }
             else this.disposeMaps(previous)
+
             throw error
         }
 
@@ -94,15 +128,18 @@ export default class Computes
         const occupancy = this.occupancyMap
         const previous = this.distanceMap
         const distance = this.maps[this.configs.skippingMethod] ?? null
+
         if (!rethreshold && distance === previous) return
 
         if (rethreshold || distance)
         {
             occupancy.computeTensor()
+
             try
             {
                 distance?.computeTensor()
                 const occupancyData = rethreshold ? occupancy.getTextureData() : null
+
                 if (distance?.texture) distance.updateTexture()
                 else distance?.computeTexture()
 
@@ -117,6 +154,7 @@ export default class Computes
             {
                 occupancy.tensor.dispose()
                 occupancy.tensor = null
+
                 if (distance?.tensor)
                 {
                     distance.tensor.dispose()
