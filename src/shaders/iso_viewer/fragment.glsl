@@ -55,7 +55,7 @@ void main()
     vec3 direction_dy = dFdy(ray.direction);
     if (ray.span_distance > 0.0)
     {
-    #elif DEBUG_ENABLED == 0 && DISCARDING_ENABLED == 1
+    #elif DISCARDING_ENABLED == 1
     if (ray.span_distance <= 0.0) discard;
     #endif
 
@@ -73,7 +73,7 @@ void main()
         fragColor = vec4(wire_color, wire_alpha);
         return;
     }
-    #elif DEBUG_ENABLED == 0 && DISCARDING_ENABLED == 1
+    #elif DISCARDING_ENABLED == 1
     if (hit.discarded) discard;
     #endif
 

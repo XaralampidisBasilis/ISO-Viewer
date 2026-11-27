@@ -4,8 +4,10 @@ import Computes from '../Computes'
 import { computeIsotropicDistanceMap } from '../Programs/DistanceMaps/Isotropic/GPGPUIsotropicDistanceMap'
 import { computeIsotropicDistanceMap as computeIsotropicDistanceMapPacked } from '../Programs/DistanceMaps/Isotropic/GPGPUIsotropicDistanceMapPacked'
 
+/** Store the nearest occupied Chebyshev distance in block units, shared across all ray directions. */
 export default class IsotropicDistanceMap
 {
+    /** @param {boolean} [unpacked] - Use the scalar transform. Both modes produce the same block layout. */
     constructor(unpacked)
     {
         this.computes = new Computes()
@@ -15,6 +17,7 @@ export default class IsotropicDistanceMap
         this.maxDistance = 255
     }
 
+    /** Build [z,y,x] Chebyshev radii, capped at 255 from the current occupancy tensor. tf.tidy releases unretained intermediates. The returned kernel tensor is stored on this map. */
     computeTensor()
     {
         console.time('computeTensor')
@@ -25,6 +28,7 @@ export default class IsotropicDistanceMap
         console.timeEnd('computeTensor')
     }
 
+    /** Create the nearest-filtered R8UI 3D texture from a synchronous readback and queue its upload. */
     computeTexture()
     {
         console.time('computeTexture')
@@ -42,17 +46,24 @@ export default class IsotropicDistanceMap
         console.timeEnd('computeTexture')
     }
 
+    /** Replace the bytes of a same-sized texture in place and queue an upload. */
     updateTexture()
     {
         this.texture.image.data.set(this.getTextureData())
         this.texture.needsUpdate = true
     }
 
+    /**
+     * Synchronously read the tensor in x-fastest spatial order.
+     *
+     * @returns {Uint8Array} One radius per block, with zero marking occupancy.
+     */
     getTextureData()
     {
         return new Uint8Array(this.tensor.dataSync())
     }
 
+    /** Release the final distance tensor and the Three.js texture if present. */
     dispose()
     {
         this.tensor?.dispose()

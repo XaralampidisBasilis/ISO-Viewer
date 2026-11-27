@@ -1,0 +1,133 @@
+<div id="split-light-styles">
+  <div class="viz-carousel viz-dotted-background" aria-label="Split navigator light styles">
+    <section data-variant="Plain columns"><div class="mock" data-style="plain"></div></section>
+    <section data-variant="Ruled lists" hidden><div class="mock" data-style="ruled"></div></section>
+    <section data-variant="Inset variables" hidden><div class="mock" data-style="inset"></div></section>
+    <section data-variant="Bordered choices" hidden><div class="mock" data-style="bordered"></div></section>
+    <section data-variant="Selection rail" hidden><div class="mock" data-style="rail"></div></section>
+    <section data-variant="Radio choices" hidden><div class="mock" data-style="radio"></div></section>
+    <section data-variant="Compact workstation" hidden><div class="mock" data-style="compact"></div></section>
+    <section data-variant="Recessed browser" hidden><div class="mock" data-style="recessed"></div></section>
+    <section data-variant="Folder tabs" hidden><div class="mock" data-style="tabs"></div></section>
+    <section data-variant="Quiet outline" hidden><div class="mock" data-style="outline"></div></section>
+  </div>
+</div>
+<style>
+  #split-light-styles [hidden] { display:none !important; }
+  #split-light-styles .mock {
+    color-scheme:light;
+    --paper:#e8e7df; --field:#f1f0e9; --ink:#172d41; --muted:#36566e;
+    --line:#a1a5a4; --selected:#d3dfe5; --accent:#294f69;
+    display:grid; justify-items:center; align-content:start; min-height:640px; padding:16px 12px;
+    color:var(--ink); font:13px/1.4 system-ui,sans-serif;
+  }
+  #split-light-styles .mock * { box-sizing:border-box; }
+  #split-light-styles .panel { display:grid; gap:10px; width:min(var(--split-width,300px),100%); padding:12px; background:var(--paper); border:1px solid var(--line); }
+  #split-light-styles h3 { margin:0; font-size:15px; font-weight:650; }
+  #split-light-styles .enable { display:flex; gap:7px; align-items:center; color:var(--muted); font-size:12px; }
+  #split-light-styles input { margin:0; accent-color:var(--accent); }
+  #split-light-styles .browser { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.22fr); gap:8px; min-width:0; align-items:start; }
+  #split-light-styles nav { border-right:1px solid var(--line); padding-right:7px; }
+  #split-light-styles nav, #split-light-styles .variables { display:grid; gap:3px; min-width:0; }
+  #split-light-styles button {
+    width:100%; min-width:0; min-height:28px; padding:5px 6px; border:1px solid transparent;
+    border-radius:0; background:transparent; color:var(--ink); font:12px/1.35 system-ui,sans-serif;
+    text-align:left; overflow-wrap:anywhere;
+  }
+  #split-light-styles nav button { color:var(--muted); }
+  #split-light-styles button:hover { background:#dde2df; }
+  #split-light-styles button[aria-pressed=true] { background:var(--selected); color:var(--ink); }
+  #split-light-styles .variables button[aria-pressed=true]::after { content:' ✓'; }
+  #split-light-styles .status { margin:0; color:var(--muted); font-size:12px; }
+  #split-light-styles .radio-row { display:flex; align-items:flex-start; gap:6px; padding:6px 2px; font-size:12px; }
+  #split-light-styles .radio-row input { margin-top:2px; }
+  #split-light-styles [data-style=ruled] button { border-bottom-color:#c5c7bf; }
+  #split-light-styles [data-style=inset] .variables { padding:5px; border:1px solid var(--line); background:var(--field); }
+  #split-light-styles [data-style=bordered] nav { border:0; padding-right:0; }
+  #split-light-styles [data-style=bordered] button { border-color:var(--line); background:var(--field); }
+  #split-light-styles [data-style=bordered] button[aria-pressed=true] { background:var(--selected); border-color:var(--accent); }
+  #split-light-styles [data-style=bordered] nav, #split-light-styles [data-style=bordered] .variables { gap:5px; }
+  #split-light-styles [data-style=rail] button[aria-pressed=true] { background:transparent; border-left:3px solid var(--accent); padding-left:4px; font-weight:600; }
+  #split-light-styles [data-style=rail] nav button[aria-pressed=true] { background:var(--selected); }
+  #split-light-styles [data-style=compact] .browser { gap:5px; grid-template-columns:minmax(0,1fr) minmax(0,1.35fr); }
+  #split-light-styles [data-style=compact] button { padding:3px 4px; min-height:24px; }
+  #split-light-styles [data-style=compact] nav, #split-light-styles [data-style=compact] .variables { gap:0; }
+  #split-light-styles [data-style=recessed] .browser { padding:5px; gap:6px; background:var(--field); border:1px solid var(--line); box-shadow:inset 1px 1px 0 #d1d2cb; }
+  #split-light-styles [data-style=tabs] .browser { gap:0; }
+  #split-light-styles [data-style=tabs] nav { border:0; padding:0; gap:3px; }
+  #split-light-styles [data-style=tabs] nav button { border:1px solid var(--line); border-right:0; }
+  #split-light-styles [data-style=tabs] nav button[aria-pressed=true] { background:var(--field); box-shadow:2px 0 0 var(--field); position:relative; }
+  #split-light-styles [data-style=tabs] .variables { padding:6px; border:1px solid var(--line); background:var(--field); align-self:stretch; align-content:start; }
+  #split-light-styles [data-style=outline] nav { border-right:0; }
+  #split-light-styles [data-style=outline] button[aria-pressed=true] { background:transparent; border-color:var(--accent); }
+  @media (pointer:coarse) {
+    #split-light-styles .mock { min-height:880px; }
+    #split-light-styles .mock button, #split-light-styles .radio-row, #split-light-styles .enable { min-height:44px; }
+  }
+</style>
+<script>
+(() => {
+  const root=document.getElementById('split-light-styles');
+  const groups={
+    'Surface hit':['Distance','Position','Residue','Gradient'],
+    'Traversal counters':['Blocks traversed','Cells traversed','Texture fetches','Root solves','Bernstein rejections'],
+    'Ray':['Direction','Signs','Start distance','End distance'],
+    'Blocks':['Occupancy map','Skip coordinates','Entry distance'],
+    'Cells':['Intersected','Coordinates','Exit position'],
+    'Traces':['Distance','Position','Residue'],
+    'Lighting':['Material color','Diffuse color','Specular color'],
+    'Volume bounds':['Entry distance','Exit distance'],
+    'Camera':['Position','Direction'],
+    'Cubic':['Root','Degree','Bernstein weights'],
+    'Quintic':['Root','Degree','Bernstein spread'],
+    'Custom variables':['Variable 0','Variable 1','Variable 2']
+  };
+  for(const mock of root.querySelectorAll('.mock')) {
+    const style=mock.dataset.style;
+    mock.innerHTML='<section class="panel" aria-label="'+mock.parentElement.dataset.variant+' light Debug panel">'+
+      '<h3>Debug</h3><label class="enable"><input type="checkbox" checked data-enable> Enable debug</label>'+
+      '<div class="browser"><nav aria-label="Debug categories"></nav><div class="variables" role="group" aria-label="Diagnostic variables"></div></div>'+
+      '<p class="status" role="status"></p></section>';
+    let category='Traversal counters',activeCategory=category,activeVariable='Blocks traversed';
+    const nav=mock.querySelector('nav');
+    const variables=mock.querySelector('.variables');
+    for(const name of Object.keys(groups)) {
+      const button=document.createElement('button');
+      button.type='button';button.textContent=name;button.dataset.category=name;
+      button.addEventListener('click',()=>{category=name;renderVariables();});
+      nav.append(button);
+    }
+    function status() {
+      const enabled=mock.querySelector('[data-enable]').checked;
+      mock.querySelector('.browser').hidden=!enabled;
+      mock.querySelector('.status').textContent=enabled?activeCategory+' · '+activeVariable:'Surface';
+      for(const button of nav.children)button.setAttribute('aria-pressed',String(button.dataset.category===category));
+      for(const input of variables.querySelectorAll('input'))input.checked=input.value===activeVariable&&category===activeCategory;
+      for(const button of variables.querySelectorAll('button'))button.setAttribute('aria-pressed',String(button.textContent===activeVariable&&category===activeCategory));
+    }
+    function renderVariables() {
+      variables.replaceChildren();
+      for(const value of groups[category]) {
+        let element,control;
+        if(style==='radio') {
+          element=document.createElement('label');element.className='radio-row';
+          control=document.createElement('input');control.type='radio';control.name='split-light-diagnostic';control.value=value;
+          element.append(control,value);
+        } else {
+          element=document.createElement('button');element.type='button';element.textContent=value;control=element;
+        }
+        control.addEventListener(style==='radio'?'change':'click',()=>{activeCategory=category;activeVariable=value;status();});
+        variables.append(element);
+      }
+      status();
+    }
+    mock.querySelector('[data-enable]').addEventListener('change',status);
+    renderVariables();
+  }
+  if(globalThis.Tweak) {
+    const state={width:300};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--split-width',state.width+'px')});
+    tweak.addSlider(state,'width',{label:'Panel width',min:248,max:340,unit:'px'});
+  }
+})();
+</script>

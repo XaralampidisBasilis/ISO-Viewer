@@ -1,0 +1,142 @@
+<div id="debug-options-preview">
+  <div class="viz-carousel viz-dotted-background" aria-label="Debug panel options">
+    <section data-variant="Category picker"><div class="demo" data-layout="picker"></div></section>
+    <section data-variant="Pinned diagnostics" hidden><div class="demo" data-layout="pinned"></div></section>
+    <section data-variant="Ray walkthrough" hidden><div class="demo" data-layout="walkthrough"></div></section>
+    <section data-variant="Searchable diagnostics" hidden><div class="demo" data-layout="search"></div></section>
+    <section data-variant="Category accordion" hidden><div class="demo" data-layout="accordion"></div></section>
+  </div>
+</div>
+<style>
+  #debug-options-preview [hidden] { display: none !important; }
+  #debug-options-preview .demo {
+    --panel: light-dark(#f8f9fa,#232932);
+    --field: light-dark(#ffffff,#1a2027);
+    --ink: light-dark(#1c2b39,#e6edf4);
+    --subtle: light-dark(#4c6072,#b1becb);
+    --line: light-dark(#b9c5d0,#505f70);
+    --selected: light-dark(#dceaf7,#304a64);
+    display: grid; justify-items: center; align-content: start;
+    min-height: 640px; padding: 16px 12px;
+    font: 13px/1.4 system-ui, sans-serif; color: var(--ink);
+  }
+  #debug-options-preview .demo * { box-sizing: border-box; }
+  #debug-options-preview .panel {
+    width: min(var(--debug-preview-width,280px),100%); padding: 12px;
+    background: var(--panel); border: 1px solid var(--line);
+    display: grid; gap: 12px;
+  }
+  #debug-options-preview .panel h3 { margin: 0; font-size: 15px; }
+  #debug-options-preview .panel p { margin: 0; color: var(--subtle); }
+  #debug-options-preview .check { display: flex; align-items: center; gap: 7px; }
+  #debug-options-preview .field { display: grid; gap: 4px; }
+  #debug-options-preview .content, #debug-options-preview .list { display: grid; gap: 7px; }
+  #debug-options-preview .panel :is(button,select,input[type=search]) {
+    min-width: 0; width: 100%; padding: 7px 8px; border: 1px solid var(--line);
+    border-radius: 2px; color: var(--ink); background: var(--field); font: inherit;
+    text-align: left; overflow-wrap: anywhere;
+  }
+  #debug-options-preview .panel button:hover,
+  #debug-options-preview .panel button[aria-pressed=true] { background: var(--selected); }
+  #debug-options-preview .panel button[aria-pressed=true]::after { content: ' ✓'; }
+  #debug-options-preview details { border-top: 1px solid var(--line); padding-top: 7px; }
+  #debug-options-preview summary { padding-block: 4px; }
+  #debug-options-preview details .list { padding-top: 7px; }
+  #debug-options-preview .status { padding-top: 9px; border-top: 1px solid var(--line); }
+  #debug-options-preview .pins { display: grid; gap: 5px; }
+  #debug-options-preview small { color: var(--subtle); font-size: 12px; }
+  @media (pointer:coarse) {
+    #debug-options-preview .demo { min-height: 790px; }
+    #debug-options-preview .panel :is(button,select,input[type=search]), #debug-options-preview summary,
+    #debug-options-preview .check { min-height: 44px; }
+    #debug-options-preview .panel :is(select,input[type=search]) { font-size: 16px; }
+  }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('debug-options-preview');
+  const groups = {
+    'Traversal counters': ['Blocks traversed','Cells traversed','Texture fetches','Root solves','Bernstein rejections'],
+    'Surface hit': ['Distance','Position','Residue','Gradient'],
+    'Blocks': ['Occupancy map','Skip coordinates','Entry distance'],
+    'Ray': ['Direction','Start distance','End distance'],
+    'Cells': ['Intersected','Coordinates','Exit position'],
+    'Traces': ['Residue difference','Previous residue'],
+    'Lighting': ['Material color','Specular color'],
+    'Volume bounds': ['Entry position','Exit position'],
+    'Camera': ['Position','Direction'],
+    'Cubic': ['Root','Number of roots','Bernstein weights'],
+    'Quintic': ['Root','Degree','Bernstein spread'],
+    'Custom variables': ['Variable 0','Variable 1']
+  };
+  const entries = Object.entries(groups).flatMap(([category,views]) => views.map(view=>({category,view})));
+  const button = (view,category) => `<button type="button" data-view="${view}" data-group="${category}" aria-pressed="false">${view}</button>`;
+  const list = category => groups[category].map(view=>button(view,category)).join('');
+  const picker = '<label class="field">Category<select data-category>' +
+    Object.keys(groups).map(name=>`<option>${name}</option>`).join('') +
+    '</select></label><div class="list" data-results></div>';
+
+  for (const demo of root.querySelectorAll('.demo')) {
+    const layout = demo.dataset.layout;
+    let contents = picker;
+    if (layout === 'pinned') contents =
+      '<strong>Pinned</strong><div class="pins">' +
+      button('Occupancy map','Blocks') + button('Blocks traversed','Traversal counters') +
+      button('Root solves','Traversal counters') + '</div>' + picker;
+    if (layout === 'walkthrough') contents = [
+      ['Skip empty blocks',[['Occupancy map','Blocks'],['Blocks traversed','Traversal counters']]],
+      ['Reject candidate cells',[['Bernstein rejections','Traversal counters'],['Cells traversed','Traversal counters']]],
+      ['Find the first crossing',[['Root solves','Traversal counters'],['Distance','Surface hit']]]
+    ].map(([name,views],i)=>`<details name="ray-stages" ${i===0?'open':''}><summary>${name}</summary>
+      <div class="list">${views.map(([view,category])=>button(view,category)).join('')}</div></details>`).join('') +
+      `<details><summary>All diagnostics</summary><div class="list">${picker}</div></details>`;
+    if (layout === 'search') contents =
+      '<label class="field">Find a diagnostic<input type="search" data-search placeholder="Search names or categories"></label><div class="list" data-results></div>';
+    if (layout === 'accordion') contents = Object.keys(groups).map((name,i)=>
+      `<details name="debug-preview-categories" ${i===0?'open':''}><summary>${name}</summary><div class="list">${list(name)}</div></details>`).join('');
+
+    demo.innerHTML = `<section class="panel" aria-label="${demo.parentElement.dataset.variant} Debug example">
+      <h3>Debug</h3><label class="check"><input type="checkbox" data-enabled checked> Enable debug</label>
+      <div class="content" data-content>${contents}</div>
+      <p class="status" data-status aria-live="polite">Viewing Blocks traversed</p></section>`;
+    let selected = {view:'Blocks traversed',category:'Traversal counters'};
+    const sync = () => {
+      const enabled = demo.querySelector('[data-enabled]').checked;
+      demo.querySelector('[data-content]').hidden = !enabled;
+      demo.querySelector('[data-status]').textContent = enabled ? `Viewing ${selected.view}` : 'Surface';
+      for (const item of demo.querySelectorAll('[data-view]'))
+        item.setAttribute('aria-pressed',String(item.dataset.view===selected.view && item.dataset.group===selected.category));
+    };
+    const category = demo.querySelector('[data-category]');
+    const search = demo.querySelector('[data-search]');
+    const results = demo.querySelector('[data-results]');
+    const update = () => {
+      if (category) results.innerHTML = list(category.value);
+      if (search) {
+        const query = search.value.toLowerCase().trim();
+        const matches = query
+          ? entries.filter(entry=>(entry.view+' '+entry.category).toLowerCase().includes(query))
+          : entries.slice(0,5);
+        results.innerHTML = matches.length ? matches.map(entry=>
+          `<div class="list">${button(entry.view,entry.category)}<small>${entry.category}</small></div>`).join('') : '<p>No matching diagnostics</p>';
+      }
+      sync();
+    };
+    if (category) category.addEventListener('change',update);
+    if (search) search.addEventListener('input',update);
+    demo.querySelector('[data-enabled]').addEventListener('change',sync);
+    demo.addEventListener('click',event=>{
+      const item=event.target.closest('[data-view]');
+      if (!item) return;
+      selected={view:item.dataset.view,category:item.dataset.group};
+      sync();
+    });
+    update();
+  }
+  if (globalThis.Tweak) {
+    const state={width:280};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--debug-preview-width',state.width+'px')});
+    tweak.addSlider(state,'width',{label:'Panel width',min:248,max:300,unit:'px'});
+  }
+})();
+</script>

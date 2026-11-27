@@ -8,6 +8,7 @@ import IsotropicDistanceMap from './Maps/IsotropicDistanceMap'
 import AnisotropicDistanceMap from './Maps/AnisotropicDistanceMap'
 import ExtendedIsotropicDistanceMap from './Maps/ExtendedIsotropicDistanceMap'
 import ExtendedAnisotropicDistanceMap from './Maps/ExtendedAnisotropicDistanceMap'
+import { activeVariants } from './Variants'
 
 const mapTypes = {
     volumeMap: VolumeMap,
@@ -51,7 +52,8 @@ export default class Computes
         const previous = this.maps
         const previousDistanceMap = this.distanceMap
         const maps = {}
-        const unpacked = this.configs.unpackedPreprocessing
+        const variants = activeVariants(this.configs)
+        const choices = this.configs.preprocessingVariants
         const timingKey = this.timingKey(downscaleFactor)
 
         this.maps = maps
@@ -69,7 +71,12 @@ export default class Computes
             // Map constructors resolve their dependencies in insertion order.
             for (const [name, MapType] of Object.entries(mapTypes))
             {
-                const map = new MapType(unpacked)
+                const variant = choices?.[name] ?? variants[name]
+                const unpacked = variant
+                    ? variant === 'unpacked' || variant === 'unfusedUnpacked'
+                    : this.configs.unpackedPreprocessing
+                const fused = variant !== 'unfusedPacked' && variant !== 'unfusedUnpacked'
+                const map = new MapType(unpacked, fused)
                 maps[name] = map
                 this[name] = map
             }
@@ -100,9 +107,7 @@ export default class Computes
             this.updateAcceleration()
             elapsed += performance.now() - started
 
-            if (this.volume !== volume || this.timings?.key !== timingKey)
-                this.timings = { key: timingKey, packed: null, unpacked: null }
-            this.timings[unpacked ? 'unpacked' : 'packed'] = elapsed
+            this.timings = { key: timingKey, elapsed }
             this.volume = volume
         }
         catch (error)
@@ -121,6 +126,7 @@ export default class Computes
         }
 
         this.disposeMaps(previous)
+        return this.timings.elapsed
     }
 
     updateAcceleration(rethreshold = true)

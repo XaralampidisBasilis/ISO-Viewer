@@ -64,7 +64,7 @@ export default class TraversalLegend
     update(debug)
     {
         const legend = this.elements['counter-legend']
-        const title = debugViews['Traversal counters'][debug?.option]
+        const title = debugViews.Counters[debug?.option]
         const reference = debug?.counter_reference
         legend.hidden = !title || !reference
         if (legend.hidden || (this.title === title && this.reference === reference)) return

@@ -34,6 +34,7 @@ export default class Configs extends EventEmitter
             blockSize: 2,
             downscaleFactor: 1,
             unpackedPreprocessing: false,
+            preprocessingVariants: null,
             isosurfaceValue: 0.35,
             interpolationMethod: 'tricubicCsébfalvi',
             gradientsMethod: 'triquadraticBspline',

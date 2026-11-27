@@ -1,0 +1,158 @@
+<div id="debug-ten-designs">
+  <div class="viz-carousel viz-dotted-background" aria-label="Ten Debug panel designs">
+    <section data-variant="Plain accordion"><div class="sample" data-style="plain"></div></section>
+    <section data-variant="Ruled accordion" hidden><div class="sample" data-style="ruled"></div></section>
+    <section data-variant="Bordered headers" hidden><div class="sample" data-style="headers"></div></section>
+    <section data-variant="Indented tree" hidden><div class="sample" data-style="tree"></div></section>
+    <section data-variant="Radio variables" hidden><div class="sample" data-style="radio"></div></section>
+    <section data-variant="Variable grid" hidden><div class="sample" data-style="grid"></div></section>
+    <section data-variant="Inline selection" hidden><div class="sample" data-style="inline"></div></section>
+    <section data-variant="Compact list" hidden><div class="sample" data-style="compact"></div></section>
+    <section data-variant="Grouped categories" hidden><div class="sample" data-style="grouped"></div></section>
+    <section data-variant="Search within category" hidden><div class="sample" data-style="search"></div></section>
+  </div>
+</div>
+<style>
+  #debug-ten-designs [hidden] { display:none !important; }
+  #debug-ten-designs .sample {
+    --paper:light-dark(#e8e7df,#232932); --field:light-dark(#f1f0e9,#1a2027);
+    --ink:light-dark(#172d41,#e6edf4); --muted:light-dark(#36566e,#b1becb);
+    --line:light-dark(#9b9f9e,#505f70); --selected:light-dark(#dceaf7,#304a64);
+    display:grid; justify-items:center; align-content:start; padding:16px 12px;
+    min-height:980px; color:var(--ink); font:13px/1.4 system-ui,sans-serif;
+  }
+  #debug-ten-designs .sample * { box-sizing:border-box; }
+  #debug-ten-designs .panel { display:grid; gap:10px; width:min(var(--demo-width,280px),100%); padding:12px; border:1px solid var(--line); background:var(--paper); }
+  #debug-ten-designs h3 { margin:0; font-size:15px; }
+  #debug-ten-designs h4 { margin:0; padding-top:6px; font-size:12px; font-weight:600; color:var(--muted); }
+  #debug-ten-designs p { margin:0; color:var(--muted); font-size:12px; }
+  #debug-ten-designs .enable, #debug-ten-designs .radio-item { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:12px; }
+  #debug-ten-designs input[type=checkbox], #debug-ten-designs input[type=radio] { margin:0; accent-color:light-dark(#294b69,#a6ccef); }
+  #debug-ten-designs .categories { display:grid; gap:10px; }
+  #debug-ten-designs summary { padding:4px 0; color:var(--muted); font-size:12px; }
+  #debug-ten-designs .variables { display:grid; gap:6px; padding-top:6px; }
+  #debug-ten-designs .variable, #debug-ten-designs input[type=search] {
+    display:block; width:100%; min-width:0; min-height:27px; padding:4px 8px; border:1px solid var(--line);
+    border-radius:0; color:var(--ink); background:transparent; font:12px system-ui,sans-serif; text-align:left; overflow-wrap:anywhere;
+  }
+  #debug-ten-designs input[type=search] { background:var(--field); }
+  #debug-ten-designs .variable[aria-pressed=true], #debug-ten-designs .variable:hover { background:var(--selected); }
+  #debug-ten-designs .variable[aria-pressed=true]::after { content:' ✓'; }
+  #debug-ten-designs .sample[data-style=ruled] details { padding-bottom:8px; border-bottom:1px solid var(--line); }
+  #debug-ten-designs .sample[data-style=headers] summary { padding:6px 8px; border:1px solid var(--line); background:var(--field); }
+  #debug-ten-designs .sample[data-style=tree] .variables { margin-left:6px; padding-left:12px; border-left:1px solid var(--line); }
+  #debug-ten-designs .sample[data-style=tree] .variable,
+  #debug-ten-designs .sample[data-style=compact] .variable { border:0; }
+  #debug-ten-designs .sample[data-style=radio] .radio-item { padding:4px 0; }
+  #debug-ten-designs .sample[data-style=grid] .variables { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #debug-ten-designs .sample[data-style=inline] .chosen { display:block; margin-left:14px; font-size:12px; color:var(--ink); }
+  #debug-ten-designs .sample[data-style=inline] .chosen:empty { display:none; }
+  #debug-ten-designs .sample[data-style=compact] .categories { gap:2px; }
+  #debug-ten-designs .sample[data-style=compact] .variables { gap:0; padding-top:0; }
+  @media (pointer:coarse) {
+    #debug-ten-designs .sample { min-height:1250px; }
+    #debug-ten-designs :is(summary,.variable,.enable,.radio-item) { min-height:44px; }
+    #debug-ten-designs input[type=search] { min-height:44px; font-size:16px; }
+  }
+</style>
+<script>
+(() => {
+  const root=document.getElementById('debug-ten-designs');
+  const groups={
+    'Surface hit':['Distance','Position','Residue','Gradient'],
+    'Traversal counters':['Blocks traversed','Cells traversed','Texture fetches','Root solves','Bernstein rejections'],
+    'Ray':['Direction','Signs','Start distance','End distance'],
+    'Blocks':['Occupancy map','Skip coordinates','Entry distance'],
+    'Cells':['Intersected','Coordinates','Exit position'],
+    'Traces':['Distance','Position','Residue'],
+    'Lighting':['Material color','Diffuse color','Specular color'],
+    'Volume bounds':['Entry distance','Exit distance'],
+    'Camera':['Position','Direction'],
+    'Cubic':['Root','Number of roots','Bernstein weights'],
+    'Quintic':['Root','Degree','Bernstein spread'],
+    'Custom variables':['Variable 0','Variable 1','Variable 2']
+  };
+  const sections={
+    'Surface and lighting':['Surface hit','Lighting'],
+    'Traversal':['Traversal counters','Ray','Blocks','Cells','Traces'],
+    'Spatial':['Volume bounds','Camera'],
+    'Polynomials and custom':['Cubic','Quintic','Custom variables']
+  };
+  for (const sample of root.querySelectorAll('.sample')) {
+    const style=sample.dataset.style;
+    sample.innerHTML='<section class="panel" aria-label="'+sample.parentElement.dataset.variant+' Debug panel">'+
+      '<h3>Debug</h3><label class="enable"><input type="checkbox" checked data-enabled> Enable debug</label>'+
+      '<div class="categories"></div><p data-status role="status"></p></section>';
+    const categories=sample.querySelector('.categories');
+    let activeGroup='Traversal counters', activeVariable='Blocks traversed';
+    const detailsMap=new Map();
+    const controls=[];
+    for (const [name,variables] of Object.entries(groups)) {
+      const details=document.createElement('details');
+      details.name='debug-demo-'+style;
+      details.open=name===activeGroup;
+      const summary=document.createElement('summary');
+      summary.textContent=name;
+      if (style==='inline') {
+        const chosen=document.createElement('span');
+        chosen.className='chosen';
+        summary.append(chosen);
+      }
+      const content=document.createElement('div');
+      content.className='variables';
+      details.append(summary,content);
+      detailsMap.set(name,details);
+      let search;
+      if (style==='search') {
+        search=document.createElement('input');
+        search.type='search'; search.placeholder='Filter variables';
+        search.setAttribute('aria-label','Filter '+name+' variables');
+        details.insertBefore(search,content);
+        search.addEventListener('input',()=>{
+          for (const item of controls.filter(item=>item.group===name))
+            item.element.hidden=!item.variable.toLowerCase().includes(search.value.toLowerCase());
+        });
+      }
+      for (const variable of variables) {
+        let element,control;
+        if (style==='radio') {
+          element=document.createElement('label'); element.className='radio-item';
+          control=document.createElement('input'); control.type='radio'; control.name='debug-variable-'+style;
+          element.append(control,variable);
+        } else {
+          element=document.createElement('button'); element.type='button'; element.className='variable'; element.textContent=variable;
+          control=element;
+        }
+        controls.push({element,control,group:name,variable});
+        content.append(element);
+        control.addEventListener(style==='radio'?'change':'click',()=>{activeGroup=name;activeVariable=variable;render();});
+      }
+    }
+    if (style==='grouped') {
+      for (const [title,names] of Object.entries(sections)) {
+        const heading=document.createElement('h4'); heading.textContent=title; categories.append(heading);
+        for (const name of names) categories.append(detailsMap.get(name));
+      }
+    } else categories.append(...detailsMap.values());
+    function render() {
+      const enabled=sample.querySelector('[data-enabled]').checked;
+      categories.hidden=!enabled;
+      sample.querySelector('[data-status]').textContent=enabled?'Viewing '+activeVariable:'Surface';
+      for (const item of controls) {
+        const active=item.group===activeGroup && item.variable===activeVariable;
+        if (style==='radio') item.control.checked=active;
+        else item.control.setAttribute('aria-pressed',String(active));
+      }
+      if (style==='inline') for (const [name,details] of detailsMap)
+        details.querySelector('.chosen').textContent=name===activeGroup?activeVariable:'';
+    }
+    sample.querySelector('[data-enabled]').addEventListener('change',render);
+    render();
+  }
+  if (globalThis.Tweak) {
+    const state={width:280};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--demo-width',state.width+'px')});
+    tweak.addSlider(state,'width',{label:'Panel width',min:248,max:300,unit:'px'});
+  }
+})();
+</script>

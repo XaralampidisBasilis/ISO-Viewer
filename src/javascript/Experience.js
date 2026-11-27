@@ -8,6 +8,7 @@ import Renderer from './Renderer'
 import World from './World/World'
 import Resources from './Utils/Resources'
 import Computes from './Computes/Computes'
+import { variantStages } from './Computes/Variants'
 import sources, { intensityRange } from './sources'
 import { setTensorflow } from './tensorflow'
 
@@ -101,7 +102,7 @@ export default class Experience
 
     update()
     {
-        if (document.hidden || this.contextLost) return
+        if (document.hidden || this.contextLost || this.measuringVariants) return
         this.camera.update()
         if (!this.ready) return
 
@@ -261,6 +262,65 @@ export default class Experience
         finally
         {
             this.applying = false
+        }
+    }
+
+    /** Rebuild the current scan for each variant selection and return the elapsed map-building times in milliseconds. */
+    async runVariantRebuilds(plans)
+    {
+        if (!this.ready || this.loading || this.applying || this.pending.size || this.contextLost)
+            throw new Error('Wait for the current viewer update to finish.')
+
+        const { configs, computes, gui } = this
+        const stages = variantStages(configs.skippingMethod)
+        for (const plan of plans)
+        {
+            for (const [key, { choices }] of Object.entries(stages))
+                if (!Object.hasOwn(choices, plan[key])) throw new Error('The selected variant is unavailable.')
+        }
+
+        const { signal } = this.abort
+        const { downscaleFactor } = configs
+        const volume = computes.volume
+        const controls = this.camera.controls
+        const controlsEnabled = controls.enabled
+        const times = []
+        let applied = configs.preprocessingVariants
+
+        // Pause viewer drawing and camera input while the compute context is being timed.
+        this.applying = true
+        this.measuringVariants = true
+        controls.enabled = false
+        this.stats.reset()
+        gui.busy(true)
+
+        try
+        {
+            for (const [index, plan] of plans.entries())
+            {
+                configs.preprocessingVariants = { ...applied, ...plan }
+                const prefix = plans.length === 2 ? (index === 0 ? 'Run A · ' : 'Run B · ') : ''
+                const elapsed = await computes.rebuild(volume, downscaleFactor, this.intensityRange,
+                    label => gui.setProgress(false, prefix + label), signal)
+
+                signal.throwIfAborted()
+                if (this.contextLost) throw new Error('The browser lost the graphics context.')
+
+                applied = configs.preprocessingVariants
+                times.push(elapsed)
+                this.world.change()
+                this.invalidate()
+            }
+
+            return times
+        }
+        finally
+        {
+            configs.preprocessingVariants = applied
+            controls.enabled = controlsEnabled
+            this.measuringVariants = false
+            this.applying = false
+            if (!signal.aborted && !this.contextLost) gui.ready(this.quality)
         }
     }
 

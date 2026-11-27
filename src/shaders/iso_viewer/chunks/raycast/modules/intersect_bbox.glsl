@@ -15,7 +15,7 @@ if (u_bbox.occupied && bbox_entry_exit.x < bbox_entry_exit.y)
     ray.end_position   = bbox_entry_exit.y * ray.direction + camera.position;
     ray.span_distance  = bbox_entry_exit.y - bbox_entry_exit.x;
 }
-#if DEBUG_ENABLED == 0 && DISCARDING_ENABLED == 1
+#if DISCARDING_ENABLED == 1
 else
 {
     ray.span_distance = 0.0;

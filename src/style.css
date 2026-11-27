@@ -69,7 +69,7 @@ button:disabled { opacity: 0.65; }
 .study h1 { margin: 0; font-size: 13px; font-weight: 400; }
 #scan-description { margin: 3px 0 0; overflow-wrap: anywhere; color: #e1e8ec; font-size: 12px; }
 
-.viewer-actions button, .workstation-status button, .control-tabs button, .loading button, .paper-link {
+.viewer-actions button, .workstation-status button, .loading button, .paper-link, #rebuild-variants {
     min-height: 26px;
     padding: 4px 8px;
     border: 1px solid var(--border);
@@ -139,23 +139,9 @@ button[aria-pressed="true"], button[aria-expanded="true"] {
     box-shadow: 2px 2px 0 rgb(0 0 0 / 20%);
 }
 .menu-panel button { display: block; width: 100%; padding: 5px 9px; border: 0; background: transparent; color: var(--text); font-size: 12px; text-align: left; }
-.menu-panel button:hover:not(:disabled), .menu-panel button[aria-pressed="true"] { background: var(--selection); }
+.menu-panel button:hover:not(:disabled), .menu-panel button[aria-pressed="true"], .menu-panel button[aria-current="true"] { background: var(--selection); }
 .menu-panel button:focus-visible { outline-offset: -2px; }
 .menu-group + .menu-group, .menu-panel > button + .menu-group { margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--border); }
-.debug-menu-panel { --debug-menu-width: 470px; width: var(--debug-menu-width); }
-.debug-menu-panel:has(#debug-options[hidden]) { --debug-menu-width: 154px; }
-.debug-browser { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); border-top: 1px solid var(--border); }
-.debug-categories, .debug-views { max-height: min(420px, calc(100dvh - 190px)); overflow-y: auto; scrollbar-width: thin; }
-.debug-categories { min-width: 0; padding-right: 3px; border-right: 1px solid var(--border); }
-.debug-categories button[aria-selected="true"] { background: var(--selection); }
-.debug-views { min-width: 0; padding-left: 3px; }
-.debug-views button { position: relative; display: grid; gap: 2px; padding-right: 24px; }
-.debug-view-name { min-width: 0; overflow-wrap: anywhere; }
-.debug-view-status { margin: 0; padding: 7px 8px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
-.debug-views button[aria-pressed="true"]:not(:hover) { background: transparent; }
-.debug-views button[aria-pressed="true"]::after { content: '✓'; position: absolute; top: 5px; right: 8px; color: var(--accent); }
-.debug-controls { min-width: 0; margin: 0; padding: 0; border: 0; }
-.debug-controls .check-setting { padding: 6px 8px; }
 .viewport {
     position: relative;
     flex: 1;
@@ -322,8 +308,6 @@ dialog p:not(.eyebrow), dialog dd { color: var(--muted); font-size: 14px; line-h
     .menu-bar details:nth-last-child(-n + 2) .menu-panel { inset-inline-start: 6px; }
 }
 @media (max-width: 600px) {
-    #debug-menu { position: static; }
-    #debug-menu .debug-menu-panel { inset-inline-start: 6px; width: min(var(--debug-menu-width), calc(100% - 12px)); min-width: 0; }
 }
 @media (pointer: coarse) {
     #fullscreen-toggle { width: 44px; height: 44px; }

@@ -2,14 +2,14 @@ export const occupancyMapView = 420
 
 // The numeric codes select fragment shader diagnostics.
 export const debugViews = {
-    'Surface hit': {
+    Hit: {
         454: 'Distance', 455: 'Position', 456: 'Residue',
         457: 'Derivative', 458: 'Orientation', 459: 'Normal',
         460: 'Gradient', 461: 'Steepness', 462: 'Curvatures',
         463: 'Value', 464: 'Hessian diagonal', 465: 'Hessian cross derivatives',
         451: 'Discarded', 452: 'Escaped', 453: 'Undefined',
     },
-    'Traversal counters': {
+    Counters: {
         901: 'Cells traversed', 902: 'Traces traversed', 903: 'Blocks traversed', 904: 'Groups traversed',
         905: 'Texture fetches', 906: 'Intersection tests',
         907: 'Volume fetches', 908: 'Occupancy fetches', 909: 'Distance-map fetches',
@@ -45,7 +45,7 @@ export const debugViews = {
         511: 'Material color', 512: 'Ambient color', 513: 'Diffuse color',
         514: 'Specular color', 515: 'Directional color', 516: 'Color', 517: 'Luminance',
     },
-    'Volume bounds': {
+    Box: {
         601: 'Entry distance', 602: 'Exit distance', 603: 'Span distance',
         604: 'Entry position', 605: 'Exit position',
         606: 'Min position', 607: 'Max position', 608: 'Min entry distance',
@@ -60,7 +60,7 @@ export const debugViews = {
         851: 'Root', 852: 'Number of roots', 853: 'Degree',
         854: 'Coefficient weights', 855: 'Bernstein weights', 856: 'Bernstein spread',
     },
-    'Custom variables': Object.fromEntries(Array.from({ length: 10 }, (_, index) => [
+    Custom: Object.fromEntries(Array.from({ length: 10 }, (_, index) => [
         1000 + index, `Variable ${index}`,
     ])),
 }

@@ -83,6 +83,7 @@ export default class ISOViewer
         debug.option = configs.effectiveDebugView
         const occupancyView = debug.option === occupancyMapView
         const debugEnabled = debug.option !== 0 && !occupancyView
+        const surfaceDiagnostic = debug.option === 459 || debug.option === 462
         debug.max_groups = maxGroups
         debug.max_blocks = Math.ceil(maxBlocks / maxGroups)
         debug.max_cells = cellsPerBlock
@@ -102,7 +103,7 @@ export default class ISOViewer
             OCCUPANCY_VIEW: Number(occupancyView),
             OCCUPANCY_WIREFRAME: Number(debug.option === 0 && configs.occupancyWireframeVisible),
             DEBUG_ENABLED: Number(debugEnabled),
-            DISCARDING_ENABLED: Number(!debugEnabled),
+            DISCARDING_ENABLED: Number(!debugEnabled || surfaceDiagnostic),
             VARIATION_METHOD: configs.effectiveRootSolver,
             MAX_CELLS: maxCells,
             MAX_CELLS_IN_BLOCK: cellsPerBlock,

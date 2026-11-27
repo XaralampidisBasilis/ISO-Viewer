@@ -1,0 +1,202 @@
+<div id="creative-debug">
+  <div class="viz-carousel viz-dotted-background" aria-label="Creative Debug directions">
+    <section data-variant="Command palette"><div class="prototype" data-mode="command"></div></section>
+    <section data-variant="Category tiles" hidden><div class="prototype" data-mode="tiles"></div></section>
+    <section data-variant="Ray journey" hidden><div class="prototype" data-mode="journey"></div></section>
+    <section data-variant="Drill-down browser" hidden><div class="prototype" data-mode="drill"></div></section>
+    <section data-variant="Favorites shelf" hidden><div class="prototype" data-mode="favorites"></div></section>
+    <section data-variant="Diagnostic matrix" hidden><div class="prototype" data-mode="matrix"></div></section>
+    <section data-variant="Split navigator" hidden><div class="prototype" data-mode="split"></div></section>
+    <section data-variant="Struct inspector" hidden><div class="prototype" data-mode="inspector"></div></section>
+    <section data-variant="Searchable outline" hidden><div class="prototype" data-mode="outline"></div></section>
+    <section data-variant="Focus switcher" hidden><div class="prototype" data-mode="focus"></div></section>
+  </div>
+</div>
+<style>
+  #creative-debug [hidden] { display:none !important; }
+  #creative-debug .prototype {
+    --paper:light-dark(#f4f3ed,#20262d); --field:light-dark(#fffefa,#151b22);
+    --text:light-dark(#253441,#e5edf4); --muted:light-dark(#566672,#acbac7);
+    --line:light-dark(#c2c9cc,#4b5965); --accent:light-dark(#294f69,#a5cce8);
+    --selection:light-dark(#dce9ef,#304859);
+    display:grid; align-content:start; justify-items:center; padding:16px 12px;
+    min-height:810px; color:var(--text); font:13px/1.45 system-ui,sans-serif;
+  }
+  #creative-debug .prototype * { box-sizing:border-box; }
+  #creative-debug .panel {
+    width:min(var(--creative-width,310px),100%); padding:16px;
+    background:var(--paper); border:1px solid var(--line); border-radius:6px;
+    display:grid; gap:14px;
+  }
+  #creative-debug h3 { margin:0; font-size:17px; font-weight:600; }
+  #creative-debug h4 { margin:0; font-size:12px; font-weight:600; color:var(--muted); }
+  #creative-debug p { margin:0; }
+  #creative-debug .row { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  #creative-debug .enable { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+  #creative-debug input { accent-color:var(--accent); }
+  #creative-debug .content, #creative-debug .list, #creative-debug .group { display:grid; gap:7px; min-width:0; }
+  #creative-debug .group + .group { margin-top:6px; }
+  #creative-debug button, #creative-debug select, #creative-debug input[type=search] {
+    width:100%; min-width:0; border:1px solid var(--line); border-radius:3px;
+    padding:7px 9px; background:var(--field); color:var(--text); font:inherit; text-align:left;
+    overflow-wrap:anywhere;
+  }
+  #creative-debug .row button { width:auto; }
+  #creative-debug .bare { border-color:transparent; background:transparent; }
+  #creative-debug button:hover, #creative-debug button[aria-pressed=true] { background:var(--selection); border-color:var(--accent); }
+  #creative-debug button[aria-pressed=true]::after { content:' ✓'; }
+  #creative-debug .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  #creative-debug small, #creative-debug .muted { color:var(--muted); font-size:12px; }
+  #creative-debug .current { border-left:3px solid var(--accent); padding-left:10px; display:grid; gap:2px; }
+  #creative-debug .current strong { font-size:14px; font-weight:600; }
+  #creative-debug .split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:9px; }
+  #creative-debug .split nav { border-right:1px solid var(--line); padding-right:7px; }
+  #creative-debug .split nav button { border:0; border-radius:0; background:transparent; padding:5px 3px; font-size:12px; }
+  #creative-debug .split nav button[aria-pressed=true] { background:var(--selection); }
+  #creative-debug .split nav button[aria-pressed=true]::after { content:''; }
+  #creative-debug .journey-step { border-left:2px solid var(--line); padding-left:11px; display:grid; gap:6px; }
+  #creative-debug .journey-step + .journey-step { margin-top:8px; }
+  #creative-debug label.field { display:grid; gap:4px; color:var(--muted); font-size:12px; }
+  #creative-debug .inspector-row { display:grid; grid-template-columns:18px minmax(0,1fr) minmax(0,1.1fr); align-items:center; gap:5px; }
+  #creative-debug .inspector-row span { font-size:12px; }
+  #creative-debug .inspector-row select { font-size:12px; padding:5px 3px; }
+  #creative-debug table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  #creative-debug th,#creative-debug td { text-align:left; padding:6px 4px; border-bottom:1px solid var(--line); font-size:12px; overflow-wrap:anywhere; font-weight:400; }
+  #creative-debug th:first-child { width:35%; }
+  #creative-debug td button { font-size:12px; padding:5px; }
+  #creative-debug summary { padding:6px 0; color:var(--muted); }
+  #creative-debug .shelf { border-bottom:1px solid var(--line); padding-bottom:12px; }
+  #creative-debug .result { display:grid; gap:2px; }
+  @media (pointer:coarse) {
+    #creative-debug .prototype { min-height:1050px; }
+    #creative-debug :is(button,select,input[type=search],summary,.enable) { min-height:44px; }
+    #creative-debug :is(select,input[type=search]) { font-size:16px; }
+  }
+</style>
+<script>
+(() => {
+  const root=document.getElementById('creative-debug');
+  const groups={
+    'Surface hit':['Distance','Position','Residue','Gradient'],
+    'Traversal counters':['Blocks traversed','Cells traversed','Texture fetches','Root solves','Bernstein rejections'],
+    'Ray':['Direction','Signs','Start distance','End distance'],
+    'Blocks':['Occupancy map','Skip coordinates','Entry distance'],
+    'Cells':['Intersected','Coordinates','Exit position'],
+    'Traces':['Distance','Position','Residue'],
+    'Lighting':['Material color','Diffuse color','Specular color'],
+    'Volume bounds':['Entry distance','Exit distance'],
+    'Camera':['Position','Direction'],
+    'Cubic':['Root','Degree','Bernstein weights'],
+    'Quintic':['Root','Degree','Bernstein spread'],
+    'Custom variables':['Variable 0','Variable 1','Variable 2']
+  };
+  const names=Object.keys(groups);
+  const entries=Object.entries(groups).flatMap(([group,values])=>values.map(value=>({group,value})));
+  const btn=(group,value)=>`<button type="button" data-group="${group}" data-value="${value}" aria-pressed="false">${value}</button>`;
+  const list=group=>groups[group].map(value=>btn(group,value)).join('');
+  const cats=()=>names.map(name=>`<button type="button" data-category="${name}">${name}</button>`).join('');
+  const categorySelect=()=>'<label class="field">Category<select data-category-select>'+names.map(name=>'<option>'+name+'</option>').join('')+'</select></label>';
+  const browse=()=>'<details><summary>All categories</summary><div class="list">'+categorySelect()+'<div class="list" data-browse></div></div></details>';
+  for (const preview of root.querySelectorAll('.prototype')) {
+    const mode=preview.dataset.mode;
+    preview.innerHTML='<section class="panel" aria-label="'+preview.parentElement.dataset.variant+' Debug panel">'+
+      '<div class="row"><h3>Debug</h3><label class="enable"><input type="checkbox" checked data-enabled> Enable</label></div>'+
+      '<div class="current" aria-live="polite"><small data-status>Traversal counters</small><strong data-current>Blocks traversed</strong></div>'+
+      '<div class="content"></div></section>';
+    const content=preview.querySelector('.content');
+    let category='Traversal counters',activeGroup=category,activeValue='Blocks traversed';
+    const designs={
+      command:'<label class="field">Find a diagnostic<input type="search" placeholder="Search variables or structs" data-search></label><div class="list" data-results></div>',
+      tiles:'<div class="grid" data-category-list>'+cats()+'</div><div class="group"><h4 data-category-title></h4><div class="list" data-results></div></div>',
+      journey:[
+        ['Skip empty space',[['Blocks','Occupancy map'],['Traversal counters','Blocks traversed']]],
+        ['Reject candidate cells',[['Traversal counters','Bernstein rejections'],['Traversal counters','Cells traversed']]],
+        ['Find the first crossing',[['Traversal counters','Root solves'],['Surface hit','Distance']]]
+      ].map(([title,items])=>'<div class="journey-step"><h4>'+title+'</h4><div class="list">'+items.map(([g,v])=>btn(g,v)).join('')+'</div></div>').join('')+browse(),
+      drill:'<div class="row"><button type="button" data-up hidden>‹ Categories</button><h4 data-category-title>Categories</h4></div><div class="list" data-results></div>',
+      favorites:'<div class="group shelf"><h4>Favorites</h4>'+btn('Blocks','Occupancy map')+btn('Traversal counters','Blocks traversed')+btn('Traversal counters','Bernstein rejections')+'</div>'+categorySelect()+'<div class="list" data-results></div>',
+      matrix:'<table><thead><tr><th>Struct</th><th>Spatial</th><th>Distance</th></tr></thead><tbody>'+
+        [['Ray','Direction','Start distance'],['Blocks','Skip coordinates','Entry distance'],['Cells','Coordinates','Exit position'],['Surface hit','Position','Distance']].map(([g,a,b])=>'<tr><th scope="row">'+g+'</th><td>'+btn(g,a)+'</td><td>'+btn(g,b)+'</td></tr>').join('')+'</tbody></table>'+browse(),
+      split:'<div class="split"><nav class="list" aria-label="Debug structs">'+cats()+'</nav><div class="list" data-results style="align-content:start"></div></div>',
+      inspector:'<div class="list">'+names.map(name=>'<label class="inspector-row"><input type="radio" name="creative-debug-struct" data-radio="'+name+'" aria-label="Activate '+name+'"><span>'+name+'</span><select data-variable="'+name+'" aria-label="'+name+' variable">'+groups[name].map(v=>'<option>'+v+'</option>').join('')+'</select></label>').join('')+'</div>',
+      outline:'<label class="field">Filter the outline<input type="search" placeholder="e.g. distance" data-search></label><div class="list" data-results></div>',
+      focus:'<label class="field">Diagnostic<select data-focus>'+entries.map((entry,i)=>'<option value="'+i+'">'+entry.group+' / '+entry.value+'</option>').join('')+'</select></label><div class="row"><button type="button" data-step="-1">‹ Previous</button><button type="button" data-step="1">Next ›</button></div><div class="group"><h4>Frequently used</h4>'+btn('Blocks','Occupancy map')+btn('Traversal counters','Cells traversed')+btn('Traversal counters','Texture fetches')+'</div>'
+    };
+    content.innerHTML=designs[mode];
+    const results=content.querySelector('[data-results]');
+    const search=content.querySelector('[data-search]');
+    const renderStatus=()=>{
+      const enabled=preview.querySelector('[data-enabled]').checked;
+      content.hidden=!enabled;
+      preview.querySelector('[data-status]').textContent=enabled?activeGroup:'Debug disabled';
+      preview.querySelector('[data-current]').textContent=enabled?activeValue:'Surface';
+      for(const item of content.querySelectorAll('[data-value]'))item.setAttribute('aria-pressed',String(item.dataset.group===activeGroup&&item.dataset.value===activeValue));
+      for(const item of content.querySelectorAll('[data-radio]'))item.checked=item.dataset.radio===activeGroup;
+      for(const item of content.querySelectorAll('[data-category]'))item.setAttribute('aria-pressed',String(item.dataset.category===category));
+    };
+    const renderResults=()=>{
+      if (mode==='command') {
+        const query=search.value.toLowerCase();
+        const matched=query?entries.filter(e=>(e.group+' '+e.value).toLowerCase().includes(query)):entries.filter(e=>e.group==='Traversal counters');
+        results.innerHTML=matched.length?matched.map(e=>'<div class="result">'+btn(e.group,e.value)+'<small>'+e.group+'</small></div>').join(''):'<p class="muted">No matching diagnostics</p>';
+      } else if(mode==='outline') {
+        const query=search.value.toLowerCase();
+        results.innerHTML=names.map(name=>{
+          const values=groups[name].filter(value=>(name+' '+value).toLowerCase().includes(query));
+          return values.length?'<div class="group"><h4>'+name+'</h4>'+values.map(value=>btn(name,value)).join('')+'</div>':'';
+        }).join('')||'<p class="muted">No matching diagnostics</p>';
+      } else if(mode==='drill') results.innerHTML=category?list(category):cats();
+      else if(results) results.innerHTML=list(category);
+      const heading=content.querySelector('[data-category-title]');
+      if(heading)heading.textContent=category||'Categories';
+      const up=content.querySelector('[data-up]');
+      if(up)up.hidden=!category;
+      renderStatus();
+    };
+    if(mode==='drill')category='';
+    if(mode==='outline') {
+      search.value='block';
+    }
+    const select=content.querySelector('[data-category-select]');
+    if(select){
+      select.value=category;
+      const update=()=>{
+        category=select.value;
+        const browseList=content.querySelector('[data-browse]');
+        if(browseList){browseList.innerHTML=list(category);renderStatus();}
+        else renderResults();
+      };
+      select.addEventListener('change',update);update();
+    }
+    if(search)search.addEventListener('input',renderResults);
+    content.addEventListener('click',event=>{
+      const button=event.target.closest('button');
+      if(!button)return;
+      if(button.dataset.value){activeGroup=button.dataset.group;activeValue=button.dataset.value;renderStatus();}
+      if(button.dataset.category){category=button.dataset.category;renderResults();}
+      if(button.hasAttribute('data-up')){category='';renderResults();}
+      if(button.dataset.step){
+        const focus=content.querySelector('[data-focus]');
+        focus.selectedIndex=(focus.selectedIndex+Number(button.dataset.step)+entries.length)%entries.length;
+        focus.dispatchEvent(new Event('change'));
+      }
+    });
+    content.addEventListener('change',event=>{
+      const target=event.target;
+      if(target.dataset.radio){activeGroup=target.dataset.radio;activeValue=Array.from(content.querySelectorAll('[data-variable]')).find(item=>item.dataset.variable===activeGroup).value;}
+      if(target.dataset.variable){activeGroup=target.dataset.variable;activeValue=target.value;}
+      if(target.hasAttribute('data-focus')){const item=entries[Number(target.value)];activeGroup=item.group;activeValue=item.value;}
+      renderStatus();
+    });
+    const focus=content.querySelector('[data-focus]');
+    if(focus)focus.value=String(entries.findIndex(item=>item.group===activeGroup&&item.value===activeValue));
+    preview.querySelector('[data-enabled]').addEventListener('change',renderStatus);
+    renderResults();
+  }
+  if(globalThis.Tweak){
+    const state={width:310};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--creative-width',state.width+'px')});
+    tweak.addSlider(state,'width',{label:'Panel width',min:270,max:380,unit:'px'});
+  }
+})();
+</script>

@@ -1,0 +1,266 @@
+<div id="iso-inspector-designs">
+  <h2>Debug</h2>
+  <div class="viz-carousel viz-dotted-background" aria-label="Debug panel designs">
+    <section data-variant="Quick picks"><div class="iso-preview" data-debug="quick"></div></section>
+    <section data-variant="Grouped list" hidden><div class="iso-preview" data-debug="groups"></div></section>
+    <section data-variant="Search diagnostics" hidden><div class="iso-preview" data-debug="search"></div></section>
+    <section data-variant="Ray walkthrough" hidden><div class="iso-preview" data-debug="ray"></div></section>
+    <section data-variant="Category picker" hidden><div class="iso-preview" data-debug="picker"></div></section>
+  </div>
+  <h2>Kernels</h2>
+  <div class="viz-carousel viz-dotted-background" aria-label="Kernels panel designs">
+    <section data-variant="Compact settings"><div class="iso-preview" data-kernel="compact"></div></section>
+    <section data-variant="Compare first" hidden><div class="iso-preview" data-kernel="compare"></div></section>
+    <section data-variant="Pipeline" hidden><div class="iso-preview" data-kernel="pipeline"></div></section>
+    <section data-variant="A/B matrix" hidden><div class="iso-preview" data-kernel="matrix"></div></section>
+    <section data-variant="Run history" hidden><div class="iso-preview" data-kernel="history"></div></section>
+  </div>
+</div>
+
+<style>
+  #iso-inspector-designs { display: grid; gap: 12px; }
+  #iso-inspector-designs [hidden] { display: none !important; }
+  #iso-inspector-designs .iso-preview {
+    --inspector-width: var(--mock-panel-width, 280px);
+    --page: light-dark(#e9edf0, #181c21);
+    --panel: light-dark(#f8f9fa, #232932);
+    --field: light-dark(#fff, #1a2027);
+    --text: light-dark(#1c2b39, #e6edf4);
+    --muted: light-dark(#4c6072, #b1becb);
+    --border: light-dark(#b9c5d0, #505f70);
+    --selection: light-dark(#dceaf7, #304a64);
+    --accent: light-dark(#295679, #a6ccef);
+    --title: light-dark(#294b69, #172332);
+    box-sizing: border-box;
+    display: grid;
+    justify-content: center;
+    align-content: start;
+    min-height: 590px;
+    padding: 16px 12px 10px;
+    font: 13px/1.35 system-ui, sans-serif;
+    color: var(--text);
+  }
+  #iso-inspector-designs .iso-preview *, #iso-inspector-designs .iso-preview *::before { box-sizing: border-box; }
+  #iso-inspector-designs .iso-workspace { width: min(var(--inspector-width), calc(100vw - 40px)); border: 1px solid var(--border); background: var(--page); }
+  #iso-inspector-designs .iso-title { padding: 7px 9px; color: #f4f7fa; background: var(--title); font-weight: 600; }
+  #iso-inspector-designs .iso-path { padding: 6px 9px; border-bottom: 1px solid var(--border); color: var(--muted); }
+  #iso-inspector-designs .iso-panel { margin: 7px; padding: 10px; display: grid; gap: 9px; background: var(--panel); border: 1px solid var(--border); }
+  #iso-inspector-designs .iso-panel h3 { margin: 0; font-size: 15px; font-weight: 650; }
+  #iso-inspector-designs .iso-panel p { margin: 0; }
+  #iso-inspector-designs .iso-panel label:not(.iso-check) { display: grid; gap: 3px; min-width: 0; }
+  #iso-inspector-designs .iso-check { display: flex; align-items: center; gap: 6px; }
+  #iso-inspector-designs input, #iso-inspector-designs button, #iso-inspector-designs select { accent-color: var(--accent); }
+  #iso-inspector-designs .iso-panel :is(button, select, input[type=search]) {
+    min-height: 28px; min-width: 0; max-width: 100%; padding: 4px 6px; color: var(--text); background: var(--field);
+    border: 1px solid var(--border); border-radius: 2px; font: inherit;
+  }
+  #iso-inspector-designs select, #iso-inspector-designs input[type=search] { width: 100%; }
+  #iso-inspector-designs .iso-panel button { overflow-wrap: anywhere; text-align: left; }
+  #iso-inspector-designs .iso-panel button:hover, #iso-inspector-designs .iso-panel button[aria-pressed=true],
+  #iso-inspector-designs .iso-panel button.iso-primary { background: var(--selection); border-color: var(--accent); }
+  #iso-inspector-designs .iso-list { display: grid; gap: 4px; }
+  #iso-inspector-designs .iso-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
+  #iso-inspector-designs .iso-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+  #iso-inspector-designs .iso-muted { color: var(--muted); font-size: 12px; }
+  #iso-inspector-designs .iso-active { padding: 6px; background: var(--selection); }
+  #iso-inspector-designs details { padding-block: 4px; border-top: 1px solid var(--border); }
+  #iso-inspector-designs details > .iso-list, #iso-inspector-designs details > .iso-grid { margin-top: 5px; }
+  #iso-inspector-designs summary { overflow-wrap: anywhere; }
+  #iso-inspector-designs table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+  #iso-inspector-designs th, #iso-inspector-designs td { padding: 5px 3px; border-bottom: 1px solid var(--border); text-align: left; overflow-wrap: anywhere; font-weight: 400; }
+  #iso-inspector-designs .iso-matrix th:first-child { width: 34%; }
+  #iso-inspector-designs .iso-matrix select { font-size: 12px; }
+  #iso-inspector-designs .iso-example { font-variant-numeric: tabular-nums; }
+  @media (pointer: coarse) {
+    #iso-inspector-designs .iso-panel :is(button, select, input[type=search]), #iso-inspector-designs summary { min-height: 44px; }
+    #iso-inspector-designs .iso-preview { min-height: 760px; }
+  }
+</style>
+
+<script>
+  (() => {
+    const root = document.getElementById('iso-inspector-designs');
+    const stages = ['Normalization', 'Interpolation features', 'Extrema bounds', 'Occupancy', 'Anisotropic distance'];
+    const groups = {
+      'Surface hit': ['Normal', 'Distance', 'Curvatures', 'Gradient'],
+      'Traversal counters': ['Blocks traversed', 'Cells traversed', 'Bernstein rejections', 'Root solves', 'Texture fetches'],
+      'Blocks': ['Occupancy map', 'Skip coordinates', 'Entry distance'],
+      'Ray': ['Direction', 'Start position', 'End position'],
+      'Cells': ['Intersected', 'Coordinates', 'Exit position'],
+      'Traces': ['Residue', 'Previous residue'],
+      'Lighting': ['Material color', 'Specular color'],
+      'Volume bounds': ['Span distance', 'Min position'],
+      'Camera': ['Position', 'Direction'],
+      'Cubic': ['Number of roots', 'Bernstein weights'],
+      'Quintic': ['Root', 'Bernstein spread'],
+      'Custom variables': ['Variable 0', 'Variable 1'],
+    };
+    const allDiagnostics = Object.entries(groups).flatMap(([group, views]) => views.map(view => ({ group, view })));
+    const options = items => items.map(item => `<option>${item}</option>`).join('');
+    const variants = stage => stage === 'Anisotropic distance'
+      ? ['Fused packed', 'Fused unpacked', 'Unfused packed', 'Unfused unpacked']
+      : ['Packed', 'Unpacked'];
+    const row = (stage, label = stage) => `<label>${label}<select data-setting="${stage}">${options(variants(stage))}</select></label>`;
+    const button = (label, attrs = '') => `<button type="button" ${attrs}>${label}</button>`;
+    const base = (title, body) => `<div class="iso-workspace">
+      <div class="iso-title">ISOViewer</div>
+      <div class="iso-path iso-row"><span>Controls › ${title}</span><span>Isovalue 0.350</span></div>
+      <section class="iso-panel" aria-label="${title} panel"><h3>${title}</h3>${body}</section>
+    </div>`;
+    const debugButton = view => button(view, `data-view="${view}" aria-pressed="false"`);
+    const list = views => views.map(debugButton).join('');
+    const grouped = (names, id, openFirst = false) => names.map((name, index) => `
+      <details name="${id}-categories" ${openFirst && index === 0 ? 'open' : ''}><summary>${name}</summary>
+        <div class="iso-list">${list(groups[name])}</div>
+      </details>`).join('');
+    const steps = [
+      ['Skip empty blocks', 'Blocks traversed', 'Occupancy map'],
+      ['Reject candidate cells', 'Bernstein rejections', 'Cells traversed'],
+      ['Find the first crossing', 'Root solves', 'Distance'],
+    ];
+
+    for (const preview of root.querySelectorAll('[data-debug]')) {
+      const mode = preview.dataset.debug;
+      const active = '<div class="iso-active iso-row"><strong data-active aria-live="polite">Surface</strong><button type="button" data-surface hidden>Back to surface</button></div>';
+      const designs = {
+        quick: `<div class="iso-grid">${list(['Normal', 'Curvatures', 'Occupancy map', 'Blocks traversed', 'Bernstein rejections', 'Root solves'])}</div>
+          <details><summary>All categories</summary><div class="iso-list">${grouped(Object.keys(groups), mode)}</div></details>`,
+        groups: `<div>${grouped(Object.keys(groups), mode, true)}</div>`,
+        search: `<label>Find a diagnostic<input type="search" placeholder="Try “Bernstein”" data-search></label>
+          <div class="iso-list" data-results></div>`,
+        ray: `<div class="iso-list">${steps.map(([label, ...views], index) => `<div class="iso-list"><strong>${index + 1}. ${label}</strong><div class="iso-grid">${list(views)}</div></div>`).join('')}</div>
+          <details><summary>All categories</summary><div class="iso-list">${grouped(Object.keys(groups), mode)}</div></details>`,
+        picker: `<label>Category<select data-category>${options(Object.keys(groups))}</select></label><div class="iso-list" data-results></div>`,
+      };
+      preview.innerHTML = base('Debug', active + designs[mode]);
+      let current = '';
+      const sync = () => {
+        preview.querySelector('[data-active]').textContent = current || 'Surface';
+        preview.querySelector('[data-surface]').hidden = !current;
+        for (const item of preview.querySelectorAll('[data-view]')) item.setAttribute('aria-pressed', String(item.dataset.view === current));
+      };
+      if (mode === 'search' || mode === 'picker') {
+        const results = preview.querySelector('[data-results]');
+        const control = preview.querySelector(mode === 'search' ? '[data-search]' : '[data-category]');
+        const update = () => {
+          const query = control.value.trim().toLowerCase();
+          const matches = mode === 'picker' ? groups[control.value]
+            : query ? allDiagnostics.filter(item => (item.view + ' ' + item.group).toLowerCase().includes(query)).map(item => item.view)
+            : ['Normal', 'Blocks traversed', 'Bernstein rejections', 'Root solves'];
+          results.innerHTML = matches.length ? list(matches) : '<p class="iso-muted">No matching diagnostics</p>';
+          sync();
+        };
+        control.addEventListener(mode === 'search' ? 'input' : 'change', update);
+        update();
+      }
+      preview.addEventListener('click', event => {
+        const control = event.target.closest('[data-view], [data-surface]');
+        if (!control) return;
+        current = control.dataset.view || '';
+        sync();
+        if (!current) preview.querySelector('h3').scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    const stagePicker = `<label>Stage<select data-stage>${options([...stages].reverse())}</select></label>`;
+    const alternate = '<label>Run B<select data-alternate></select></label>';
+    const rebuild = button('Rebuild and time', 'data-run="rebuild" class="iso-primary"');
+    const compare = button('Run A/B comparison', 'data-run="compare" class="iso-primary"');
+    const output = '<p class="iso-example iso-muted" data-result aria-live="polite"></p>';
+    const settings = `<div class="iso-list">${stages.map(stage => row(stage)).join('')}</div>`;
+    const abSetup = stagePicker + '<div class="iso-grid"><label>Run A<select data-baseline></select></label>' + alternate + '</div>';
+    const otherStages = `<details><summary>Pipeline settings</summary>${settings}</details>`;
+    const kernelDesigns = {
+      compact: settings + rebuild + `<details><summary>Compare one stage</summary><div class="iso-list">${stagePicker}${alternate}${compare}</div></details>` + output,
+      compare: abSetup + compare + output + otherStages,
+      pipeline: stages.map((stage, index) => `<details ${index === 4 ? 'open' : ''}><summary>${index + 1}. ${stage} <span class="iso-muted" data-stage-summary="${stage}"></span></summary>
+        <div class="iso-list">${row(stage, 'Implementation')}${button('Compare this stage', `data-pick-stage="${stage}"`)}</div></details>`).join('') +
+        `<div class="iso-list" data-inline-compare hidden>${abSetup}${compare}</div>` + rebuild + output,
+      matrix: `<table class="iso-matrix"><thead><tr><th>Stage</th><th>Run A</th><th>Run B</th></tr></thead><tbody>${stages.map(stage =>
+        `<tr><th scope="row">${stage}</th><td><select aria-label="${stage} for run A" data-setting="${stage}">${options(variants(stage))}</select></td><td data-matrix="${stage}">Same</td></tr>`).join('')}</tbody></table>${stagePicker}${compare}${output}`,
+      history: `<div class="iso-list"><table class="iso-example"><thead><tr><th>Example run</th><th>Total</th></tr></thead><tbody data-history>
+        <tr><td>Unfused unpacked</td><td>620 ms</td></tr><tr><td>Fused packed</td><td>480 ms</td></tr></tbody></table></div>` +
+        otherStages + rebuild + `<details><summary>Compare one stage</summary><div class="iso-list">${abSetup}${compare}</div></details>` + output,
+    };
+
+    for (const preview of root.querySelectorAll('[data-kernel]')) {
+      const mode = preview.dataset.kernel;
+      preview.innerHTML = base('Kernels', kernelDesigns[mode]);
+      const query = selector => preview.querySelector(selector);
+      const stagePickerElement = query('[data-stage]');
+      const stage = () => stagePickerElement.value;
+      const baseline = query('[data-baseline]');
+      const settingsField = name => query(`[data-setting="${name}"]`);
+      const current = () => settingsField(stage())?.value ?? variants(stage())[0];
+      const updateAlternate = () => {
+        const active = baseline?.value || current();
+        const alt = query('[data-alternate]');
+        const previous = alt.value;
+        const choices = variants(stage()).filter(value => value !== active);
+        alt.innerHTML = options(choices);
+        if (choices.includes(previous)) alt.value = previous;
+      };
+      const sync = () => {
+        for (const summary of preview.querySelectorAll('[data-stage-summary]')) {
+          summary.textContent = '· ' + settingsField(summary.dataset.stageSummary).value;
+        }
+        if (mode === 'matrix') {
+          for (const cell of preview.querySelectorAll('[data-matrix]')) cell.textContent = 'Same';
+          query(`[data-matrix="${stage()}"]`).innerHTML = `<select data-alternate aria-label="${stage()} for run B"></select>`;
+        }
+        if (baseline) {
+          baseline.innerHTML = options(variants(stage()));
+          baseline.value = current();
+        }
+        updateAlternate();
+      };
+      sync();
+      preview.addEventListener('change', event => {
+        if (event.target === baseline) {
+          const field = settingsField(stage());
+          if (field) field.value = baseline.value;
+          updateAlternate();
+        } else if (event.target === stagePickerElement || event.target.matches('[data-setting]')) {
+          sync();
+        }
+      });
+      preview.addEventListener('click', event => {
+        const control = event.target.closest('[data-run], [data-pick-stage]');
+        if (!control) return;
+        if (control.dataset.pickStage) {
+          query('[data-inline-compare]').hidden = false;
+          stagePickerElement.value = control.dataset.pickStage;
+          sync();
+          stagePickerElement.focus();
+          return;
+        }
+        const values = { Packed: 480, Unpacked: 545, 'Fused packed': 480, 'Fused unpacked': 545, 'Unfused packed': 570, 'Unfused unpacked': 620 };
+        if (control.dataset.run === 'compare') {
+          const a = baseline?.value || current();
+          const b = query('[data-alternate]').value;
+          query('[data-result]').textContent = `Example · A ${values[a]} ms · B ${values[b]} ms`;
+        } else {
+          const selection = settingsField('Anisotropic distance').value;
+          const elapsed = values[selection] + stages.slice(0, 4).filter(name => settingsField(name).value === 'Unpacked').length * 12;
+          query('[data-result]').textContent = `Example total · ${elapsed} ms`;
+          const history = query('[data-history]');
+          if (history) {
+            const record = history.insertRow(0);
+            record.insertCell().textContent = selection;
+            record.insertCell().textContent = `${elapsed} ms`;
+            if (history.rows.length > 3) history.deleteRow(-1);
+          }
+        }
+      });
+    }
+
+    if (globalThis.Tweak) {
+      const state = { panelWidth: 280 };
+      const tweak = new Tweak({
+        container: root,
+        onChange: () => root.style.setProperty('--mock-panel-width', `${state.panelWidth}px`),
+      });
+      tweak.addSlider(state, 'panelWidth', { label: 'Panel width', min: 248, max: 300, unit: 'px' });
+    }
+  })();
+</script>

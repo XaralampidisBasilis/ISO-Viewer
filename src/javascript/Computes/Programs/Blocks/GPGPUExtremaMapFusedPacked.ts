@@ -178,7 +178,7 @@ class GPGPUExtremaMap2 implements GPGPUProgram
         split: boolean
     ) 
     {
-        this.packedInputs = packed
+        this.packedInputs = inputShape.length === 5
         this.packedOutput = packed
         if (split) this.variableNames = ['X', 'Y', 'Z', 'F']
         // N voxel centers define N + 1 cell indices with replicated edge samples.
@@ -196,7 +196,7 @@ class GPGPUExtremaMap2 implements GPGPUProgram
         vec4 getVoxelSample(ivec3 voxelCoords)
         {
             voxelCoords = clamp(voxelCoords, voxelMinCoords, voxelMaxCoords);
-            ${packed ? 'return getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);' : split ? `
+            ${this.packedInputs ? 'return getA(voxelCoords.z, voxelCoords.y, voxelCoords.x, 0, 0);' : split ? `
             return vec4(
                 getX(voxelCoords.z, voxelCoords.y, voxelCoords.x),
                 getY(voxelCoords.z, voxelCoords.y, voxelCoords.x),
@@ -338,7 +338,7 @@ function runProgram(prog: GPGPUProgram, inputs: tf.Tensor[]): tf.Tensor
  *
  * @param interpolationMap - Packed [z,y,x,2,2], scalar [z,y,x,4], or four [z,y,x] channel tensors in feature order.
  * @param blockSize - Cells per axis in each block.
- * @param packed - Select packed feature reads and four-lane output. Split inputs use scalar mode.
+ * @param packed - Write four bounds per texel. The input shape independently determines how voxel features are read.
  * @returns New bounds with channels [trilinear min, trilinear max, tricubic min, tricubic max]. The trailing shape is [2,2] in packed mode and [4] in scalar mode.
  */
 export function computeExtremaMap(interpolationMap: tf.Tensor4D | tf.Tensor5D | tf.Tensor[], blockSize: number, packed = true): tf.Tensor

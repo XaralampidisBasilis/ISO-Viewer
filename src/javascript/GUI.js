@@ -1,7 +1,7 @@
 import Configs from './Utils/Configs'
-import ControlPanels from './Utils/ControlPanels'
 import TraversalLegend from './Utils/TraversalLegend'
 import { debugViews, debugViewSources, debugViewUnavailableReason } from './Utils/DebugViews'
+import { activeVariants, variantStages } from './Computes/Variants'
 
 const overlayControls = [
     ['toggle-occupancy-wireframe', 'occupancyWireframeVisible'],
@@ -9,6 +9,9 @@ const overlayControls = [
     ['toggle-volume-box', 'volumeBoxVisible'],
     ['toggle-orientation-cube', 'orientationCubeVisible'],
 ]
+
+// Keep the normal and curvature shader IDs available to developer tooling.
+const hiddenDebugViews = new Set(['459', '462'])
 
 export default class GUI
 {
@@ -20,11 +23,10 @@ export default class GUI
         this.cameraButtons = Array.from(document.querySelectorAll('[data-camera]'))
         this.listeners = new AbortController()
         this.touchInput = matchMedia('(pointer: coarse)')
-        new ControlPanels(this.elements['control-tabs'], this.listeners.signal)
         this.setupDebugBrowser()
-        this.viewButtons = Array.from(document.querySelectorAll('[data-view]'))
         this.setupMenu()
         this.setupFullscreen()
+        this.setupVariants()
 
         for (const name of Configs.Colormaps)
             this.elements.colormap.add(new Option(name[0].toUpperCase() + name.slice(1), name))
@@ -38,51 +40,122 @@ export default class GUI
         element.addEventListener(name, listener, { signal: this.listeners.signal })
     }
 
+    setupVariants()
+    {
+        const elements = this.elements
+        this.listen(elements['rebuild-variants'], 'click', () => this.runVariants())
+    }
+
+    populateVariants()
+    {
+        const { configs } = this.experience
+        const container = this.elements['variant-stages']
+        const active = activeVariants(configs)
+        this.variantMethod = configs.skippingMethod
+        this.variantStages = variantStages(this.variantMethod)
+        this.variantSelectors = {}
+        container.replaceChildren()
+
+        for (const [key, { label, choices }] of Object.entries(this.variantStages))
+        {
+            const row = document.createElement('label')
+            const select = document.createElement('select')
+            row.className = 'select-setting'
+            row.append(label, select)
+            container.append(row)
+
+            for (const [value, name] of Object.entries(choices)) select.add(new Option(name, value))
+            select.value = active[key]
+            this.variantSelectors[key] = select
+        }
+
+    }
+
+    async runVariants()
+    {
+        const { configs, computes } = this.experience
+        const result = this.elements['variant-result']
+        const baseline = Object.fromEntries(Object.entries(this.variantSelectors).map(([key, select]) => [key, select.value]))
+        const previous = computes.preprocessingTimes?.elapsed
+
+        this.variantTimingKey = computes.timingKey(configs.downscaleFactor)
+        this.variantVolume = computes.volume
+        result.textContent = 'Measuring a full rebuild…'
+
+        try
+        {
+            const [elapsed] = await this.experience.runVariantRebuilds([baseline])
+            if (this.listeners.signal.aborted) return
+
+            const format = time => `${Math.round(time).toLocaleString()} ms`
+            result.textContent = `Total · ${format(elapsed)}`
+            if (previous != null) result.textContent += `\nPrevious rebuild · ${format(previous)}`
+        }
+        catch (error)
+        {
+            result.textContent = error.message || 'The variant rebuild failed.'
+            console.error(error)
+        }
+        finally
+        {
+            if (!this.listeners.signal.aborted) this.populateVariants()
+        }
+    }
+
     setupDebugBrowser()
     {
-        const categories = this.elements['debug-categories']
         const views = this.elements['debug-views']
-        Object.entries(debugViews).forEach(([name, entries], index) =>
+        const categories = document.createElement('nav')
+        const panels = document.createElement('div')
+        categories.className = 'debug-categories'
+        categories.setAttribute('aria-label', 'Debug categories')
+        panels.className = 'debug-variable-panels'
+        views.append(categories, panels)
+        this.debugButtons = []
+        const categoryButtons = []
+        const selectCategory = selected =>
+        {
+            for (const button of categoryButtons)
+            {
+                const active = button === selected
+                button.setAttribute('aria-pressed', String(active))
+                document.getElementById(button.getAttribute('aria-controls')).hidden = !active
+            }
+        }
+
+        for (const [index, [name, entries]] of Object.entries(debugViews).entries())
         {
             const category = document.createElement('button')
+            const variables = document.createElement('div')
             category.type = 'button'
-            category.id = `debug-category-${index}`
             category.textContent = name
-            category.setAttribute('role', 'tab')
-
-            const panel = document.createElement('div')
-            panel.id = `debug-views-${index}`
-            panel.setAttribute('role', 'tabpanel')
-            panel.setAttribute('aria-labelledby', category.id)
-            category.setAttribute('aria-controls', panel.id)
+            category.id = `debug-category-${index}`
+            variables.id = `debug-variables-${index}`
+            variables.className = 'debug-variables'
+            variables.setAttribute('role', 'group')
+            variables.setAttribute('aria-labelledby', category.id)
+            category.setAttribute('aria-controls', variables.id)
+            categories.append(category)
+            panels.append(variables)
+            categoryButtons.push(category)
+            this.listen(category, 'click', () => selectCategory(category))
 
             for (const [id, label] of Object.entries(entries))
             {
+                if (hiddenDebugViews.has(id)) continue
+
                 const button = document.createElement('button')
                 button.type = 'button'
                 button.dataset.view = id
-                const name = document.createElement('span')
-                name.className = 'debug-view-name'
-                name.textContent = label
-                button.append(name)
-                button.disabled = true
-                panel.append(button)
+                button.textContent = label
+                button.setAttribute('aria-pressed', 'false')
+                variables.append(button)
+                this.debugButtons.push(button)
+                this.listen(button, 'click', () => this.setDiagnosticView(Number(id)))
             }
-
-            categories.append(category)
-            views.append(panel)
-        })
-
-        const panels = new ControlPanels(categories, this.listeners.signal)
-        this.debugPanels = panels
-        panels.select(categories.firstElementChild.getAttribute('aria-controls'))
-        for (const category of categories.children)
-        {
-            this.listen(category, 'pointerenter', event =>
-            {
-                if (event.pointerType === 'mouse') panels.select(category.getAttribute('aria-controls'))
-            })
         }
+
+        selectCategory(categoryButtons.find(button => button.textContent === 'Counters') ?? categoryButtons[0])
     }
 
     setupMenu()
@@ -94,7 +167,7 @@ export default class GUI
             const summary = menu.querySelector('summary')
             this.listen(menu, 'click', event =>
             {
-                if (!event.target.closest('button:not([role="tab"])')) return
+                if (!event.target.closest('button')) return
                 if (menu.contains(document.activeElement)) summary.focus()
                 menu.open = false
             })
@@ -122,6 +195,23 @@ export default class GUI
             {
                 button.closest('details').querySelector('summary').focus()
                 this.elements[button.dataset.dialog].showModal()
+            })
+        }
+
+        const controlButtons = Array.from(menuBar.querySelectorAll('[data-control-panel]'))
+        for (const button of controlButtons)
+        {
+            this.listen(button, 'click', () =>
+            {
+                for (const control of controlButtons)
+                {
+                    const active = control === button
+                    control.setAttribute('aria-current', String(active))
+                    this.elements[control.dataset.controlPanel].hidden = !active
+                }
+
+                const panel = this.elements[button.dataset.controlPanel]
+                panel.querySelector('h2').focus()
             })
         }
 
@@ -227,6 +317,10 @@ export default class GUI
         this.experience = experience
         const { configs, camera, renderer, stats } = experience
         this.counterLegend = new TraversalLegend(this.elements, renderer.instance)
+        this.listen(this.elements['shading-view'], 'change', event =>
+        {
+            this.setDiagnosticView(Number(event.target.value))
+        })
         this.listen(this.touchInput, 'change', () => this.updateNavigationHelp())
         this.listen(this.elements['open-scan'], 'click', () => this.elements['scan-file'].click())
         this.listen(this.elements['scan-file'], 'change', event =>
@@ -264,23 +358,14 @@ export default class GUI
             let value = field.value
             if (field.type === 'checkbox') value = field.checked
             else if (typeof configs.get(key) === 'number') value = Number(value)
+            if (key === 'debugEnabled') configs.set('diagnosticView', 0)
             configs.set(key, value)
         })
-        this.listen(this.elements['debug-enabled'], 'change', event =>
-        {
-            configs.set('diagnosticView', 0)
-            configs.set('debugEnabled', event.target.checked)
-        })
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
-        this.listen(this.elements['back-to-surface'], 'click', () =>
-        {
-            this.setDiagnosticView(0)
-            experience.canvas.focus({ preventScroll: true })
-        })
         for (const [id, key] of overlayControls)
-            this.listen(this.elements[id], 'click', () =>
+            this.listen(this.elements[id], 'change', event =>
             {
-                const visible = !configs[key]
+                const visible = event.target.checked
                 configs.set(key, visible)
                 if (visible && key === 'occupancyWireframeVisible') this.setDiagnosticView(0)
             })
@@ -294,9 +379,6 @@ export default class GUI
 
         for (const button of this.qualityButtons)
             this.listen(button, 'click', () => experience.loadQuality(button.dataset.quality))
-
-        for (const button of this.viewButtons)
-            this.listen(button, 'click', () => this.setDiagnosticView(Number(button.dataset.view)))
 
         for (const button of this.cameraButtons)
         {
@@ -320,12 +402,7 @@ export default class GUI
     setDiagnosticView(view)
     {
         const { configs } = this.experience
-        if (view !== 0)
-        {
-            configs.set('diagnosticView', view)
-            const option = this.elements['debug-views'].querySelector(`[data-view="${view}"]`)
-            if (option) this.debugPanels.select(option.parentElement.id)
-        }
+        configs.set('diagnosticView', view)
         configs.set('debugEnabled', view !== 0)
     }
 
@@ -333,35 +410,32 @@ export default class GUI
     {
         const configs = this.experience?.configs
         const disabled = this.elements['settings-fields'].disabled || !configs
-        this.elements['debug-controls'].disabled = disabled
         for (const [id, key] of overlayControls)
         {
-            const button = this.elements[id]
+            const field = this.elements[id]
             const available = key !== 'orientationCubeVisible' || Boolean(this.experience?.computes.volume?.patientOrientation)
-            button.disabled = disabled || !available
-            button.setAttribute('aria-pressed', String(available && (configs?.get(key) ?? false)))
+            field.disabled = disabled || !available
+            field.checked = available && (configs?.get(key) ?? false)
         }
         this.elements['debug-options'].hidden = !configs?.debugEnabled
         const activeView = configs?.effectiveDebugView ?? 0
-        const activeButton = this.viewButtons.find(button => Number(button.dataset.view) === activeView)
-        const label = activeButton?.textContent.trim() || 'Surface'
+        const shadingView = this.elements['shading-view']
+        const shadingOption = Array.from(shadingView.options).find(option => option.value === String(activeView))
+        shadingView.querySelector('[value="debug"]').hidden = Boolean(shadingOption)
+        shadingView.value = shadingOption ? String(activeView) : 'debug'
+        const activeButton = this.debugButtons.find(button => Number(button.dataset.view) === activeView)
+        const label = shadingOption?.textContent.trim() || activeButton?.textContent.trim() || 'Surface'
         const viewLabel = this.elements['active-view']
         if (viewLabel.textContent !== label) viewLabel.textContent = label
-        const back = this.elements['back-to-surface']
-        back.hidden = activeView === 0
-        back.disabled = disabled
-        this.elements['debug-view-status'].textContent = activeView
-            ? `Viewing ${label}`
-            : 'Select a diagnostic to replace the shaded surface.'
-        for (const button of this.viewButtons)
+        for (const button of this.debugButtons)
         {
             const view = Number(button.dataset.view)
             const reason = configs ? debugViewUnavailableReason(view, configs) : ''
             button.disabled = disabled || Boolean(reason)
             button.title = reason || debugViewSources[view] || button.textContent
+            button.setAttribute('aria-pressed', String(view === activeView))
             if (reason) button.setAttribute('aria-description', reason)
             else button.removeAttribute('aria-description')
-            button.setAttribute('aria-pressed', String(view === activeView))
         }
     }
 
@@ -408,8 +482,9 @@ export default class GUI
         }
 
         this.syncThreshold()
-        this.elements['bernstein-control'].firstElementChild.disabled = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
+        this.elements['bernstein-control'].querySelector('input').disabled = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
         this.updateDebugControls()
+        if (this.variantMethod !== configs.skippingMethod) this.populateVariants()
 
         if (!quality) return
 
@@ -418,13 +493,9 @@ export default class GUI
             button.setAttribute('aria-pressed', String(button.dataset.quality === quality))
 
         const { dimensions, spacing } = computes.volumeMap
-        const timings = computes.preprocessingTimes
 
-        for (const mode of ['packed', 'unpacked'])
-        {
-            const elapsed = timings?.[mode]
-            this.elements[`${mode}-time`].textContent = elapsed == null ? '—' : `${Math.round(elapsed).toLocaleString()} ms`
-        }
+        if (this.variantVolume !== computes.volume || this.variantTimingKey !== computes.timingKey(configs.downscaleFactor))
+            this.elements['variant-result'].textContent = ''
 
         const voxelGrid = dimensions.toArray().join(' × ')
         const blockGrid = computes.occupancyMap.dimensions.toArray().join(' × ')
@@ -449,7 +520,7 @@ export default class GUI
         this.updateDebugControls()
         this.elements['open-scan'].disabled = busy
         this.elements['fps-toggle'].disabled = busy
-        const cameraUnavailable = !this.experience?.ready
+        const cameraUnavailable = !this.experience?.ready || this.experience.measuringVariants
         this.elements['reset-view'].disabled = cameraUnavailable
         for (const button of this.cameraButtons) button.disabled = cameraUnavailable
         for (const button of this.qualityButtons) button.disabled = busy

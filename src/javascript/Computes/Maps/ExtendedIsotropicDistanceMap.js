@@ -4,8 +4,10 @@ import Computes from '../Computes'
 import { computeExtendedIsotropicDistanceMap } from '../Programs/DistanceMaps/Isotropic/GPGPUExtendedIsotropicDistanceMap'
 import { computeExtendedIsotropicDistanceMap as computeExtendedIsotropicDistanceMapPacked } from '../Programs/DistanceMaps/Isotropic/GPGPUExtendedIsotropicDistanceMapPacked'
 
+/** Encode negative and positive XYZ skip extents in R and G respectively. Each word stores XYZ in bits 15–11, 10–6, and 5–1, with occupancy in bit 0. */
 export default class ExtendedIsotropicDistanceMap
 {
+    /** @param {boolean} [unpacked] - Use scalar programs. Both modes produce the same packed words. */
     constructor(unpacked)
     {
         this.computes = new Computes()
@@ -15,6 +17,7 @@ export default class ExtendedIsotropicDistanceMap
         this.maxDistance = 31
     }
 
+    /** Build [z,y,x,2] words, with XYZ extents capped at 31 from the current occupancy tensor. tf.tidy releases unretained intermediates. The returned kernel tensor is stored on this map. */
     computeTensor()
     {
         console.time('computeTensor')
@@ -25,6 +28,7 @@ export default class ExtendedIsotropicDistanceMap
         console.timeEnd('computeTensor')
     }
 
+    /** Create the nearest-filtered RG16UI 3D texture from a synchronous readback and queue its upload. */
     computeTexture()
     {
         console.time('computeTexture')
@@ -42,17 +46,24 @@ export default class ExtendedIsotropicDistanceMap
         console.timeEnd('computeTexture')
     }
 
+    /** Replace the bytes of a same-sized texture in place and queue an upload. */
     updateTexture()
     {
         this.texture.image.data.set(this.getTextureData())
         this.texture.needsUpdate = true
     }
 
+    /**
+     * Synchronously read the tensor in x-fastest spatial order.
+     *
+     * @returns {Uint16Array} Two consecutive 5-5-5-1 words per block, negative then positive.
+     */
     getTextureData()
     {
         return new Uint16Array(this.tensor.dataSync())
     }
 
+    /** Release the final distance tensor and the Three.js texture if present. */
     dispose()
     {
         this.tensor?.dispose()

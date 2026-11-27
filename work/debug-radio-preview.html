@@ -1,0 +1,97 @@
+<div id="debug-radio-preview" class="viz-dotted-background">
+  <section class="debug-panel" aria-label="Debug panel with struct selection">
+    <h3>Debug</h3>
+    <label class="debug-enable"><input type="checkbox" data-enabled checked> Enable debug</label>
+    <div class="debug-fields" data-fields></div>
+    <p data-status role="status"></p>
+  </section>
+</div>
+<style>
+  #debug-radio-preview {
+    --paper:light-dark(#e8e7df,#232932);
+    --field:light-dark(#f1f0e9,#1a2027);
+    --ink:light-dark(#172d41,#e6edf4);
+    --label:light-dark(#36566e,#b1becb);
+    --line:light-dark(#9b9f9e,#505f70);
+    display:grid; justify-items:center; padding:16px 12px;
+    color:var(--ink); font:13px/1.4 system-ui,sans-serif;
+  }
+  #debug-radio-preview [hidden] { display:none !important; }
+  #debug-radio-preview * { box-sizing:border-box; }
+  #debug-radio-preview .debug-panel {
+    display:grid; gap:10px; padding:12px; width:min(var(--debug-width,280px),100%);
+    border:1px solid var(--line); background:var(--paper);
+  }
+  #debug-radio-preview h3 { margin:0; font-size:15px; }
+  #debug-radio-preview .debug-enable, #debug-radio-preview .struct-name {
+    display:flex; align-items:center; gap:7px; color:var(--label); font-size:12px;
+  }
+  #debug-radio-preview input { margin:0; accent-color:light-dark(#294b69,#a6ccef); }
+  #debug-radio-preview .debug-fields { display:grid; gap:10px; }
+  #debug-radio-preview .struct { display:grid; gap:4px; min-width:0; }
+  #debug-radio-preview select {
+    width:100%; min-width:0; padding:5px 7px; font:13px system-ui,sans-serif;
+    border:1px solid var(--line); border-radius:0; color:var(--ink); background:var(--field);
+  }
+  #debug-radio-preview p { margin:0; font-size:12px; color:var(--label); }
+  #debug-radio-preview .struct:has(input:checked) .struct-name { color:var(--ink); font-weight:600; }
+  @media (pointer:coarse) {
+    #debug-radio-preview select, #debug-radio-preview .struct-name, #debug-radio-preview .debug-enable { min-height:44px; }
+    #debug-radio-preview select { font-size:16px; }
+  }
+</style>
+<script>
+(() => {
+  const root=document.getElementById('debug-radio-preview');
+  const fields=root.querySelector('[data-fields]');
+  const groups={
+    'Surface hit':['Distance','Position','Residue','Gradient'],
+    'Traversal counters':['Blocks traversed','Cells traversed','Texture fetches','Root solves','Bernstein rejections'],
+    'Ray':['Direction','Signs','Start distance','End distance'],
+    'Blocks':['Occupancy map','Skip coordinates','Coordinates','Entry distance'],
+    'Cells':['Coordinates','Intersected','Entry distance'],
+    'Traces':['Residue','Distance','Position'],
+    'Lighting':['Material color','Ambient color','Diffuse color','Specular color'],
+    'Volume bounds':['Entry distance','Exit distance','Min position','Max position'],
+    'Camera':['Position','Direction'],
+    'Cubic':['Root','Number of roots','Degree','Bernstein weights'],
+    'Quintic':['Root','Number of roots','Degree','Bernstein weights'],
+    'Custom variables':['Variable 0','Variable 1','Variable 2']
+  };
+  const rows=[];
+  let active='Traversal counters';
+  for (const [name,variables] of Object.entries(groups)) {
+    const row=document.createElement('div');
+    row.className='struct';
+    const label=document.createElement('label');
+    label.className='struct-name';
+    const radio=document.createElement('input');
+    radio.type='radio'; radio.name='debug-preview-struct'; radio.value=name;
+    radio.checked=name===active;
+    label.append(radio,name);
+    const select=document.createElement('select');
+    select.setAttribute('aria-label',name+' variable');
+    for (const variable of variables) select.add(new Option(variable,variable));
+    row.append(label,select); fields.append(row);
+    rows.push({name,radio,select});
+    radio.addEventListener('change',()=>{active=name; render();});
+    select.addEventListener('change',()=>{active=name; render();});
+  }
+  function render() {
+    const enabled=root.querySelector('[data-enabled]').checked;
+    fields.hidden=!enabled;
+    for (const row of rows) row.radio.checked=row.name===active;
+    const chosen=rows.find(row=>row.name===active);
+    root.querySelector('[data-status]').textContent=enabled
+      ? active+' · '+chosen.select.value
+      : 'Surface';
+  }
+  root.querySelector('[data-enabled]').addEventListener('change',render);
+  render();
+  if (globalThis.Tweak) {
+    const state={width:280};
+    const tweak=new Tweak({container:root,onChange:()=>root.style.setProperty('--debug-width',state.width+'px')});
+    tweak.addSlider(state,'width',{label:'Panel width',min:248,max:300,unit:'px'});
+  }
+})();
+</script>
