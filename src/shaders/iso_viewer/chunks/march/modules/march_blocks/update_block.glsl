@@ -16,3 +16,7 @@ block.current_coords = block.coords;
 #elif SKIPPING_METHOD == 4
 #include "./update_block/update_block_extended_anisotropic"
 #endif    
+
+#if RAY_CAPTURE == 1
+captureBlock();
+#endif

@@ -59,6 +59,15 @@
 #rebuild-variants { justify-self: start; }
 #variant-result { white-space: pre-line; font-variant-numeric: tabular-nums; }
 #variant-result:empty { display: none; }
+#ray-inspection { display: grid; gap: 8px; }
+#select-ray { justify-self: start; }
+#ray-inspection-status { margin: 0; color: var(--muted); font-size: 12px; }
+.ray-inspection-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 12px; }
+.ray-inspection-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ray-inspection-legend i { width: 10px; height: 10px; border: 2px solid; }
+.ray-empty-color { color: #55ced0; }
+.ray-occupied-color { color: #cc99ff; }
+.webgl.ray-selecting { cursor: crosshair; }
 
 #debug-options { display: grid; gap: 10px; }
 .debug-views { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.22fr); align-items: start; gap: 8px; min-width: 0; }

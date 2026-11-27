@@ -82,6 +82,7 @@ export default function()
 
         DEBUG_ENABLED     : 0,
         DISCARDING_ENABLED: 1,
+        RAY_CAPTURE       : 0,
         VARIATION_ENABLED : 0,
         VARIATION_METHOD  : 1,
 

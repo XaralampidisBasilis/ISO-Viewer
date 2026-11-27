@@ -185,6 +185,15 @@
                         <label class="check-setting"><input type="checkbox" id="toggle-bounding-box"> Bounding box</label>
                         <label class="check-setting"><input type="checkbox" id="toggle-volume-box"> Volume box</label>
                         <label class="check-setting"><input type="checkbox" id="toggle-orientation-cube"> Orientation cube</label>
+                        <label class="check-setting"><input type="checkbox" data-config="rayInspectionVisible"> Ray inspection</label>
+                        <div id="ray-inspection" hidden>
+                            <button type="button" id="select-ray">Select ray</button>
+                            <p id="ray-inspection-status" role="status">Select ray, then click the scan. Rotate to inspect the path.</p>
+                            <div class="ray-inspection-legend" aria-label="Ray inspection colors">
+                                <span><i class="ray-empty-color" aria-hidden="true"></i>Empty regions</span>
+                                <span><i class="ray-occupied-color" aria-hidden="true"></i>Occupied blocks</span>
+                            </div>
+                        </div>
                     </section>
 
                     <section class="control-panel" id="kernels-panel" aria-labelledby="kernels-heading" hidden>

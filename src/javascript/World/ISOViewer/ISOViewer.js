@@ -3,6 +3,7 @@ import Experience from '../../Experience'
 import Configs from '../../Utils/Configs'
 import { debugCounterReference, occupancyMapView } from '../../Utils/DebugViews'
 import ISOMaterial from './ISOMaterial'
+import RayTraversalOverlay from './RayTraversalOverlay'
 
 export default class ISOViewer
 {
@@ -16,6 +17,7 @@ export default class ISOViewer
         this.boxEdges = new THREE.EdgesGeometry(this.mesh.geometry)
         this.volumeBox = this.createBoxWireframe(0x99aaff, 1)
         this.boundingBox = this.createBoxWireframe(0xffbd57, 2)
+        this.rayOverlay = new RayTraversalOverlay(this, experience)
         this.syncShading()
     }
 
@@ -120,6 +122,7 @@ export default class ISOViewer
             Object.assign(material.defines, defines)
             material.needsUpdate = true
         }
+        this.rayOverlay.sync()
     }
 
     syncShading()
@@ -132,6 +135,7 @@ export default class ISOViewer
 
     destroy()
     {
+        this.rayOverlay.destroy()
         this.mesh.removeFromParent()
         this.boxEdges.dispose()
         this.boundingBox.material.dispose()

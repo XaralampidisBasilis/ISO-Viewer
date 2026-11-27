@@ -39,6 +39,7 @@ export default class Renderer extends EventEmitter
 
     update()
     {
+        this.experience.world.viewer.rayOverlay.update()
         this.instance.render(this.scene, this.camera.instance)
         const { computes, configs } = this.experience
         const theme = document.documentElement.dataset.theme

@@ -15,6 +15,10 @@ cell.coords += cell.exit_normal * ray.signs;
 cell_far_distances = advanceCellFarDistances(cell_far_distances, cell_step_distances, cell.exit_distance, cell.exit_normal);
 cell.terminated = cell.exit_distance > ray.end_distance;
 
+#if RAY_CAPTURE == 1
+captureEvent(cell.entry_position, cell.exit_position, cell.entry_distance, cell.exit_distance, 2.0);
+#endif
+
 #if DEBUG_ENABLED == 1
 stats.num_cells += 1;
 #endif

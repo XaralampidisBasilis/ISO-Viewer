@@ -50,6 +50,7 @@ export default class Configs extends EventEmitter
             volumeBoxVisible: false,
             orientationCubeVisible: true,
             occupancyWireframeVisible: false,
+            rayInspectionVisible: false,
             gradientShading: true,
             curvatureShading: true,
             debugEnabled: false,
