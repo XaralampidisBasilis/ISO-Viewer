@@ -1,0 +1,115 @@
+<div id="ray-clarity-preview">
+  <div class="viz-carousel" aria-label="Ray inspection clarity options">
+    <section data-variant="Outlined ray"><div class="scene" data-treatment="0"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Dashed empty regions" hidden><div class="scene" data-treatment="1"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Direction arrows" hidden><div class="scene" data-treatment="2"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Hit callout" hidden><div class="scene" data-treatment="3"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Muted anatomy" hidden><div class="scene" data-treatment="4"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+  </div>
+</div>
+<style>
+  #ray-clarity-preview [hidden] { display:none !important; }
+  #ray-clarity-preview .scene { background:#211d20; color:#ede9df; font:12px system-ui,sans-serif; }
+  #ray-clarity-preview canvas { display:block; width:100%; height:320px; }
+  #ray-clarity-preview .key { display:flex; justify-content:center; gap:8px 18px; flex-wrap:wrap; padding:8px 12px 15px; }
+  #ray-clarity-preview .key span { display:flex; align-items:center; gap:5px; }
+  #ray-clarity-preview .key i { width:12px; height:10px; border:2px solid currentColor; }
+  #ray-clarity-preview .key span:nth-child(3) i { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  #ray-clarity-preview .key span:nth-child(4) i { height:0; border-width:1px; }
+  @media(max-width:480px) { #ray-clarity-preview canvas { height:225px; } }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('ray-clarity-preview');
+  for (const scene of root.querySelectorAll('.scene')) {
+    const colors = ['#53c9f4', '#ffb24a', '#ff6587', '#e6f2ff'];
+    const treatment = Number(scene.dataset.treatment);
+    const [empty, occupied, hit, ray] = colors;
+    const canvas = scene.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const labels = ['Empty region', 'Occupied block', 'First hit', 'Ray'];
+    for (const [index, label] of labels.entries()) {
+      const item = document.createElement('span');
+      const swatch = document.createElement('i');
+      swatch.style.color = colors[index];
+      swatch.setAttribute('aria-hidden', 'true');
+      item.append(swatch, label);
+      scene.querySelector('.key').append(item);
+    }
+    function draw() {
+      const {clientWidth: width, clientHeight: height} = canvas;
+      if (!width || !height) return;
+      const ratio = devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const scale = Math.min(width / 580, height / 275);
+      const project = ([x,y,z]) => [width * .5 + scale * (x + y * .52), height * .54 + scale * (x * .18 - y * .32 - z)];
+      function line(a, b, color, weight) {
+        ctx.beginPath();
+        ctx.moveTo(...project(a));
+        ctx.lineTo(...project(b));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = weight;
+        ctx.stroke();
+      }
+      function box(start, end, radius, color, opacity) {
+        const points = Array.from({length:8}, (_, i) => [i & 1 ? end : start, i & 2 ? radius : -radius, i & 4 ? radius : -radius]);
+        ctx.globalAlpha = opacity;
+        for (let i = 0; i < 8; i++) {
+          for (const bit of [1,2,4]) if (!(i & bit)) line(points[i], points[i | bit], color, 1.5);
+        }
+        ctx.globalAlpha = 1;
+      }
+      if (treatment === 4) ctx.globalAlpha = .36;
+      const path = [[160,0,-105],[138,0,-39],[152,0,20],[145,0,71],[176,0,132]];
+      ctx.lineCap = 'round';
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#81837c', 36 * scale);
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#c9c5b2', 27 * scale);
+      line([152,0,20],[219,17,78],'#aaa795',18 * scale);
+      ctx.globalAlpha = 1;
+      if (treatment === 1) ctx.setLineDash([4,5]);
+      box(-211,-95,55,empty,treatment === 1 ? .65 : .35);
+      box(-95,7,38,empty,.35);
+      box(7,96,27,empty,.35);
+      ctx.setLineDash([]);
+      box(96,151,19,occupied,.8);
+      if (treatment === 0) line([-260,0,0],[134,0,0],'#17141b',5.5);
+      line([-260,0,0],[134,0,0],ray,1.8);
+      if (treatment === 2) {
+        for (const x of [-167,-60,53]) {
+          line([x-10,0,6],[x,0,0],ray,2);
+          line([x-10,0,-6],[x,0,0],ray,2);
+        }
+      }
+      if (treatment === 3) {
+        const [x,y] = project([134,0,0]);
+        ctx.beginPath();
+        ctx.moveTo(x+3,y-4);
+        ctx.lineTo(x-14,y-33);
+        ctx.lineTo(x-27,y-33);
+        ctx.strokeStyle = hit;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.textAlign = 'right';
+        ctx.font = '12px system-ui,sans-serif';
+        ctx.fillStyle = '#f4e9ef';
+        ctx.fillText('First hit', x-31,y-29);
+      }
+      for (const x of [-211,-95,7,96,134]) {
+        ctx.beginPath();
+        ctx.arc(...project([x,0,0]), x === 134 ? 5 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = x === 134 ? hit : ray;
+        ctx.fill();
+        if (x === 134) {
+          ctx.strokeStyle = '#36232f';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+    new ResizeObserver(draw).observe(canvas);
+    draw();
+  }
+})();
+</script>

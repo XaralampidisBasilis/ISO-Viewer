@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#294b69">
     <meta name="description" content="Explore a head and neck CT angiography scan with interactive GPU isosurface rendering.">
     <title>ISOViewer | Head &amp; neck CTA</title>
-  <script type="module" crossorigin src="./assets/index-0a0b747c.js"></script>
-  <link rel="stylesheet" href="./assets/index-9ae849d8.css">
+  <script type="module" crossorigin src="./assets/index-9ad65d27.js"></script>
+  <link rel="stylesheet" href="./assets/index-52c07f1a.css">
 </head>
 <body>
     <header class="topbar">
@@ -33,19 +33,7 @@
             <details name="app-menu">
                 <summary>View</summary>
                 <div class="menu-panel">
-                    <div class="menu-group" role="group" aria-label="Volume display">
-                        <button type="button" data-view="0" aria-pressed="true" disabled>Surface</button>
-                        <button type="button" data-view="459" aria-pressed="false" disabled>Normals</button>
-                        <button type="button" data-view="462" aria-pressed="false" disabled>Curvature</button>
-                    </div>
-                    <div class="menu-group" role="group" aria-label="Wireframes">
-                        <button type="button" id="toggle-occupancy-wireframe" aria-pressed="false" disabled>Occupancy wireframe</button>
-                        <button type="button" id="toggle-bounding-box" aria-pressed="false" disabled>Bounding box</button>
-                        <button type="button" id="toggle-volume-box" aria-pressed="false" disabled>Volume box</button>
-                    </div>
-                    <div class="menu-group" role="group" aria-label="Orientation">
-                        <button type="button" id="toggle-orientation-cube" aria-pressed="false" disabled>Orientation cube</button>
-                    </div>
+                    <button type="button" id="reset-view" disabled>Reset view</button>
                     <div class="menu-group" role="group" aria-label="Camera">
                         <button type="button" data-camera="orbit" aria-pressed="true" disabled>Orbit</button>
                         <button type="button" data-camera="fly" aria-pressed="false" disabled>Fly</button>
@@ -54,21 +42,20 @@
                         <button type="button" data-theme="light" aria-pressed="true">Light mode</button>
                         <button type="button" data-theme="dark" aria-pressed="false">Dark mode</button>
                     </div>
+                    <div class="menu-group" role="group" aria-label="Coordinate space">
+                        <button type="button" data-space="world" aria-pressed="true" disabled>World space</button>
+                        <button type="button" data-space="grid" aria-pressed="false" disabled>Grid space</button>
+                    </div>
                 </div>
             </details>
-            <details name="app-menu" id="debug-menu">
-                <summary>Debug</summary>
-                <div class="menu-panel debug-menu-panel">
-                    <fieldset class="debug-controls" id="debug-controls" disabled>
-                        <label class="check-setting"><input type="checkbox" id="debug-enabled" data-config="debugEnabled" aria-controls="debug-options"> Enable debug</label>
-                        <div id="debug-options" hidden>
-                            <div class="debug-browser">
-                                <div class="debug-categories" id="debug-categories" role="tablist" aria-label="Visualization categories" aria-orientation="vertical"></div>
-                                <div class="debug-views" id="debug-views"></div>
-                            </div>
-                            <p class="debug-view-status" id="debug-view-status" role="status">Select a diagnostic to replace the shaded surface.</p>
-                        </div>
-                    </fieldset>
+            <details name="app-menu">
+                <summary>Controls</summary>
+                <div class="menu-panel">
+                    <button type="button" data-control-panel="render-panel" aria-controls="render-panel" aria-current="true">Rendering</button>
+                    <button type="button" data-control-panel="shading-panel" aria-controls="shading-panel">Shading</button>
+                    <button type="button" data-control-panel="overlays-panel" aria-controls="overlays-panel">Overlays</button>
+                    <button type="button" data-control-panel="kernels-panel" aria-controls="kernels-panel">Kernels</button>
+                    <button type="button" data-control-panel="debug-panel" aria-controls="debug-panel">Debug</button>
                 </div>
             </details>
             <details name="app-menu">
@@ -81,19 +68,11 @@
         </nav>
         <input id="scan-file" type="file" accept=".nii,.nii.gz" aria-label="Choose a NIfTI scan" hidden>
         <section class="viewer" aria-label="Interactive volume viewer">
-            <div class="viewer-toolbar">
-                <div class="viewer-state" role="status">
-                    <span id="scan-quality" hidden></span>
-                    <strong id="active-view">Surface</strong>
-                </div>
-                <div class="viewer-actions">
-                    <button type="button" id="back-to-surface" hidden>Back to surface</button>
-                    <button type="button" id="reset-view" disabled>Reset view</button>
-                </div>
-            </div>
             <div class="viewport" id="viewport">
                 <canvas class="webgl" tabindex="0" aria-label="3D rendering of the current scan" aria-describedby="navigation-help"></canvas>
-                <canvas id="orientation-cube" width="192" height="192" role="img" aria-label="Patient orientation" hidden></canvas>
+                <div id="orientation-control" role="group" aria-label="Align camera to patient orientation" hidden>
+                    <canvas id="orientation-cube" width="192" height="192" aria-hidden="true" hidden></canvas>
+                </div>
                 <div class="loading" id="loading" role="status" aria-live="polite">
                     <strong id="loading-title">Starting the viewer</strong>
                     <span id="loading-description">Head &amp; neck CT angiography</span>
@@ -108,16 +87,29 @@
                 <figure class="counter-legend" id="counter-legend" aria-label="Traversal counter legend" hidden>
                     <div id="counter-legend-scale">
                         <canvas id="counter-legend-ramp" width="257" height="1" aria-hidden="true"></canvas>
-                        <div class="counter-legend-ticks" id="counter-legend-ticks"></div>
+                        <canvas id="counter-legend-overflow" width="257" height="1" aria-hidden="true"></canvas>
+                        <div class="counter-legend-ticks">
+                            <div id="counter-legend-ticks"></div>
+                            <span class="counter-legend-top"><input id="counter-legend-maximum" type="number" min="1" max="16777216" step="1" inputmode="numeric" aria-label="Counter color maximum" title="Counts above this value fade toward white. Clear to restore the default."></span>
+                        </div>
                     </div>
                     <div class="counter-legend-swatches" id="counter-legend-swatches" hidden>
                         <span><i id="counter-legend-one" aria-hidden="true"></i>1</span>
                         <span><i aria-hidden="true"></i>0</span>
                     </div>
                 </figure>
-                <button type="button" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Enter fullscreen" hidden>
-                    <span aria-hidden="true">⛶</span>
-                </button>
+                <div class="viewport-actions">
+                    <button type="button" id="capture-view" aria-label="Capture PNG" title="Capture PNG" disabled>
+                        <svg class="capture-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M14.3 8 20 17.9 M9.7 8h11.4 M7.4 12l5.7-9.9 M9.7 16 4 6.1 M14.3 16H2.9 M16.6 12l-5.7 9.9"></path>
+                        </svg>
+                    </button>
+                    <button type="button" id="fullscreen-toggle" aria-label="Enter fullscreen" title="Enter fullscreen" hidden>
+                        <span aria-hidden="true">⛶</span>
+                    </button>
+                </div>
+                <div id="capture-error" class="stage-message" role="status" hidden></div>
             </div>
         </section>
 
@@ -130,24 +122,26 @@
             <span id="isovalue-scale">Normalized 0–1</span>
         </fieldset>
 
-        <aside class="inspector" aria-labelledby="volume-controls">
-            <h2 id="volume-controls">Volume controls</h2>
+        <aside class="inspector" aria-label="Controls">
             <form id="settings">
                 <p id="settings-error" class="settings-error" role="status" hidden></p>
 
-                <div class="control-tabs" id="control-tabs" role="tablist" aria-label="Viewer controls">
-                    <button type="button" id="render-tab" role="tab" aria-controls="render-panel" aria-selected="true">Render</button>
-                    <button type="button" id="surface-tab" role="tab" aria-controls="surface-panel" aria-selected="false" tabindex="-1">Surface</button>
-                </div>
-
                 <fieldset id="settings-fields" disabled>
-                    <section class="control-panel" id="surface-panel" role="tabpanel" aria-labelledby="surface-tab" hidden>
-                        <fieldset class="control-group">
-                            <legend>Appearance</legend>
-                            <label class="select-setting">Surface palette
+                    <section class="control-panel" id="shading-panel" aria-labelledby="shading-heading" hidden>
+                        <h2 id="shading-heading" tabindex="-1">Shading</h2>
+                        <div class="control-group">
+                            <label class="select-setting">View
+                                <select id="shading-view">
+                                    <option value="0">Surface</option>
+                                    <option value="459">Normals</option>
+                                    <option value="462">Curvature</option>
+                                    <option value="debug" disabled hidden>Debug diagnostic</option>
+                                </select>
+                            </label>
+                            <label class="select-setting">Colormap
                                 <select id="colormap" data-config="colormap"></select>
                             </label>
-                            <label class="select-setting">Surface normals
+                            <label class="select-setting">Gradient method
                                 <select data-config="gradientsMethod">
                                     <option value="analytic">Analytic gradient</option>
                                     <option value="trilinearSobel">Trilinear Sobel</option>
@@ -155,15 +149,13 @@
                                     <option value="tricubicBspline">Tricubic B-spline</option>
                                 </select>
                             </label>
-                        </fieldset>
-                        <fieldset class="control-group">
-                            <legend>Lighting</legend>
                             <label class="check-setting"><input type="checkbox" data-config="gradientShading"> Gradient shading</label>
                             <label class="check-setting"><input type="checkbox" data-config="curvatureShading"> Curvature shading</label>
-                        </fieldset>
+                        </div>
                     </section>
 
-                    <section class="control-panel" id="render-panel" role="tabpanel" aria-labelledby="render-tab">
+                    <section class="control-panel" id="render-panel" aria-labelledby="render-heading">
+                        <h2 id="render-heading" tabindex="-1">Rendering</h2>
                         <div class="control-group">
                             <label class="select-setting">Interpolation
                                 <select data-config="interpolationMethod">
@@ -180,6 +172,12 @@
                                     <option value="extendedAnisotropicDistance">Extended anisotropic distance</option>
                                 </select>
                             </label>
+                            <label class="select-setting">Ray traversal
+                                <select data-config="marchingMethod">
+                                    <option value="digitalDifferentialAnalyzer">Discrete Differential Analyzer</option>
+                                    <option value="uniformStepping">Uniform stepping</option>
+                                </select>
+                            </label>
                             <label class="select-setting">Block size
                                 <select id="block-size" data-config="blockSize">
                                     <option value="1">1 × 1 × 1 cells</option>
@@ -188,23 +186,40 @@
                                     <option value="8">8 × 8 × 8 cells</option>
                                 </select>
                             </label>
+                            <label class="check-setting"><input type="checkbox" data-config="skippingEnabled"> Skip empty space</label>
+                            <label class="check-setting" id="bernstein-control"><input type="checkbox" data-config="bernsteinEnabled"> Bernstein rejection</label>
+                            <label class="check-setting"><input type="checkbox" data-config="boundingBoxEnabled"> Clip to occupied bounds</label>
                         </div>
-                        <details class="advanced-settings">
-                            <summary>Advanced rendering</summary>
-                            <div class="advanced-fields">
-                                <label class="select-setting">Ray traversal
-                                    <select data-config="marchingMethod">
-                                        <option value="digitalDifferentialAnalyzer">Discrete Differential Analyzer</option>
-                                        <option value="uniformStepping">Uniform stepping</option>
-                                    </select>
-                                </label>
-                                <label class="check-setting"><input type="checkbox" data-config="skippingEnabled"> Skip empty space</label>
-                                <label class="check-setting" id="bernstein-control"><input type="checkbox" data-config="bernsteinEnabled"> Bernstein rejection</label>
-                                <label class="check-setting"><input type="checkbox" data-config="boundingBoxEnabled"> Clip to occupied bounds</label>
-                            </div>
-                        </details>
                     </section>
 
+                    <section class="control-panel" id="overlays-panel" aria-labelledby="overlays-heading" hidden>
+                        <h2 id="overlays-heading" tabindex="-1">Overlays</h2>
+                        <label class="check-setting"><input type="checkbox" id="toggle-surface"> Hide surface</label>
+                        <label class="check-setting"><input type="checkbox" id="toggle-occupancy-wireframe"> Occupancy wireframe</label>
+                        <label class="check-setting"><input type="checkbox" id="toggle-bounding-box"> Bounding box</label>
+                        <label class="check-setting"><input type="checkbox" id="toggle-volume-box"> Volume box</label>
+                        <label class="check-setting"><input type="checkbox" id="toggle-orientation-cube"> Orientation cube</label>
+                        <label class="check-setting"><input type="checkbox" data-config="rayInspectionVisible"> Ray inspection</label>
+                        <div id="ray-inspection" hidden>
+                            <button type="button" id="select-ray">Select ray</button>
+                            <p id="ray-inspection-status" role="status">Select ray, then click the scan. Rotate to inspect the path.</p>
+                        </div>
+                    </section>
+
+                    <section class="control-panel" id="kernels-panel" aria-labelledby="kernels-heading" hidden>
+                        <h2 id="kernels-heading" tabindex="-1">Kernels</h2>
+                        <button type="button" id="rebuild-variants">Rebuild and time</button>
+                        <div id="variant-stages"></div>
+                        <p id="variant-result" role="status"></p>
+                    </section>
+
+                    <section class="control-panel" id="debug-panel" aria-labelledby="debug-heading" hidden>
+                        <h2 id="debug-heading" tabindex="-1">Debug</h2>
+                        <label class="check-setting"><input type="checkbox" id="debug-enabled" data-config="debugEnabled" aria-controls="debug-options"> Enable debug</label>
+                        <div id="debug-options" hidden>
+                            <div class="debug-views" id="debug-views" role="group" aria-label="Diagnostics"></div>
+                        </div>
+                    </section>
                 </fieldset>
             </form>
         </aside>

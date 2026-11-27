@@ -1,4 +1,9 @@
 import * as THREE from 'three'
+import { Line2 } from 'three/addons/lines/Line2.js'
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import fragmentShader from '../../../shaders/iso_viewer/capture.glsl'
 
 const vertexShader = `
@@ -68,7 +73,7 @@ export default class RayTraversalOverlay
         else if (this.previousStatus) this.status.textContent = this.previousStatus
     }
 
-    /** Freeze the world-space camera ray. Later camera motion only changes its viewing angle. */
+    /** Freeze the ray in proxy-local coordinates so it follows the scan in either display space. */
     select(clientX, clientY)
     {
         const { canvas, camera } = this.experience
@@ -80,10 +85,11 @@ export default class RayTraversalOverlay
         camera.instance.updateMatrixWorld()
         const raycaster = new THREE.Raycaster()
         raycaster.setFromCamera(pointer, camera.instance)
+        const size = this.viewer.size
         this.selection = {
-            origin: raycaster.ray.origin.clone(),
-            direction: raycaster.ray.direction.clone(),
-            cameraDirection: camera.instance.getWorldDirection(new THREE.Vector3()),
+            origin: raycaster.ray.origin.clone().divide(size),
+            direction: raycaster.ray.direction.clone().divide(size),
+            cameraDirection: camera.instance.getWorldDirection(new THREE.Vector3()).divide(size),
         }
         this.setSelecting(false)
         this.dirty = true
@@ -191,11 +197,11 @@ export default class RayTraversalOverlay
     capture()
     {
         this.prepareCapture()
-        const { dimensions, size, spacing } = this.experience.computes.volumeMap
+        const { dimensions } = this.experience.computes.volumeMap
         const { uniforms } = this.captureMaterial
-        uniforms.u_capture_origin.value.copy(this.selection.origin).divide(size).addScalar(0.5).multiply(dimensions)
-        uniforms.u_capture_direction.value.copy(this.selection.direction).divide(spacing).normalize()
-        uniforms.u_capture_camera_direction.value.copy(this.selection.cameraDirection).divide(spacing).normalize()
+        uniforms.u_capture_origin.value.copy(this.selection.origin).addScalar(0.5).multiply(dimensions)
+        uniforms.u_capture_direction.value.copy(this.selection.direction).multiply(dimensions).normalize()
+        uniforms.u_capture_camera_direction.value.copy(this.selection.cameraDirection).multiply(dimensions).normalize()
         const defines = {
             ...this.viewer.material.defines,
             RAY_CAPTURE: 1,
@@ -279,21 +285,20 @@ export default class RayTraversalOverlay
             return
         }
 
-        const points = [this.local(origin), this.local(origin.clone().addScaledVector(direction, start))]
-        const markers = [points[1]]
+        const blockMarkers = [this.local(origin.clone().addScaledVector(direction, start))]
+        const fineMarkers = []
         const wirePositions = []
         const occupiedPositions = []
-        let skips = 0
-        let occupied = 0
         for (let index = 2; index < count + 2; index++)
         {
             const kind = data[index * 4 + 3]
             const entry = data[(width + index) * 4 + 3]
             const exit = data[(width * 2 + index) * 4 + 3]
-            if (entry >= end || exit <= start) continue
+            if (entry > end || exit <= start) continue
             const minimum = read(index, 0)
             const maximum = read(index, 1)
             this.captureResult.events.push({ kind, minimum, maximum, entry, exit })
+            const markers = kind === 2 ? fineMarkers : blockMarkers
             markers.push(this.local(origin.clone().addScaledVector(direction, Math.min(exit, end))))
             if (kind !== 1 && kind !== 3) continue
 
@@ -308,37 +313,58 @@ export default class RayTraversalOverlay
             for (const [a, b] of [[0, 1], [0, 2], [0, 4], [1, 3], [1, 5], [2, 3],
                 [2, 6], [3, 7], [4, 5], [4, 6], [5, 7], [6, 7]])
                 positions.push(...corners[a], ...corners[b])
-            if (kind === 3) occupied++
-            else skips++
         }
-        points.push(this.local(origin.clone().addScaledVector(direction, end)))
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0xffbd57, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false,
+        const endpoint = this.local(origin.clone().addScaledVector(direction, end))
+        const pathGeometry = new LineGeometry().setPositions([...this.local(origin).toArray(), ...endpoint.toArray()])
+        const lineMaterial = new LineMaterial({
+            color: 0xe6f2ff, linewidth: 2, transparent: true, opacity: 0.85, depthTest: false, depthWrite: false,
         })
-        const path = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), lineMaterial)
-        const visits = new THREE.Points(new THREE.BufferGeometry().setFromPoints(markers),
-            new THREE.PointsMaterial({ color: 0xffbd57, size: 3, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false }))
-        const wireGeometry = new THREE.BufferGeometry()
-        wireGeometry.setAttribute('position', new THREE.Float32BufferAttribute(wirePositions, 3))
-        const regions = new THREE.LineSegments(wireGeometry, new THREE.LineBasicMaterial({
-            color: 0x55ced0, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false,
-        }))
-        const occupiedGeometry = new THREE.BufferGeometry()
-        occupiedGeometry.setAttribute('position', new THREE.Float32BufferAttribute(occupiedPositions, 3))
-        const occupiedBlocks = new THREE.LineSegments(occupiedGeometry, new THREE.LineBasicMaterial({
-            color: 0xcc99ff, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false,
-        }))
-        path.renderOrder = regions.renderOrder = occupiedBlocks.renderOrder = 10
-        visits.renderOrder = 11
-        this.group.add(path, visits, regions, occupiedBlocks)
+        const path = new Line2(pathGeometry, lineMaterial)
+        path.renderOrder = 10
+        this.group.add(path)
+        for (const [markers, size] of [[fineMarkers, 3], [blockMarkers, 5]])
+        {
+            if (!markers.length) continue
+            const visits = new THREE.Points(new THREE.BufferGeometry().setFromPoints(markers),
+                new THREE.PointsMaterial({ color: 0xe6f2ff, size, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false }))
+            visits.renderOrder = 11
+            this.group.add(visits)
+        }
+        for (const [positions, color, opacity, order] of [
+            [wirePositions, 0x53c9f4, 0.8, 10],
+            [occupiedPositions, this.viewer.boundingBox.material.color, 0.8, 10],
+        ])
+        {
+            if (!positions.length) continue
+            const geometry = new LineSegmentsGeometry().setPositions(positions)
+            const wireframe = new LineSegments2(geometry, new LineMaterial({
+                color, linewidth: 2, transparent: true, opacity, depthTest: false, depthWrite: false,
+            }))
+            wireframe.renderOrder = order
+            this.group.add(wireframe)
+        }
         if (hitState === 1)
         {
+            if (!this.hitMarkerTexture)
+            {
+                const canvas = document.createElement('canvas')
+                canvas.width = canvas.height = 32
+                const context = canvas.getContext('2d')
+                context.beginPath()
+                context.arc(16, 16, 14, 0, Math.PI * 2)
+                context.fillStyle = '#ffffff'
+                context.fill()
+                context.strokeStyle = '#392934'
+                context.lineWidth = 4
+                context.stroke()
+                this.hitMarkerTexture = new THREE.CanvasTexture(canvas)
+            }
             const marker = new THREE.Points(new THREE.BufferGeometry().setFromPoints([this.local(hit)]),
-                new THREE.PointsMaterial({ color: 0xff6655, size: 7, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false }))
+                new THREE.PointsMaterial({ color: 0xff6587, map: this.hitMarkerTexture, size: 9, sizeAttenuation: false, transparent: true, depthTest: false, depthWrite: false }))
             marker.renderOrder = 12
             this.group.add(marker)
         }
-        this.status.textContent = `${skips} empty regions · ${occupied} occupied blocks · ${hitState === 1 ? 'Surface hit' : 'No surface hit'}. Rotate to inspect.`
+        this.status.textContent = ''
         this.sync()
     }
 
@@ -359,6 +385,7 @@ export default class RayTraversalOverlay
         this.clear()
         this.group.removeFromParent()
         this.target?.dispose()
+        this.hitMarkerTexture?.dispose()
         this.captureMesh?.geometry.dispose()
         this.captureMaterial?.dispose()
     }

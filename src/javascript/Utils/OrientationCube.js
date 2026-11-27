@@ -1,6 +1,7 @@
 import { Matrix3, Quaternion, Vector3 } from 'three'
 
 const directions = ['L', 'R', 'P', 'A', 'I', 'S']
+const viewNames = ['left', 'right', 'posterior', 'anterior', 'inferior', 'superior']
 const lightPalette = {
     faces: ['#3b383b', '#484549', '#575357'],
     outline: '#302d30',
@@ -37,11 +38,28 @@ function cubeBasis(orientation)
 
 export default class OrientationCube
 {
-    constructor(canvas)
+    constructor(canvas, align, signal)
     {
         this.canvas = canvas
+        this.control = canvas.parentElement
         this.context = canvas.getContext('2d')
         this.rotation = new Quaternion()
+        this.buttons = directions.map((label, index) =>
+        {
+            const button = document.createElement('button')
+            button.type = 'button'
+            button.hidden = true
+            button.dataset.face = label
+            button.title = `View from ${viewNames[index]}`
+            button.setAttribute('aria-label', button.title)
+            button.addEventListener('click', event =>
+            {
+                const face = this.faces?.[index]
+                if (face && !button.hidden && !this.control.hidden) align(face.normal, face.up, event.detail > 0)
+            }, { signal })
+            this.control.append(button)
+            return button
+        })
     }
 
     setVolume(volume)
@@ -67,7 +85,7 @@ export default class OrientationCube
             center.applyMatrix3(patientToGrid)
             const points = corners.map(([x, y]) => center.clone().addScaledVector(right, x).addScaledVector(up, y))
             return {
-                label, points, center, right, up, axis,
+                label, points, center, right, up, axis, button: this.buttons[index],
                 normal: new Vector3().crossVectors(right, up).normalize(),
             }
         })
@@ -80,6 +98,7 @@ export default class OrientationCube
         if (changedVolume) this.setVolume(volume)
         const wasHidden = this.canvas.hidden
         this.canvas.hidden = !visible || !this.faces || !this.context
+        this.control.hidden = this.canvas.hidden
         if (this.canvas.hidden) return
         if (!wasHidden && !changedVolume && this.palette === palette && this.rotation.equals(camera.quaternion)) return
         this.palette = palette
@@ -102,11 +121,14 @@ export default class OrientationCube
         ctx.font = '650 42px system-ui'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
+        for (const face of this.faces) face.button.hidden = !faces.includes(face)
         for (const face of faces)
         {
+            const polygon = face.points.map(screen)
+            face.button.style.clipPath = `polygon(${polygon.map(([x, y]) => `${x / 192 * 100}% ${y / 192 * 100}%`).join(', ')})`
             ctx.beginPath()
-            ctx.moveTo(...screen(face.points[0]))
-            for (const point of face.points.slice(1)) ctx.lineTo(...screen(point))
+            ctx.moveTo(...polygon[0])
+            for (const point of polygon.slice(1)) ctx.lineTo(...point)
             ctx.closePath()
             ctx.fillStyle = palette.faces[face.axis]
             ctx.fill()
@@ -119,6 +141,5 @@ export default class OrientationCube
             ctx.fillText(face.label, 0, 0)
             ctx.restore()
         }
-        this.canvas.setAttribute('aria-label', `Patient orientation · ${faces.map(face => face.label).join(', ')}`)
     }
 }

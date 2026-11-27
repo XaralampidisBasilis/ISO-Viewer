@@ -67,7 +67,7 @@ void main()
     const vec3 wire_color = vec3(0.26, 0.88, 0.80);
     float extent = hit.discarded ? box.exit_distance : hit.distance;
     float wire_alpha = 0.62 * occupancyWireframe(extent, direction_dx, direction_dy);
-    if (hit.discarded)
+    if (hit.discarded || SURFACE_VISIBLE == 0)
     {
         if (wire_alpha <= 0.0) discard;
         fragColor = vec4(wire_color, wire_alpha);

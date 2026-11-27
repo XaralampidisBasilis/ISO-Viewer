@@ -5,7 +5,9 @@ export default class World
 {
     constructor()
     {
-        this.scene = new Experience().scene
+        const { scene, camera } = new Experience()
+        this.scene = scene
+        this.camera = camera
         this.viewer = new ISOViewer()
     }
 
@@ -15,9 +17,12 @@ export default class World
         this.scene.add(this.viewer.mesh)
     }
 
-    change()
+    change(reframe = false)
     {
+        const previousSize = this.viewer.size
         this.viewer.sync()
+        const { size, unitsPerMeter } = this.viewer
+        if (!reframe && !size.equals(previousSize)) this.camera.rescale(size, unitsPerMeter)
     }
 
     destroy()

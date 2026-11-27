@@ -55,6 +55,7 @@ export default function()
         ({
             option    : 0,
             counter_reference: 0,
+            counter_maximum: 0,
             max_groups: 0,
             max_blocks: 0,
             max_cells : 0,
@@ -82,6 +83,7 @@ export default function()
 
         DEBUG_ENABLED     : 0,
         DISCARDING_ENABLED: 1,
+        SURFACE_VISIBLE   : 1,
         RAY_CAPTURE       : 0,
         VARIATION_ENABLED : 0,
         VARIATION_METHOD  : 1,

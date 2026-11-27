@@ -189,8 +189,8 @@ export default class Experience
             this.scanName = file?.name
             this.intensityRange = range
             if (initial) this.world.start()
-            else this.world.change()
-            if (reframe) this.camera.reset(this.world.viewer.size)
+            else this.world.change(reframe)
+            if (reframe) this.camera.reset(this.world.viewer.size, this.world.viewer.unitsPerMeter)
 
             this.renderer.update()
             this.ready = true

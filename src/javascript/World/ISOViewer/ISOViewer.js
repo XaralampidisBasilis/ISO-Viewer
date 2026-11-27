@@ -42,8 +42,10 @@ export default class ISOViewer
         const cellsPerBlock = configs.blockSize * 3
         const maxGroups = Math.ceil(maxCells / cellsPerBlock)
 
-        this.size = size
-        this.mesh.scale.copy(size)
+        const gridSpace = configs.coordinateSpace === 'grid'
+        this.size = (gridSpace ? dimensions : size).clone()
+        this.unitsPerMeter = gridSpace ? this.size.length() / size.length() : 1
+        this.mesh.scale.copy(this.size)
         this.volumeBox.visible = configs.volumeBoxVisible
         const translation = new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.5)
         const scale = new THREE.Matrix4().makeScale(dimensions.x, dimensions.y, dimensions.z)
@@ -60,7 +62,8 @@ export default class ISOViewer
         volume.block_size = configs.blockSize
         volume.dimensions.copy(dimensions)
         volume.spacing.copy(spacing)
-        volume.spacing_normalized.copy(spacing).normalize()
+        // Shade in the same metric used by the displayed geometry.
+        volume.spacing_normalized.copy(this.size).divide(dimensions).normalize()
         volume.blocked_dimensions.copy(blocked)
         volume.inv_dimensions.set(1 / dimensions.x, 1 / dimensions.y, 1 / dimensions.z)
 
@@ -77,14 +80,17 @@ export default class ISOViewer
                 .divide(dimensions).multiplyScalar(0.5).subScalar(0.5)
             this.boundingBox.scale.subVectors(bounds.max_position, bounds.min_position).divide(dimensions)
         }
-        const writeSurfaceDepth = this.volumeBox.visible || this.boundingBox.visible
+        const writeSurfaceDepth = configs.surfaceVisible && (this.volumeBox.visible || this.boundingBox.visible)
         material.depthTest = writeSurfaceDepth
         material.depthWrite = writeSurfaceDepth
 
         const debug = uniforms.u_debug.value
         debug.option = configs.effectiveDebugView
-        const occupancyView = debug.option === occupancyMapView
-        const debugEnabled = debug.option !== 0 && !occupancyView
+        const occupancyView = configs.surfaceVisible && debug.option === occupancyMapView
+        const debugEnabled = configs.surfaceVisible && debug.option !== 0 && !occupancyView
+        const occupancyWireframe = configs.occupancyWireframeVisible && (!configs.surfaceVisible || debug.option === 0)
+        // Hide only the proxy material so attached box and ray overlays can still draw.
+        material.visible = configs.surfaceVisible || occupancyWireframe
         const surfaceDiagnostic = debug.option === 459 || debug.option === 462
         debug.max_groups = maxGroups
         debug.max_blocks = Math.ceil(maxBlocks / maxGroups)
@@ -102,8 +108,9 @@ export default class ISOViewer
             BBOX_ENABLED: Number(configs.boundingBoxEnabled),
             BERNSTEIN_ENABLED: Number(configs.bernsteinEnabled),
             WRITE_SURFACE_DEPTH: Number(writeSurfaceDepth),
+            SURFACE_VISIBLE: Number(configs.surfaceVisible),
             OCCUPANCY_VIEW: Number(occupancyView),
-            OCCUPANCY_WIREFRAME: Number(debug.option === 0 && configs.occupancyWireframeVisible),
+            OCCUPANCY_WIREFRAME: Number(occupancyWireframe),
             DEBUG_ENABLED: Number(debugEnabled),
             DISCARDING_ENABLED: Number(!debugEnabled || surfaceDiagnostic),
             VARIATION_METHOD: configs.effectiveRootSolver,

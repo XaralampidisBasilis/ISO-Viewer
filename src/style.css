@@ -69,7 +69,7 @@ button:disabled { opacity: 0.65; }
 .study h1 { margin: 0; font-size: 13px; font-weight: 400; }
 #scan-description { margin: 3px 0 0; overflow-wrap: anywhere; color: #e1e8ec; font-size: 12px; }
 
-.viewer-actions button, .workstation-status button, .loading button, .paper-link, #rebuild-variants, #select-ray {
+.workstation-status button, .loading button, .paper-link, #rebuild-variants, #select-ray {
     min-height: 26px;
     padding: 4px 8px;
     border: 1px solid var(--border);
@@ -95,21 +95,6 @@ button[aria-pressed="true"], button[aria-expanded="true"] {
     min-height: 0;
 }
 .viewer { grid-area: viewer; display: flex; flex-direction: column; min-width: 0; min-height: 0; margin: 7px 7px 7px 0; }
-.viewer-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 4px 10px;
-    padding: 4px 8px;
-    border: 1px solid var(--border);
-    border-bottom: 0;
-    background: var(--toolstrip);
-    font-size: 12px;
-}
-.viewer-state { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 9px; min-width: 0; overflow-wrap: anywhere; }
-#scan-quality { color: var(--muted); }
-.viewer-actions { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; margin-inline-start: auto; }
 .menu-bar {
     grid-area: menu;
     position: relative;
@@ -158,11 +143,15 @@ button[aria-pressed="true"], button[aria-expanded="true"] {
 .viewport:fullscreen, .viewport.viewport-expanded { width: 100%; height: 100%; border: 0; }
 .viewport.viewport-expanded { position: fixed; inset: 0; z-index: 3; }
 body:has(.viewport-expanded) { overflow: hidden; }
-#fullscreen-toggle {
+.viewport-actions {
     position: absolute;
     z-index: 1;
     top: 8px;
     right: 8px;
+    display: flex;
+    gap: 6px;
+}
+.viewport-actions button {
     display: grid;
     place-items: center;
     width: 34px;
@@ -174,9 +163,13 @@ body:has(.viewport-expanded) { overflow: hidden; }
     color: #ece8ee;
     font: 21px/1 "Segoe UI Symbol", "Segoe UI", sans-serif;
 }
-#fullscreen-toggle:hover { border-color: #c0cdd8; background: #39343b; color: #fff; }
-#fullscreen-toggle:focus-visible { outline-color: #c0cdd8; }
-#orientation-cube { position: absolute; left: 8px; bottom: 8px; width: 84px; height: 84px; opacity: 0.8; pointer-events: none; }
+.viewport-actions button:hover:not(:disabled) { border-color: #c0cdd8; background: #39343b; color: #fff; }
+.viewport-actions button:focus-visible { outline-color: #c0cdd8; }
+.capture-icon { width: 20px; height: 20px; }
+#orientation-control { position: absolute; left: 8px; bottom: 8px; width: 84px; height: 84px; pointer-events: none; }
+#orientation-cube { display: block; width: 100%; height: 100%; opacity: 0.8; }
+#orientation-control button { position: absolute; inset: 0; padding: 0; border: 0; background: transparent; pointer-events: auto; }
+#orientation-control button:hover, #orientation-control button:focus-visible { background: rgb(216 230 244 / 24%); }
 :root[data-theme="dark"] #orientation-cube { opacity: 1; }
 
 .workstation-status {
@@ -235,17 +228,17 @@ progress { width: min(175px, 100%); height: 6px; accent-color: var(--accent); }
     pointer-events: none;
 }
 #empty-view { inset-inline-start: auto; }
-#orientation-cube:not([hidden]) ~ #empty-view { max-width: calc(100% - 108px); }
+#orientation-control:not([hidden]) ~ #empty-view { max-width: calc(100% - 108px); }
 .load-notice { inset: 12px auto auto 12px; display: grid; gap: 6px; }
 .counter-legend {
-    --ruler-height: 250px;
+    --overflow-height: 30px;
+    --ruler-height: clamp(100px, calc(100dvh - 180px), 250px);
     --ruler-width: 9px;
     --ruler-gap: 11px;
     position: absolute;
-    inset: 50% 6px auto auto;
-    transform: translateY(-50%);
+    inset: auto 6px 10px auto;
     margin: 0;
-    padding: 9px 6px;
+    padding: 12px 6px;
     background: var(--stage);
     color: #e6e4e5;
     font: 11px var(--mono);
@@ -268,8 +261,23 @@ progress { width: min(175px, 100%); height: 6px; accent-color: var(--accent); }
     transform-origin: top left;
 }
 .counter-legend-ticks { grid-column: 2; position: relative; }
+#counter-legend-overflow { top: 0; width: var(--overflow-height); }
+.counter-legend:has(#counter-legend-scale:not([hidden])) { padding-top: calc(12px + var(--overflow-height)); }
 .counter-legend-ticks span { position: absolute; left: 0; transform: translateY(50%); white-space: nowrap; }
 .counter-legend-ticks span::before { content: ''; position: absolute; top: 50%; left: calc(-1 * var(--ruler-gap)); width: 7px; border-top: 1px solid currentColor; }
+.counter-legend-top { bottom: 100%; }
+#counter-legend-maximum {
+    width: 8ch;
+    padding: 2px 3px;
+    border: 1px solid #6b6570;
+    border-radius: 2px;
+    background: var(--stage);
+    color: inherit;
+    font: inherit;
+    pointer-events: auto;
+    appearance: textfield;
+}
+#counter-legend-maximum::-webkit-inner-spin-button, #counter-legend-maximum::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .counter-legend-swatches { display: grid; gap: 6px; }
 .counter-legend-swatches span { display: flex; align-items: center; gap: 9px; }
 .counter-legend-swatches i { width: 12px; height: 12px; border: 1px solid var(--border); background: #000; }
@@ -296,9 +304,8 @@ dialog p:not(.eyebrow), dialog dd { color: var(--muted); font-size: 14px; line-h
     .topbar { padding-inline: 10px; }
     .workspace { grid-template-areas: "menu" "viewer" "threshold" "inspector" "status"; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
     .viewer { margin: 7px 7px 0; }
-    .viewer-actions button { min-height: 36px; }
     .viewport { flex: none; height: clamp(260px, 53dvh, 480px); }
-    .counter-legend { --ruler-height: clamp(232px, calc(53dvh - 24px), 250px); }
+    .counter-legend { --ruler-height: clamp(180px, calc(53dvh - 60px), 250px); }
     .workstation-status { gap: 6px 10px; padding-inline: 8px; }
     #navigation-help { flex-basis: 100%; }
     .render-details summary, .frame-meter { margin-inline-start: 0; }
@@ -310,6 +317,6 @@ dialog p:not(.eyebrow), dialog dd { color: var(--muted); font-size: 14px; line-h
 @media (max-width: 600px) {
 }
 @media (pointer: coarse) {
-    #fullscreen-toggle { width: 44px; height: 44px; }
-    .menu-bar summary, .menu-panel button, .viewer-actions button, .workstation-status button { min-height: 36px; }
+    .viewport-actions button { width: 44px; height: 44px; }
+    .menu-bar summary, .menu-panel button, .workstation-status button { min-height: 36px; }
 }

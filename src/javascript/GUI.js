@@ -21,6 +21,7 @@ export default class GUI
         this.fields = Array.from(document.querySelectorAll('[data-config]'))
         this.qualityButtons = Array.from(document.querySelectorAll('[data-quality]'))
         this.cameraButtons = Array.from(document.querySelectorAll('[data-camera]'))
+        this.spaceButtons = Array.from(document.querySelectorAll('[data-space]'))
         this.listeners = new AbortController()
         this.touchInput = matchMedia('(pointer: coarse)')
         this.setupDebugBrowser()
@@ -316,7 +317,30 @@ export default class GUI
     {
         this.experience = experience
         const { configs, camera, renderer, stats } = experience
-        this.counterLegend = new TraversalLegend(this.elements, renderer.instance)
+        this.counterLegend = new TraversalLegend(this.elements, renderer.instance, this.listeners.signal, () => experience.invalidate())
+        this.listen(this.elements['capture-view'], 'click', async () =>
+        {
+            const notice = this.elements['capture-error']
+            notice.hidden = true
+            try
+            {
+                const png = await renderer.captureViewport(this.counterLegend)
+                if (this.listeners.signal.aborted) return
+
+                const url = URL.createObjectURL(png)
+                const download = document.createElement('a')
+                download.href = url
+                download.download = `isoviewer-${new Date().toISOString().replace(/[:.]/g, '-')}.png`
+                download.click()
+                window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+            }
+            catch (error)
+            {
+                notice.textContent = 'Could not capture the viewport.'
+                notice.hidden = false
+                console.error(error)
+            }
+        })
         this.listen(this.elements['shading-view'], 'change', event =>
         {
             this.setDiagnosticView(Number(event.target.value))
@@ -362,6 +386,7 @@ export default class GUI
             configs.set(key, value)
         })
         this.listen(this.elements['reset-view'], 'click', () => camera.reset())
+        this.listen(this.elements['toggle-surface'], 'change', event => configs.set('surfaceVisible', !event.target.checked))
         for (const [id, key] of overlayControls)
             this.listen(this.elements[id], 'change', event =>
             {
@@ -379,6 +404,9 @@ export default class GUI
 
         for (const button of this.qualityButtons)
             this.listen(button, 'click', () => experience.loadQuality(button.dataset.quality))
+
+        for (const button of this.spaceButtons)
+            this.listen(button, 'click', () => configs.set('coordinateSpace', button.dataset.space))
 
         for (const button of this.cameraButtons)
         {
@@ -423,10 +451,7 @@ export default class GUI
         const shadingOption = Array.from(shadingView.options).find(option => option.value === String(activeView))
         shadingView.querySelector('[value="debug"]').hidden = Boolean(shadingOption)
         shadingView.value = shadingOption ? String(activeView) : 'debug'
-        const activeButton = this.debugButtons.find(button => Number(button.dataset.view) === activeView)
-        const label = shadingOption?.textContent.trim() || activeButton?.textContent.trim() || 'Surface'
-        const viewLabel = this.elements['active-view']
-        if (viewLabel.textContent !== label) viewLabel.textContent = label
+        this.elements['toggle-surface'].checked = configs?.surfaceVisible === false
         for (const button of this.debugButtons)
         {
             const view = Number(button.dataset.view)
@@ -459,7 +484,7 @@ export default class GUI
         const fly = this.experience.camera.mode === 'fly'
         const hint = this.touchInput.matches
             ? (fly ? 'Drag to look · Pinch to zoom' : 'Drag to orbit · Pinch to zoom · Pan with two fingers')
-            : (fly ? 'Click the viewport · WASD to move · Drag to look · Q/E to roll · Space faster · Shift slower' : 'Drag to orbit · Scroll to zoom · Right-drag to pan')
+            : (fly ? 'Click the viewport to focus · WASD to move · R/F to rise or descend · Drag or use arrow keys to look · Q/E to roll · Hold Space for speed or Shift for precision' : 'Drag to orbit · Scroll to zoom · Right-drag to pan')
         this.elements['navigation-help'].textContent = hint
     }
 
@@ -482,6 +507,8 @@ export default class GUI
         }
 
         this.syncThreshold()
+        for (const button of this.spaceButtons)
+            button.setAttribute('aria-pressed', String(button.dataset.space === configs.coordinateSpace))
         this.elements['bernstein-control'].querySelector('input').disabled = configs.marchingMethod !== 'digitalDifferentialAnalyzer'
         this.updateDebugControls()
         if (this.variantMethod !== configs.skippingMethod) this.populateVariants()
@@ -510,7 +537,7 @@ export default class GUI
         this.elements['status-block-grid'].textContent = blockGrid
         this.elements['render-details'].hidden = false
         this.elements['open-volume-parameters'].disabled = false
-        this.elements['empty-view'].hidden = computes.occupancyMap.boundingBox !== null || configs.effectiveDebugView !== 0
+        this.elements['empty-view'].hidden = !configs.surfaceVisible || computes.occupancyMap.boundingBox !== null || configs.effectiveDebugView !== 0
     }
 
     busy(busy)
@@ -521,8 +548,10 @@ export default class GUI
         this.elements['open-scan'].disabled = busy
         this.elements['fps-toggle'].disabled = busy
         const cameraUnavailable = !this.experience?.ready || this.experience.measuringVariants
+        this.elements['capture-view'].disabled = busy || cameraUnavailable
         this.elements['reset-view'].disabled = cameraUnavailable
         for (const button of this.cameraButtons) button.disabled = cameraUnavailable
+        for (const button of this.spaceButtons) button.disabled = busy || cameraUnavailable
         for (const button of this.qualityButtons) button.disabled = busy
     }
 
@@ -564,9 +593,6 @@ export default class GUI
         this.elements['scan-description'].hidden = !local
         this.elements['volume-source'].textContent = local ? this.experience.scanName : 'Head & neck CTA'
         const qualityLabel = local ? 'Local scan' : quality === 'detail' ? 'Detailed scan' : 'Preview scan'
-        const indicator = this.elements['scan-quality']
-        if (indicator.textContent !== qualityLabel) indicator.textContent = qualityLabel
-        indicator.hidden = false
         this.elements['volume-detail'].textContent = qualityLabel
         this.elements['volume-resampling'].hidden = !local || this.experience.configs.downscaleFactor >= 1
         this.busy(false)

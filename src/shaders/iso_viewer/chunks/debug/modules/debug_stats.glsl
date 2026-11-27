@@ -16,6 +16,8 @@ switch (u_debug.option - 900)
 
 if (u_debug.counter_reference > 0.0)
 {
-    vec3 counter_color = debug_count == 0 ? vec3(0.0) : turboBurn(float(debug_count) / u_debug.counter_reference);
+    float maximum = u_debug.counter_maximum > 0.0 ? u_debug.counter_maximum : u_debug.counter_reference;
+    float t = min(float(debug_count) / maximum, 2.0);
+    vec3 counter_color = debug_count == 0 ? vec3(0.0) : turboBurn(t);
     fragColor = to_color(counter_color);
 }

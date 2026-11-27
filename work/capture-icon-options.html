@@ -1,0 +1,35 @@
+<div id="capture-icon-options" class="viz-dotted-background">
+  <div class="icon-option"><div class="viewport"><span><i data-lucide="camera" aria-hidden="true"></i></span><span><i data-lucide="maximize" aria-hidden="true"></i></span></div><p>Camera</p></div>
+  <div class="icon-option"><div class="viewport"><span><i data-lucide="aperture" aria-hidden="true"></i></span><span><i data-lucide="maximize" aria-hidden="true"></i></span></div><p>Aperture</p></div>
+  <div class="icon-option"><div class="viewport"><span><i data-lucide="image-down" aria-hidden="true"></i></span><span><i data-lucide="maximize" aria-hidden="true"></i></span></div><p>Save image</p></div>
+  <div class="icon-option"><div class="viewport"><span><i data-lucide="scan-line" aria-hidden="true"></i></span><span><i data-lucide="maximize" aria-hidden="true"></i></span></div><p>Scan frame</p></div>
+  <div class="icon-option"><div class="viewport"><span><i data-lucide="focus" aria-hidden="true"></i></span><span><i data-lucide="maximize" aria-hidden="true"></i></span></div><p>Focus frame</p></div>
+</div>
+<style>
+  #capture-icon-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+  #capture-icon-options .viewport {
+    display: flex;
+    justify-content: end;
+    gap: 6px;
+    padding: 8px;
+    background: #211d20;
+    border: 1px solid #6b6570;
+    color: #ece8ee;
+  }
+  #capture-icon-options .viewport span {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #6b6570;
+    border-radius: 4px;
+  }
+  #capture-icon-options .viewport svg { width: 18px; height: 18px; }
+  #capture-icon-options p { margin: 5px 0 0; font: 13px/1.4 system-ui, sans-serif; }
+</style>

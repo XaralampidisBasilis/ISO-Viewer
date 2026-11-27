@@ -5,6 +5,7 @@ struct UniformsDebug
 {
     int option;
     float counter_reference;
+    float counter_maximum;
     int max_groups;         
     int max_blocks;         
     int max_cells;             

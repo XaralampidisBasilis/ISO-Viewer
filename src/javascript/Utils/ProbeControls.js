@@ -79,6 +79,7 @@ class ProbeControls extends Controls {
 		 * @default 1
 		 */
 		this.speedMultiplier = 1.0;
+		this._speedKeys = new Set();
 
 		/**
 		 * Rotation speed for keyboard-based view rotation (yaw/pitch/roll).
@@ -516,14 +517,13 @@ function _autoAlignEyeWithForwardIfNeeded() {
 	// world-space forward (-Z in camera space)
 	_fwd.set( 0, 0, - 1 ).applyQuaternion( this.object.quaternion ).normalize();
 
-	// check alignment between eye vector and forward (implementation expects them to be parallel)
+	// Eye points from the target to the camera, opposite the viewing direction.
 	_tmpV.copy( this._eye ).normalize();
 	const dot = _fwd.dot( _tmpV );
 
-	if ( dot < 0.999 ) {
+	if ( dot > - 0.999 ) {
 
-		// realign _eye to forward, preserve radius; update target to stay consistent
-		this._eye.copy( _fwd ).multiplyScalar( r );
+		this._eye.copy( _fwd ).multiplyScalar( - r );
 		this.target.copy( this.object.position ).sub( this._eye );
 
 	}
@@ -566,7 +566,7 @@ function _applyViewAngles( yaw, pitch, roll ) {
 
 	// keep eye/target consistent in orientation (but DON'T rewrite position)
 	const r = this._eye.length() || 1.0;
-	this._eye.copy( _fwd ).multiplyScalar( r );
+	this._eye.copy( _fwd ).multiplyScalar( - r );
 	this.target.copy( this.object.position ).sub( this._eye );
 
 }
@@ -904,7 +904,7 @@ function onMouseWheel( event ) {
 
 	}
 
-	const factor = 1.0 + ( - event.deltaY * k ) * ( this.zoomSpeed * this.speedMultiplier );
+	const factor = 1.0 + event.deltaY * k * this.zoomSpeed * this.speedMultiplier;
 
 	if ( factor !== 1.0 && factor > 0.0 ) {
 
@@ -1053,6 +1053,17 @@ function onTouchEnd( event ) {
 
 // ---------------- Keyboard handlers ----------------
 
+function updateSpeedMultiplier( code, pressed ) {
+
+	if ( pressed ) this._speedKeys.add( code );
+	else this._speedKeys.delete( code );
+
+	// Precision takes priority when both modifiers are held.
+	const fine = this._speedKeys.has( 'ShiftLeft' ) || this._speedKeys.has( 'ShiftRight' );
+	this.speedMultiplier = fine ? 0.05 : this._speedKeys.has( 'Space' ) ? 5 : 1;
+
+}
+
 function onKeyDown( event ) {
 
 	if ( ! this.enabled || ! this.enableKeyboard || document.activeElement !== this.domElement ) return;
@@ -1062,8 +1073,8 @@ function onKeyDown( event ) {
 	switch ( event.code ) {
 
 		case 'ShiftLeft':
-		case 'ShiftRight': this.speedMultiplier = 0.2; used = true; break;
-		case 'Space':     this.speedMultiplier = 2.0; used = true; break;
+		case 'ShiftRight':
+		case 'Space': updateSpeedMultiplier.call( this, event.code, true ); used = true; break;
 
 		case 'KeyW': this._moveState.forward = 1; used = true; break;
 		case 'KeyS': this._moveState.back    = 1; used = true; break;
@@ -1093,8 +1104,8 @@ function onKeyUp( event ) {
 	switch ( event.code ) {
 
 		case 'ShiftLeft':
-		case 'ShiftRight': this.speedMultiplier = 1.0; break;
-		case 'Space':     this.speedMultiplier = 1.0; break;
+		case 'ShiftRight':
+		case 'Space': updateSpeedMultiplier.call( this, event.code, false ); break;
 
 		case 'KeyW': this._moveState.forward = 0; break;
 		case 'KeyS': this._moveState.back    = 0; break;
@@ -1124,6 +1135,7 @@ function onWindowBlur() {
 	this._moveState.yawLeft = this._moveState.yawRight = 0;
 	this._moveState.rollLeft = this._moveState.rollRight = 0;
 
+	this._speedKeys.clear();
 	this.speedMultiplier = 1.0;
 
 }

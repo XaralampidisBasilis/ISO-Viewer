@@ -1,0 +1,84 @@
+<div id="ray-palette-preview">
+  <div class="viz-carousel" aria-label="Ray inspection color palettes">
+    <section data-variant="Teal and violet"><div class="scene" data-colors="#55ced0 #cc99ff #ff6655 #ffbd57"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Cyan and amber" hidden><div class="scene" data-colors="#53c9f4 #ffb24a #ff6587 #e6f2ff"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Slate and mint" hidden><div class="scene" data-colors="#95a9bf #70f0b7 #ff7da9 #ffe492"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Blue and coral" hidden><div class="scene" data-colors="#7e9fff #ff8b76 #f8f6ff #65e4ce"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+    <section data-variant="Silver and gold" hidden><div class="scene" data-colors="#a5b6c1 #ffcb58 #fb83e6 #70dcff"><canvas role="img" aria-label="Ray passing through three empty regions and ending at a hit inside an occupied block"></canvas><div class="key"></div></div></section>
+  </div>
+</div>
+<style>
+  #ray-palette-preview [hidden] { display:none !important; }
+  #ray-palette-preview .scene { background:#211d20; color:#ede9df; font:12px system-ui,sans-serif; }
+  #ray-palette-preview canvas { display:block; width:100%; height:320px; }
+  #ray-palette-preview .key { display:flex; justify-content:center; gap:8px 18px; flex-wrap:wrap; padding:8px 12px 15px; }
+  #ray-palette-preview .key span { display:flex; align-items:center; gap:5px; }
+  #ray-palette-preview .key i { width:12px; height:10px; border:2px solid currentColor; }
+  #ray-palette-preview .key span:nth-child(3) i { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  #ray-palette-preview .key span:nth-child(4) i { height:0; border-width:1px; }
+  @media(max-width:480px) { #ray-palette-preview canvas { height:225px; } }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('ray-palette-preview');
+  for (const scene of root.querySelectorAll('.scene')) {
+    const colors = scene.dataset.colors.split(' ');
+    const [empty, occupied, hit, ray] = colors;
+    const canvas = scene.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const labels = ['Empty region', 'Occupied block', 'First hit', 'Ray'];
+    for (const [index, label] of labels.entries()) {
+      const item = document.createElement('span');
+      const swatch = document.createElement('i');
+      swatch.style.color = colors[index];
+      swatch.setAttribute('aria-hidden', 'true');
+      item.append(swatch, label);
+      scene.querySelector('.key').append(item);
+    }
+    function draw() {
+      const {clientWidth: width, clientHeight: height} = canvas;
+      if (!width || !height) return;
+      const ratio = devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const scale = Math.min(width / 580, height / 275);
+      const project = ([x,y,z]) => [width * .5 + scale * (x + y * .52), height * .54 + scale * (x * .18 - y * .32 - z)];
+      function line(a, b, color, weight) {
+        ctx.beginPath();
+        ctx.moveTo(...project(a));
+        ctx.lineTo(...project(b));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = weight;
+        ctx.stroke();
+      }
+      function box(start, end, radius, color, opacity) {
+        const points = Array.from({length:8}, (_, i) => [i & 1 ? end : start, i & 2 ? radius : -radius, i & 4 ? radius : -radius]);
+        ctx.globalAlpha = opacity;
+        for (let i = 0; i < 8; i++) {
+          for (const bit of [1,2,4]) if (!(i & bit)) line(points[i], points[i | bit], color, 1.5);
+        }
+        ctx.globalAlpha = 1;
+      }
+      const path = [[160,0,-105],[138,0,-39],[152,0,20],[145,0,71],[176,0,132]];
+      ctx.lineCap = 'round';
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#81837c', 36 * scale);
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#c9c5b2', 27 * scale);
+      line([152,0,20],[219,17,78],'#aaa795',18 * scale);
+      box(-211,-95,55,empty,.35);
+      box(-95,7,38,empty,.35);
+      box(7,96,27,empty,.35);
+      box(96,151,19,occupied,.8);
+      line([-260,0,0],[134,0,0],ray,1.8);
+      for (const x of [-211,-95,7,96,134]) {
+        ctx.beginPath();
+        ctx.arc(...project([x,0,0]), x === 134 ? 5 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = x === 134 ? hit : ray;
+        ctx.fill();
+      }
+    }
+    new ResizeObserver(draw).observe(canvas);
+    draw();
+  }
+})();
+</script>

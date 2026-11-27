@@ -15,6 +15,7 @@ const choices = {
     skippingMethod: ['occupancy', 'isotropicDistance', 'anisotropicDistance', 'extendedIsotropicDistance', 'extendedAnisotropicDistance'],
     diagnosticView: [0, ...debugViewIds],
     rootSolverMethod: [1, 2, 3, 4],
+    coordinateSpace: ['world', 'grid'],
 }
 
 export default class Configs extends EventEmitter
@@ -50,6 +51,8 @@ export default class Configs extends EventEmitter
             volumeBoxVisible: false,
             orientationCubeVisible: true,
             occupancyWireframeVisible: false,
+            surfaceVisible: true,
+            coordinateSpace: 'world',
             rayInspectionVisible: false,
             gradientShading: true,
             curvatureShading: true,
