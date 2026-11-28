@@ -68,6 +68,8 @@ The wireframes show empty block regions clipped to the volume. Signed anisotropi
 
 **Patient orientation.** `NIFTILoader.parse()` derives the grid-to-RAS basis from the NIfTI sform or qform, preferring a scanner-space transform when available. `OrientationCube` uses the orthogonal polar factor to preserve rotation and handedness while removing shear and scaling from the marker. It projects the cube and its face-local glyphs orthographically at a fixed scale. The lower-left cube is controlled from Overlays and hides when orientation metadata is missing, singular, or conflicting in handedness. Each visible face has a button clipped to its projected polygon. Selecting it keeps the camera target and distance and aligns the view with the outward normal and up vector of the face. Volume geometry stays in storage axes.
 
+The compact Ray inspection bar at the bottom of the viewport shows the number of captured skipped regions, distinct visited occupied blocks, and first-hit distance from the ray origin in grid-space cell units.
+
 ## Validation and performance
 
 Counter diagnostics show a colorbar at the bottom right of the viewport. Counts map linearly to Turbo up to the editable maximum, with black reserved for zero. Above the maximum, TurboBurn fades toward white and reaches its display cap at twice the maximum. An overflow strip sits above the main ramp. Clearing the field restores the shader counter reference, and binary counters retain their two swatches. The override is a display uniform and does not alter traversal or counts.

@@ -228,6 +228,36 @@ progress { width: min(175px, 100%); height: 6px; accent-color: var(--accent); }
     pointer-events: none;
 }
 #empty-view { inset-inline-start: auto; }
+#ray-inspection-counts {
+    inset: auto 10px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px 15px;
+    width: auto;
+    margin: 0;
+    padding: 10px 12px;
+    border-color: #6b6570;
+    background: #2b262d;
+    color: #ece8ee;
+    font: 12px/1.35 system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+#ray-inspection-counts > span { white-space: nowrap; }
+.viewport:has(#quality-notice:not([hidden])) #ray-inspection-counts { visibility: hidden; }
+#ray-skipped-regions { color: #53c9f4; }
+#ray-occupied-blocks { color: #ffbd57; }
+#ray-inspection-hit.has-hit { color: #ff88a1; }
+.viewport:has(#orientation-control:not([hidden])) #ray-inspection-counts { inset-inline-start: 100px; }
+.viewport:has(.counter-legend:not([hidden])) #ray-inspection-counts { inset-inline-end: 106px; }
+.viewport:has(#empty-view:not([hidden])) #ray-inspection-counts { bottom: 50px; }
+@media (max-width: 420px) {
+    .viewport:has(#orientation-control:not([hidden])):has(.counter-legend:not([hidden])) #ray-inspection-counts {
+        inset-inline-start: 10px;
+        bottom: 100px;
+    }
+}
 #orientation-control:not([hidden]) ~ #empty-view { max-width: calc(100% - 108px); }
 .load-notice { inset: 12px auto auto 12px; display: grid; gap: 6px; }
 .counter-legend {

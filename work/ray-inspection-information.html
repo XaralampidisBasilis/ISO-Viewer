@@ -1,0 +1,151 @@
+<div id="ray-info-preview">
+  <div class="viz-carousel" aria-label="Ray inspection information options">
+    <section data-variant="Panel rows"><div class="scene side" data-treatment="0"><aside class="readout"><h4>Ray inspection</h4><dl><div><dt>Skipped regions</dt><dd>3</dd></div><div><dt>Occupied blocks</dt><dd>2</dd></div><div><dt>First hit</dt><dd>394 voxels</dd></div></dl></aside><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Compact status" hidden><div class="scene " data-treatment="1"><div class="readout footer low"><span>3 skipped</span><span>2 occupied</span><span class="hit">Hit at 394 voxels</span></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Corner cards" hidden><div class="scene " data-treatment="2"><div class="readout corner low"><div class="chips"><span><b>3</b>Skipped</span><span><b>2</b>Occupied</span></div><p class="hit">First hit · 394 voxels</p></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Hit callout" hidden><div class="scene " data-treatment="3"><div class="readout callout"><b class="hit">First surface hit</b><p>394 voxels from origin</p><p>3 skipped · 2 occupied</p></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Ray labels" hidden><div class="scene " data-treatment="4"><div class="readout bottom-left low"><span class="empty">3 skipped regions</span><br><span class="occupied">2 occupied blocks</span></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Path strip" hidden><div class="scene " data-treatment="5"><div class="readout footer timeline"><div class="strip" aria-label="Inspect ray events"><button type="button" data-event="0">Skip 1</button><button type="button" data-event="1">Skip 2</button><button type="button" data-event="2">Skip 3</button><button type="button" data-event="3">Block 1</button><button type="button" data-event="4">Block 2</button><button type="button" data-event="5">Hit</button></div><p data-detail aria-live="polite">First hit · 394 voxels from origin</p></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Events table" hidden><div class="scene side" data-treatment="6"><aside class="readout"><h4>Traversal events</h4><table><thead><tr><th>Event</th><th>Entry</th></tr></thead><tbody><tr><td class="empty">Skip 1</td><td>49</td></tr><tr><td class="empty">Skip 2</td><td>165</td></tr><tr><td class="empty">Skip 3</td><td>267</td></tr><tr><td class="occupied">Block 1</td><td>356</td></tr><tr><td class="occupied">Block 2</td><td>379</td></tr><tr><td class="hit">First hit</td><td>394</td></tr></tbody></table><p class="muted">Distances in voxels</p></aside><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Expandable details" hidden><div class="scene " data-treatment="7"><details class="readout corner"><summary>First hit · 394 voxels</summary><dl><div><dt>Skipped regions</dt><dd>3</dd></div><div><dt>Occupied blocks</dt><dd>2</dd></div></dl></details><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Viewport header" hidden><div class="scene " data-treatment="8"><div class="readout header low"><strong>Ray inspection</strong><span>3 skipped · 2 occupied</span><span class="hit">First hit · 394 voxels</span></div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+    <section data-variant="Split summary" hidden><div class="scene side" data-treatment="9"><aside class="readout"><h4>Ray inspection</h4><p><span class="empty">3</span> skipped regions</p><p><span class="occupied">2</span> occupied blocks</p></aside><div class="readout corner low hit">First hit · 394 voxels</div><canvas role="img" aria-label="Illustrative ray passing through three empty regions and two occupied blocks to a first surface hit"></canvas></div></section>
+  </div>
+</div>
+<style>
+  #ray-info-preview [hidden] { display:none !important; }
+  #ray-info-preview .scene { position:relative; height:390px; overflow:hidden; background:#211d20; color:#eae5ec; font:12px/1.35 system-ui,sans-serif; }
+  #ray-info-preview canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #ray-info-preview .side canvas { inset-inline-start:164px; width:calc(100% - 164px); }
+  #ray-info-preview .readout { position:absolute; z-index:1; box-sizing:border-box; padding:10px 12px; border:1px solid #625b66; background:#2b262d; }
+  #ray-info-preview .side aside { left:8px; top:10px; width:156px; }
+  #ray-info-preview h4 { margin:0 0 7px; font-size:13px; }
+  #ray-info-preview dl, #ray-info-preview p { margin:4px 0 0; }
+  #ray-info-preview dl div { display:flex; justify-content:space-between; gap:5px; padding:4px 0; border-top:1px solid #504952; }
+  #ray-info-preview dd { margin:0; font-variant-numeric:tabular-nums; }
+  #ray-info-preview .footer { left:10px; right:10px; bottom:10px; display:flex; flex-wrap:wrap; justify-content:center; gap:6px 15px; }
+  #ray-info-preview .corner { bottom:10px; right:10px; }
+  #ray-info-preview .bottom-left { bottom:10px; left:10px; }
+  #ray-info-preview .callout { top:35px; right:17px; }
+  #ray-info-preview .header { top:10px; left:10px; right:10px; display:flex; gap:6px 16px; flex-wrap:wrap; align-items:center; }
+  #ray-info-preview .chips { display:flex; gap:15px; } 
+  #ray-info-preview .chips b { display:block; font-size:17px; }
+  #ray-info-preview .empty { color:#53c9f4; }
+  #ray-info-preview .occupied { color:#ffbd57; }
+  #ray-info-preview .hit { color:#ff88a1; }
+  #ray-info-preview .muted { color:#c6bbc8; font-size:11px; }
+  #ray-info-preview table { width:100%; border-collapse:collapse; text-align:left; font-variant-numeric:tabular-nums; }
+  #ray-info-preview th, #ray-info-preview td { padding:4px 1px; border-bottom:1px solid #504952; }
+  #ray-info-preview th:last-child, #ray-info-preview td:last-child { text-align:right; }
+  #ray-info-preview .timeline { display:grid; justify-content:stretch; gap:6px; }
+  #ray-info-preview .strip { display:flex; flex-wrap:wrap; gap:5px; }
+  #ray-info-preview .strip button { flex:1; white-space:nowrap; background:#332c36; border:1px solid #665d6b; color:inherit; font:inherit; padding:4px 5px; }
+  #ray-info-preview .strip button[aria-pressed=true] { border-color:#ff88a1; color:#ff88a1; }
+  #ray-info-preview .timeline p { margin:0; }
+  @media(max-width:540px) {
+    #ray-info-preview .scene { height:375px; }
+    #ray-info-preview .side canvas { inset:0; width:100%; height:218px; }
+    #ray-info-preview .side aside { top:217px; bottom:8px; left:8px; width:151px; }
+    #ray-info-preview .side:has(table) aside { width:calc(100% - 16px); }
+    #ray-info-preview .side:has(table) table { font-size:11px; }
+    #ray-info-preview .side:has(table) th, #ray-info-preview .side:has(table) td { padding:0 2px; }
+    #ray-info-preview .callout { top:12px; }
+  }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('ray-info-preview');
+  for (const scene of root.querySelectorAll('.scene')) {
+    const colors = ['#53c9f4', '#ffb24a', '#ff6587', '#e6f2ff'];
+    const treatment = Number(scene.dataset.treatment);
+    const [empty, occupied, hit, ray] = colors;
+    const canvas = scene.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const ranges = [[-211,-95,55],[-95,7,38],[7,96,27],[96,119,18],[119,142,18]];
+    const descriptions = ['Skip 1 · entry 49 voxels','Skip 2 · entry 165 voxels','Skip 3 · entry 267 voxels','Occupied block 1 · entry 356 voxels','Occupied block 2 · entry 379 voxels','First hit · 394 voxels from origin'];
+    let selected = 5;
+    for (const button of scene.querySelectorAll('[data-event]')) {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.event) === selected));
+      button.addEventListener('click', () => {
+        selected = Number(button.dataset.event);
+        for (const item of scene.querySelectorAll('[data-event]')) item.setAttribute('aria-pressed', String(item === button));
+        scene.querySelector('[data-detail]').textContent = descriptions[selected];
+        draw();
+      });
+    }
+    function draw() {
+      const {clientWidth: width, clientHeight: height} = canvas;
+      if (!width || !height) return;
+      const ratio = devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const scale = Math.min(width / 580, height / 275);
+      const project = ([x,y,z]) => [width * .5 + scale * (x + y * .52), height * .54 + scale * (x * .18 - y * .32 - z)];
+      function line(a, b, color, weight) {
+        ctx.beginPath();
+        ctx.moveTo(...project(a));
+        ctx.lineTo(...project(b));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = weight;
+        ctx.stroke();
+      }
+      function box(start, end, radius, color, opacity) {
+        const points = Array.from({length:8}, (_, i) => [i & 1 ? end : start, i & 2 ? radius : -radius, i & 4 ? radius : -radius]);
+        ctx.globalAlpha = opacity;
+        for (let i = 0; i < 8; i++) {
+          for (const bit of [1,2,4]) if (!(i & bit)) line(points[i], points[i | bit], color, 1.5);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      const path = [[160,0,-105],[138,0,-39],[152,0,20],[145,0,71],[176,0,132]];
+      ctx.lineCap = 'round';
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#81837c', 36 * scale);
+      for (let i = 1; i < path.length; i++) line(path[i-1], path[i], '#c9c5b2', 27 * scale);
+      line([152,0,20],[219,17,78],'#aaa795',18 * scale);
+      ranges.forEach(([start,end,radius], index) => {
+        const opacity = treatment === 5 && selected < 5 ? (selected === index ? 1 : .25) : .65;
+        box(start,end,radius,index < 3 ? empty : occupied,opacity);
+      });
+      line([-260,0,0],[134,0,0],ray,1.8);
+      const [hx,hy] = project([134,0,0]);
+      if (treatment === 3) {
+        const target = scene.querySelector('.callout').getBoundingClientRect();
+        const area = canvas.getBoundingClientRect();
+        ctx.beginPath();
+        ctx.moveTo(hx,hy);
+        ctx.lineTo(target.left - area.left + 8,target.bottom - area.top);
+        ctx.strokeStyle = hit;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      if (treatment === 4) {
+        ctx.font = '12px system-ui,sans-serif';
+        ctx.textAlign = 'center';
+        for (const [index,x] of [-154,-43,52].entries()) {
+          const [px,py] = project([x,0,67]);
+          ctx.fillStyle = empty;
+          ctx.fillText('Skip ' + (index+1),px,py);
+        }
+        const [px,py] = project([134,0,-35]);
+        ctx.fillStyle = hit;
+        ctx.fillText('First hit',px,py);
+      }
+      for (const x of [-211,-95,7,96,119,134]) {
+        ctx.beginPath();
+        ctx.arc(...project([x,0,0]), x === 134 ? 5 : 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = x === 134 ? hit : ray;
+        ctx.fill();
+        if (x === 134) {
+          ctx.strokeStyle = '#36232f';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+    new ResizeObserver(draw).observe(canvas);
+    draw();
+  }
+})();
+</script>

@@ -42,6 +42,10 @@ export default class RayTraversalOverlay
         this.button = document.getElementById('select-ray')
         this.status = document.getElementById('ray-inspection-status')
         this.panel = document.getElementById('ray-inspection')
+        this.counts = document.getElementById('ray-inspection-counts')
+        this.skippedRegions = document.getElementById('ray-skipped-regions')
+        this.occupiedBlocks = document.getElementById('ray-occupied-blocks')
+        this.hitReadout = document.getElementById('ray-inspection-hit')
         const { canvas, abort } = experience
         const options = { signal: abort.signal }
 
@@ -102,6 +106,8 @@ export default class RayTraversalOverlay
         const enabled = configs.rayInspectionVisible
         this.panel.hidden = !enabled
         this.group.visible = enabled
+        const hideReadouts = !enabled || !this.captureResult || this.captureResult.hitState < 0
+        this.counts.hidden = hideReadouts
         if (!enabled && this.selecting) this.setSelecting(false)
 
         if (this.volume !== computes.volume)
@@ -365,6 +371,12 @@ export default class RayTraversalOverlay
             this.group.add(marker)
         }
         this.status.textContent = ''
+        const events = this.captureResult.events
+        this.skippedRegions.textContent = events.filter(event => event.kind === 1).length.toLocaleString()
+        this.occupiedBlocks.textContent = new Set(events.filter(event => event.kind === 3)
+            .map(event => event.minimum.toArray().join(','))).size.toLocaleString()
+        this.hitReadout.classList.toggle('has-hit', hitState === 1)
+        this.hitReadout.textContent = hitState === 1 ? `Hit at ${Math.round(end).toLocaleString()} cells` : 'No surface hit'
         this.sync()
     }
 
@@ -377,6 +389,7 @@ export default class RayTraversalOverlay
             child.removeFromParent()
         }
         this.captureResult = null
+        this.counts.hidden = true
     }
 
     destroy()
